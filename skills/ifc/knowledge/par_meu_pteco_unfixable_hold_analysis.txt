@@ -1,0 +1,232 @@
+Total unfixable paths → par_meu: 1516
+
+====================================================================================================
+CROSS-PARTITION UNFIXABLE HOLD PATHS → par_meu (from ECO report)
+====================================================================================================
+
+  par_pmh → par_meu: 1329 paths  worst_hold_slack=-3358.56
+  Clock domain crossings:
+    mclk_pmh→mclk_meu                         1323 paths  worst=-27.411
+    ssh_ijtag→ssh_ijtag                          4 paths  worst=-3275.168
+    ijtag_tck→ijtag_tck                          2 paths  worst=-3358.56
+
+  par_ooo_int → par_meu: 133 paths  worst_hold_slack=-45.71
+  Clock domain crossings:
+    mclk_ooo_int→mclk_meu                      133 paths  worst=-45.71
+
+  par_exe → par_meu: 48 paths  worst_hold_slack=-219.878
+  Clock domain crossings:
+    mclk_exe→mclk_meu                           30 paths  worst=-16.511
+    ijtag_tck→ijtag_tck                         18 paths  worst=-219.878
+
+  par_ooo_vec → par_meu: 6 paths  worst_hold_slack=-5.135
+  Clock domain crossings:
+    mclk_ooo_vec→mclk_meu                        6 paths  worst=-5.135
+
+====================================================================================================
+TOP 50 WORST UNFIXABLE HOLD PATHS → par_meu (sorted by slack)
+====================================================================================================
+    1. hold= -3358.6  setup=   585.3  ijtag_tck→ijtag_tck
+       SP: par_pmh      ...i_ijtag2edt/i_ijtag2edt_tdr/tdr_out_inter_reg_0_/CP
+       EP: par_meu      ...i_ctech_clk_or_postclk/i_core_ctech_lib_clk_mux_2to1/ctech_lib_clk_mux_2to1_dcszo/S
+    2. hold= -3343.5  setup=   597.8  ijtag_tck→ijtag_tck
+       SP: par_pmh      ...i_ijtag2edt/i_ijtag2edt_tdr/tdr_out_inter_reg_0_/CP
+       EP: par_meu      ...i_ctech_clk_or_postclk/i_core_ctech_lib_clk_mux_2to1/ctech_lib_clk_mux_2to1_dcszo/S
+    3. hold= -3275.2  setup=  1462.9  ssh_ijtag→ssh_ijtag
+       SP: par_pmh      ...i_ssh_icore_2_wrapper_tessent_ssn_scan_host_1_inst/fsm/enable_sync_ff_reg/CP
+       EP: par_meu      ...i_ctech_clk_or_en/i_core_ctech_lib_clk_or_en/ctech_lib_clk_or_en_dcszo/E
+    4. hold= -3275.1  setup=  1464.3  ssh_ijtag→ssh_ijtag
+       SP: par_pmh      ...i_ssh_icore_2_wrapper_tessent_ssn_scan_host_1_inst/fsm/enable_sync_ff_reg/CP
+       EP: par_meu      ...i_ctech_clk_or_en/i_core_ctech_lib_clk_or_en/ctech_lib_clk_or_en_dcszo/E
+    5. hold= -3264.1  setup=  1470.3  ssh_ijtag→ssh_ijtag
+       SP: par_pmh      ...i_ssh_icore_2_wrapper_tessent_ssn_scan_host_1_inst/fsm/enable_sync_ff_reg/CP
+       EP: par_meu      ...i_ctech_clk_or_en/i_core_ctech_lib_clk_or_en/ctech_lib_clk_or_en_dcszo/E
+    6. hold= -3264.0  setup=  1471.7  ssh_ijtag→ssh_ijtag
+       SP: par_pmh      ...i_ssh_icore_2_wrapper_tessent_ssn_scan_host_1_inst/fsm/enable_sync_ff_reg/CP
+       EP: par_meu      ...i_ctech_clk_or_en/i_core_ctech_lib_clk_or_en/ctech_lib_clk_or_en_dcszo/E
+    7. hold=  -219.9  setup=     1.9  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_7_/D
+    8. hold=  -219.9  setup=     1.9  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_7_/D
+    9. hold=  -219.4  setup=     1.1  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_2_/D
+   10. hold=  -219.4  setup=     1.1  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_2_/D
+   11. hold=  -219.3  setup=     0.9  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_3_/D
+   12. hold=  -219.3  setup=     0.9  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_3_/D
+   13. hold=  -219.2  setup=     0.8  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_5_/D
+   14. hold=  -219.2  setup=     0.8  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_5_/D
+   15. hold=  -219.2  setup=     0.8  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_6_/D
+   16. hold=  -219.2  setup=     0.7  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_6_/D
+   17. hold=  -218.9  setup=     0.5  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_4_/D
+   18. hold=  -218.9  setup=     0.4  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_4_/D
+   19. hold=  -218.8  setup=     0.3  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_0_/D
+   20. hold=  -218.8  setup=     0.3  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_0_/D
+   21. hold=  -218.8  setup=     0.3  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_1_/D
+   22. hold=  -218.8  setup=     0.3  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rsvecprf_arrays_ext_mbist/rsvecprf_dfx_wrapper_placeholder_INTP_chain_pipeline_bisr_inst/ShiftReg_reg_0_/CP
+       EP: par_meu      ...core_rf_ieu_bisr_buffer/bisr_buffer_fifo/memory_reg_1_/D
+   23. hold=  -202.3  setup=     6.9  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rs_vec_wrap/core_rf_rsvecprf_bisr_buffer/auto_vector_MBIT_bisr_chain_se_synced_dl3_reg_MBIT_bisr_chain_se_synced_dl2_reg/CP
+       EP: par_meu      ...ieu/core_rf_ieu_bisr_buffer/bisr_chain_se_synced_dl0_reg/D
+   24. hold=  -202.3  setup=     6.9  ijtag_tck→ijtag_tck
+       SP: par_exe      ...rs_vec_wrap/core_rf_rsvecprf_bisr_buffer/auto_vector_MBIT_bisr_chain_se_synced_dl3_reg_MBIT_bisr_chain_se_synced_dl2_reg/CP
+       EP: par_meu      ...ieu/core_rf_ieu_bisr_buffer/bisr_chain_se_synced_dl0_reg/D
+   25. hold=   -45.7  setup=     7.9  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsbpc/auto_vector_MBIT_RSIsI2VM302H_reg_1__MBIT_RSIsI2VM302H_reg_3__MBIT_RSIsI2VM302H_reg_5__MBIT_RSIsI2VM302H_reg_7_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VM303H_reg_1__MBIT_RSIsI2VM303H_reg_3__MBIT_RSIsI2VM303H_reg_5__MBIT_RSIsI2VM303H_reg_7_/D1
+   26. hold=   -45.7  setup=     8.0  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsbpc/auto_vector_MBIT_RSIsI2VM302H_reg_1__MBIT_RSIsI2VM302H_reg_3__MBIT_RSIsI2VM302H_reg_5__MBIT_RSIsI2VM302H_reg_7_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VM303H_reg_1__MBIT_RSIsI2VM303H_reg_3__MBIT_RSIsI2VM303H_reg_5__MBIT_RSIsI2VM303H_reg_7_/D1
+   27. hold=   -45.4  setup=     7.4  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/auto_vector_MBIT_EuSchedDispM301H_reg_3__40__MBIT_EuSchedDispM301H_reg_3__41__MBIT_EuSchedDispM301H_reg_3__42__MBIT_EuSchedDispM301H_reg_3__43_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VPdstBankBM302H_reg_1__MBIT_RSIsI2VPdstBankBM302H_reg_3__MBIT_RSIsI2VPdstBankBM302H_reg_5__MBIT_RSIsI2VPdstBankBM302H_reg_7_/D2
+   28. hold=   -45.4  setup=     7.5  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/auto_vector_MBIT_EuSchedDispM301H_reg_3__40__MBIT_EuSchedDispM301H_reg_3__41__MBIT_EuSchedDispM301H_reg_3__42__MBIT_EuSchedDispM301H_reg_3__43_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VPdstBankBM302H_reg_1__MBIT_RSIsI2VPdstBankBM302H_reg_3__MBIT_RSIsI2VPdstBankBM302H_reg_5__MBIT_RSIsI2VPdstBankBM302H_reg_7_/D2
+   29. hold=   -41.9  setup=     5.8  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsbpc/auto_vector_MBIT_RSIsI2VM302H_reg_1__MBIT_RSIsI2VM302H_reg_3__MBIT_RSIsI2VM302H_reg_5__MBIT_RSIsI2VM302H_reg_7_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VM303H_reg_1__MBIT_RSIsI2VM303H_reg_3__MBIT_RSIsI2VM303H_reg_5__MBIT_RSIsI2VM303H_reg_7_/D4
+   30. hold=   -41.8  setup=     5.9  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsbpc/auto_vector_MBIT_RSIsI2VM302H_reg_1__MBIT_RSIsI2VM302H_reg_3__MBIT_RSIsI2VM302H_reg_5__MBIT_RSIsI2VM302H_reg_7_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VM303H_reg_1__MBIT_RSIsI2VM303H_reg_3__MBIT_RSIsI2VM303H_reg_5__MBIT_RSIsI2VM303H_reg_7_/D4
+   31. hold=   -41.5  setup=     8.1  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsbpc/auto_vector_MBIT_RSIsI2VM302H_reg_1__MBIT_RSIsI2VM302H_reg_3__MBIT_RSIsI2VM302H_reg_5__MBIT_RSIsI2VM302H_reg_7_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VM303H_reg_1__MBIT_RSIsI2VM303H_reg_3__MBIT_RSIsI2VM303H_reg_5__MBIT_RSIsI2VM303H_reg_7_/D2
+   32. hold=   -41.5  setup=     8.2  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsbpc/auto_vector_MBIT_RSIsI2VM302H_reg_1__MBIT_RSIsI2VM302H_reg_3__MBIT_RSIsI2VM302H_reg_5__MBIT_RSIsI2VM302H_reg_7_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VM303H_reg_1__MBIT_RSIsI2VM303H_reg_3__MBIT_RSIsI2VM303H_reg_5__MBIT_RSIsI2VM303H_reg_7_/D2
+   33. hold=   -41.0  setup=    11.2  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsbpc/auto_vector_MBIT_RSIsI2VM302H_reg_1__MBIT_RSIsI2VM302H_reg_3__MBIT_RSIsI2VM302H_reg_5__MBIT_RSIsI2VM302H_reg_7_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VM303H_reg_1__MBIT_RSIsI2VM303H_reg_3__MBIT_RSIsI2VM303H_reg_5__MBIT_RSIsI2VM303H_reg_7_/D3
+   34. hold=   -41.0  setup=    11.3  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsbpc/auto_vector_MBIT_RSIsI2VM302H_reg_1__MBIT_RSIsI2VM302H_reg_3__MBIT_RSIsI2VM302H_reg_5__MBIT_RSIsI2VM302H_reg_7_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VM303H_reg_1__MBIT_RSIsI2VM303H_reg_3__MBIT_RSIsI2VM303H_reg_5__MBIT_RSIsI2VM303H_reg_7_/D3
+   35. hold=   -38.6  setup=    24.2  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/auto_vector_MBIT_EuSchedDispM301H_reg_1__29__MBIT_EuSchedDispM301H_reg_1__30__MBIT_EuSchedDispM301H_reg_1__31__MBIT_EuSchedDispM301H_reg_1__32_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VPdstBankBM302H_reg_1__MBIT_RSIsI2VPdstBankBM302H_reg_3__MBIT_RSIsI2VPdstBankBM302H_reg_5__MBIT_RSIsI2VPdstBankBM302H_reg_7_/D1
+   36. hold=   -38.5  setup=    24.2  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/auto_vector_MBIT_EuSchedDispM301H_reg_1__29__MBIT_EuSchedDispM301H_reg_1__30__MBIT_EuSchedDispM301H_reg_1__31__MBIT_EuSchedDispM301H_reg_1__32_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VPdstBankBM302H_reg_1__MBIT_RSIsI2VPdstBankBM302H_reg_3__MBIT_RSIsI2VPdstBankBM302H_reg_5__MBIT_RSIsI2VPdstBankBM302H_reg_7_/D1
+   37. hold=   -37.4  setup=     7.6  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/auto_vector_MBIT_V2IPrePDstVM303H_reg_0__MBIT_V2IPrePDstVM303H_reg_1_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSV2IPDstVM304H_reg_0__MBIT_RSV2IPDstVM304H_reg_1_/D2
+   38. hold=   -37.4  setup=     7.6  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/auto_vector_MBIT_V2IPrePDstVM303H_reg_0__MBIT_V2IPrePDstVM303H_reg_1_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSV2IPDstVM304H_reg_0__MBIT_RSV2IPDstVM304H_reg_1_/D2
+   39. hold=   -35.8  setup=     5.1  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/auto_vector_MBIT_V2IPrePDstVM303H_reg_0__MBIT_V2IPrePDstVM303H_reg_1_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSV2IPDstVM304H_reg_0__MBIT_RSV2IPDstVM304H_reg_1_/D1
+   40. hold=   -35.8  setup=     5.1  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/auto_vector_MBIT_V2IPrePDstVM303H_reg_0__MBIT_V2IPrePDstVM303H_reg_1_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSV2IPDstVM304H_reg_0__MBIT_RSV2IPDstVM304H_reg_1_/D1
+   41. hold=   -35.5  setup=    13.4  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/EuSchedDispM301H_reg_7__150_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VPdstBankBM302H_reg_1__MBIT_RSIsI2VPdstBankBM302H_reg_3__MBIT_RSIsI2VPdstBankBM302H_reg_5__MBIT_RSIsI2VPdstBankBM302H_reg_7_/D4
+   42. hold=   -35.5  setup=    13.4  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rseuldcamc/EuSchedDispM301H_reg_7__150_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VPdstBankBM302H_reg_1__MBIT_RSIsI2VPdstBankBM302H_reg_3__MBIT_RSIsI2VPdstBankBM302H_reg_5__MBIT_RSIsI2VPdstBankBM302H_reg_7_/D4
+   43. hold=   -34.8  setup=    18.2  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rsbpceum/arr_bank_loop_RsEuDispDataM301H_2__rsinteucam2rdbpph1rfip_RsEuDispDataM301H/auto_vector_MBIT_data_array_reg_5__1__fielded_PDst_8__MBIT_data_array_reg_5__1__fielded_PDst_9_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VPdstBankBM302H_reg_1__MBIT_RSIsI2VPdstBankBM302H_reg_3__MBIT_RSIsI2VPdstBankBM302H_reg_5__MBIT_RSIsI2VPdstBankBM302H_reg_7_/D3
+   44. hold=   -34.8  setup=    18.2  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rsbpceum/arr_bank_loop_RsEuDispDataM301H_2__rsinteucam2rdbpph1rfip_RsEuDispDataM301H/auto_vector_MBIT_data_array_reg_5__1__fielded_PDst_8__MBIT_data_array_reg_5__1__fielded_PDst_9_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsI2VPdstBankBM302H_reg_1__MBIT_RSIsI2VPdstBankBM302H_reg_3__MBIT_RSIsI2VPdstBankBM302H_reg_5__MBIT_RSIsI2VPdstBankBM302H_reg_7_/D3
+   45. hold=   -29.2  setup=     6.2  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsmempc/auto_vector_MBIT_RSV2IUopM800H_reg_0__MBIT_RSV2IUopM800H_reg_1__MBIT_RSV2IUopM800H_reg_2__MBIT_RSV2IUopM800H_reg_3_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsV2IM304H_reg_0__MBIT_RSIsV2IM304H_reg_2__MBIT_RSIsV2IM304H_reg_4__MBIT_RSIsV2IM304H_reg_6_/D4
+   46. hold=   -29.1  setup=     6.5  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rs_int/rsmempc/auto_vector_MBIT_RSV2IUopM800H_reg_0__MBIT_RSV2IUopM800H_reg_1__MBIT_RSV2IUopM800H_reg_2__MBIT_RSV2IUopM800H_reg_3_/CP
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSIsV2IM304H_reg_0__MBIT_RSIsV2IM304H_reg_2__MBIT_RSIsV2IM304H_reg_4__MBIT_RSIsV2IM304H_reg_6_/D4
+   47. hold=   -28.2  setup=     0.0  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rseumtxsched/rs_eumtxsched_bank_loop_1__rs_eumtxsched_bank_0/rsmeubanktop/clkfreemhcheckpin1
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSPtPwrUpIntM300L_reg_0__MBIT_RSPtPwrUpIntM300L_reg_1__MBIT_RSPtPwrUpIntM300L_reg_2__MBIT_RSPtPwrUpIntM300L_reg_3__MBIT_RSPtPwrUpIntM300L_reg_4__MBIT_RSPtPwrUpIntM300L_reg_5__MBIT_RSPtPwrUpIntM300L_reg_6__MBIT_RSPtPwrUpIntM300L_reg_7_/D4
+   48. hold=   -28.2  setup=     0.0  mclk_ooo_int→mclk_meu
+       SP: par_ooo_int  ...rseumtxsched/rs_eumtxsched_bank_loop_1__rs_eumtxsched_bank_0/rsmeubanktop/clkfreemhcheckpin1
+       EP: par_meu      ...par_meu/rsbpd/auto_vector_MBIT_RSPtPwrUpIntM300L_reg_0__MBIT_RSPtPwrUpIntM300L_reg_1__MBIT_RSPtPwrUpIntM300L_reg_2__MBIT_RSPtPwrUpIntM300L_reg_3__MBIT_RSPtPwrUpIntM300L_reg_4__MBIT_RSPtPwrUpIntM300L_reg_5__MBIT_RSPtPwrUpIntM300L_reg_6__MBIT_RSPtPwrUpIntM300L_reg_7_/D4
+   49. hold=   -27.4  setup=     7.5  mclk_pmh→mclk_meu
+       SP: par_pmh      ...dcu_l1/dcl1data/auto_vector_MBIT_DcL1RdDataIntM408H_reg_1__1__243__MBIT_DcL1RdDataIntM408H_reg_1__1__248__MBIT_DcL1RdDataIntM408H_reg_1__1__250__MBIT_DcL1RdDataIntM408H_reg_1__1__104_/CP
+       EP: par_meu      ...dcdatabufd/dcibbankd21/auto_vector_MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__0__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__1__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__2__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__3__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__4__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__5__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__6__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__7_/D4
+   50. hold=   -27.4  setup=     7.5  mclk_pmh→mclk_meu
+       SP: par_pmh      ...dcu_l1/dcl1data/auto_vector_MBIT_DcL1RdDataIntM408H_reg_1__1__243__MBIT_DcL1RdDataIntM408H_reg_1__1__248__MBIT_DcL1RdDataIntM408H_reg_1__1__250__MBIT_DcL1RdDataIntM408H_reg_1__1__104_/CP
+       EP: par_meu      ...dcdatabufd/dcibbankd21/auto_vector_MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__0__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__1__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__2__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__3__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__4__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__5__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__6__MBIT_WSBDataArrayMnnnH_reg_1__1__1__1__7_/D4
+
+====================================================================================================
+BOTTLENECK SUMMARY & ACTIONS
+====================================================================================================
+
+  ┌─ DCU_L1_DATABANK: 1319 paths, worst=-27.411
+  │  Sources: {'par_pmh': 1319}
+  │  Clocks:  {'mclk_pmh→mclk_meu': 1319}
+  │  ⚠ L1 data cache banks — dense MBIT arrays, area-constrained
+  │  ACTION: par_meu PO (mfeldma1) placement/buffering optimization
+  │  Consider: clock skew tuning for databank clocks
+  └─ OWNER: mfeldma1 (par_meu PO)
+
+  ┌─ RS_BYPASS_DISPATCH: 133 paths, worst=-45.71
+  │  Sources: {'par_ooo_int': 97, 'par_exe': 30, 'par_ooo_vec': 6}
+  │  Clocks:  {'mclk_ooo_int→mclk_meu': 97, 'mclk_exe→mclk_meu': 30, 'mclk_ooo_vec→mclk_meu': 6}
+  │  ⚠ Reservation station bypass — cross-partition data paths
+  │  ACTION: Check launch→capture clock skew, add hold buffers at partition boundary
+  └─ OWNER: par_meu PO + source partition POs
+
+  ┌─ RS_FLAG_PRF: 32 paths, worst=-21.052
+  │  Sources: {'par_ooo_int': 32}
+  │  Clocks:  {'mclk_ooo_int→mclk_meu': 32}
+  │  ⚠ RS flag/dependency logic — some have dont_touch (V)
+  │  ACTION: Review dont_touch constraints, PO-level hold fix
+  └─ OWNER: par_meu PO (mfeldma1)
+
+  ┌─ BISR_DFT: 18 paths, worst=-219.878
+  │  Sources: {'par_exe': 18}
+  │  Clocks:  {'ijtag_tck→ijtag_tck': 18}
+  │  ⚠ BISR/DFT paths on ijtag_tck — these are SCAN chain paths
+  │  ACTION: Clock tree fix needed (453ps clock latency diff!) or DFT exception
+  └─ OWNER: DFT team + clock architect
+
+  ┌─ par_meu_dft: 6 paths, worst=-3358.56
+  │  Sources: {'par_pmh': 6}
+  │  Clocks:  {'ssh_ijtag→ssh_ijtag': 4, 'ijtag_tck→ijtag_tck': 2}
+  └─ REVIEW: Check specific paths for fixability
+
+  ┌─ dcu_l0: 4 paths, worst=-6.401
+  │  Sources: {'par_pmh': 4}
+  │  Clocks:  {'mclk_pmh→mclk_meu': 4}
+  └─ REVIEW: Check specific paths for fixability
+
+  ┌─ mob: 2 paths, worst=-13.042
+  │  Sources: {'par_ooo_int': 2}
+  │  Clocks:  {'mclk_ooo_int→mclk_meu': 2}
+  └─ REVIEW: Check specific paths for fixability
+
+  ┌─ rsintprf_arrays: 2 paths, worst=-12.759
+  │  Sources: {'par_ooo_int': 2}
+  │  Clocks:  {'mclk_ooo_int→mclk_meu': 2}
+  └─ REVIEW: Check specific paths for fixability
+___BEGIN___COMMAND_DONE_MARKER___0

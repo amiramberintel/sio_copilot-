@@ -1,0 +1,182 @@
+================================================================================
+                    pvt.tcl - Comprehensive Overview
+================================================================================
+
+FILE LOCATION
+-------------
+/nfs/site/disks/crt_tools_0115/eou_flow_project_ptl/TS2025.12_gfc_n2.6/GFCN2CLIENTA0/pvt.tcl
+
+PURPOSE
+-------
+Master configuration defining ALL operating conditions for the GFC N2 Client A0 
+design - voltages, temperatures, process corners, and which scenarios to use 
+for each EDA task.
+
+================================================================================
+1. POWER RAILS DEFINED
+================================================================================
+
+  Rail          Description                        Voltage Range
+  -----------   --------------------------------   ----------------
+  VSS           Ground                             Always 0V
+  VCCCORE       Core logic supply                  0.540V - 1.271V
+  VCCRING       Ring/IO logic supply               0.540V - 1.271V
+  VCCST         Always-on / Standby supply         0.550V - 1.271V
+  VCCANA_EHV    Analog high voltage                Fixed 1.800V
+
+Rail Grouping - treats these rails as having same voltage:
+  VCCSA     -> grouped with VCCST
+  VCCTM     -> grouped with VCCCORE
+  VCCMLCSSA -> grouped with VCCCORE
+
+================================================================================
+2. SCENARIO NAMING CONVENTION
+================================================================================
+
+  func.max_high.T_85.typical
+   |      |      |      |
+   |      |      |      +-- RC Corner: typical, rcworst, cworst, CCworst_T
+   |      |      |
+   |      |      +-- Temperature: T_85  = 85C (typical)
+   |      |                       S_125 = 125C (slow/hot)
+   |      |                       S_M40 = -40C (slow/cold)
+   |      |                       F_M40 = -40C (fast/cold)
+   |      |                       F_125 = 125C (fast/hot)
+   |      |
+   |      +-- Voltage Corner: max_low, max_nom, max_high, max_turbo, min_*, etc.
+   |
+   +-- Mode: func  = functional (aged/stressed transistors)
+             fresh = fresh silicon (new transistors, for hold)
+
+================================================================================
+3. VOLTAGE CORNERS - DETAILED
+================================================================================
+
+SETUP (Max) CORNERS - Slow paths, check setup timing
+-----------------------------------------------------
+  Corner              VCCCORE   VCCRING   VCCST    Description
+  ------------------  -------   -------   ------   ----------------------
+  max_low             0.550V    0.550V    0.650V   Ultra low power mode
+  max_nom             0.650V    0.650V    0.650V   Nominal operation
+  max_med             0.850V    0.650V    0.650V   Medium performance
+  max_high            1.100V    1.100V    0.650V   High performance
+  max_turbo           1.210V    1.100V    0.650V   Turbo/boost mode
+  max_slow_low        0.540V    0.540V    0.675V   Worst-case slow
+  max_fast            1.271V    1.271V    1.271V   Fast process max
+
+HOLD (Min) CORNERS - Fast paths, check hold timing
+--------------------------------------------------
+  Corner              VCCCORE   VCCRING   VCCST    Description
+  ------------------  -------   -------   ------   ----------------------
+  min_low             0.550V    0.550V    0.550V   Low voltage hold
+  min_nom             0.650V    0.650V    0.650V   Nominal hold
+  min_high            1.100V    1.100V    1.100V   High voltage hold
+  min_fast            1.271V    1.271V    0.825V   Fast corner hold
+  min_hvqk            1.271V    1.271V    1.271V   High-V quick (fastest)
+
+SPECIAL CORNERS
+---------------
+  Corner              Purpose
+  ------------------  ------------------------------------------
+  rv_em_core          Reliability - Electromigration analysis
+  noise_low/high      Signal integrity / noise analysis
+  power_mid_warm      Power estimation
+  max_lo_hi_hi, etc.  Cross-domain voltage analysis
+
+================================================================================
+4. SCENARIO-TO-TASK MAPPING
+================================================================================
+
+Defines WHICH CORNERS to analyze for each EDA flow step:
+
+  Task Pattern              Scenarios Used
+  ------------------------  ------------------------------------------------
+  *syn* (Synthesis)         max_low only
+  *pnr*, *place*, *route*   max_nom, max_med, max_high (stressed) + 
+                            min_low + min_fast_cold
+  *clock* (CTS)             max_high_stressed only
+  intel_caliber             max_high, max_nom, max_low
+  *atpg*, gen_sdf           max_low only
+  *extraction*              ALL STA scenarios
+  *power_extraction*        power_mid_warm_client
+
+================================================================================
+5. DELAY TYPE MAPPING
+================================================================================
+
+Maps each scenario to SETUP (max) or HOLD (min) analysis:
+
+  Setup Analysis (max delay):       Hold Analysis (min delay):
+  -----------------------------     -----------------------------
+  func.max_low.*                    func.min_low.*
+  func.max_nom.*                    func.min_nom.*
+  func.max_high.*                   func.min_high.*
+  func.max_turbo.*                  fresh.min_slow.*
+  func.max_slow_*                   fresh.min_fast.*
+  func.rv_em_core.*                 fresh.noise_*
+
+================================================================================
+6. KEY SIGNOFF SCENARIOS
+================================================================================
+
+  Analysis Type       Primary Scenario
+  ------------------  ------------------------------------------
+  Dynamic Power       func.max_nom_stressed.T_85.typical
+  Leakage Power       func.max_nom_stressed.T_85.typical
+  EM/IR (Reliability) func.rv_em_core.F_125.rcworst_CCworst
+  Noise               fresh.noise_low.S_M40 + fresh.noise_high.F_125
+
+================================================================================
+7. PROCESS CORNERS (RC Extraction)
+================================================================================
+
+  RC Corner     Description
+  -----------   ------------------------------------------
+  typical       Nominal interconnect
+  rcworst       Worst resistance (slow signals)
+  cworst        Worst capacitance (high load)
+  CCworst       Worst coupling capacitance
+  CCworst_T     Coupling + temperature effects
+
+================================================================================
+8. SUMMARY DIAGRAM
+================================================================================
+
+                      +-------------------------------------+
+                      |             pvt.tcl                 |
+                      +-------------------------------------+
+                                      |
+          +---------------------------+---------------------------+
+          |                           |                           |
+          v                           v                           v
+  +---------------+         +-----------------+         +-----------------+
+  | Voltage Rails |         | Scenarios       |         | Task Mapping    |
+  | VCCCORE       |         | func.max_*      |         | syn -> max_low  |
+  | VCCRING       |         | func.min_*      |         | pnr -> multi    |
+  | VCCST         |         | fresh.*         |         | caliber -> 3    |
+  | VCCANA_EHV    |         | noise/power/rv  |         | extraction->all |
+  +---------------+         +-----------------+         +-----------------+
+
+================================================================================
+KEY TAKEAWAYS
+================================================================================
+
+1. pvt.tcl is the FOUNDATION for MCMM (Multi-Corner Multi-Mode) analysis
+
+2. Ensures timing closure across ALL operating conditions:
+   - Multiple voltages (0.54V to 1.27V)
+   - Multiple temperatures (-40C to 125C)
+   - Multiple process corners (slow, typical, fast)
+
+3. Different EDA tasks use different subsets of scenarios:
+   - Synthesis: minimal (speed)
+   - P&R: moderate (balance)
+   - Signoff: comprehensive (accuracy)
+
+4. Setup vs Hold:
+   - Setup: func.max_* scenarios (slow paths, aged transistors)
+   - Hold: fresh.min_* scenarios (fast paths, fresh transistors)
+
+================================================================================
+Generated: 2026-02-17
+================================================================================

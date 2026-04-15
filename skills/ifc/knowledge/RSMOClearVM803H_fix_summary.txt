@@ -1,0 +1,504 @@
+================================================================================
+  RSMOClearVM803H — CROSS-PARTITION TIMING FIX SUMMARY
+  WA: GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW11A_dcm_daily-CLK039
+  Date: 2026-03-09 (WW11A)
+  Signal: RSMOClearVM803H (single bit, par_ooo_int → par_ooo_vec)
+================================================================================
+
+================================================================================
+  PATH OVERVIEW
+================================================================================
+
+  Startpoint:  par_ooo_int/rs_int/rsrptint/auto_vector_MBIT_RORtLdIncM904H_reg_4__MBIT_RSMOClearVM803H_reg/CP
+  Endpoint:    par_ooo_vec/rob/roipaddd/roptrd/ROBEarlyQualJumpM304H_reg/D
+  Path Group:  mclk_ooo_vec
+  Path Type:   max (setup)
+  Cross-clock: mclk_ooo_int (SP) → mclk_ooo_vec (EP)
+
+  Slack:         -71.6ps (statistical), -64.0ps (mean)
+  POR Slack:     +17ps (spec-aware, budget exists but misallocated)
+  Norm Slack:    -0.38
+  Data Delay:    242.9ps
+  Clock Period:  186.0ps
+  Skew:          +6.69ps favorable (capture arrives later)
+  Setup Time:    12.4ps (statistical)
+
+  SP FF Location: (1160, 783) — par_ooo_int/rsrptint
+  EP FF Location: (440, 357)  — par_ooo_vec/rob/roipaddd/roptrd
+  Port out:       (652, 505)  — par_ooo_int output
+  Port in:        (652, 505)  — par_ooo_vec input (abutted, 576nm gap)
+
+  Total Manhattan: ~1146um
+    par_ooo_int leg: SP(1160,783) → port(652,505) = 786um
+    par_ooo_vec leg: port(652,505) → EP(440,357)  = 360um
+
+================================================================================
+  SPECS (from timing_specs.xml, added by gilkeren)
+================================================================================
+
+  ┌──────────────┬─────────────────────┬──────────┬──────────────┬───────────┬─────────────────────┐
+  │ Partition    │ Pin                 │ Spec(ps) │ Clock        │ Used(ps)  │ Status              │
+  ├──────────────┼─────────────────────┼──────────┼──────────────┼───────────┼─────────────────────┤
+  │ par_ooo_int  │ rsmoclearvm803h     │ 34.0     │ mclk_ooo_int │ 140.5    │ OVER by 106.5ps !!  │
+  │ par_ooo_vec  │ rsmoclearvm803h     │ 134.0    │ mclk_ooo_vec │ 115.2    │ UNDER by 18.8ps ✓   │
+  ├──────────────┼─────────────────────┼──────────┼──────────────┼───────────┼─────────────────────┤
+  │ par_fe       │ bprsmoclearvm803h   │ 59.0     │ mclk_fe      │ —        │ different path      │
+  │ par_msid     │ rsmoclearvm803h     │ 84.0     │ mclk_msid    │ —        │ different path      │
+  │ par_msid     │ bprsmoclearvm803h   │ 84.0     │ mclk_msid    │ —        │ different path      │
+  └──────────────┴─────────────────────┴──────────┴──────────────┴───────────┴─────────────────────┘
+
+  SPEC ANALYSIS:
+  Total budget available: 34.0 + 134.0 = 168.0ps
+  Total data delay used:  140.5 + 115.2 = 255.7ps (after removing clk/setup)
+  Overshoot:              87.7ps (255.7 - 168.0)
+
+  The problem: par_ooo_int has spec=34ps but SP FF is 786um from port!
+    → 8-buffer chain uses 140.5ps — 4x over budget
+    → par_ooo_vec is within spec (115.2 < 134.0)
+    → ALL fixes must target par_ooo_int side
+
+  POR slack = +17ps means: if par_ooo_int met its 34ps spec,
+  there would be 17ps of margin. The budget split is valid,
+  par_ooo_int just can't deliver because of MBIT placement.
+
+  NOTE: The par_msid path (rsmoclearvm803h, spec=84.0ps) has
+  por_slack=+38ps and slack=+18ps — no issue on that crossing.
+
+================================================================================
+  ALL FAILING ENDPOINTS (6 paths from same SP FF)
+================================================================================
+
+  All 6 paths share the SAME SP FF and SAME boundary crossing:
+    par_ooo_int/rsmoclearvm803h → par_ooo_vec/rsmoclearvm803h
+
+  ┌─────────────────────────────┬────────┬──────────┬────────────┬───────────────┐
+  │ Endpoint FF                 │ Slack  │ POR Slack│ Manhattan  │ par_ooo_vec   │
+  ├─────────────────────────────┼────────┼──────────┼────────────┼───────────────┤
+  │ ROBEarlyQualJumpM304H_reg   │ -71ps  │ +17ps    │ 1147um     │ 115ps         │
+  │ ROBEarlyQualJumpM304H_reg   │ -71ps  │ +17ps    │ 1147um     │ 115ps (icore1)│
+  │ ROMOClearStallM901H_reg     │ -64ps  │ +30ps    │ 1199um     │ 122ps         │
+  │ ROMOClearStallM901H_reg     │ -64ps  │ +30ps    │ 1199um     │ 122ps (icore1)│
+  │ RSMOClearVM804H_reg         │ -49ps  │ +19ps    │ 1084um     │ 96ps          │
+  │ RSMOClearVM804H_reg         │ -49ps  │ +19ps    │ 1084um     │ 96ps  (icore1)│
+  └─────────────────────────────┴────────┴──────────┴────────────┴───────────────┘
+
+  ONE TIP plan on par_ooo_int side fixes ALL 6 paths (shared buffer chain).
+
+================================================================================
+  SP FF — MULTI-BIT MERGE PROBLEM
+================================================================================
+
+  FF name: auto_vector_MBIT_RORtLdIncM904H_reg_4__MBIT_RSMOClearVM803H_reg
+  Cell:    MB2SRLSDFKMCNQTXGOPTBB1211M2P30ITLD3BWP156HPNPN3P48CPDULVT
+  Type:    MB2 (Multi-Bit 2 — two flip-flops in one physical cell)
+  Location: (1160376, 783451)
+
+  BAD MERGE — two signals going in opposite directions:
+  ┌────────┬────────────────────┬──────────────────┬───────────┬─────────────────────┐
+  │ Q pin  │ Signal             │ Destination      │ Direction │ Worst slack         │
+  ├────────┼────────────────────┼──────────────────┼───────────┼─────────────────────┤
+  │ Q1     │ RORtLdIncM904H[4]  │ internal/par_pmh │ up/right  │ 0 failing paths     │
+  │ Q2     │ RSMOClearVM803H    │ par_ooo_vec      │ down/left │ -71ps (6 paths!)    │
+  └────────┴────────────────────┴──────────────────┴───────────┴─────────────────────┘
+
+  RORtLdIncM904H bus MBIT packing (all bits):
+    MBIT reg_0 + reg_1 → par_pmh, worst slack -1ps
+    MBIT reg_2 + reg_3 → par_pmh, worst slack -9ps
+    MBIT reg_4 + RSMOClearVM803H → par_ooo_vec, worst slack -71ps ←!!
+
+  Bit[4] has ZERO external failing paths — it is happy at (1160,783)
+  RSMOClearVM803H needs to be near port (652,505) — 786um away!
+  Synthesis packed them together because they share mclk_ooo_int,
+  ignoring that their outputs go in completely different directions.
+
+================================================================================
+  GATE-BY-GATE PATH DETAIL
+================================================================================
+
+  par_ooo_int portion (SP FF → port): 140.5ps, 786um, 8 gates
+  ─────────────────────────────────────────────────────────────────────────────
+  Gate │ Cell                          │ Vt   │ Cell  │ Wire  │ DTrans│ Cap
+  ─────────────────────────────────────────────────────────────────────────────
+  SP   │ MB2SRLSDFKMCNQTXGOPTBB1211   │ ULVT │ 16.2ps│  —    │  —    │  —
+       │ M2P30ITLD3BWP156HPNPN...ULVT │      │ CK→Q2 │       │       │
+       │ Location: (1160376, 783451)   │      │       │       │       │
+  ─────────────────────────────────────────────────────────────────────────────
+  G1   │ BUFFSR2BFYD8BWP156HNPPN      │ ULVT │  5.5ps│  2.9ps│  0.0  │  4.0fF
+       │ (1156584, 777025)             │      │       │       │       │
+  ─────────────────────────────────────────────────────────────────────────────
+  G2   │ INVREPM2P30ITLICMD16BWP156   │ ULVT │  4.5ps│  3.3ps│  0.0  │  8.1fF
+       │ (1148124, 775093)             │      │       │       │       │
+       │ hierarchy cross: rsrptint → par_ooo_int                      │
+  ─────────────────────────────────────────────────────────────────────────────
+  G3   │ BUFFREPM2P30ITLICMD16BWP156  │ ULVT │  8.1ps│ 10.4ps│  9.7  │ 32.1fF
+       │ (1029944, 785389)             │      │       │ 128um │       │
+  ─────────────────────────────────────────────────────────────────────────────
+  G4   │ BUFFSR2BFYD18BWP156HNPPN     │ ULVT │  7.3ps│  5.7ps│  2.1  │ 21.5fF
+       │ (962376, 766417)              │      │       │  86um │       │
+  ─────────────────────────────────────────────────────────────────────────────
+  G5   │ BUFFSR2BFYD18BWP156HNPPN     │ ULVT │  8.6ps│ 13.6ps│  5.9  │ 38.3fF
+       │ (820776, 755437)              │      │       │ 152um │       │ ← LONG
+  ─────────────────────────────────────────────────────────────────────────────
+  G6   │ BUFFSR2BFYTHD18BWP156HPNPN   │ ULVT │  7.9ps│ 12.4ps│ 10.8  │ 31.2fF
+       │ (752328, 688981)              │      │       │ 134um │       │ ← LONG
+  ─────────────────────────────────────────────────────────────────────────────
+  G7   │ BUFFSR2SKRD6BWP156HNPPN      │ ULVT │  9.6ps│ 20.6ps│ 21.3  │ 56.2fF
+       │ (654120, 505927)              │      │       │ 281um │       │ ← WORST
+       │ DTrans=3.9ps, input trans 37.4ps — overloaded!               │
+  ─────────────────────────────────────────────────────────────────────────────
+  G8   │ INVREPM2P30ITLICMD6BWP156    │ ULVT │  3.1ps│  0.2ps│  0.0  │  9.0fF
+       │ (653972, 505213)              │      │       │       │       │
+       │ rsmoclearvm803h_sideload_inv_2 — restores polarity to rise   │
+  ─────────────────────────────────────────────────────────────────────────────
+  PORT │ par_ooo_int/rsmoclearvm803h   │      │       │       │       │
+       │ (652368, 505248)              │      │       │       │       │
+  ─────────────────────────────────────────────────────────────────────────────
+
+  par_ooo_vec portion (port → EP FF): 102.9ps, 360um, 6 gates
+  ─────────────────────────────────────────────────────────────────────────────
+  PORT │ par_ooo_vec/rsmoclearvm803h   │      │       │       │       │
+       │ (651792, 505248) — abutted    │      │       │       │       │
+  ─────────────────────────────────────────────────────────────────────────────
+  V1   │ BUFFD4BWP156HPNPN            │ ULVT │  8.4ps│  5.5ps│  1.1  │ 17.6fF
+       │ (649992, 475893)              │      │       │  30um │       │ WEAK D4
+  ─────────────────────────────────────────────────────────────────────────────
+  V2   │ BUFFD6BWP156HPNPN            │ ULVT │ 12.4ps│ 24.7ps│ 17.5  │ 12.9fF
+       │ (564024, 464007)              │      │       │  97um │       │
+       │ input trans 52.3ps — very high!                               │
+  ─────────────────────────────────────────────────────────────────────────────
+  V3   │ BUFFD6BWP156HPNPN            │ ULVT │ 10.7ps│  7.7ps│  3.0  │ 21.2fF
+       │ (527160, 425913)              │      │       │  47um │       │
+  ─────────────────────────────────────────────────────────────────────────────
+       │ hierarchy cross: → rob/roipaddd/roptrd                       │
+  ─────────────────────────────────────────────────────────────────────────────
+  V4   │ NR2D6BWP156HPNPN             │ ULVT │  6.8ps│ 10.0ps│ 21.0  │ 11.5fF
+       │ (494136, 363543)              │      │       │  95um │       │
+       │ FIRST LOGIC GATE (NOR2) — RSMOClearVM803H on A1 input        │
+  ─────────────────────────────────────────────────────────────────────────────
+  V5   │ INVD1BWP156HPNPN...ULVTLL    │ULVTLL│  4.3ps│  6.1ps│  0.6  │  0.4fF
+       │ (440983, 357607)              │      │       │  59um │       │ WEAK D1!
+  ─────────────────────────────────────────────────────────────────────────────
+  V6   │ OR2D1BWP156HPNPN...LVT       │ LVT  │  5.8ps│  0.2ps│  0.3  │  0.7fF
+       │ (441048, 357740)              │      │       │       │       │ WEAK D1!
+       │ *** LVT — can swap to ULVT ***                               │
+  ─────────────────────────────────────────────────────────────────────────────
+  EP   │ SDFQTXGD4BWP156HPNPN...LVT   │ LVT  │setup  │  0.3ps│       │
+       │ (440568, 357177)              │      │12.4ps │       │       │
+       │ *** LVT — can swap to ULVT ***                               │
+  ─────────────────────────────────────────────────────────────────────────────
+
+  Vt SUMMARY: 15/17 cells already ULVT, only V6 (OR2D1) and EP FF are LVT
+
+================================================================================
+  DELAY BREAKDOWN
+================================================================================
+
+  ┌───────────────────────────────┬──────────┬─────────┐
+  │ Category                      │ Delay    │ % total │
+  ├───────────────────────────────┼──────────┼─────────┤
+  │ CK→Q (SP FF)                  │  16.2ps  │   6.7%  │
+  │ par_ooo_int cell delays (G1-8)│  54.6ps  │  22.5%  │
+  │ par_ooo_int wire delays       │  69.1ps  │  28.5%  │
+  │ par_ooo_vec cell delays (V1-6)│  48.4ps  │  19.9%  │
+  │ par_ooo_vec wire delays       │  54.2ps  │  22.3%  │
+  │ EP setup                      │  12.4ps  │   — OCV │
+  ├───────────────────────────────┼──────────┼─────────┤
+  │ TOTAL data arrival            │ 242.9ps  │  100%   │
+  │ Available window              │ 168.2ps  │         │
+  │ DEFICIT                       │  74.7ps  │         │
+  └───────────────────────────────┴──────────┴─────────┘
+
+  Wire delay = 123.3ps (50.8%) — dominated by long uncontrolled segments
+  Cell delay = 119.2ps (49.1%) — many buffers exist because of wire length
+
+================================================================================
+  FIX #1: TIP BUFFER — par_ooo_int SIDE (M17/M18 half shield)
+  Owner: TIP team     |  ETA: ~1 week  |  Gain: +35-50ps
+================================================================================
+
+  WHY: par_ooo_int has spec=34ps but uses 140.5ps (8 buffers over 786um)
+  TIP replaces uncontrolled buffer chain with shielded, optimally-spaced repeaters
+
+  REFERENCE: rsmoclearspecstallm901h already has a TIP plan in TS25.12
+    Same direction: par_ooo_int → par_ooo_vec
+    Same boundary crossing at X≈652
+    specstall has TIP and WNS=-43ps (without TIP it was likely ~-80ps)
+
+  TIP ROUTE GEOMETRY (L-shape):
+    Point 1: (1160, 783) — near SP FF
+    Point 2: (1140, 783) — short M18 hop (20um)
+    Point 3: (1140, 505) — M17 vertical drop (278um)
+    Point 4: (440, 505)  — M18 horizontal to EP area (700um)
+    Total: ~998um controlled route
+
+  SHAPE LAYERS (from specstall reference):
+    Leg 1: M18 (~2%) — short horizontal near SP
+    Leg 2: M17 (100%) — full vertical segment
+    Leg 3: M18 (~98%) — long horizontal crossing boundary
+
+  HALF SHIELD (M17/M18):
+    layer_cutting_distance: {M18 0.5 0.5} {M17 0.5 0.5}
+    Track offsets: M17={1.140, 3.420}, M18={1.235, 3.705}
+    Blockage width: 0.2520um per shield wire
+    Effect: blocks adjacent track coupling on long M18 horizontal runs
+    Crosstalk reduction: DTrans 3.9ps → ~1ps on worst segment
+
+  REPEATERS: 5-6 mid-repeaters at ~160-180um spacing
+    Corner repeater at M18→M17 turn
+    Corner repeater at M17→M18 turn
+    3-4 mid-repeaters on long M18 horizontal segment
+    Repeater size: 1.5x height, 1.5x width multiplier
+
+  GAIN: +35-50ps
+    Removes 5 uncontrolled buffers (G3-G7)
+    Replaces with 5-6 optimally spaced/sized TIP repeaters
+    Wire segments go from 128-281um → ~160um each (controlled)
+    Half shield eliminates crosstalk delta on long runs
+
+  SPEC IMPACT ON par_ooo_int:
+    Current: 140.5ps used vs 34.0ps spec (over by 106.5ps)
+    After TIP: ~90-105ps used vs 34.0ps spec (over by 56-71ps)
+    TIP alone does NOT bring par_ooo_int within spec
+    Need de-merge (FIX #4) to meet the 34ps budget
+
+  COVERS ALL 6 ENDPOINTS (shared par_ooo_int buffer chain)
+
+================================================================================
+  FIX #2: EP FF PLACEMENT MOVE (ROBEarlyQualJumpM304H_reg)
+  Owner: par_ooo_vec  |  ETA: ~1 week  |  Gain: +15-22ps
+================================================================================
+
+  CURRENT: EP FF at (440, 357) — 360um from port (652, 505)
+  TARGET:  Move to ~(520, 470) — 167um from port
+
+  Wire reduction: 360um → 167um = 193um saved → 15-22ps
+
+  SAFETY CHECK:
+    As endpoint:   2 paths (our path × 2 icores) — BOTH benefit
+    As startpoint: 0 paths — no output timing risk
+    VERDICT: SAFE to move
+
+  NOTE: This fix only helps ROBEarlyQualJumpM304H_reg (worst EP)
+    ROMOClearStallM901H_reg and RSMOClearVM804H_reg need their own
+    placement assessment if they remain failing after TIP
+
+  SPEC IMPACT ON par_ooo_vec:
+    Current: 115.2ps used vs 134.0ps spec (under by 18.8ps)
+    After move: ~93-100ps used vs 134.0ps spec (under by 34-41ps)
+    par_ooo_vec stays well within spec ✓
+
+================================================================================
+  FIX #3: GATE UPSIZING AT EP CONE (par_ooo_vec)
+  Owner: par_ooo_vec  |  ETA: ECO  |  Gain: +5-8ps
+================================================================================
+
+  Two weak D1 gates at the endpoint:
+
+  V5: INVD1BWP156HPNPN3P48CPDULVTLL → INVD4BWP156HPNPN3P48CPDULVT
+      Cell delay: 4.3ps → ~3.0ps (save ~1.3ps)
+      Better drive for 59um wire to V6
+      Also swap ULVTLL → ULVT (remove leakage limit)
+
+  V6: OR2D1BWP156HPNPN3P48CPDLVT → OR2D4BWP156HPNPN3P48CPDULVT
+      Cell delay: 5.8ps → ~3.5ps (save ~2.3ps)
+      LVT → ULVT swap: additional ~1.0ps
+      Better drive to EP FF D pin
+
+  V1: BUFFD4BWP156HPNPN → BUFFD18BWP156HPNPN
+      Cell delay: 8.4ps → ~5.5ps (save ~2.9ps)
+      Reduces 52ps input transition at V2
+
+  Total: +5-8ps (small but free — ECO level change)
+
+================================================================================
+  FIX #4: ULVT SWAP (2 LVT cells)
+  Owner: par_ooo_vec  |  ETA: ECO  |  Gain: +3-5.5ps
+================================================================================
+
+  15 of 17 cells on path are already ULVT — only 2 LVT cells remain:
+
+  V6: OR2D1BWP156HPNPN3P48CPD*LVT* → CPD*ULVT*
+      Gain: ~1.0-1.5ps
+
+  EP FF: SDFQTXGD4BWP156HPNPN3P48CPD*LVT* → CPD*ULVT*
+      Gain: ~2-4ps (setup time improvement)
+
+  Total: +3-5.5ps
+  Cost: increased leakage (no area change)
+  Note: V6 gets ULVT in FIX #3 upsize anyway (combined with D1→D4)
+
+================================================================================
+  FIX #5: SP FF DE-MERGE (synthesis change)
+  Owner: synthesis    |  ETA: ~2 weeks  |  Gain: +20-30ps (REVISED ↓)
+================================================================================
+
+  PROBLEM: RSMOClearVM803H is packed into MB2 with RORtLdIncM904H[4]
+  These go in OPPOSITE directions — synthesis made a bad merge decision
+
+  Current MBIT:
+    Q1: RORtLdIncM904H[4] → internal/par_pmh (up/right) — 0 failing paths
+    Q2: RSMOClearVM803H    → par_ooo_vec (down/left)     — 6 failing paths!
+    Both bits forced to location (1160, 783)
+
+  *** INPUT PATH CONSTRAINT (D2 pin) — LIMITS MOVEMENT ***
+  ─────────────────────────────────────────────────────────────────────────────
+  report_timing -to .../MBIT_RSMOClearVM803H_reg/D2 shows:
+    SP:   rsbpc/RSMOClearVM802H_reg at (1008, 861)
+    EP:   our MBIT FF D2 pin at (1161, 783)
+    Slack: +38.6ps (MET) — only 38.6ps margin!
+    Last driver: BUFFSKRD4 LVT at (1162, 833) — just 50um from current FF
+    Last wire: 50um, DTrans=48.7ps, Cap=12.3fF, wire delay=27.6ps (stressed)
+
+  PLACEMENT TRADEOFF TABLE (output gain vs input path degradation):
+  ┌────────────────┬───────────┬───────────┬────────────────┬────────────────┐
+  │ FF moved to    │ Out wire  │ Out gain  │ Input loss     │ Input slack    │
+  ├────────────────┼───────────┼───────────┼────────────────┼────────────────┤
+  │ (1160,783) NOW │ 786um     │  0ps      │  0ps           │ +38.6ps  ✓     │
+  │ (1050,750)     │ ~590um    │ +15-20ps  │ ~15ps          │ +23ps    ✓     │
+  │ (1000,720)     │ ~433um    │ +25-35ps  │ ~25ps          │ +13ps    ✓     │
+  │ (900,700)      │ ~394um    │ +30-40ps  │ ~30-40ps       │ -1 to +9ps ⚠️ │
+  │ (850,600)      │ ~293um    │ +45-55ps  │ ~40-55ps       │ -16 to -1ps ✗ │
+  │ (650,505) PORT │ ~2um      │ +90-100ps │ ~60-80ps       │ -41 to -21ps ✗│
+  └────────────────┴───────────┴───────────┴────────────────┴────────────────┘
+
+  *** FINDING: (850,600) creates new -16ps violation on D2 input! ***
+  *** Safe range: (1000-1100, 700-780) — max ~250um from last driver ***
+
+  REVISED DE-MERGE ACTION:
+    Split MB2 → two single-bit FFs:
+    1. RORtLdIncM904H[4] stays at (1160, 783) — no impact
+    2. RSMOClearVM803H moves to ~(1000, 720) — safe range
+       Output: 786um → 433um = 353um saved
+       Input:  50um → 300um = 250um added (stays within 38.6ps margin)
+
+  SYNTHESIS DIRECTIVES:
+    Option A: set_dont_merge [get_cells rsrptint/RSMOClearVM803H_reg]
+    Option B: create_bound + dont_merge:
+      create_bound -name rsmo_vm803h_bound -coordinate {970 690 1030 750}
+      add_to_bound rsmo_vm803h_bound [get_cells rsrptint/RSMOClearVM803H_reg]
+
+  REVISED GAIN BREAKDOWN:
+    Wire reduction: 786um → ~433um = 353um saved (was 493um — input constrained)
+    Buffer elimination: 8 buffers → 4-5 buffers (removes 3-4 cell delays)
+    Wire delay saved: ~15-20ps
+    Cell delay saved: 3 × 6-8ps = 18-24ps
+    TOTAL: +20-30ps (was +65-90ps before D2 analysis)
+
+  SPEC IMPACT ON par_ooo_int:
+    Current: 140.5ps used vs 34.0ps spec (over by 106.5ps)
+    After de-merge alone: ~110-120ps used vs 34.0ps spec (still OVER by 76-86ps)
+    De-merge ALONE cannot meet spec — TIP is mandatory
+
+  RISKS:
+  ┌──────────────────┬──────────┬──────────────────────────────────────────┐
+  │ Risk             │ Level    │ Mitigation                               │
+  ├──────────────────┼──────────┼──────────────────────────────────────────┤
+  │ Input path slack │ *** HIGH │ D2 input has only +38.6ps margin!        │
+  │ (D2 pin)         │ ***     │ Last driver at (1162,833) = 50um away    │
+  │                  │          │ Moving >250um BREAKS D2 input path       │
+  │                  │          │ Must stay in safe range (1000-1100,700+) │
+  ├──────────────────┼──────────┼──────────────────────────────────────────┤
+  │ Area overhead    │ LOW      │ MB2 → 2× single-bit: ~10% more area     │
+  │                  │          │ for 1 FF — negligible at block level     │
+  ├──────────────────┼──────────┼──────────────────────────────────────────┤
+  │ Clock tree       │ LOW      │ New FF location needs CTS coverage       │
+  │                  │          │ (1000,720) is within par_ooo_int domain  │
+  ├──────────────────┼──────────┼──────────────────────────────────────────┤
+  │ RORtLdIncM904H[4]│ NONE    │ Stays at (1160,783) — 0 failing paths    │
+  ├──────────────────┼──────────┼──────────────────────────────────────────┤
+  │ Synth turnaround │ HIGH     │ Requires re-synthesis, ~2 weeks          │
+  │                  │          │ Cannot be done as ECO                    │
+  └──────────────────┴──────────┴──────────────────────────────────────────┘
+
+================================================================================
+  COMBINED FIX STRATEGY
+================================================================================
+
+  ┌───────────────────────────────────┬───────────┬──────────┬──────────┬──────────────┐
+  │ Fix                               │ Gain      │ Time     │ Risk     │ Cumulative   │
+  ├───────────────────────────────────┼───────────┼──────────┼──────────┼──────────────┤
+  │ #1 TIP (M17/M18 half shield)      │ +35-50ps  │ ~1 week  │ LOW      │ -37 to -22ps │
+  │ #2 EP FF placement move           │ +15-22ps  │ ~1 week  │ LOW      │ -22 to  +0ps │
+  │ #3 Gate upsize D1→D4 (V1,V5,V6)  │  +5-8ps   │ ECO      │ LOW      │ -17 to  +8ps │
+  │ #4 ULVT swap (V6 + EP FF)        │  +3-5.5ps │ ECO      │ LOW      │ -14 to +14ps │
+  │ #5 SP FF de-merge (REVISED)       │ +20-30ps  │ ~2 weeks │ HIGH     │ closes fully │
+  └───────────────────────────────────┴───────────┴──────────┴──────────┴──────────────┘
+
+  *** FIX #5 REVISED: D2 input path has only +38.6ps margin ***
+  *** Last driver at (1162,833) — FF can only move ~250um safely ***
+  *** Original +65-90ps estimate → revised +20-30ps ***
+  *** De-merge alone CANNOT close -71.6ps path ***
+
+  STRATEGY A — FAST (TIP + EP move + ECOs): +58-85.5ps
+    Slack: -71.6 → -14 to +14ps
+    Probability of closure: ~60-70%
+    Timeline: ~1 week
+
+  STRATEGY B — FULL (A + de-merge): +78-115.5ps
+    Slack: -71.6 → +6 to +44ps
+    Probability of closure: ~95%
+    Timeline: ~2 weeks
+    WARNING: D2 input path must be monitored — only 38.6ps margin
+
+  RECOMMENDATION:
+    → TIP (#1) is MANDATORY — no other fix alone is sufficient
+    → Start Strategy A immediately (TIP + EP move + ECOs)
+    → Request de-merge from synthesis team IN PARALLEL
+    → De-merge adds +20-30ps on top of TIP (not +65-90ps as originally est.)
+    → If A closes the path, cancel de-merge
+    → If A is borderline, de-merge provides additional margin
+
+================================================================================
+  SPEC PROJECTION AFTER FIXES
+================================================================================
+
+  par_ooo_int spec = 34.0ps:
+  ┌──────────────────────────────┬──────────┬───────────────────────────────┐
+  │ Scenario                     │ Used(ps) │ vs Spec                       │
+  ├──────────────────────────────┼──────────┼───────────────────────────────┤
+  │ Current (no fix)             │ 140.5    │ OVER by 106.5ps               │
+  │ After TIP only (#1)          │ 90-105   │ OVER by 56-71ps               │
+  │ After de-merge only (#5)     │ 110-120  │ OVER by 76-86ps (REVISED)     │
+  │ After TIP + de-merge (#1+#5) │ 70-85    │ OVER by 36-51ps (REVISED)     │
+  └──────────────────────────────┴──────────┴───────────────────────────────┘
+
+  *** REVISED: De-merge constrained by D2 input (only +38.6ps margin) ***
+  *** FF can only move to ~(1000,720) — not (850,600) as originally est. ***
+  *** TIP + de-merge no longer meets 34ps spec — needs spec renegotiation ***
+
+  par_ooo_vec spec = 134.0ps:
+  ┌──────────────────────────────┬──────────┬───────────────────────────────┐
+  │ Scenario                     │ Used(ps) │ vs Spec                       │
+  ├──────────────────────────────┼──────────┼───────────────────────────────┤
+  │ Current (no fix)             │ 115.2    │ UNDER by 18.8ps  ✓            │
+  │ After EP move (#2)           │ 93-100   │ UNDER by 34-41ps ✓            │
+  │ After upsize+ULVT (#3+#4)   │ 107-110  │ UNDER by 24-27ps ✓            │
+  │ After all vec fixes (#2+3+4)│ 85-93    │ UNDER by 41-49ps ✓            │
+  └──────────────────────────────┴──────────┴───────────────────────────────┘
+
+  To FULLY meet specs on BOTH partitions:
+    par_ooo_int: TIP + de-merge still OVER spec (70-85ps vs 34ps)
+                 → Spec renegotiation needed (borrow from par_ooo_vec margin)
+                 → par_ooo_vec has 18.8ps headroom → could give ~15ps
+    par_ooo_vec: already within spec, all fixes add margin
+
+================================================================================
+  SIMILAR SIGNALS — EXISTING TIP PLANS (reference)
+================================================================================
+
+  rsmoclearspecstallm901h (HAS TIP in TS25.12):
+    Same direction: par_ooo_int → par_ooo_vec
+    Port crossing: (652368, 357167) — same X, 148um lower Y
+    TIP route: L-shape (1132,555)→(1114,555)→(1114,357)→(423,357)
+    Shape layers: M18(3.7%) + M17(100%) + M18(96.3%)
+    6 repeaters, half shield {M18 0.5 0.5} {M17 0.5 0.5}
+    WNS with TIP: -43ps (would be ~-80ps without)
+
+  rsmsidmoclearvm803h (par_ooo_int → par_msid):
+    DIFFERENT path — goes to par_msid not par_ooo_vec
+    Port: (988380, 355968) → different boundary
+    Slack: +18ps — not failing
+
+================================================================================
+  END OF FIX SUMMARY
+================================================================================

@@ -1,0 +1,111 @@
+================================================================================
+  PAR_MEU — QUICK REFERENCE CARD
+  Cheat sheet for daily par_meu timing work
+================================================================================
+
+
+DAILY WORK AREA PATHS
+---------------------
+Latest daily:
+  /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_26ww10b_*
+
+STA reports (per corner):
+  .../runs/core_client/n2p_htall_conf4/sta_pt/<CORNER>/reports/
+
+MEU-specific reports:
+  reports/par_level/core_client.<CORNER>_icore0__par_meu_margins.rpt
+  reports/fct_level_slack_per_port.par_meu.<CORNER>.none.rpt
+  reports/fct_level_slack_per_port.par_meu.<CORNER>.attribute.rpt
+
+MEU specs:
+  .../runs/par_meu/n2p_htall_conf4/release/latest/timing_specs/par_meu_spec.csv
+  .../runs/par_meu/n2p_htall_conf4/release/latest/timing_specs/par_meu_spec_ft.csv
+
+MEU constraints:
+  .../runs/par_meu/n2p_htall_conf4/release/latest/constraints_mapping/
+
+Timing closure XMLs:
+  .../runs/par_meu/n2p_htall_conf4/release/latest/timing_closure/
+
+
+CORNERS (FUNC MAX = SETUP, FRESH MIN = HOLD)
+---------------------------------------------
+Most relevant for MEU setup:
+  func.max_high.T_85.typical          <-- primary WC corner
+  func.max_slow_low.S_125.cworst_CCworst_T
+  func.max_hi_hi_lo.T_85.typical
+  func.max_hi_lo_hi.T_85.typical
+
+For hold:
+  fresh.min_fast.F_125.rcworst_CCworst
+  fresh.min_fast_cold.F_M40.rcworst_CCworst
+
+
+COMMON PT CLIENT COMMANDS
+--------------------------
+# Report timing to a MEU output port (setup):
+pt_client.pl -corner func.max_high.T_85.typical \
+  "report_timing -to icore0/par_meu/mowbcheckrobidldm803h_*_[*] -max_paths 5"
+
+# Report timing from a MEU input port (setup):
+pt_client.pl -corner func.max_high.T_85.typical \
+  "report_timing -from icore0/par_meu/rslduopcodm301h_*_[*] -max_paths 5"
+
+# Check clock latency at MEU endpoint:
+pt_client.pl -corner func.max_high.T_85.typical \
+  "report_clock_timing -type latency -to [get_pins icore0/par_meu/*/CP]"
+
+# Get all failing paths in MEU:
+pt_client.pl -corner func.max_high.T_85.typical \
+  "report_timing -through icore0/par_meu/* -slack_lesser_than 0 -max_paths 50"
+
+
+CARPETDB
+--------
+Web UI for tracking par_meu ports:
+  https://carpetdb.intel.com/project/GFCN2CLIENT?port=icore0/par_meu/<signal>
+
+Tracking CSV:
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/data_meu.csv
+
+
+UARCH CP SPREADSHEET
+---------------------
+SharePoint: TheLions/PNC/Uarch CP.xlsx
+Key columns: family, owner, nor_slack, wc.slack, LOS_186, Comment
+
+
+BASEL'S MEU FAMILIES
+--------------------
+  Family          WC slack  LOS    Priority
+  803             -77ps     -30    HIGH (worst slack)
+  301H_int        -71ps     !!!!   BLOCKED (CI)
+  QSF             -61ps     -10    MEDIUM
+  200H            -60ps     -20    MEDIUM (msid clock late)
+  rspsrcm301h_int -43ps     !!!!   BLOCKED (CI)
+  800h_int        -30ps     -15    LOW (bounded, manual work)
+
+
+KEY TERMINOLOGY
+---------------
+  WNS     Worst Negative Slack (most failing path, in ps)
+  TNS     Total Negative Slack (sum of all failing paths)
+  FEP     Failing End Points (count of failing endpoints)
+  LOS     Level Of Success (target slack for a given model)
+  CI      Clock Integration (clock tree synthesis/tuning)
+  ICG     Integrated Clock Gate (clock gating cell)
+  TIP     Topology In-context Plan (.tp file for routing)
+  SIO     Spec I/O (interface spec between partitions)
+  PO      Port Owner (who owns the constraint/spec)
+  SIO2PO  Reassignment of port from one TIP cell to another
+  PRF     Physical Register File (large macro in MEU)
+  MOB     Memory Order Buffer
+  SDB     Store Data Buffer
+  ROB     Re-Order Buffer
+  RS      Reservation Station
+  FT      Feed-Through (signal passes through without terminating)
+  PBA     Path-Based Analysis (more accurate than GBA)
+  GBA     Graph-Based Analysis (default, pessimistic)
+  OCV     On-Chip Variation (derating)
+
+================================================================================

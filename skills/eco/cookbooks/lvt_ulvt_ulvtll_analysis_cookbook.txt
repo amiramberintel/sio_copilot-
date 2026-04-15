@@ -1,0 +1,344 @@
+[2m==========================================================================================[0m
+[1;37m  COOKBOOK: LVT / ULVTLL / ULVT — VT DISTRIBUTION ANALYSIS[0m
+[2m==========================================================================================[0m
+
+  [1;36mPurpose:[0m  Analyze the Vt cell distribution in a BU postCTS model,
+           estimate leakage impact, identify safe VT downswap targets,
+           and provide actionable recommendations for power optimization.
+
+  [1;36mWhen to use:[0m
+  • Comparing two models (TST vs REF) and internal paths differ a lot
+  • Power team flags leakage concerns on a partition
+  • SIO engineer wants to know how much ULVT they can safely reduce
+  • After any SIO run with aggressive timing closure (high ULVT%)
+
+  [1;36mPrerequisites:[0m
+  • BU postCTS model(s) with STA reports
+  • cell_stats.csv in the STA reports directory
+  • Internal path histogram (path_group_per_partition_histogram_internal.ind)
+  • Internal penalty histogram (path_group_histogram_internal_penalty.ind)
+
+[2m==========================================================================================[0m
+[1;37m  STEP 1 — LOCATE THE DATA[0m
+[2m==========================================================================================[0m
+
+  [1;37mModel base path:[0m
+  /nfs/site/disks/<wa>/<MODEL_NAME>.bu_postcts
+
+  [1;37mSTA path:[0m
+  <MODEL>/runs/core_client/n2p_htall_conf4/sta_pt/<CORNER>
+
+  [1;37mTypical corner:[0m
+  func.max_high.T_85.typical
+
+  [1;37mFiles needed:[0m
+
+  [1;36m1. cell_stats.csv[0m
+     Location: <STA>/reports/cell_stats.csv
+     Format:   CSV, one row per partition
+     Columns:  par,ULVT,ULVTLL,LVT,BFM,CLOCK_CELLS,TOTAL_CELLS,
+               FF,FF2,FF4,FF6,FF8,TOTAL_FF,
+               L,L2,L4,L6,L8,TOTAL_L,
+               %ULVT,%ULVTLL,%LVT,%BFM,%MB,D20,FDRD,TBFF
+
+  [1;36m2. Internal path histogram (negative slack = failing)[0m
+     Location: <STA>/reports/core_client.<CORNER>_path_group_per_partition_histogram_internal.ind
+     Format:   TSV with bins: <=0% | <=-2% | <=-5% | <=-10% | <=-20% | <=-30% | <=-50% | <=-100% | Total
+     [1;31mNOTE: Bins are NOT cumulative — each column is a separate range[0m
+
+  [1;36m3. Internal penalty histogram (positive slack = passing)[0m
+     Location: <STA>/reports/core_client.<CORNER>_path_group_histogram_internal_penalty.ind
+     Format:   TSV with bins: >=0% | >=1% | >=5% | >=10% | >=20% | >=50% | >=100% | >=150% | >=200% | Total
+     [1;31mNOTE: These are % of clock period. For 186ps clock:[0m
+            >=0% = 0-1.86ps, >=1% = 1.86-9.3ps, >=5% = 9.3-18.6ps,
+            >=10% = 18.6-37.2ps, >=20% = 37.2-93ps, >=50% = 93-186ps,
+            >=100% = 186-279ps, >=150% = 279-372ps, >=200% = 372+ps
+
+  [1;36m4. Clock latency (optional, for clock tree analysis)[0m
+     Location: <STA>/reports/check_clk_latency.<CORNER>.rpt
+     Format:   CSV — #clk_name,avg_ntwrk,avg_src
+
+[2m==========================================================================================[0m
+[1;37m  STEP 2 — EXTRACT VT DISTRIBUTION[0m
+[2m==========================================================================================[0m
+
+  [1;37mQuick command to get one partition:[0m
+
+  [1;36m# Header[0m
+  head -1 <STA>/reports/cell_stats.csv
+
+  [1;36m# Specific partition (e.g., par_meu)[0m
+  grep "par_meu" <STA>/reports/cell_stats.csv
+
+  [1;37mKey columns to extract:[0m
+
+  [1;37mColumn     │ What it is                        │ Why it matters[0m
+  [2m───────────┼───────────────────────────────────┼──────────────────────[0m
+  ULVT       │ Ultra-low Vt cell count            │ Fastest, highest leakage
+  ULVTLL     │ Ultra-low Vt LL cell count          │ Medium speed, medium leakage
+  LVT        │ Low Vt cell count                   │ Slowest, lowest leakage
+  %ULVT      │ ULVT as % of signal cells           │ Primary leakage indicator
+  %ULVTLL    │ ULVTLL as % of signal cells          │ Middle tier
+  %LVT       │ LVT as % of signal cells             │ Power-friendly cells
+  CLOCK_CELLS│ Clock buffer/inverter count          │ Dynamic power indicator
+  TOTAL_FF   │ Total flip-flop count                │ Affects clock tree size
+  FF         │ Single-bit FFs                       │ High = not banked
+  %MB        │ Multi-bit banking percentage          │ Higher = better routing
+  TBFF       │ Timing buffer flip-flops              │ Extra FFs for timing
+
+  [1;37mTypical healthy ranges:[0m
+
+  [1;37mMetric   │ Conservative │ Balanced │ Aggressive │ Too aggressive[0m
+  [2m─────────┼──────────────┼──────────┼────────────┼───────────────[0m
+  %ULVT    │  25-35%      │ 40-55%   │  55-70%    │ [1;31m>70%[0m
+  %ULVTLL  │  15-25%      │ 15-25%   │   8-15%    │ [1;31m<5%[0m
+  %LVT     │  40-60%      │ 25-40%   │  15-25%    │ [1;31m<15%[0m
+  %MB      │  25-35%      │ 35-50%   │  50-65%    │ [1;31m>65%[0m
+
+[2m==========================================================================================[0m
+[1;37m  STEP 3 — ESTIMATE LEAKAGE[0m
+[2m==========================================================================================[0m
+
+  [1;37mLeakage ratios (typical FinFET, normalized to LVT = 1.0x):[0m
+
+  [1;37mVt Type  │ Leakage ratio │ Speed          │ Notes[0m
+  [2m─────────┼───────────────┼────────────────┼────────────────────────[0m
+  LVT      │     1.0x      │ Slowest        │ Baseline for comparison
+  ULVTLL   │    ~2.0x      │ Medium         │ Range 1.5-2.5x, process dependent
+  ULVT     │    ~4.0x      │ Fastest        │ Range 3.0-5.0x, process dependent
+
+  [1;37mLeakage score formula:[0m
+  score = (ULVT_cells × 4.0) + (ULVTLL_cells × 2.0) + (LVT_cells × 1.0)
+
+  [1;37mCompare TST vs REF:[0m
+  growth% = (TST_score / REF_score - 1) × 100
+
+  [1;37mFull-chip impact:[0m
+  If partition = X% of core leakage → full chip impact = growth% × X%
+  Typical partition share: 5-15% of core leakage
+
+  [1;35mNOTE: These are rough estimates from cell counts only.[0m
+  [1;35mReal leakage depends on cell drive strengths, switching activity,[0m
+  [1;35mtemperature, voltage. Run Voltus/PTPX for exact numbers.[0m
+
+[2m==========================================================================================[0m
+[1;37m  STEP 4 — ANALYZE SLACK DISTRIBUTION[0m
+[2m==========================================================================================[0m
+
+  To know how much ULVT can be safely downswapped, we need to
+  understand how much positive slack (margin) exists.
+
+  [1;37mGet negative (failing) paths:[0m
+  grep "<PARTITION_GROUP>" <STA>/reports/core_client.<CORNER>_path_group_per_partition_histogram_internal.ind
+
+  [1;37mGet positive (passing) paths:[0m
+  grep "<CLOCK_GROUP>" <STA>/reports/core_client.<CORNER>_path_group_histogram_internal_penalty.ind
+
+  [1;37mConvert % bins to ps:[0m
+  Multiply bin boundary (%) × clock_period (ps) / 100
+
+  Example for 186ps clock:
+  >=10% bin = paths with 18.6-37.2ps positive slack
+  >=50% bin = paths with 93-186ps positive slack
+
+  [1;37mClassify paths by swap safety:[0m
+
+  [1;37mMargin    │ ULVT→ULVTLL (5-10ps) │ ULVT→LVT (15-25ps)[0m
+  [2m──────────┼──────────────────────┼────────────────────[0m
+  <10ps     │ [1;31mDO NOT TOUCH[0m          │ [1;31mDO NOT TOUCH[0m
+  10-20ps   │ [1;35m1 cell max[0m            │ [1;31mDO NOT TOUCH[0m
+  20-40ps   │ [1;36m2-3 cells[0m             │ [1;35m1 cell max[0m
+  40-90ps   │ [1;32m3-5 cells[0m             │ [1;36m1-2 cells[0m
+  90-180ps  │ [1;32m10+ cells[0m             │ [1;32m3-5 cells[0m
+  >180ps    │ [1;32mall cells[0m             │ [1;32m5+ cells[0m
+
+  [1;37mTotal swappable cells estimate:[0m
+  Sum across all bins: paths × cells_per_path × swappable_fraction
+
+  Typical: ~15 cells per path (varies by design complexity)
+
+[2m==========================================================================================[0m
+[1;37m  STEP 5 — DETERMINE TARGET %ULVT[0m
+[2m==========================================================================================[0m
+
+  [1;37mCalculate for each target:[0m
+
+  target_ulvt_cells = TOTAL_CELLS × target_pct / 100
+  cells_to_swap     = current_ULVT - target_ulvt_cells
+
+  [1;37mCheck feasibility:[0m
+  cells_to_swap ≤ total_swappable_cells?  → feasible
+  cells_to_swap > total_swappable_cells?  → too aggressive
+
+  [1;37mChoose swap path:[0m
+
+  [1;37mCondition                │ Swap path     │ Why[0m
+  [2m─────────────────────────┼───────────────┼────────────────────────────[0m
+  Moderate reduction      │ ULVT → ULVTLL │ Cheaper (5-10ps), safe
+  Need max leakage save   │ ULVT → LVT    │ 3x more leakage save per cell
+  Mixed (recommended)     │ SIO auto      │ Tool picks optimal per cell
+
+  [1;37mDecision matrix:[0m
+
+  [1;37m%ULVT target │ ULVTLL path     │ LVT path       │ Recommendation[0m
+  [2m─────────────┼─────────────────┼────────────────┼─────────────────[0m
+  60-65%       │ [1;32mEasy[0m             │ [1;32mEasy[0m            │ Either works
+  50-55%       │ [1;32mComfortable[0m      │ [1;36mOK but tight[0m    │ [1;32mPrefer ULVTLL[0m
+  45-50%       │ [1;36mOK[0m               │ [1;35mRisky[0m           │ [1;36mULVTLL only[0m
+  40-45%       │ [1;35mTight[0m            │ [1;31mToo much[0m        │ [1;35mULVTLL + allow -5ps[0m
+  <40%         │ [1;31mRisky[0m            │ [1;31mBreaks timing[0m   │ [1;31mNot recommended[0m
+
+[2m==========================================================================================[0m
+[1;37m  STEP 6 — INTERACTION WITH SIO2PO BOUNDING[0m
+[2m==========================================================================================[0m
+
+  If the model also needs IFC bounding (SIO2PO), both operations
+  eat into positive slack. They can conflict on overlapping paths.
+
+  [1;37mOverlap zone:[0m
+  Bounded FFs (IFC-facing) × internal fanout = ~3× bounded ports
+  Example: 845 bounded ports × 3 = ~2,535 affected internal paths
+
+  [1;37mCombined cost on overlapping paths:[0m
+  VT swap (ULVTLL): 5-10ps  +  Bounding: 15-35ps  =  20-45ps total
+
+  [1;31mEXECUTION ORDER MATTERS:[0m
+
+  [1;32mCORRECT ORDER:[0m
+  1. Apply SIO2PO bounding FIRST
+  2. Then set VT target and run optimization
+  3. SIO sees real slack after bounding → avoids tight paths
+
+  [1;31mWRONG ORDER:[0m
+  1. VT downswap first → eats all margin
+  2. Then bound → no margin left → paths break
+
+  [1;37mMinimum margin for both operations (with +10ps safety):[0m
+  ULVTLL path: 10ps (VT) + 25ps (bound) + 10ps = [1;37m45ps[0m
+  LVT path:    25ps (VT) + 25ps (bound) + 10ps = [1;37m60ps[0m
+
+[2m==========================================================================================[0m
+[1;37m  STEP 7 — ESTIMATE DYNAMIC POWER IMPACT[0m
+[2m==========================================================================================[0m
+
+  VT swap doesn't directly change dynamic power, but related
+  optimizations (multi-bit banking, TBFF) do:
+
+  [1;37mFactor               │ Effect on dynamic power[0m
+  [2m─────────────────────┼─────────────────────────────────────[0m
+  Fewer clock cells    │ [1;32m↓ Less clock tree switching[0m
+  Fewer FFs (banking)  │ [1;32m↓ Less FF toggle power[0m
+  MB shared clk pins   │ [1;32m↓ Less clock load per bit[0m
+  TBFF insertion       │ [1;31m↑ More cells switching[0m
+  Fewer total cells    │ [1;32m↓ Less combinational switching[0m
+
+  [1;37mClock tree = 30-40% of dynamic power.[0m
+  If clock cells reduced by 20% → ~6-8% total dynamic power savings.
+
+  [1;37mPower balance:[0m
+  • Leakage: dominated by Vt mix (ULVT = 4× vs LVT = 1×)
+  • Dynamic: dominated by clock tree size and cell count
+  • At high activity: dynamic savings help offset leakage cost
+  • At idle/low activity: leakage dominates
+
+[2m==========================================================================================[0m
+[1;37m  STEP 8 — WRITE RECOMMENDATION[0m
+[2m==========================================================================================[0m
+
+  [1;37mTemplate for Fadi / SIO owner:[0m
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │ VT OPTIMIZATION RECOMMENDATION                              │
+  │                                                             │
+  │ Current: %ULVT = ___   Leakage vs REF: +___%               │
+  │ Target:  %ULVT = ___   Leakage vs REF: +___%               │
+  │                                                             │
+  │ Swap path: ULVT → ULVTLL (preferred) / LVT / Auto          │
+  │ Cells to swap: ___,___                                      │
+  │ Available safe cells: ___,___                                │
+  │ Expected internal re-fail: ~___                              │
+  │ Net timing vs REF: -___%                                     │
+  │                                                             │
+  │ Execution order:                                             │
+  │ 1. SIO2PO bounding (if needed)                               │
+  │ 2. set_max_ulvt_percentage __ (verify cmd with SIO team)     │
+  │ 3. Run SIO optimization                                      │
+  │                                                             │
+  │ Verify with SIO team:                                        │
+  │ • Exact command to cap ULVT%                                 │
+  │ • Does tool prefer ULVTLL or LVT swap path?                  │
+  │ • Slack threshold for swap decisions                          │
+  └─────────────────────────────────────────────────────────────┘
+
+[2m==========================================================================================[0m
+[1;37m  QUICK REFERENCE — COMMAND CHEAT SHEET[0m
+[2m==========================================================================================[0m
+
+  [1;36m# Extract cell_stats for a partition[0m
+  head -1 <STA>/reports/cell_stats.csv
+  grep "<PARTITION>" <STA>/reports/cell_stats.csv
+
+  [1;36m# Compare two models[0m
+  diff <(grep "<PAR>" REF_STA/reports/cell_stats.csv) \
+       <(grep "<PAR>" TST_STA/reports/cell_stats.csv)
+
+  [1;36m# Get internal failing paths[0m
+  grep "<PAR>" <STA>/reports/core_client.<CORNER>_path_group_per_partition_histogram_internal.ind
+
+  [1;36m# Get internal passing paths (penalty = positive slack)[0m
+  grep "<CLK_GROUP>" <STA>/reports/core_client.<CORNER>_path_group_histogram_internal_penalty.ind
+
+  [1;36m# Get clock latency[0m
+  cat <STA>/reports/check_clk_latency.<CORNER>.rpt
+
+  [1;36m# Compute leakage score (python one-liner)[0m
+  python3 -c "print(ULVT*4.0 + ULVTLL*2.0 + LVT*1.0)"
+
+  [1;36m# Compute % growth[0m
+  python3 -c "print((TST_score/REF_score - 1) * 100)"
+
+[2m==========================================================================================[0m
+[1;37m  TIPS AND GOTCHAS[0m
+[2m==========================================================================================[0m
+
+  [1;35m1.[0m Histogram bins are NOT cumulative — each is a separate range.
+
+  [1;35m2.[0m %ULVT in cell_stats is based on signal cells only (excludes
+     clock cells and BFM cells). Use this for VT analysis.
+
+  [1;35m3.[0m The penalty histogram uses clock period % — convert to ps:
+     margin_ps = bin_percentage × clock_period_ps / 100
+
+  [1;35m4.[0m Leakage ratios (4x/2x/1x) are typical estimates.
+     Actual ratios are process-dependent — check with PDK team
+     for your specific process node.
+
+  [1;35m5.[0m TBFF cells show up as regular FFs in cell_stats but are
+     timing-inserted, not RTL FFs. High TBFF count = tool worked
+     hard on timing, may have area/power overhead.
+
+  [1;35m6.[0m Multi-bit banking (%MB) reduces clock tree size but locks
+     FFs into fixed groups. High %MB can cause IFC regressions
+     because boundary FFs get merged into internal banks.
+
+  [1;35m7.[0m When both VT downswap and SIO2PO bounding are needed,
+     [1;31mALWAYS bound first, then VT swap.[0m The SIO tool needs to
+     see the real slack picture after bounding.
+
+  [1;35m8.[0m Other partitions should have IDENTICAL cell_stats between
+     TST and REF if only one partition was re-optimized.
+     Check this to confirm scope of changes.
+
+  [1;35m9.[0m Dynamic power savings from fewer clock cells are real but
+     only partially offset the leakage increase from ULVT upswap.
+     At high workload activity, the net power impact is smaller.
+
+  [1;35m10.[0m Target %ULVT should be discussed with BOTH timing and
+      power teams. Typical sweet spot: [1;32m45-55%[0m for balanced results.
+
+[2m==========================================================================================[0m
+[1;36m  See also:[0m
+  • cookbooks/compare_tst_ref_cookbook.txt  — full model comparison workflow
+  • cookbooks/master_timing_fix_cookbook.txt — timing fix techniques
+  • ww12_3/par_meu_ifc_tst_vs_ref_combined_analysis.txt — example analysis
+[2m==========================================================================================[0m

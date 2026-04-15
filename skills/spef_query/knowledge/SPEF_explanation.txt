@@ -1,0 +1,201 @@
+================================================================================
+                 SPEF - Standard Parasitic Exchange Format
+================================================================================
+
+WHAT IS SPEF?
+-------------
+SPEF is an IEEE standard file format (IEEE 1481) that contains the parasitic 
+information (resistance and capacitance) of the interconnect wires in a chip 
+after routing.
+
+================================================================================
+WHAT IT CONTAINS
+================================================================================
+
+Example SPEF content:
+
+    *SPEF "IEEE 1481-2009"
+    *DESIGN "par_msid"
+    *DATE "Feb 11 2026"
+    *VENDOR "Synopsys"
+    *DIVIDER /
+    *DELIMITER :
+    *BUS_DELIMITER []
+
+    *D_NET net_12345 1.5432E-14    <-- Net total capacitance (Farads)
+    *CONN
+    *I inst1:Z O                    <-- Driver pin (Output)
+    *I inst2:A I                    <-- Receiver pin (Input)
+    *CAP
+    1 inst1:Z 5.234E-15            <-- Pin capacitance
+    2 inst2:A 3.456E-15
+    3 net_12345:1 6.742E-15        <-- Wire segment capacitance
+    *RES
+    1 inst1:Z net_12345:1 2.345    <-- Resistance in Ohms
+    2 net_12345:1 inst2:A 1.876
+    *END
+
+================================================================================
+THE PARASITICS
+================================================================================
+
+  Parasitic            Symbol    Unit     Effect on Timing
+  -------------------  ------    ------   ---------------------------------
+  Resistance (R)       Ω         Ohms     Slows signal (RC delay)
+  Capacitance (C)      F         Farads   Slows signal, increases power
+  Coupling Cap (Cc)    F         Farads   Causes crosstalk/noise
+
+How RC affects delay:
+
+                R (resistance)
+    Driver ----/\/\/\/\----+---- Receiver
+                           |
+                          === C (capacitance)
+                           |
+                          GND
+
+    Delay ≈ R × C (simplified)
+    
+    Higher R or C = Slower signal = More delay
+
+================================================================================
+SPEF CORNERS
+================================================================================
+
+Different SPEF files for different PVT (Process, Voltage, Temperature) corners:
+
+  File                                  Corner          Use Case
+  ------------------------------------  --------------  ----------------------
+  par_msid.typical_85.spef.gz           Typical R & C   Nominal analysis
+  par_msid.cworst_CCworst_125.spef.gz   Min R, Max C    Setup (max delay)
+  par_msid.rcworst_CCworst_125.spef.gz  Max R, Max C    Worst-case setup
+  par_msid.cworst_CCworst_M40.spef.gz   Min R, Max C    Cold temperature
+  par_msid.rcworst_CCworst_M40.spef.gz  Max R, Max C    Cold + worst RC
+
+Corner naming convention:
+
+  cworst    = Capacitance worst (max C, for setup analysis)
+  rcworst   = RC worst (max R and max C, worst case)
+  CCworst   = Coupling Capacitance worst (for crosstalk)
+  cbest     = Capacitance best (min C, for hold analysis)
+  125       = 125°C (hot)
+  M40       = -40°C (cold)
+  T_125     = Temperature-dependent at 125°C
+
+================================================================================
+CORNER USAGE TABLE
+================================================================================
+
+  Corner      R      C      Cc     Temp    Analysis Type
+  ---------   ----   ----   ----   -----   ------------------
+  typical     Nom    Nom    Nom    85°C    Nominal timing
+  cworst      Min    Max    Max    Hot     Setup (slow paths)
+  rcworst     Max    Max    Max    Hot     Worst setup
+  cbest       Max    Min    Min    Cold    Hold (fast paths)
+  
+  Why?
+  - Setup analysis needs SLOW paths (max delay) -> high C
+  - Hold analysis needs FAST paths (min delay) -> low C
+
+================================================================================
+EXTRACTION FLOW
+================================================================================
+
+  +-------------+      +------------------+      +--------+      +-----------+
+  | Layout      | ---> | Extraction Tool  | ---> | SPEF   | ---> | PrimeTime |
+  | (DEF/OAS)   |      | (StarRC, QRC)    |      | File   |      | STA       |
+  +-------------+      +------------------+      +--------+      +-----------+
+                              |
+                              v
+                       Extracts R, C, Cc
+                       for every net
+
+Tools that generate SPEF:
+  - Synopsys StarRC
+  - Cadence Quantus QRC
+  - Mentor Calibre xRC
+
+Tools that consume SPEF:
+  - Synopsys PrimeTime (STA)
+  - Cadence Tempus (STA)
+  - For delay calculation and timing analysis
+
+================================================================================
+FILE SIZE
+================================================================================
+
+SPEF files are VERY LARGE because they contain parasitics for every net:
+
+  par_msid example:
+  - Millions of nets
+  - Each net has multiple R and C values
+  - ~3GB compressed (.spef.gz)
+  - ~15-20GB uncompressed
+
+That's why they're always stored compressed (.gz)
+
+================================================================================
+SPEF SYNTAX REFERENCE
+================================================================================
+
+Header Section:
+  *SPEF "version"        - SPEF version
+  *DESIGN "name"         - Design name
+  *DATE "date"           - Extraction date
+  *VENDOR "tool"         - Extraction tool
+  *PROGRAM "name"        - Program name
+  *VERSION "ver"         - Program version
+  *DESIGN_FLOW "flow"    - Design flow info
+  *DIVIDER /             - Hierarchy divider character
+  *DELIMITER :           - Pin delimiter character
+  *BUS_DELIMITER []      - Bus notation characters
+  *T_UNIT 1 PS           - Time unit (picoseconds)
+  *C_UNIT 1 FF           - Capacitance unit (femtofarads)
+  *R_UNIT 1 OHM          - Resistance unit (ohms)
+  *L_UNIT 1 UH           - Inductance unit (microhenries)
+
+Net Section:
+  *D_NET netname cap     - Define net with total capacitance
+  *CONN                  - Connection section
+  *I pin dir             - Instance pin (I=input, O=output, B=bidir)
+  *P port dir            - Port pin
+  *CAP                   - Capacitance section
+  n node cap             - Node capacitance
+  n node1 node2 cap      - Coupling capacitance
+  *RES                   - Resistance section
+  n node1 node2 res      - Resistance between nodes
+  *END                   - End of net
+
+================================================================================
+KEY POINTS
+================================================================================
+
+1. SPEF is generated AFTER routing (need physical wire information)
+
+2. Different corners capture different manufacturing variations:
+   - Process variations (fast/slow transistors)
+   - Voltage variations (high/low supply)
+   - Temperature variations (hot/cold)
+
+3. Accurate SPEF = Accurate timing analysis
+
+4. SPEF annotation in PT:
+   pt_shell> read_parasitics -format spef par_msid.typical_85.spef.gz
+
+5. Without SPEF, STA uses wire load models (less accurate)
+
+================================================================================
+RELATED FILES
+================================================================================
+
+  Format    Description                      Tool
+  ------    -----------------------------    ----------------
+  SPEF      Standard Parasitic Exchange      Industry standard
+  DSPF      Detailed Standard Parasitic      More detail than SPEF
+  RSPF      Reduced Standard Parasitic       Less detail than SPEF
+  SBPF      Synopsys Binary Parasitic        Binary format (faster)
+  GPD       Gate-level Power Data            For power analysis
+
+================================================================================
+Generated: 2026-02-18
+================================================================================

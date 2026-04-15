@@ -1,0 +1,289 @@
+================================================================================
+  COMPARE TST vs REF MODEL COOKBOOK
+  IFC + Internal Timing Comparison Between Two BU Models
+================================================================================
+
+  Purpose:  Compare two BU postCTS models (e.g. private SIO model vs release)
+            to find what improved, what regressed, and generate actionable
+            SIO2PO bound list for the next iteration.
+
+  When:     • SIO delivers a private model and you need to evaluate it
+            • New release dropped and you want to compare to previous release
+            • After ECO/RCO and you want to measure the impact
+            • Any time you have two models and need a side-by-side comparison
+
+  Output:   3 report files:
+            1. *_ifc_tst_vs_ref.txt          — Port-level IFC comparison
+            2. *_ifc_tst_vs_ref_deepdive.txt  — Family-level root cause analysis
+            3. *_ifc_tst_vs_ref_combined_analysis.txt — IFC + internal + SIO2PO list
+
+================================================================================
+  REQUIRED INPUTS
+================================================================================
+
+  1. TST model full path (the model you are testing)
+     Example: /nfs/site/disks/fnaseral_wa/BU_SIO/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW12B_ver_50-CLK039.bu_postcts
+
+  2. REF model full path (the baseline you compare against)
+     Example: /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW12A_dcm_release-CLK039.bu_postcts
+
+  3. Partition to compare (e.g. par_meu, par_exe, par_pmh, ...)
+
+  4. Output directory (e.g. ww12_3/)
+
+  5. Corner (default: func.max_high.T_85.typical)
+
+================================================================================
+  DATA LOCATIONS INSIDE A BU MODEL
+================================================================================
+
+  Base STA path:
+    {MODEL}/runs/core_client/n2p_htall_conf4/sta_pt/{CORNER}/
+
+  IFC margins reports (per-partition, per-core):
+    {STA}/reports/par_level/core_client.{CORNER}_{CORE}__{PARTITION}_margins.rpt
+
+    Format per line:
+    {core}/{partition}/{signal}, {in|out}, {Negative|Positive|FeedThrough}, {slack} ps {normalized} normalized, {group}
+
+    • Negative = failing (slack < 0)
+    • Positive = passing (slack > 0)
+    • FeedThrough = pass-through path (not owned by this partition)
+
+  Internal path histograms:
+    {STA}/reports/core_client.{CORNER}_path_group_histogram_internal.ind
+    {STA}/reports/core_client.{CORNER}_path_group_per_partition_histogram_internal.ind
+
+    Format (tab-separated):
+    id | Partition | Group | <=0% | <=-2% | <=-5% | <=-10% | <=-20% | <=-30% | <=-50% | <=-100% | Total
+
+    Each column counts endpoints failing by that percentage or worse.
+
+  Timing summary XML:
+    {STA}/reports/core_client.{CORNER}_timing_summary.xml
+
+    Contains worst paths per group with slack, startpoint, endpoint,
+    partition info. Good for identifying specific worst paths.
+
+================================================================================
+  STEP-BY-STEP PROCESS
+================================================================================
+
+  STEP 1 — VERIFY BOTH MODELS EXIST AND HAVE DATA
+  ─────────────────────────────────────────────────
+  Check that both model paths exist and contain the STA results:
+    ls {TST}/runs/core_client/n2p_htall_conf4/sta_pt/{CORNER}/reports/par_level/
+    ls {REF}/runs/core_client/n2p_htall_conf4/sta_pt/{CORNER}/reports/par_level/
+
+  Verify margins reports exist for the target partition:
+    ls *_{PARTITION}_margins.rpt
+
+  Both models must have icore0 and icore1 margins for the same partition.
+
+
+  STEP 2 — PARSE IFC MARGINS (BOTH MODELS)
+  ─────────────────────────────────────────
+  For each model (TST and REF):
+    • Read icore0 and icore1 margins reports for the target partition
+    • Parse each line: extract signal name, direction, polarity, slack
+    • For Negative entries: slack = -abs(value)
+    • For Positive entries: slack = +abs(value)
+    • Keep WORST slack per signal across icore0 and icore1
+
+  Result: Two dictionaries — tst_signals{signal → slack} and ref_signals{signal → slack}
+
+
+  STEP 3 — GENERATE PORT-LEVEL IFC COMPARISON
+  ─────────────────────────────────────────────
+  Compare every signal between TST and REF:
+
+  Categories:
+    • IMPROVED:  signal was failing in both, TST slack > REF slack
+    • REGRESSED: signal was failing in both, TST slack < REF slack
+    • FIXED:     was Negative in REF, now Positive in TST (fail → clean)
+    • NEW FAIL:  was Positive in REF, now Negative in TST (clean → fail)
+    • UNCHANGED: same slack in both
+
+  Generate summary table:
+    ┌─────────────────────┬─────────┬─────────┬─────────┐
+    │                     │   REF   │   TST   │  Delta  │
+    ├─────────────────────┼─────────┼─────────┼─────────┤
+    │ Failing ports       │   XXXX  │   YYYY  │  ±ZZZZ  │
+    │ Improved            │         │         │   AAAA  │
+    │ Regressed           │         │         │   BBBB  │
+    │ Fixed (fail→clean)  │         │         │   CCCC  │
+    │ New fail (clean→fail)│        │         │   DDDD  │
+    └─────────────────────┴─────────┴─────────┴─────────┘
+
+  Generate TOP 20 improvements, TOP 20 regressions, TOP 15 new failures,
+  TOP 15 fixed signals — sorted by delta.
+
+  Output → {PARTITION}_ifc_tst_vs_ref.txt
+
+
+  STEP 4 — FAMILY-LEVEL DEEP-DIVE
+  ────────────────────────────────
+  Group signals into families (strip bus index):
+    miv2idatam803h_1__15_0_[5]  → family: miv2idatam803h
+    bypreqadrm403h_0__0_[35]   → family: bypreqadrm403h
+
+  For each family:
+    • Count failing ports in TST and REF
+    • Calculate WNS (worst negative slack) for each
+    • Calculate delta WNS
+
+  Group regressed families by PARTNER PARTITION (which partition is
+  on the other side of the IFC crossing):
+    • INPUT signals (in): partner is the SOURCE partition
+    • OUTPUT signals (out): partner is the DESTINATION partition
+
+  For top regressed families, analyze root cause:
+    • Data delay change (did the combinational path get longer?)
+    • Manhattan distance change (did cells move further apart?)
+    • Clock skew change (did clock balance shift?)
+    • Budget allocation change (did the partition budget shift?)
+
+  Output → {PARTITION}_ifc_tst_vs_ref_deepdive.txt
+
+
+  STEP 5 — INTERNAL PATH COMPARISON
+  ──────────────────────────────────
+  Parse the per-partition internal histogram indicator files:
+    {STA}/reports/core_client.{CORNER}_path_group_per_partition_histogram_internal.ind
+
+  For each partition, extract the main clock group row (e.g. mclk_meu for par_meu).
+
+  Compare TST vs REF:
+    • Total failing endpoints per partition
+    • Bucket breakdown (<=0%, <=-2%, ..., <=-100%)
+    • Which partitions changed and which stayed the same
+
+  Key insight: If only the target partition changed and others stayed flat,
+  it proves the SIO only modified that partition's placement.
+
+  Combine with IFC data for the FULL PICTURE:
+    IFC failing ports + Internal failing endpoints = Total failing
+
+
+  STEP 6 — GENERATE SIO2PO BOUND LIST
+  ────────────────────────────────────
+  For every signal family that REGRESSED in the IFC comparison:
+
+  Determine the bounding technique:
+    • INPUT signals  → D2 (bound RECEIVER FF inside target partition)
+    • OUTPUT signals → D1 (bound SOURCE FF inside target partition)
+
+  Create priority list sorted by port count (largest first).
+
+  For each entry provide:
+    • Signal family name and wildcard pattern
+    • Number of failing ports
+    • Direction (IN/OUT)
+    • Technique (D1 bound source / D2 bound receiver)
+    • Partner partition
+    • Worst 5 ports with REF slack, TST slack, delta
+    • REF slack (what it used to be — the target to recover)
+
+  Output → {PARTITION}_ifc_tst_vs_ref_combined_analysis.txt
+
+
+  STEP 7 — SUMMARY AND RECOMMENDATION
+  ────────────────────────────────────
+  Generate the final verdict:
+
+  Questions to answer:
+    1. Is the TST model net positive or negative? (total failing delta)
+    2. How big are the internal gains vs IFC regressions?
+    3. Are the improvements and regressions on different cells?
+    4. Can the regressions be fixed with SIO2PO bounding?
+    5. What is the expected result after bounding?
+
+  Recommendation template:
+    • If net positive with fixable regressions:
+      "Ship TST, file SIO2PO for P1-Pn, expected to recover X ports"
+    • If net negative:
+      "Do NOT ship TST, regressions outweigh improvements"
+    • If mixed:
+      "Need signal-by-signal analysis — some regressions may be
+       structurally linked to improvements"
+
+================================================================================
+  QUICK TRIGGER
+================================================================================
+
+  One-liner to start:
+    "compare TST {tst_path} vs REF {ref_path} for {partition} in {output_dir}"
+
+  Example:
+    "compare TST /nfs/site/disks/fnaseral_wa/BU_SIO/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW12B_ver_50-CLK039.bu_postcts
+     vs REF /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW12A_dcm_release-CLK039.bu_postcts
+     for par_meu in ww12_3/"
+
+================================================================================
+  EXAMPLE OUTPUT FILES (from par_meu WW12B ver_50 vs WW12A release)
+================================================================================
+
+  See these files as reference:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/ww12_3/par_meu_ifc_tst_vs_ref.txt
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/ww12_3/par_meu_ifc_tst_vs_ref_deepdive.txt
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/ww12_3/par_meu_ifc_tst_vs_ref_combined_analysis.txt
+
+================================================================================
+  TIPS AND NOTES
+================================================================================
+
+  • Always check INTERNAL paths, not just IFC. A model may regress 900
+    IFC ports but fix 31,000 internal paths — that's a huge net win.
+
+  • Group regressions by partner partition — this reveals the placement
+    tradeoff pattern (e.g. improving ooo_int boundary hurts exe boundary).
+
+  • The SIO2PO bound list is the actionable deliverable. Without it,
+    Fadi (or whoever owns the SIO model) won't know what to fix.
+
+  • When comparing, always use icore0 + icore1 worst — don't rely on
+    just one core. Violations can be core-specific.
+
+  • FeedThrough signals are pass-through paths owned by another partition.
+    Include them in the count but flag them separately — they may need
+    a different fix approach.
+
+  • The priority list should be sorted by port count (most ports first)
+    because SIO tools optimize in bulk — fixing 180 ports of the same
+    family is one constraint, not 180 separate ones.
+
+  • If a signal was already failing in REF and got worse in TST, it's
+    still a regression but lower priority than a NEW failure (clean→fail).
+
+  • Corner matters — func.max_high.T_85.typical is the most common
+    worst corner, but check func.max_nom and func.min_low too if the
+    user asks for multi-corner comparison.
+
+================================================================================
+  RELATED COOKBOOKS
+================================================================================
+
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/master_timing_fix_cookbook.txt
+    — After identifying regressions, use master cookbook to plan fixes
+
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/master_timing_fix_README.txt
+    — Full technique details (D1, D2 bounding explained)
+
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/icc2_eco_fix_cookbook.txt
+    — If ECO fixes are needed for the regressed signals
+
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/path_analysis_procedure.txt
+    — Deep path analysis for individual signals
+
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/daily_update_cookbook.txt
+    — Daily status reports (can be used to track model improvements over time)
+
+================================================================================
+  CHANGELOG
+================================================================================
+
+  2026-03-17  v1.0  Created from par_meu TST vs REF comparison workflow
+                    Full 7-step process: verify → parse IFC → port compare →
+                    family deep-dive → internal paths → SIO2PO list → verdict
+
+================================================================================

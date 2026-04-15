@@ -1,0 +1,32 @@
+DONT_USE CELL LIST -- PROJECT SOURCE
+=====================================
+
+The official dont_use cell list is maintained by CRT in the eou_flow_project:
+
+  LATEST:
+  /nfs/site/disks/crt_tools_061/eou_flow_project_ptl/TS2025.12_gfc_n2.8/GFC80CLIENTA0/dont_use.txt
+
+  Pattern:
+  /nfs/site/disks/crt_tools_061/eou_flow_project_ptl/<TS_VERSION>/GFC80CLIENTA0/dont_use.txt
+
+  Current version: TS2025.12_gfc_n2.8
+  Lines: 365 entries
+  Size: 22KB
+  Format: #lib cell_template reason_for_dont_use
+  Updated: 2025-02-03 by crtadm
+
+  Other steppings in same release:
+  - GFCN2CLIENTA0, GFCN2SERVERA0, BJCN2H156P48A0, etc.
+
+TIMOR'S EXPANDED LIST:
+  /nfs/site/disks/tsabek_wa01/playground/illegal_cells.txt
+  - 15,746 entries (expanded from project wildcards to explicit cell names)
+  - Adds elvt/lvtll/pnnp OD flavor reasons
+  - Used by ts_vt_swap and ts_estimate_eco_best_buffer procs
+
+USAGE IN PT SHELL:
+  The project list is loaded via ivar(libsetup,ndm_libname,dont_use)
+  in the FCT session setup. No manual sourcing needed.
+
+  For Timor's procs that need the expanded file:
+    set illegal_cells_file "/nfs/site/disks/tsabek_wa01/playground/illegal_cells.txt"

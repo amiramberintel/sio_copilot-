@@ -1,0 +1,34 @@
+#!/usr/bin/tcsh -f
+\rm aaa.nom.ref
+\rm aaa.nom.wa
+\rm aaa.hv.ref
+\rm aaa.hv.wa
+#\rm nom.ck
+#\rm hv.ck
+#\rm ref.nom.ck
+#\rm ref.hv.ck
+
+
+foreach fub (`cat /nfs/iil/disks/home01/gilkeren/${PROJ_FAMILY}_meu_fub_list`)
+#Nominal BVR diff:
+echo "$fub" `zcat $FUB_PV_ARCHIVE/$fub/cornet/$fub/nominal/tango/analysis/$fub.bvr.gz | zegrep "PV_CORNER|DATE" | replace "!" ""` >> aaa.nom.ref
+echo "$fub" `zcat collateral/tango/evrbvr/$fub.bvr.gz | zegrep "PV_CORNER|DATE" | replace "!" ""` >> aaa.nom.wa
+#cksum collateral/tango/evrbvr/$fub.bvr.gz |replace "evrbvr/" " " |item 1 2 4 >> nom.ck
+#cksum $FCT_GOLDEN/collateral/tango/evrbvr/${PROJECT}/$fub.bvr.gz | replace "evrbvr/${PROJECT}/" " "| item 1 2 4 >> ref.nom.ck
+end
+
+tkdiff aaa.nom.ref aaa.nom.wa &
+#tkdiff ref.nom.ck nom.ck &
+
+foreach fub (`cat /nfs/iil/disks/home01/gilkeren/${PROJ_FAMILY}_meu_fub_list`)
+#HighV BVR diff
+echo "$fub" `zcat $FUB_PV_ARCHIVE/$fub/cornet/$fub/highv/tango/analysis/$fub.bvr.gz | zegrep "PV_CORNER|DATE" | replace "!" ""` >> aaa.hv.ref
+echo "$fub" `zcat cornet/highv/collateral/tango/evrbvr/$fub.bvr.gz | zegrep "PV_CORNER|DATE" | replace "!" ""` >> aaa.hv.wa
+#cksum cornet/highv/collateral/tango/evrbvr/$fub.bvr.gz |replace "evrbvr/" " " |item 1 2 4 >> hv.ck
+#cksum $FCT_GOLDEN/highv/collateral/tango/evrbvr/${PROJECT}/$fub.bvr.gz |replace "evrbvr/${PROJECT}/" " "| item 1 2 4 >> ref.hv.ck
+end
+
+tkdiff aaa.hv.ref aaa.hv.wa &
+#tkdiff ref.hv.ck hv.ck &
+
+

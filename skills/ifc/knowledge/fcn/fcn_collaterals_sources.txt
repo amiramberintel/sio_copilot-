@@ -1,0 +1,60 @@
+================================================================================
+  FCN COLLATERALS SOURCES — Who Sends What
+================================================================================
+
+  This file tracks where each FCN input comes from and who to contact.
+
+=== INPUT COLLATERALS ===
+
+  Collateral          Source Person    How You Get It
+  ----------          -------------   ---------------
+  RTL Model           Basel           Email with model path
+  Clock Tag           Haya Muhsen     GFC TD daily mail
+                                      *** Take BU_FCN tag, NOT prop ***
+  HIP Tags            Maxim           Email with HIP WA path
+  TOP IO Tag          Timing team     Timing collateral (take latest)
+  hip_tags.xml        Auto-generated  Updated per HIP tag change
+  attribute.xml       fnaseral        /nfs/site/disks/fnaseral_wa/drops_GFC/
+  ctech libs          Project         /nfs/site/disks/gfc_ctech_libs/ctech/
+  UPF files           RTL model       Per-partition, from fe_collateral
+
+=== WHAT TO DO WHEN YOU GET EACH EMAIL ===
+
+  Basel's RTL email:
+    -> Update ivar(fcn,fe_model) in fcn_user_vars.tcl
+    -> This triggers a new FCN run
+
+  Maxim's HIP email:
+    -> Update ivar(fcn,hip_wa) in fcn_user_vars.tcl
+    -> If ONLY HIP changed, can use HIP writer (no full run needed)
+
+  Haya's clock tag email:
+    -> Update ivar(fcn,clock_tag) in fcn_user_vars.tcl
+    -> IMPORTANT: Use the BU_FCN tag, never the prop tag
+    -> Clock tag changes can affect FDR counts (ssh_ijtag/ijtag_tck)
+
+  Basel's contour pilot email:
+    -> Run the contour pilot flow (separate from main FCN)
+    -> Use contour pilot GUI or manual steps
+    -> Report errors back to Basel
+
+=== OUTPUT COLLATERALS (what FCN produces) ===
+
+  Output                      Consumed By        Location
+  ------                      -----------        --------
+  <par>.v.gz (netlists)       FCT daily builds   release/latest/fe_collateral/
+  <par>.upf (power intent)    FCT/PnR            release/latest/fe_collateral/
+  FDR exceptions (.tcl)       PT/FC timing       release/latest/fdr_collateral/
+  IO constraints              SIO (you!)         release/latest/sio_timing_collateral/
+  soc_hier.partial.csv        FCT hierarchy      release/latest/fe_collateral/
+  <par>.rtl2fev.tcl           FEV verification   release/latest/fe_collateral/
+
+=== ARCHIVE LOCATION ===
+
+  After fcn_commit.csh, collaterals go to:
+    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/
+
+  Tagged with: GFCA0_FCN_<run_name>
+  Separate tags for FE and FDR: -fe_tag, -fdr_tag
+
+================================================================================

@@ -1,0 +1,21 @@
+================================================================
+PATH ANALYSIS REPORT
+Date: <YYYY-MM-DD>  Partition: <par_name>  Corner: <corner>
+================================================================
+PATH: <startpoint> -> <endpoint>
+SLACK: <slack>  PERIOD: <period>  LOGIC LEVELS: <count>
+----------------------------------------------------------------
+| Stage | Cell/Net        | Delay  | Cumulative | Type    |
+|-------|-----------------|--------|------------|---------|
+| 1     |                 |        |            | launch  |
+| 2     |                 |        |            | logic   |
+| ...   |                 |        |            |         |
+----------------------------------------------------------------
+PHYSICAL:
+  Manhattan distance: <dist_um>
+  Metal layers: <M1..Mn>
+  Buffer count: <count>
+  SIO buffers: <count>
+CAN BE BOUNDED: <YES/NO>
+  Reason: <if NO, explain why>
+================================================================

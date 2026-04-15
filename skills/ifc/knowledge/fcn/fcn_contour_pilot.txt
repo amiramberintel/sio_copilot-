@@ -1,0 +1,72 @@
+================================================================================
+  FCN CONTOUR PILOT FLOW
+================================================================================
+
+=== WHAT IS CONTOUR PILOT? ===
+
+  Contour pilot is a validation run triggered by Basel's email.
+  It checks that new contour tags (design configuration bundles)
+  are compatible with the FCN flow before they go into production.
+
+  Think of it as a "dry run" to catch problems early.
+
+=== WHEN TO RUN ===
+
+  When you get a mail from Basel requesting a contour pilot check.
+  The mail contains the tags to use.
+
+=== REFERENCE WORK AREAS ===
+
+  GFC:
+    /nfs/site/disks/idc_bei_fcn/GFC/FCN/gfc_client_netlist_runs/
+      rtl26ww10b_client_contour_pilot
+
+  PNC Client:
+    /nfs/site/disks/idc_bei_fcn/PNC/FCN/pnc_netlist_runs/
+      PNCB0_FCN_rtl25ww32a_client_contour_checker/
+
+=== STEPS ===
+
+  1. Copy fcn_scripts from ref:
+     cp -rf $REF_WA/fcn_scripts/ .
+
+  2. Edit fcn_scripts/fcn_user_vars.tcl:
+     Update tags from Basel's mail
+
+  3. Run prepare:
+     fcn_prepare -run
+
+  4. Run checks:
+     $ward/fcn_scripts/fcn_check_runs.tcl
+
+  5. Review log:
+     less fcn_reports/run_check_latest/td.log
+
+  6. Report to Basel any errors found
+
+=== CONTOUR PILOT GUI ===
+
+  For convenience, use the GUI:
+    /nfs/site/disks/idc_bei_fcn/GFC/FCN/gfc_client_netlist_runs/
+      gfc_fcn_scripts_and_GUIs/contour_pilot_gui.py
+
+  Features:
+    - Tkinter-based GUI similar to fcn_gui
+    - Interactive tag/parameter configuration
+    - Automatic logging
+    - Status monitoring
+
+=== KEY DIFFERENCE FROM FULL FCN RUN ===
+
+  Contour pilot does NOT do:
+    - FDR generation (no -run_fdr)
+    - Promote/commit (no archive)
+    - FEV check
+    - Release email
+
+  It ONLY does:
+    - Synthesis (prepare + run)
+    - Check reports (td.log is the key report)
+    - Report errors to Basel
+
+================================================================================

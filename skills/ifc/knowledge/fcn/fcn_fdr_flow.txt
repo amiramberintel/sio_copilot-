@@ -1,0 +1,88 @@
+================================================================================
+  FCN FDR FLOW — FDR Generation, Merging & Min Expressions
+================================================================================
+
+=== WHAT IS FDR? ===
+
+  FDR = Formal Design Rule (also called Fast Design Rule in some contexts).
+  These are timing exceptions (false paths, multi-cycle paths) that the
+  synthesis/STA tools need to avoid false violations.
+
+  FDR exceptions tell PT/FC: "don't report timing on these paths because
+  they are functionally impossible or multi-cycle."
+
+=== FDR GENERATION (fcn_prepare -run_fdr) ===
+
+  What happens:
+    1. Runs core_client top-level job:
+       - Builds flat timing model
+       - Generates IO constraints for all partitions
+       - IO constraints: release/latest/sio_timing_collateral/
+    2. Runs 12 partition jobs (one per partition):
+       - Each runs setup_timing (apr_fc) consuming IO constraints
+       - Generates FDR exception files
+
+  FDR reports:
+    runs/<PAR>/n2p_htall_conf4/apr_fc/reports/setup_timing2/<PAR>.fdr.rpt
+
+  FDR scripts involved:
+    fcn_scripts/step_fdr_init.tcl
+      - Parses FDR/MCP-BUF modules
+      - Extracts RTL parameters
+      - Identifies FDR modules
+      - Applies user-attributes to leaf buffers
+      - Handles special DFX DB flop exceptions
+
+    fcn_scripts/step_fdr_rtl_to_be_clk_mapping.tcl
+      - Maps RTL clocks to BE (backend) clocks
+      - Creates clock mapping for timing verification
+
+=== XPV FDR EXCEPTIONS FOR PAR_PM ===
+
+  par_pm has special needs — it requires FDR exceptions from TWO corners:
+    1. func.max_nom.T_85.typical (default)
+    2. func.max_lo_hi_hi.T_85.typical (additional XPV corner)
+
+  Steps:
+    1. Run full FCN with corner: func.max_lo_hi_hi.T_85.typical
+       (same collaterals as max_nom, just different corner)
+
+    2. Merge exceptions from both corners:
+       Script: gfc_fcn_scripts_and_GUIs/fdr_exceptions_merged.py
+       Edit vars: NOM, LO_HI_HI, OUT
+       What it does:
+         - Reads base (max_nom) and LO_HI_HI FDR exception files
+         - Merges unique lines using anchored insertion strategy
+         - Outputs merged TCL with markers for added LO_HI_HI lines
+       Output: par_pm.fdr_exceptions_merged.tcl
+
+    3. Add min expressions:
+       Script: gfc_fcn_scripts_and_GUIs/fdr_exceptions_min.py
+       Edit vars: INPUT_PATH, OUTPUT_PATH
+       What it does:
+         - Post-processes merged FDR exceptions
+         - Detects redundant UCLK_EXPR and MCLK_EXPR patterns
+         - Replaces with MIN_EXPR for optimization
+       Output: par_pm.fdr_exceptions_with_min_expr.tcl
+
+  Both output files are visible in the WA root:
+    $WA/par_pm.fdr_exceptions_merged.tcl
+    $WA/par_pm.fdr_exceptions_with_min_expr.tcl
+
+=== FDR EXCEPTION FILE FORMAT ===
+
+  FDR exception files are TCL scripts that define timing exceptions.
+  They contain commands like:
+    set_false_path -from [get_clocks ssh_ijtag] -to [get_clocks ijtag_tck]
+    set_multicycle_path -setup 2 -from <start> -to <end>
+
+  These are consumed by PT/FC during timing analysis to suppress
+  false timing violations.
+
+=== FDR DELIVERABLES ===
+
+  After promote, FDR files go to:
+    release/latest/fdr_collateral/
+  And are archived with the FDR tag.
+
+================================================================================

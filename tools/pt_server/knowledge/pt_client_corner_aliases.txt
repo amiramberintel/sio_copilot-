@@ -1,0 +1,248 @@
+alias fcts_bc_cth2      "/nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl"
+
+### GFCN2CLIENTA0
+
+alias  gfcn2clienta0bmslls125cct_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_slow_low.S_125.cworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bmslls125cct   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_slow_low.S_125.cworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bmslls125cct_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_slow_low.S_125.cworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bmslls125cct0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_slow_low.S_125.cworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnlhht085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_lo_hi_hi.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnlhht085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_lo_hi_hi.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnlhht085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_lo_hi_hi.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnlhht085   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_lo_hi_hi.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnfcdfm40rcw_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_fast_cold.F_M40.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnfcdfm40rcw   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_fast_cold.F_M40.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnfcdfm40rct_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_fast_cold.F_M40.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnfcdfm40rct   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_fast_cold.F_M40.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnffff125rcw_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnffff125rcw   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnffff125rct_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnffff125rct   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnhvqf125rcw_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_hvqk.F_125.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnhvqf125rcw   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_hvqk.F_125.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnhvqf125rct_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_hvqk.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnhvqf125rct   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_hvqk.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnhhlt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_hi_hi_lo.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnhhlt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_hi_hi_lo.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnhhlt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_fresh.min_hi_hi_lo.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnhhlt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_fresh.min_hi_hi_lo.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmhigt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_high.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmhigt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmhigt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_high.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmhigt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmmedt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_med.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmmedt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_med.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmmedt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_med.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmmedt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_med.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmlowt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmlowt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmlowt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmlowt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmffff125rct_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_fast.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bmffff125rct   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_fast.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bmnomt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmnomt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmnomt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmnomt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnlowt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.min_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnlowt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.min_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnlowt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.min_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnlowt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.min_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnnomt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnnomt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnnomt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnnomt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0lmhigt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_fcl_func.max_high.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0lmhigt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_fcl_func.max_high.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0lmhigt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_fcl_func.max_high.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0lmhigt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_fcl_func.max_high.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0lmlowt085tcc_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_fcl_func.max_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0lmlowt085tcc   'fcts_bc_cth2 -m latest_gfcn2clienta0_fcl_func.max_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0lmlowt085_a   'fcts_bc_cth2 -m modela_gfcn2clienta0_fcl_func.max_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0lmlowt085   'fcts_bc_cth2 -m latest_gfcn2clienta0_fcl_func.max_low.T_85.typical    -c "\!*"'
+
+# modelb_servers
+
+alias  gfcn2clienta0bnlhht085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_lo_hi_hi.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnlhht085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_lo_hi_hi.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnlhht085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_lo_hi_hi.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnlhht0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_lo_hi_hi.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnfcdfm40rcw_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_fast_cold.F_M40.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnfcdfm40rcw0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_fast_cold.F_M40.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnfcdfm40rct_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_fast_cold.F_M40.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnfcdfm40rct0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_fast_cold.F_M40.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnffff125rcw_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnffff125rcw0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnffff125rct_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnffff125rct0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnhvqf125rcw_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_hvqk.F_125.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnhvqf125rcw0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_hvqk.F_125.rcworst_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnhvqf125rct_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_hvqk.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnhvqf125rct0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_hvqk.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bnhhlt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_hi_hi_lo.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnhhlt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_hi_hi_lo.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnhhlt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_fresh.min_hi_hi_lo.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnhhlt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_fresh.min_hi_hi_lo.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmhigt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_high.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmhigt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_high.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmhigt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_high.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmhigt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_high.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmmedt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_med.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmmedt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_med.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmmedt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_med.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmmedt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_med.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmlowt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmlowt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmlowt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmlowt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmffff125rct_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_fast.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bmffff125rct0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_fast.F_125.rcworst_CCworst_T    -c "\!*"'
+alias  gfcn2clienta0bmnomt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmnomt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bmnomt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bmnomt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnlowt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.min_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnlowt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.min_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnlowt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.min_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnlowt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.min_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnnomt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnnomt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0bnnomt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0bnnomt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0lmhigt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_fcl_func.max_high.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0lmhigt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_fcl_func.max_high.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0lmhigt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_fcl_func.max_high.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0lmhigt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_fcl_func.max_high.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0lmlowt085tcc_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_fcl_func.max_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0lmlowt085tcc0   'fcts_bc_cth2 -m prev_gfcn2clienta0_fcl_func.max_low.T_85.typical_CCworst    -c "\!*"'
+alias  gfcn2clienta0lmlowt085_b   'fcts_bc_cth2 -m modelb_gfcn2clienta0_fcl_func.max_low.T_85.typical    -c "\!*"'
+alias  gfcn2clienta0lmlowt0850   'fcts_bc_cth2 -m prev_gfcn2clienta0_fcl_func.max_low.T_85.typical    -c "\!*"'
+
+
+### PNC78CLIENTB0
+
+alias  pnc78clientb0bmnomttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmnomttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmmedttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmmedttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmhigttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmhigttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlowttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlowttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnnomttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnnomttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnhigttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnhigttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnlowttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnlowttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnfffrcffcminpcff125prc_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clientb0bnfffrcffcminpcff125prc   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+
+# modelb_servers
+
+alias  pnc78clientb0bmnomttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmnomttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmmedttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmmedttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmhigttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmhigttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlowttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlowttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnnomttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnnomttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnhigttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnhigttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnlowttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnlowttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnfffrcffcminpcff125prc_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clientb0bnfffrcffcminpcff125prc0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+
+
+
+### CGC78CLIENTA0
+
+alias  cgc78clienta0bmnomttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmnomttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_cgc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmhigttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmhigttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_cgc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+# modelb_servers
+
+alias  cgc78clienta0bmnomttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmnomttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmhigttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmhigttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+#ivnc0133> most /nfs/iil/proj/lnl/pt_server/cth2_ptserver/cth2_ptserver_root/pt_server_model_link/modela_lnlca0_bu/project/lnllnc/h169p45_80nm_tsmc_m18/pvt.tcl | g scenario_delay_type_map | item 3 | sed -s 's/{"//' | sed -s 's/"//' | g -v scenario_delay_type_map
+#{}
+#func.max_low.T_85.typical
+#func.max_nom.T_85.typical
+#func.max_nom1.S_125.cworst_CCworst
+#func.max_med.T_85.typical
+#func.max_high.T_85.typical
+#func.max_turbo.T_85.typical
+#func.max_dvfs.T_85.typical
+#func.min_low.T_85.typical
+#func.min_nom.T_85.typical
+#func.min_nom1.S_125.cworst_CCworst
+#func.min_med.T_85.typical
+#func.min_high.T_85.typical
+#func.min_turbo.T_85.typical
+#func.min_low_cold.S_M40.typical
+#func.min_nom_cold.S_M40.typical
+#func.min_high_cold.F_M40.typical
+#func.min_dvfs.T_85.typical
+#func.min_dvfs_cold.S_M40.typical
+#func.noise_low.S_M40.cworst_CCworst
+#func.noise_high.F_125.rcworst_CCworst
+
+
+#/nfs/site/stod/stod253/w.rkurtz.103/LNL/test_setup/REFLATEST-FCT20WW46D_rkurtz_sbox_ww46-CLK009.fcl/project/lnllnc/1277.2/pvt.tcl
+#lappend ivar(sta,scenario_delay_type_map) {"func.max_low.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.max_nom.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.max_med.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.max_high.TT_100.tttt"       "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.max_low.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.max_nom.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.max_med.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.max_high.TT_100.tttt"       "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.min_low.TM_100.tttt"        "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func_fresh.min_low.TM_100.tttt"  "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.min_nom.TM_100.tttt"        "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func_fresh.min_nom.TM_100.tttt"  "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.min_high.TM_100.tttt"       "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.min_low.TM_100.tttt"        "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan_fresh.min_low.TM_100.tttt"  "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.min_nom.TM_100.tttt"        "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan_fresh.min_nom.TM_100.tttt"  "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.min_high.TM_100.tttt"       "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.min_burnin.RF_110.tttt"     "min"}
+
+#ivnc0133> most /nfs/iil/proj/lnl/pt_server/cth2_ptserver/cth2_ptserver_root/pt_server_model_link/modela_lnlca0_bu/project/lnlc/h169p45_80nm_tsmc_m18/pvt.tcl | g scenario_delay_type_map | item 3 | sed -s 's/{"//' | sed -s 's/"//' | g -v scenario_delay_type_map
+#func.max_low.T_85.typical
+#func.max_nom.T_85.typical
+#func.max_med.T_85.typical
+#func.max_high.T_85.typical
+#func.max_turbo.T_85.typical
+#func.max_hi_lo_lo.T_85.typical
+#func.max_hi_hi_lo.T_85.typical
+#func.max_hi_lo_hi.T_85.typical
+#func.max_lo_lo_hi.T_85.typical
+#func.max_lo_hi_lo.T_85.typical
+#func.max_lo_hi_hi.T_85.typical
+#func.max_dvfs.T_85.typical
+#func.min_low.T_85.typical
+#func.min_high.T_85.typical
+#func.min_high_cold.F_0.typical
+#func.min_hi_lo_lo.T_85.typical
+#func.min_hi_hi_lo.T_85.typical
+#func.min_hi_lo_hi.T_85.typical
+#func.min_lo_lo_hi.T_85.typical
+#func.min_lo_hi_lo.T_85.typical
+#func.min_dvfs.T_85.typical
+#func.noise_low.S_M40.cworst_CCworst
+#func.noise_high.F_125.rcworst_CCworst

@@ -1,0 +1,41 @@
+Subject: JNC TIP tp files — need pin locations for 97 signals (quick FC script)
+
+Hi Kris / Basel,
+
+I've converted all 109 GFC tp files to JNC format (Intel 1278.6):
+  ✅ Metal layers → m15 (vert) / m16 (horiz)
+  ✅ Buffer cell → lib786_i0m_180h_50pp_ds1_ulvt/i0mbfn000qa1n36x5
+  ✅ NDR → m15_m16_2x_2w with full routing rule
+  ✅ Headers → NLIB, BUILD_DIR, CTH_SETUP from your TIP ward
+  ✅ 14 of your original JNC tp files copied directly (+ 2 JNC-only signals)
+
+The 111 files are ready at:
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/tp_file_to_JNC/jnc_converted/
+
+ONE THING NEEDED:
+The 97 signals that don't have Kris's original tp files still use GFC 
+floorplan geometry (bbox_percentage, origin coordinates, repeater offsets).
+I verified these are significantly different between GFC and JNC — so I need
+the real JNC pin locations.
+
+CAN YOU RUN THIS? (takes ~30 seconds):
+In your existing FC session where core_server.nlib is open, just run:
+
+  source /nfs/site/disks/sunger_wa/fc_data/my_learns/tp_file_to_JNC/extract_pin_locations.tcl
+
+This will dump all cross-partition pin locations + bbox percentages to:
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/tp_file_to_JNC/jnc_pin_locations.csv
+
+Once I have that CSV, I'll automatically update all 97 files with real 
+JNC geometry within minutes.
+
+If your FC session isn't open, you can also start a fresh one:
+  1. cth_psetup -proj jnc_78_server/JNC_TS2025.11.T2 -cfg jnc78servera0.cth \
+     -ward /nfs/site/disks/kknopp_wa/JNC/TIP -x '$SETUP_R2G -force -b core_server -w TIP'
+  2. fc_shell
+  3. open_block $ward/core_server.nlib:core_server
+  4. link_block
+  5. source /nfs/site/disks/sunger_wa/fc_data/my_learns/tp_file_to_JNC/extract_pin_locations.tcl
+
+Thanks!
+Shachar

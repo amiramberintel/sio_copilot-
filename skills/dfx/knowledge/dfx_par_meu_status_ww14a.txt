@@ -1,0 +1,87 @@
+par_meu DFX Status - WW14A (FCT26WW14A vs FCT26WW13A)
+======================================================
+Last updated: 2026-03-30
+Source: Maha's DFX status report
+
+SUMMARY:
+  Setup (max_high) internal IMPROVED: 348 -> 98 paths (72% reduction)
+  Hold (min_low) external IMPROVED: 670 -> 160 paths (76% reduction)
+  Hold (min_low) internal still large: 65686 paths (but REF was 85053)
+
+func.max_high (SETUP):
+  Type      TST_paths  TST_WNS  TST_TNS  REF_paths  REF_WNS  REF_TNS  Trend
+  --------  ---------  -------  -------  ---------  -------  -------  -----
+  External  17         -13ps    -129     18         -12ps    -124     ~same
+  Internal  98         -18ps    -298     348        -21ps    -1425    BETTER
+
+  Domain breakdown (internal, TST):
+    mclk:  WNS=-18ps, TNS=-616ps  (main contributor)
+    bist:  WNS=-7ps,  TNS=-134ps
+    misr:  WNS=-1ps,  TNS=-2ps
+    slos:  WNS=-7ps,  TNS=-310ps
+    clkg:  WNS=-8ps,  TNS=-92ps
+
+  Domain breakdown (external, TST):
+    mclk:  WNS=-13ps, TNS=-360ps
+    bist:  WNS=-8ps,  TNS=-160ps
+    bisr:  WNS=-8ps,  TNS=-160ps
+
+  Action items:
+    - External mclk paths through EXE: AR sent to EXE to fix
+    - PMH -> MEU paths: AR sent to MEU to fix
+
+func.min_low (HOLD):
+  Type      TST_paths  TST_WNS  TST_TNS   REF_paths  REF_WNS  REF_TNS   Trend
+  --------  ---------  -------  --------  ---------  -------  --------  -----
+  External  160        -338ps   -32844    670        -358ps   -60307    BETTER
+  Internal  65686      -417ps   -1281434  85053      -2411ps  -5220573  BETTER
+
+  Domain breakdown (external, TST):
+    bisr_ijtag: WNS=-176ps, TNS=-5424ps
+    ssh_ijtag:  WNS=-338ps, TNS=-62966ps  (worst WNS)
+    mclk:       WNS=-26ps,  TNS=-364ps
+    bist:       WNS=-26ps,  TNS=-298ps
+    misr:       WNS=-15ps,  TNS=-30ps
+    async:      WNS=-53ps,  TNS=-459ps
+
+  Domain breakdown (internal, TST):
+    ijtag_tck:  WNS=-170ps, TNS=-21709ps
+    bisr_ijtag: WNS=-55ps,  TNS=-218ps
+    ssh_ijtag:  WNS=-21ps,  TNS=-480ps
+    scanclk:    WNS=-417ps, TNS=-934569ps  (worst WNS, most paths)
+    mclk:       WNS=-137ps, TNS=-1602413ps (most TNS)
+    lcp:        WNS=-57ps,  TNS=-741ps
+    bist:       WNS=-112ps, TNS=-417059ps
+    bisr:       WNS=-18ps,  TNS=-686ps
+    misr:       WNS=-110ps, TNS=-48717ps
+    slos:       WNS=-94ps,  TNS=-231927ps
+    tap:        WNS=-52ps,  TNS=-9366ps
+    clkg:       WNS=-30ps,  TNS=-60ps
+    async:      WNS=-87ps,  TNS=-2936ps
+    saf:        WNS=-28ps,  TNS=-77ps
+
+func.max_low+CT (SETUP with common-timing OCV):
+  Type      TST_paths  TST_WNS  TST_TNS  REF_paths  REF_WNS  REF_TNS    Trend
+  --------  ---------  -------  -------  ---------  -------  --------   -----
+  External  96         -50ps    -1324    1659       -900ps   -731023    MUCH BETTER
+  Internal  380        -67ps    -3860    1786       -981ps   -500215    MUCH BETTER
+
+  Domain breakdown (external, TST):
+    mclk: WNS=-50ps, TNS=-2646ps
+    bist: WNS=-30ps, TNS=-1608ps
+
+  Action: PMH -> MEU, AR sent to MEU
+
+DFX CLOCKS PRESENT IN par_meu:
+  mclk_meu (186ps), scanclk_div_phyex (3704ps), ijtag_tck (6266ps),
+  ssh_ijtag (6266ps), ssnclk (1852ps), sbclk (2232ps), testclk (1852ps),
+  tapclk (6266ps), mclk4saf (1000ps)
+
+KEY OBSERVATIONS:
+  1. Setup (max_high) is in good shape - only 98 internal paths, WNS=-18ps
+  2. Hold (min_low) external much improved (670->160) but internal still 65K paths
+  3. max_low+CT dramatically improved (1659->96 external, 1786->380 internal)
+  4. Worst domains for par_meu: scanclk (path count), mclk (TNS), ssh_ijtag (external WNS)
+  5. ssh_ijtag will be fixed in FCT PT ECO
+  6. bisr_ijtag: BE fix by adding mux post-construction, AR still open for MEU
+  7. All non-mclk external paths fixable by PT ECO (per Maha's comment)

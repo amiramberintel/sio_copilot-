@@ -1,0 +1,64 @@
+RSMOClearVM803H Path Analysis — My Lines (sunger)
+Session: 2026-03-09 (Sunday), Israel Time
+==========================================
+
+WA: /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW11A_dcm_daily-CLK039.bu_postcts
+STA: .../runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical
+
+--- RSMOClearVM803H Path Analysis ---
+
+show me the new daily WA
+
+[pasted full PT report for new path RSMOClearVM803H and asked to start analysis]
+
+what fix options exist?
+
+what about moving SP/EP FFs to reduce 1200um distance?
+
+does SIO's request to bound rsbpc/*RSMOClearVM802H_* closer to port at X=110 Y=160 help our path?
+
+--- RSMOClearVM803H Fix Summary & TIP ---
+
+what about TIP bound commands for constraining FF placement to TIP routing?
+
+can you create the TIP file with the placement change
+
+did you use the move object in this tip file?
+
+in previous tp file we use the 50% 50% and then move object to the real placement
+
+we have this cookbook for TIP /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/TIP_tp_creation_cookbook.txt do we need to update it?
+
+yes
+
+after move_objects we must update the buffers, are we doing it? need to update this cookbook?
+
+great, do we need to recreate the TIP file /nfs/site/disks/sunger_wa/fc_data/my_learns/RSMOClearVM803H/rsmoclearvm803h.tp
+
+can we also create short version of the RSMOClearVM803H_fix_summary.txt RSMOClearVM803H_fix_short_summary.txt and short RSMOClearVM803H_fix_short_summary.sh?
+
+let's add the TIP file /nfs/site/disks/sunger_wa/fc_data/my_learns/RSMOClearVM803H/rsmoclearvm803h.tp also to the short summary, make clear that this tp file is for the new placement
+
+--- D2 Input Path Analysis & De-merge Revision ---
+
+if we will do only SP FF de-merge (synthesis) │ +65-90ps │ ~2 wk │ MEDIUM │ par_ooo_int not any other fixes can we solve this path?
+
+let's review it in more details, if it lands close to port (~650,505) will it create new issues? how much the slack will be?
+
+no, can you check the input D-pin path?
+
+[pasted full PT report: report_timing -to .../MBIT_RSMOClearVM803H_reg/D2 — 38.6ps slack]
+
+yes
+
+what about the .sh file, also updated?
+
+--- Demo & Documentation ---
+
+thanks, I want to create a file that captures our conversation today, I need to show demo for path analysis flow, can you do it?
+
+can we create one more txt file just with all what I was writing during this analysis, only my lines, simple txt file with all my lines
+
+==========================================
+END OF SESSION LINES
+==========================================

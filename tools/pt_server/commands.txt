@@ -1,0 +1,20 @@
+# PT Server -- Most-Used Commands (via pt_client.pl)
+
+# Timing queries
+report_timing -through <hier_path> -max_paths 10
+report_timing -from <startpoint> -to <endpoint> -pba_mode path
+report_timing -through <signal> -path_type full_clock_expanded
+get_timing_paths -through <signal> -max_paths 1000
+
+# Cell/net queries
+get_attribute [get_cells <cell>] ref_name
+get_attribute [get_cells <cell>] threshold_voltage_group
+get_attribute [get_nets <net>] total_capacitance
+get_attribute [get_pins <pin>] actual_rise_transition_max
+
+# Design info
+get_designs
+report_clock_timing -type summary
+
+# Examples
+sg soc -c "pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical -c 'report_timing -through icore0/par_meu/signal_name -max_paths 5'"

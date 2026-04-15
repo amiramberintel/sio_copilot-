@@ -1,0 +1,98 @@
+
+-I- MODE:  func.max_high.T_85.typical
+-I- MODEL: /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW13A_dcm_release-CLK048.bu_postcts/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/outputs/core_client.pt_session.func.max_high.T_85.typical
+
+Warning: AOCVM path-based analysis can take a long time if path-specific slew propagation is also performed. (UITE-487)
+****************************************
+Report : timing
+	-path_type full_clock_expanded
+	-delay_type max
+	-nosplit
+	-slack_lesser_than 0.000
+	-max_paths 20
+	-pba_mode path
+	-sort_by slack
+Design : core_client
+Version: V-2023.12-SP5-5-VAL-20260115
+Date   : Wed Mar 25 04:12:57 2026
+****************************************
+
+Report timing status: Started...
+
+  Startpoint: icore0/par_pmh/dcu_l1/dcl1data/auto_vector_MBIT_DcL1RdDataIntM408H_reg_0__1__74__MBIT_DcL1RdDataIntM408H_reg_0__1__76__MBIT_DcL1RdDataIntM408H_reg_0__1__77__MBIT_DcL1RdDataIntM408H_reg_0__1__78_/CP (rising edge-triggered flip-flop clocked by mclk_pmh)
+  Endpoint: icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd21/auto_vector_MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__0__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__1__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__2__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__3__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__4__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__5__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__6__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__7_/D2 (rising edge-triggered flip-flop clocked by mclk_meu)
+  Path Group: mclk_meu
+  Path Type: max  (recalculated)
+  Sigma: 4.4
+
+       Mean       Sensit     Incr         Path       Point
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        0.000                 0.000        0.000     clock mclk_pmh (rise edge)
+        0.000      0.000      0.000        0.000     clock source latency
+        0.000      0.000      0.000        0.000 r   icore0/par_pmh/par_pmh_glbdrv_par_mclk_pmh/glbdrv_Par_Mclk_PMH/CLKIN (DCCKSLNQCWM11M2P34ITLICMD20BWP156HPNPN3P48CPDULVT)
+       17.589      0.121     18.123 &     18.123 r   icore0/par_pmh/par_pmh_glbdrv_par_mclk_pmh/glbdrv_Par_Mclk_PMH/CLKOUT (DCCKSLNQCWM11M2P34ITLICMD20BWP156HPNPN3P48CPDULVT)
+       10.318      0.151     10.633 &     28.756 r   icore0/par_pmh/dcu_l1/dcl1data/l1_icg_0__core_icg_ClkL1DatMH_Slice__0_/ctech_lib_clk_gate_te_ctech_lib_clk_gate_te_dcszo_clone_clone/Q (CKLNQOPTBBD10BWP156HPNPN3P48CPDULVT)
+       10.727      0.106     10.846 &     39.602 f   icore0/par_pmh/dcu_l1/dcl1data/CTS_ccl_inv_02209/ZN (CKND10BWP156HPNPN3P48CPDULVT)
+       15.516      0.149     15.716 &     55.318 r   icore0/par_pmh/dcu_l1/dcl1data/CTS_ccl_inv_02128/ZN (CKND7BWP156HPNPN3P48CPDULVT)
+        8.604      0.188      8.862 &     64.180 r   icore0/par_pmh/dcu_l1/dcl1data/l1_sample407_slice_0__core_icg_ClkRd4084MH_Slice__0_/ctech_lib_clk_gate_te_ctech_lib_clk_gate_te_dcszo_clone_clone_1_clone_clone_1/Q (CKLNQD5BWP156HPNPN3P48CPDULVT)
+        7.953      0.117      8.039 &     72.219 r   icore0/par_pmh/dcu_l1/dcl1data/l1_sample407_slice_0__core_icg_ClkRd4084MH_Slice__0_/lcp_rcb_buffer_1345_clone_clone_1_clone_clone_1/CLKOUT (CKRCBBUFFITLICMD5BWP156HPNPN3P48CPDULVT)
+        5.238      0.072      5.270 &     77.490 f   icore0/par_pmh/dcu_l1/dcl1data/CTS_ccl_a_inv_01154/ZN (CKND7BWP156HPNPN3P48CPDULVT)
+        7.165      0.079      7.203 &     84.693 r   icore0/par_pmh/dcu_l1/dcl1data/CTS_ccl_a_inv_00266/ZN (CKND9BWP156HPNPN3P48CPDULVT)
+        2.384      0.000      2.384 &     87.077 r   icore0/par_pmh/dcu_l1/dcl1data/auto_vector_MBIT_DcL1RdDataIntM408H_reg_0__1__74__MBIT_DcL1RdDataIntM408H_reg_0__1__76__MBIT_DcL1RdDataIntM408H_reg_0__1__77__MBIT_DcL1RdDataIntM408H_reg_0__1__78_/CP (MB4SRLSDFQTXG1221M2P30ITLD3BWP156HPNPN3P48CPDULVT)
+       20.331      0.373     21.023 &    108.100 f   icore0/par_pmh/dcu_l1/dcl1data/auto_vector_MBIT_DcL1RdDataIntM408H_reg_0__1__74__MBIT_DcL1RdDataIntM408H_reg_0__1__76__MBIT_DcL1RdDataIntM408H_reg_0__1__77__MBIT_DcL1RdDataIntM408H_reg_0__1__78_/Q1 (MB4SRLSDFQTXG1221M2P30ITLD3BWP156HPNPN3P48CPDULVT)
+        7.145      0.131      7.213 &    115.313 f   icore0/par_pmh/dcu_l1/dcl1data/invs_place_FE_OCPC575656_DcL1RdDataIntM408H_0__1__74/Z (BUFFSR2SKFBFYDHD10BWP156HPNPN3P48CPDULVT)
+       11.007      0.258     11.260 &    126.573 f   icore0/par_pmh/dcu_l1/dcl1data/l1_syndrome_slice_0__l1_syndrome_ecc_1__dcl1_dat_hmatrix/invs_place_FE_RC_98897_0/Z (XOR2TXGNBFITLICMD1BWP156HPNPN3P48CPDULVT)
+       12.731      0.280     12.993 &    139.565 r   icore0/par_pmh/dcu_l1/dcl1data/l1_syndrome_slice_0__l1_syndrome_ecc_1__dcl1_dat_hmatrix/invs_cts_FE_RC_185243_0/Z (XOR3NBFITLICMD4BWP156HNPPN3P48CPDULVT)
+        8.044      0.164      8.131 &    147.696 r   icore0/par_pmh/dcu_l1/dcl1data/l1_syndrome_slice_0__l1_syndrome_ecc_1__dcl1_dat_hmatrix/invs_cts_FE_RC_178718_0/Z (XOR3NBFITLICMD2BWP156HPNPN3P48CPDULVT)
+       12.840      0.185     12.949 &    160.646 f   icore0/par_pmh/dcu_l1/dcl1data/l1_syndrome_slice_0__l1_syndrome_ecc_1__dcl1_dat_hmatrix/invs_cts_FE_RC_178895_0/Z (XOR4NBFITLICMD2BWP156HPNPN3P48CPDULVT)
+        8.632      0.151      8.703 &    169.349 f   icore0/par_pmh/dcu_l1/dcl1data/n0019D43409/Z (AN2D16BWP156HNPPN3P48CPDULVT)
+       16.145      0.208     16.274 &    185.623 f   icore0/par_pmh/dcu_l1/dcl1data/invs_route_opt_FE_PSBC646963_DcL1SyndromeBistM408H_0__1__2/Z (BUFFSR2BFYD10BWP156HNPPN3P48CPDULVT)
+        4.145      0.069      4.154 &    189.777 r   icore0/par_pmh/dcu_l1/dcl1data/l1_class_slice_0__l1_class_ecc_1__dcl1_dat_corr/invs_place_FE_OFC304693_DcL1SyndromeBistM408H_0__1__2/ZN (INVSKRD10BWP156HNPPN3P48CPDULVT)
+        6.587      0.091      6.610 &    196.387 r   icore0/par_pmh/dcu_l1/dcl1data/l1_class_slice_0__l1_class_ecc_1__dcl1_dat_corr/invs_cts_FE_OCPC628929_invs_place_FE_DBTN1331_DcL1SyndromeBistM408H_0__1__2/Z (BUFFREPM2P30ITLICMD6BWP156HNPPN3P48CPDULVT)
+        3.860      0.087      3.881 &    200.268 f   icore0/par_pmh/dcu_l1/dcl1data/l1_class_slice_0__l1_class_ecc_1__dcl1_dat_corr/invs_place_FE_RC_133173_0/ZN (INVSKROD4BWP156HPNPN3P48CPDULVT)
+        3.976      0.083      3.996 &    204.264 r   icore0/par_pmh/dcu_l1/dcl1data/l1_class_slice_0__l1_class_ecc_1__dcl1_dat_corr/invs_place_FE_RC_133171_0/ZN (ND3D6BWP156HNPPN3P48CPDULVT)
+        6.794      0.105      6.825 &    211.089 f   icore0/par_pmh/dcu_l1/dcl1data/l1_class_slice_0__l1_class_ecc_1__dcl1_dat_corr/p0002D43821/ZN (NR3SKRLPOD8BWP156HNPPN3P48CPDULVT)
+       10.625      0.139     10.678 &    221.766 r   icore0/par_pmh/dcu_l1/dcl1data/l1_class_slice_0__l1_class_ecc_1__dcl1_dat_corr/p0001D43556/Z (XOR2D6BWP156HNPPN3P48CPDULVT)
+        8.021      0.081      8.038 &    229.805 r   icore0/par_pmh/dcl1rddatam408h_5__0__0__0__1__inv_1/Z (BUFFSR2SKRBFYDHD14BWP156HPNPN3P48CPDULVT)
+       12.741      0.106     12.772 &    242.577 r   icore0/par_pmh/dcl1rddatam408h_5__0__0__0__1__inv_2/Z (BUFFSR2SKRBFYDHD14BWP156HPNPN3P48CPDULVT)
+       10.705      0.111     10.738 &    253.315 r   icore0/par_pmh/invs_route_opt_FE_PDC644411_dcl1rddatam408h_5__0__0__0__1/Z (BUFFSR2BFYD6BWP156HNPPN3P48CPDULVT)
+       30.654      0.612     31.550 &    284.865 r   icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd21/p0009A168301/Z (AO22D2BWP156HPNPN3P48CPDLVT)
+        0.611      0.000      0.611 &    285.476 r   icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd21/auto_vector_MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__0__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__1__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__2__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__3__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__4__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__5__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__6__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__7_/D2 (MB8SRLSDFQTXG2442M2P30ITLD1BWP156HPNPN3P48CPDLVT)
+                                         285.476     data arrival time
+
+      186.000               186.000      186.000     clock mclk_meu (rise edge)
+        0.000      0.000      0.000      186.000     clock source latency
+        0.000      0.000      0.000      186.000 r   icore0/par_meu/par_meu_glbdrv_par_mnsclk_meu/glbdrv_par_mnsclk_meu_c7/CLKIN (DCCKSLNQCWM11M2P34ITLICMD20BWP156HPNPN3P48CPDULVT)
+       18.232      0.119     17.707 &    203.707 r   icore0/par_meu/par_meu_glbdrv_par_mnsclk_meu/glbdrv_par_mnsclk_meu_c7/CLKOUT (DCCKSLNQCWM11M2P34ITLICMD20BWP156HPNPN3P48CPDULVT)
+        9.923      0.150      9.605 &    213.312 r   icore0/par_meu/dcu_l0/dcbdatan/core_icg_ClkL1IslandMH_0__ctech_lib_clk_gate_te_ctech_lib_clk_gate_te_dcszo_clone_clone_clone_clone_1/Q (CKLNQD12BWP156HPNPN3P48CPDULVT)
+        4.834      0.049      4.807 &    218.118 f   icore0/par_meu/dcu_l0/CTS_ccl_inv_249499/ZN (CKND10BWP156HPNPN3P48CPDULVT)
+        6.136      0.049      6.109 &    224.228 r   icore0/par_meu/dcu_l0/CTS_ccl_inv_249490/ZN (CKND12BWP156HPNPN3P48CPDULVT)
+       10.488      0.157     10.252 &    234.480 f   icore0/par_meu/dcu_l0/CTS_idc_inv_253668/ZN (CKND4BWP156HPNPN3P48CPDULVT)
+        7.095      0.107      7.002 &    241.481 r   icore0/par_meu/dcu_l0/CTS_ccl_inv_248649/ZN (CKND4BWP156HPNPN3P48CPDULVT)
+       11.927      0.295     11.369 &    252.850 r   icore0/par_meu/dcu_l0/dcbdatan/fillclk_0__core_icg_ClkWSBWr4094MH_slc__0__ctech_lib_clk_gate_te_ctech_lib_clk_gate_te_dcszo_clone_clone_clone_1_clone_clone/Q (CKLNQD4BWP156HPNPN3P48CPDULVT)
+        4.048      0.087      4.007 &    256.857 f   icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd30/CTS_cdb_inv_525220/ZN (CKND4BWP156HPNPN3P48CPDULVT)
+        3.043      0.051      3.029 &    259.887 r   icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd30/CTS_cdb_inv_525221/ZN (CKND4BWP156HPNPN3P48CPDULVT)
+        8.228      0.178      8.069 &    267.956 r   icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd30/CG_RC_CG_HIER_INST92_RC_CGIC_INST_clone_clone_clone_clone_clone_1_clone_clone_1/Q (CKLNQD4BWP156HPNPN3P48CPDULVT)
+        7.051      0.112      6.992 &    274.947 f   icore0/par_meu/dcu_l0/dcdatabufd/CTS_ccl_inv_246629/ZN (CKND4BWP156HPNPN3P48CPDULVT)
+        8.433      0.147      8.333 &    283.280 r   icore0/par_meu/dcu_l0/dcdatabufd/CTS_ccl_inv_244898/ZN (CKND4BWP156HPNPN3P48CPDULVT)
+        9.209      0.149      9.111 &    292.391 f   icore0/par_meu/dcu_l0/dcdatabufd/CTS_ccl_inv_241404/ZN (CKND4BWP156HPNPN3P48CPDULVT)
+        7.317      0.101      7.273 &    299.664 r   icore0/par_meu/dcu_l0/dcdatabufd/CTS_ccl_a_inv_234526/ZN (CKND6BWP156HPNPN3P48CPDULVT)
+        1.621      0.000      1.621 &    301.285 r   icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd21/auto_vector_MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__0__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__1__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__2__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__3__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__4__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__5__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__6__MBIT_WSBDataArrayMnnnH_reg_0__0__0__0__7_/CP (MB8SRLSDFQTXG2442M2P30ITLD1BWP156HPNPN3P48CPDLVT)
+        0.000      0.000      0.000      301.285     clock reconvergence pessimism
+      -12.000               -12.000      289.285     inter-clock uncertainty
+       -4.411      1.408     -8.720      280.565     library setup time
+      287.173      1.502                 280.565     data required time
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      287.173      1.502                 280.565     data required time
+     -281.089      0.997                -285.476     data arrival time
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                              3.073       -1.838     statistical adjustment
+        6.084      1.800                  -1.838     slack (VIOLATED)
+
+  ---------------------------------------------------
+  normalization delay                   186.000
+  normalized slack                       -0.010
+
+
+Report timing status: Completed...
+1

@@ -1,0 +1,17 @@
+================================================================
+MULTI-CORNER REPORT: <par_name> -- <date>
+Build: <build_tag>
+================================================================
+| Corner               | WNS     | TNS     | FEP | Worst Family  |
+|----------------------|---------|---------|-----|---------------|
+| func.max_high        |         |         |     |               |
+| func.max_med         |         |         |     |               |
+| func.max_low         |         |         |     |               |
+| func.max_nom         |         |         |     |               |
+| func.min_low         |         |         |     |               |
+| func.min_high        |         |         |     |               |
+| fresh.min_fast       |         |         |     |               |
+----------------------------------------------------------------
+LIMITING CORNER: <corner>  (worst WNS across all)
+HOLD LIMITING:   <corner>  (worst hold WNS)
+================================================================

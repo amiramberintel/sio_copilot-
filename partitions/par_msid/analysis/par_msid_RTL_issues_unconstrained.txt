@@ -1,0 +1,176 @@
+================================================================================
+        par_msid RTL-RELATED UNCONSTRAINED SIGNALS - Analysis Report
+================================================================================
+
+LOCATION: /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_msid/sta_primetime/GOLDEN/
+CORNER:   func.max_high.T_85.typical
+
+================================================================================
+                              SUMMARY BY ROOT CAUSE
+================================================================================
+
+                                                    RTL      SPEC/SDC
+  Issue Type                              Count    Issue?   Issue?
+  ------------------------------------    -----    ------   ---------
+  DES-012: Port Direction Mismatch        54       YES      -
+  Feedthrough (no register in path)       14       YES      -
+  No Driving Cell (inputs)               434       NO       YES
+  Unconstrained Endpoints (outputs)      370       NO       YES
+  No Input Delay (inputs)                450       NO       YES
+  ------------------------------------    -----    ------   ---------
+  RTL ISSUES TOTAL                        68
+  SPEC/SDC ISSUES TOTAL                 1254
+
+================================================================================
+       CATEGORY 1: RTL ISSUES (Design Problems - Need RTL Fix)
+================================================================================
+
+-----------------------------------------------------------------------
+DES-012 ERRORS: PORT DIRECTION MISMATCH (54 ports)
+-----------------------------------------------------------------------
+
+PROBLEM: Timing spec defines set_output_delay on an INPUT port (or vice versa)
+         This means RTL port direction doesn't match the spec file
+
+AFFECTED SIGNALS:
+  - ifclipm105h_0_[5:56] (52 bits) - Trying set_output_delay on INPUT
+  - ildpipectlforfem100h_enablestage103to104 - input/output mismatch  
+  - ifissueuopvm103h - input/output mismatch
+
+ROOT CAUSE:
+  The timing spec CSV file has these as OUTPUTS, but in the RTL/netlist
+  they are defined as INPUTS. This is an RTL vs Spec mismatch.
+
+ACTION REQUIRED:
+  1. Check RTL definition of ifclipm105h signal
+  2. Check spec file (par_msid_spec.csv) for ifclipm105h direction
+  3. Either fix RTL or fix spec file to match
+
+TO DEBUG IN PT:
+  pt_shell> get_ports ifclipm105h_0_[5] -attributes direction
+  # Should show "in" or "out"
+
+-----------------------------------------------------------------------
+FEEDTHROUGH PATHS: NO REGISTER IN PATH (14 signals)
+-----------------------------------------------------------------------
+
+PROBLEM: Signals that pass directly from input to output with no flip-flop
+         These create combinational paths that can't be constrained normally
+
+AFFECTED SIGNALS (OUTPUTS - unconstrained endpoint):
+  - core_rf_bisr_chain_clk__FEEDTHRU_1  (BISR clock feedthrough)
+
+AFFECTED SIGNALS (INPUTS - no input delay):
+  - RAWhisperPsvRstrEvM203H_[0:11]__FEEDTHRU_0 (12 bits - DFX whisper)
+  - dfx_sfe_vsense_ooo_vec__FEEDTHRU_0 (DFX voltage sense)
+
+ROOT CAUSE:
+  These are intentional feedthrough signals in RTL - they pass through
+  the partition without registering. The naming "_FEEDTHRU_" indicates
+  this was done intentionally during synthesis/place-and-route.
+
+  This is NOT necessarily an RTL bug - may be intentional for:
+  - BISR chain clock distribution
+  - DFX/debug signals that need direct access
+  - Voltage sensing analog signals
+
+ACTION REQUIRED:
+  1. Verify these feedthroughs are intentional (check RTL spec)
+  2. Add feedthrough constraints in SDC:
+     set_max_delay -from [get_ports *FEEDTHRU_0] -to [get_ports *FEEDTHRU_1]
+  3. Or add virtual clock constraints for feedthrough timing
+
+================================================================================
+       CATEGORY 2: NOT RTL ISSUES (Spec/SDC Problems)
+================================================================================
+
+These are NOT RTL problems - they are missing timing specifications:
+
+-----------------------------------------------------------------------
+NO DRIVING CELL: 434 input ports
+-----------------------------------------------------------------------
+
+These inputs don't have set_driving_cell defined. This affects transition
+time calculation but does NOT indicate RTL problem.
+
+EXAMPLE PORTS:
+  - bptakenm124h[*]           - BPU interface
+  - cslimitcm107h[*]          - CS limit register
+  - bpurepairbiqm807h_*       - BPU repair
+  - badbitnqm106h             - Bad bit indicator
+
+ACTION: Add set_driving_cell in SDC (not RTL fix needed)
+
+-----------------------------------------------------------------------
+NO INPUT/OUTPUT DELAY: 820 ports  
+-----------------------------------------------------------------------
+
+Missing set_input_delay or set_output_delay constraints.
+These are SPEC FILE issues, not RTL issues.
+
+See: par_msid_unconstrained_signals_report.txt for full categorization
+
+================================================================================
+                      HOW TO IDENTIFY RTL ISSUES
+================================================================================
+
+1. DES-012 ERRORS - Port direction mismatch
+   Command: grep "DES-012" report_error_warning.rpt
+   Fix: Compare RTL port list with spec file
+
+2. UNDRIVEN OUTPUTS - Output ports not driven by any logic
+   Command: pt_shell> report_port -unconnected
+   Fix: Check RTL for missing assignments
+
+3. UNLOADED INPUTS - Input ports not used by any logic  
+   Command: pt_shell> report_port -unconnected
+   Fix: Check RTL for unused inputs (may be intentional)
+
+4. FEEDTHROUGH - No register in path
+   Look for: *_FEEDTHRU_* in port names
+   Fix: Verify intentional or add missing registers
+
+5. FLOATING NETS - Nets with no driver
+   Command: pt_shell> all_fanin -flat -to [all_registers] -trace_arcs all
+   Fix: RTL assignment missing
+
+================================================================================
+                      PRIORITY ACTIONS FOR par_msid
+================================================================================
+
+HIGH PRIORITY (RTL Issues):
+  [ ] Investigate ifclipm105h port direction (52 bits affected)
+  [ ] Investigate ifissueuopvm103h direction
+  [ ] Investigate ildpipectlforfem100h_enablestage103to104 direction
+
+MEDIUM PRIORITY (Feedthrough):
+  [ ] Verify BISR feedthrough is intentional
+  [ ] Verify RAWhisper feedthrough is intentional
+  [ ] Add feedthrough timing constraints if needed
+
+LOW PRIORITY (Spec/SDC):
+  [ ] Add missing input/output delays (820 ports)
+  [ ] Add driving cells (434 ports)
+
+================================================================================
+                      COMMANDS TO INVESTIGATE
+================================================================================
+
+# In PT shell, check port direction:
+pt_shell> get_attribute [get_ports ifclipm105h_0_*] direction
+
+# Check if port is connected:
+pt_shell> all_fanout -from [get_ports ifclipm105h_0_[5]]
+pt_shell> all_fanin -to [get_ports ifclipm105h_0_[5]]
+
+# Find unconnected ports:
+pt_shell> set unconnected [get_ports -filter "direction==in && fanout_load==0"]
+pt_shell> set undriven [get_ports -filter "direction==out && actual_fanin_load==0"]
+
+# Check specific feedthrough path:
+pt_shell> report_timing -from [get_ports RAWhisperPsvRstrEvM203H_0___FEEDTHRU_0] \
+                        -to [get_ports *FEEDTHRU_1]
+
+================================================================================
+Generated: $(date '+%Y-%m-%d')
+================================================================================

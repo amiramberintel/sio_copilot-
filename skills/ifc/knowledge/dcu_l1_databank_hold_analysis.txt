@@ -1,0 +1,728 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║         DCU L1 DATABANK — HOLD TIMING CLOSURE ANALYSIS                     ║
+║         par_pmh → par_meu  |  mclk_pmh → mclk_meu                         ║
+║                                                                            ║
+║  Source: Alex PTECO WW12A ECO run (core_client_260315_ww11)                ║
+║         + Live PT server queries (modelb, func.min_nom / func.max_high)    ║
+║  Date:  WW13 analysis                                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 1.  EXECUTIVE SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  TOTAL UNFIXABLE PATHS:  1,230  (all par_pmh → par_meu, DcL1RdData → WSBDataArray)
+  SEVERITY:               CRITICAL — largest single bottleneck in PTECO
+  ROOT CAUSE:             +143ps capture-vs-launch clock skew
+  
+  KEY NUMBERS:
+  ┌──────────────────────────────────────────────────────────────┐
+  │  Hold slack range:  -27.4ps (worst) to -0.0ps (best)        │
+  │  Median hold slack: -4.2ps                                  │
+  │  Setup slack range: -12.5ps (worst) to +21.1ps (best)       │
+  │  Clock skew:        +133 to +202ps (capture AFTER launch)   │
+  │                                                              │
+  │  Paths fixable by buffer alone:      698 / 1230  (56.7%)    │
+  │  Paths failing BOTH hold & setup:    184 / 1230  (15.0%)    │
+  │  Paths needing clock intervention:   532 / 1230  (43.3%)    │
+  └──────────────────────────────────────────────────────────────┘
+
+  VERDICT: Cannot fix with data-path ECO alone. 
+           Need clock tree rebalancing OR SIO2PO bounds OR RTL restructure.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2.  ARCHITECTURE — THE PATH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  FUNCTIONAL PATH:   L1 Data Cache Read → Write-Side Buffer (WSB) Databank
+  
+  ┌─────────────────┐     ┌────────────┐     ┌──────────────────┐
+  │  par_pmh         │     │  BOUNDARY   │     │  par_meu          │
+  │  dcu_l1/dcl1data │ ──> │  (OCP)      │ ──> │  dcu_l0/dcdatabufd│
+  │                  │     │             │     │  /dcibbankdNN      │
+  │  MBIT_DcL1Rd     │     │ ECC/MUX/BUF │     │  MBIT_WSBDataArray │
+  │  DataIntM408H    │     │             │     │  MnnnH             │
+  │  (mclk_pmh)      │     │             │     │  (mclk_meu)        │
+  └─────────────────┘     └────────────┘     └──────────────────┘
+  
+  STARTPOINT:  par_pmh/dcu_l1/dcl1data/MBIT_DcL1RdDataIntM408H  (mclk_pmh)
+  ENDPOINT:    par_meu/dcu_l0/dcdatabufd/dcibbankdNN/MBIT_WSBDataArrayMnnnH (mclk_meu)
+  
+  This is the DCU L1 → L0 read data forwarding path:
+  - L1 cache reads data (DcL1RdDataInt = "DC L1 Read Data Internal")
+  - Data crosses partition boundary through ECC syndrome logic + MUX + buffers
+  - Lands in WSB (Write-Side Buffer) databank for downstream execution
+  - 8 banks × ~150-160 paths/bank = 1230 total paths across 2 cores
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 3.  WORST-CASE HOLD PATH — LIVE PT TIMING (func.min_nom)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Endpoint queried: icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd21/
+                    MBIT_WSBDataArrayMnnnH_reg_{1,1,1,1,0..7}/D4
+
+  ┌─── HOLD PATH ──────────────────────────────────────────────────────────┐
+  │                                                                        │
+  │  Hold Slack:  -65.743ps  (VIOLATED)                                    │
+  │                                                                        │
+  │  Note: PT server shows -65.7ps vs PTECO -27.4ps because:              │
+  │    - PTECO applies +5ps path margin → real slack ~32ps worse           │
+  │    - Statistical adjustment differs between PBA and non-PBA            │
+  │    - PT server = deterministic min_nom; PTECO = stat PBA mode          │
+  │                                                                        │
+  │  LAUNCH CLOCK (mclk_pmh) — 2 ICGs, 6 stages to register:             │
+  │  ┌──────────────────────────────────────────────────────────────┐      │
+  │  │  glbdrv_Par_Mclk_PMH       28.9ps  (global driver)         │      │
+  │  │  ↓                                                          │      │
+  │  │  ICG  ClkL1DatMH            42.2ps  (+13.4ps)  ← L1 gate   │      │
+  │  │  ↓                                                          │      │
+  │  │  4× CTS buffers             93.3ps  (+51.1ps)               │      │
+  │  │  ↓                                                          │      │
+  │  │  ICG  ClkRd4084MH          105.7ps  (+12.4ps)  ← read gate │      │
+  │  │  ↓                                                          │      │
+  │  │  RCB buffer                121.7ps  (+16.0ps)               │      │
+  │  │  ↓                                                          │      │
+  │  │  → reg CP                  123.1ps  (+1.4ps)                │      │
+  │  └──────────────────────────────────────────────────────────────┘      │
+  │  TOTAL LAUNCH LATENCY: 123.1ps                                        │
+  │                                                                        │
+  │  CAPTURE CLOCK (mclk_meu) — 3 ICGs, 12+ stages to register:          │
+  │  ┌──────────────────────────────────────────────────────────────┐      │
+  │  │  glbdrv_par_mnsclk_meu      47.9ps  (global driver)        │      │
+  │  │  ↓                                                          │      │
+  │  │  ICG  ClkL1IslandMH          72.6ps  (+24.7ps) ← L1 island │      │
+  │  │  ↓   [CKLNQD12 = big driver]                               │      │
+  │  │                                                              │      │
+  │  │  6× CTS buffers             148.4ps  (+75.8ps)              │      │
+  │  │  ↓                                                          │      │
+  │  │  ICG  ClkWSBWr4094MH        171.1ps  (+22.6ps) ← WSB write │      │
+  │  │  ↓   [write-bank gating — needed for power]                 │      │
+  │  │                                                              │      │
+  │  │  ICG  CG_RC_CG_HIER_INST99  192.7ps  (+21.6ps) ← RC gate  │      │
+  │  │  ↓   [RC = Register Control — auto-inserted]                │      │
+  │  │                                                              │      │
+  │  │  6× CTS buffers             265.0ps  (+72.3ps)              │      │
+  │  │  ↓                                                          │      │
+  │  │  → reg CP                   266.1ps  (+1.1ps)               │      │
+  │  └──────────────────────────────────────────────────────────────┘      │
+  │  TOTAL CAPTURE LATENCY: 266.1ps                                       │
+  │                                                                        │
+  │  CLOCK SKEW = 266.1 - 123.1 = +143.0ps                                │
+  │  (capture arrives 143ps AFTER launch — devastating for hold)           │
+  │                                                                        │
+  │  DATA PATH (6 cells):                                                  │
+  │  ┌──────────────────────────────────────────────────────────────┐      │
+  │  │  reg Q2  →  BUFFD2 (ECC buffer)                             │      │
+  │  │  →  MUX (dcl1_dat_hmatrix/XOR+MUX, ECC correction)         │      │
+  │  │  →  BUFFD8 (drive buffer, partition boundary)               │      │
+  │  │  →  BUFFSR2 (par_meu side)                                  │      │
+  │  │  →  AO22 (bank select logic)                                │      │
+  │  │  →  reg D4                                                  │      │
+  │  └──────────────────────────────────────────────────────────────┘      │
+  │  DATA PATH DELAY: ~97ps (fast, but clock skew overwhelms it)          │
+  │                                                                        │
+  │  HOLD EQUATION:                                                        │
+  │    data_arrival (97ps) - capture_clock (266ps) - hold_time (11ps)     │
+  │    + launch_clock (123ps) - uncertainty (18ps) ≈ -75ps                │
+  │    (statistical adjustment narrows to -65.7ps)                        │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+  ┌─── SETUP PATH (func.max_high) ─────────────────────────────────────────┐
+  │                                                                        │
+  │  Setup Slack:  +8.5ps  (MET, but TIGHT)                                │
+  │  Normalized:   0.046 (well under 1.0 target)                           │
+  │                                                                        │
+  │  Data arrival:  271.3ps                                                │
+  │  Data required: 276.7ps                                                │
+  │  Statistical adjustment: +8.5ps                                        │
+  │                                                                        │
+  │  The +143ps clock skew that kills hold HELPS setup:                    │
+  │    - More capture latency = later required time = more setup slack      │
+  │    - But only +8.5ps means setup is tight too                          │
+  │    - This path is borderline on BOTH hold and setup                    │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 3b. CORNER COMPARISON — min_nom vs min_low (WORST CORNER)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  The same worst path queried at func.min_low.T_85.typical:
+  Hold Slack = -74.5ps  (vs -65.7ps at min_nom — 9ps WORSE)
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  CORNER COMPARISON (same endpoint, dcibbankd21):                      │
+  │                                                                        │
+  │                            func.min_nom    func.min_low    DELTA      │
+  │  ───────────────────────   ────────────    ────────────    ─────      │
+  │  Hold Slack:                 -65.7ps         -74.5ps      -8.8ps     │
+  │  Launch clock latency:        123ps           151ps       +28ps      │
+  │  Capture clock latency:       266ps           329ps       +63ps      │
+  │  Clock skew:                 +143ps          +178ps       +35ps !!   │
+  │  Data path delay:              97ps           123ps       +26ps      │
+  │  Inter-clock uncertainty:      18ps            20ps        +2ps      │
+  │  Path margin:                   0ps           2.6ps       +2.6ps    │
+  │  Hold time:                  10.7ps          11.5ps       +0.8ps    │
+  │                                                                        │
+  │  WHY min_low IS WORSE:                                                │
+  │  At low voltage, ALL cells slow down. But the capture path has        │
+  │  MORE stages (3 ICGs + 12 CTS = 15 stages) vs launch (2 ICGs +       │
+  │  6 CTS = 8 stages). Each stage slows ~3-5ps at min_low → the         │
+  │  clock with MORE stages slows disproportionately.                     │
+  │                                                                        │
+  │  Capture slows +63ps, launch slows only +28ps → skew GROWS +35ps.    │
+  │  The data path also slows +26ps (helps hold), but the +35ps skew     │
+  │  growth minus +26ps data slowdown = net -9ps WORSE.                   │
+  │                                                                        │
+  │  ⚠️  min_low is the LIMITING CORNER for this path group.             │
+  │  Any fix strategy must be validated at BOTH min_nom AND min_low.      │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  CAPTURE CLOCK TREE at min_low (329ps total):
+    glbdrv_par_mnsclk_meu        58.8ps  (vs 47.9 at min_nom, +11ps)
+    ICG  ClkL1IslandMH            90.2ps  (+31.4ps, vs 24.7 at min_nom)
+    6× CTS buffers               182.8ps  (+92.6ps)
+    ICG  ClkWSBWr4094MH          210.8ps  (+28.0ps)
+    ICG  CG_RC_CG_HIER           238.4ps  (+27.6ps)
+    6× CTS buffers               328.0ps  (+89.6ps)
+    → reg CP                     329.0ps  (+1.0ps)
+
+  LAUNCH CLOCK TREE at min_low (151ps total):
+    glbdrv_Par_Mclk_PMH           35.1ps  (vs 28.9 at min_nom, +6ps)
+    ICG  ClkL1DatMH                51.9ps  (+16.8ps)
+    4× CTS buffers               113.9ps  (+62.0ps)
+    ICG  ClkRd4084MH              129.6ps  (+15.7ps)
+    RCB buffer                    149.7ps  (+20.1ps)
+    → reg CP                     151.0ps  (+1.3ps)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 4.  STATISTICAL DISTRIBUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  HOLD SLACK HISTOGRAM (1230 paths):
+  
+  -30 to -25ps  ████                                    4 paths  (0.3%)
+  -25 to -20ps  ████████████                           12 paths  (1.0%)
+  -20 to -15ps  ██████████████████████                 30 paths  (2.4%)
+  -15 to -10ps  █████████████████████████████████████  77 paths  (6.3%)
+  -10 to  -5ps  ████████████████████████████████████  415 paths (33.7%)
+   -5 to   0ps  ████████████████████████████████████  692 paths (56.3%)
+                                                     ────────────
+                                                      1230 total
+  
+  CUMULATIVE FROM WORST:
+  ≤  -20ps:    16 paths  ( 1.3%)  — need clock tree restructure
+  ≤  -10ps:   123 paths  (10.0%)  — need significant intervention
+  ≤   -5ps:   538 paths  (43.7%)  — need moderate fix
+  ≤    0ps:  1230 paths (100.0%)  — all paths
+
+  
+  PER-BANK SUMMARY (8 banks across par_meu):
+  ┌──────────────┬───────┬─────────┬─────────┬─────────┐
+  │ Bank         │ Count │  Worst  │  Median │  Best   │
+  ├──────────────┼───────┼─────────┼─────────┼─────────┤
+  │ dcibbankd21  │   160 │ -27.4ps │  -5.1ps │  -0.0ps │  ← WORST
+  │ dcibbankd31  │   222 │ -23.1ps │  -4.5ps │  -0.1ps │
+  │ dcibbankd01  │   198 │ -20.7ps │  -4.7ps │  -0.0ps │
+  │ dcibbankd30  │   116 │ -18.6ps │  -4.5ps │  -0.1ps │
+  │ dcibbankd20  │   170 │ -17.7ps │  -4.4ps │  -0.0ps │
+  │ dcibbankd00  │   180 │ -14.8ps │  -4.2ps │  -0.0ps │
+  │ dcibbankd11  │   131 │ -13.7ps │  -3.3ps │  -0.0ps │
+  │ dcibbankd10  │    53 │  -9.4ps │  -2.7ps │  -0.0ps │  ← BEST
+  └──────────────┴───────┴─────────┴─────────┴─────────┘
+  
+  Observation: Bank d21 is worst (-27.4ps), bank d10 is best (-9.4ps)
+  The 18ps spread between banks suggests DIFFERENT clock tree routes.
+  Banks d21/d31 likely have longer capture clock trees.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 5.  ROOT CAUSE ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  ROOT CAUSE #1: MASSIVE POSITIVE CLOCK SKEW (+143ps)                  │
+  │                                                                        │
+  │  The capture clock (mclk_meu) has 3 ICGs vs 2 for launch (mclk_pmh). │
+  │  Plus 12 CTS stages vs 6 for launch.                                   │
+  │                                                                        │
+  │  This means the capture clock arrives 143ps AFTER the launch clock.    │
+  │  For hold timing: data must be STABLE for 143ps after launch.          │
+  │  But the data path is only 97ps long → data changes too fast.          │
+  │                                                                        │
+  │  WHY 3 ICGs on capture?                                                │
+  │    ICG1: ClkL1IslandMH  — L1 island power gating (architectural)      │
+  │    ICG2: ClkWSBWr4094MH — WSB write bank gating (power management)    │
+  │    ICG3: CG_RC_CG_HIER  — Register control gate (auto-inserted)       │
+  │                                                                        │
+  │  The 3rd ICG (CG_RC) is auto-inserted by CTS for clock gating.        │
+  │  This is the most likely candidate for optimization.                   │
+  └────────────────────────────────────────────────────────────────────────┘
+  
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  ROOT CAUSE #2: CROSS-PARTITION — NO CTS COORDINATION                 │
+  │                                                                        │
+  │  mclk_pmh (par_pmh) and mclk_meu (par_meu) are balanced              │
+  │  independently during CTS.                                             │
+  │                                                                        │
+  │  Each partition CTS only sees its own clock tree.                       │
+  │  Neither knows about the cross-partition hold requirement.             │
+  │  The 143ps gap is an artifact of independent clock tree synthesis.     │
+  └────────────────────────────────────────────────────────────────────────┘
+  
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  ROOT CAUSE #3: ECC LOGIC IS TOO FAST                                  │
+  │                                                                        │
+  │  The data path goes through dcl1_dat_hmatrix (ECC syndrome XOR+MUX)   │
+  │  which is only 6 cells deep (~97ps total including reg-to-reg).        │
+  │                                                                        │
+  │  For a cross-partition path with 143ps skew, you'd need ~170ps         │
+  │  of data delay (143 + 11 hold_time + 18 uncertainty - margin).         │
+  │  The data path is 73ps SHORT of what's needed.                         │
+  └────────────────────────────────────────────────────────────────────────┘
+  
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  ROOT CAUSE #4: LIBRARY CELL DENSITY (L code in PTECO)                 │
+  │                                                                        │
+  │  PTECO tried to insert hold buffers but failed with code "L" (area)    │
+  │  and "T" (timing too tight).                                           │
+  │                                                                        │
+  │  The MBIT register banks are extremely dense — no room for buffers.    │
+  │  Physical-aware ECO cannot find open sites near the endpoints.         │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 6.  FIX STRATEGIES — RANKED BY FEASIBILITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌─── STRATEGY A: USEFUL SKEW ON par_meu CAPTURE REGISTERS ──────────────┐
+  │                                                                        │
+  │  WHAT:  Add negative useful_skew on WSBDataArrayMnnnH capture flops    │
+  │         This tells CTS to pull the capture clock EARLIER                │
+  │                                                                        │
+  │  COMMAND (in par_meu PO):                                              │
+  │    set_clock_latency -offset -<N>ps [get_pins */MBIT_WSBDataArray*/CP] │
+  │    or: user_useful_skew.tcl entry for the register group               │
+  │                                                                        │
+  │  IMPACT TABLE:                                                         │
+  │    Skew reduction   Paths fixed     % of 1230    Setup concern          │
+  │    ─────────────    ───────────     ─────────    ──────────────         │
+  │         5ps              692          56.3%      Minor                  │
+  │        10ps            1,051          85.4%      Moderate (worst→-22)   │
+  │        15ps            1,177          95.7%      Significant            │
+  │        20ps            1,218          99.0%      HIGH (worst→-32)       │
+  │        30ps            1,230         100.0%      UNACCEPTABLE           │
+  │                                                                        │
+  │  RISK: Setup slack is already -12.5ps on some paths.                   │
+  │        Any capture clock reduction makes setup WORSE.                  │
+  │        Safe limit: ~5ps (fixes 56% but leaves 538 paths)              │
+  │                                                                        │
+  │  FEASIBILITY: ★★★☆☆ (helps 56%, but limited by setup budget)         │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌─── STRATEGY B: USEFUL SKEW ON par_pmh LAUNCH REGISTERS ──────────────┐
+  │                                                                        │
+  │  WHAT:  Add positive useful_skew on DcL1RdDataIntM408H launch flops    │
+  │         This tells CTS to push the launch clock LATER                  │
+  │                                                                        │
+  │  KEY ADVANTAGE: Pushing launch clock later helps hold at endpoint      │
+  │         WITHOUT changing capture clock → does NOT hurt setup at EP     │
+  │         (The setup concern moves to the LAUNCH side's input paths)     │
+  │                                                                        │
+  │  REQUIREMENT: par_pmh PO owner (fnaseral) needs to implement           │
+  │  Must check that delaying DcL1RdDataInt launch doesn't violate         │
+  │  setup on par_pmh INTERNAL paths into these flops.                     │
+  │                                                                        │
+  │  FEASIBILITY: ★★★★☆ (best single fix, but needs par_pmh cooperation) │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌─── STRATEGY C: SIO2PO DEPARTURE BOUNDS ──────────────────────────────┐
+  │                                                                        │
+  │  WHAT:  Set SIO2PO bounds on the DcL1RdData → WSBDataArray interface  │
+  │         Forces par_pmh to guarantee minimum departure time             │
+  │         This is equivalent to "make the data leave par_pmh later"      │
+  │                                                                        │
+  │  HOW:   File SIO2PO HSD requesting bound on:                          │
+  │         DcL1RdDataIntM408H → with minimum departure of ~30ps extra     │
+  │                                                                        │
+  │  Currently in IFC: These paths likely already tracked                  │
+  │  Check avi_exe/par_meu_ifc_hsd_gap_report.txt for HSD status          │
+  │                                                                        │
+  │  FEASIBILITY: ★★★☆☆ (standard flow, but adds latency to par_pmh)    │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌─── STRATEGY D: REMOVE/BYPASS CAPTURE ICG (CG_RC_CG_HIER) ───────────┐
+  │                                                                        │
+  │  WHAT:  The 3rd ICG in the capture path (CG_RC_CG_HIER_INST99) is    │
+  │         auto-inserted by the clock gating synthesis tool.              │
+  │         If it can be removed or bypassed, capture latency drops ~22ps. │
+  │                                                                        │
+  │  IMPACT: -22ps on capture = fixes ~99% of paths                       │
+  │          But setup gets -22ps worse (worst setup would be -34.5ps)     │
+  │                                                                        │
+  │  RISK: This ICG controls clock gating for power management.            │
+  │        Removing it increases dynamic power to the register bank.       │
+  │        Need RTL owner (dcu_l0 team) agreement.                         │
+  │                                                                        │
+  │  FEASIBILITY: ★★☆☆☆ (architectural change, power impact, setup risk) │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌─── STRATEGY E: COMBINED APPROACH (RECOMMENDED) ──────────────────────┐
+  │                                                                        │
+  │  WHAT:  Split the fix across BOTH launch and capture sides:           │
+  │                                                                        │
+  │    1. par_pmh: +10ps useful_skew on DcL1RdDataIntM408H launch flops   │
+  │       → pushes launch 10ps later → helps hold without hurting EP setup │
+  │                                                                        │
+  │    2. par_meu: -5ps useful_skew on WSBDataArrayMnnnH capture flops    │
+  │       → pulls capture 5ps earlier → helps hold, costs 5ps setup       │
+  │                                                                        │
+  │    3. SIO2PO: +10ps departure bound on DcL1RdData interface           │
+  │       → forces data path delay increase at partition boundary          │
+  │                                                                        │
+  │  TOTAL EFFECT: ~25ps hold improvement (partial stack)                  │
+  │    Fixes: ~1228/1230 paths (99.8%)                                     │
+  │    Setup impact: only -5ps on capture (manageable)                     │
+  │    Launch setup: needs verification at par_pmh input paths             │
+  │                                                                        │
+  │  FEASIBILITY: ★★★★★ (best balance, distributed fix)                  │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 7.  WHAT ABOUT CLOCK FIX? (user_useful_skew.tcl approach)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  The user_useful_skew.tcl approach (seen in par_ooo_vec for similar paths)
+  is the STANDARD mechanism in this design for cross-partition hold fixes.
+  
+  EXAMPLE (from par_ooo_vec PO for miintwbrsderrm807h):
+    user_useful_skew.tcl:  set_clock_latency -offset +10ps <capture_flop>
+    user_reg_bound2port.tcl: sio2po_magnet on the port
+    → This added 10ps to capture register, fixing hold paths
+  
+  FOR DCU L1 DATABANK, equivalent approach:
+  
+  IN par_meu user_useful_skew.tcl:
+    # Pull WSBDataArray capture clock earlier by 5-10ps
+    set_clock_latency -offset -5 [get_pins \
+      */dcibbankd*/auto_vector_MBIT_WSBDataArrayMnnnH_reg_*/CP]
+  
+  IN par_pmh user_useful_skew.tcl:
+    # Push DcL1RdData launch clock later by 10-15ps
+    set_clock_latency -offset +10 [get_pins \
+      */dcl1data/auto_vector_MBIT_DcL1RdDataIntM408H_reg_*/CP]
+  
+  COMBINED: ~15-25ps improvement across the interface
+  
+  ⚠️  CRITICAL: The 184 paths that fail BOTH hold AND setup
+     CANNOT be fixed by clock skew alone.
+     These need DATA PATH restructure (RTL change or buffer insertion
+     in a less-dense area).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 8.  CLOCK TREE COMPARISON — WHY THE SKEW?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  LAUNCH (mclk_pmh):             CAPTURE (mclk_meu):
+  ──────────────────             ───────────────────
+  glbdrv  (29ps)                 glbdrv  (48ps)         +19ps gap from start
+  │                              │
+  ICG  ClkL1DatMH  (42ps)       ICG  ClkL1IslandMH (73ps)  ← bigger ICG
+  │                              │
+  4× CTS  (93ps)                 6× CTS  (148ps)        ← 2 extra CTS stages
+  │                              │
+  ICG  ClkRd4084MH (106ps)      ICG  ClkWSBWr4094MH (171ps)
+  │                              │
+  RCB  (122ps)                   ICG  CG_RC_CG_HIER (193ps)  ← EXTRA ICG!
+  │                              │
+  reg CP  (123ps)                6× CTS  (265ps)        ← EXTRA 6 CTS stages
+                                 │
+                                 reg CP  (266ps)
+  
+  DELTA BREAKDOWN:
+    Global driver gap:       +19ps  (mclk_meu spine longer)
+    First ICG gap:           +11ps  (bigger ICG cell in meu)
+    CTS stages gap:          +25ps  (more stages in meu after ICG1)
+    Second ICG gap:          +65ps  (meu has 3rd ICG + more CTS)
+    Post-second-ICG gap:     +23ps  (extra CTS in meu)
+                             ──────
+    TOTAL SKEW:             +143ps
+  
+  KEY INSIGHT: The biggest contributor is the EXTRA ICG (CG_RC) and the
+  additional 6 CTS stages AFTER the second ICG in the capture path.
+  These add ~88ps to the capture latency.
+  
+  If CG_RC_CG_HIER could be merged with ClkWSBWr4094MH (one less ICG),
+  the skew would drop by ~22ps → fixes 99% of paths.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 9.  PATHS THAT FAIL BOTH HOLD AND SETUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  184 paths (15%) cannot be fixed by ANY clock skew adjustment because
+  they violate BOTH hold and setup simultaneously.
+  
+  This means: hold needs MORE delay, but setup needs LESS delay.
+  No single clock/delay change can fix both.
+  
+  Worst combined (hold + setup) failures:
+  ┌──────┬──────────┬───────────┬──────────┬────────────────┐
+  │ Rank │ Hold     │ Setup     │ Gap      │ Bank           │
+  ├──────┼──────────┼───────────┼──────────┼────────────────┤
+  │ #260 │ -21.0ps  │  -1.0ps   │ -22.1ps  │ dcibbankd31    │
+  │ #259 │ -21.0ps  │  -1.0ps   │ -22.0ps  │ dcibbankd31    │
+  │ #280 │ -18.6ps  │  -1.7ps   │ -20.3ps  │ dcibbankd30    │
+  │ #281 │ -18.6ps  │  -1.7ps   │ -20.2ps  │ dcibbankd30    │
+  │ #274 │ -18.9ps  │  -1.1ps   │ -19.9ps  │ dcibbankd31    │
+  │ #732 │  -7.4ps  │ -12.5ps   │ -19.9ps  │ dcibbankd21    │
+  │ #730 │  -7.4ps  │ -12.5ps   │ -19.9ps  │ dcibbankd21    │
+  │ #212 │ -27.4ps  │  +7.5ps   │ -19.9ps  │ dcibbankd21    │
+  │ #275 │ -18.9ps  │  -1.0ps   │ -19.9ps  │ dcibbankd31    │
+  │ #307 │ -17.1ps  │  -2.6ps   │ -19.7ps  │ dcibbankd31    │
+  └──────┴──────────┴───────────┴──────────┴────────────────┘
+  
+  These 184 paths need RTL-level intervention:
+  • Retime the ECC logic (move flops to break the path)
+  • Add pipeline stage (requires DCU L1 arch change)
+  • Change clock domain boundary (move WSBDataArray to mclk_pmh)
+  
+  Note: #732/#730 have unusual profile: small hold (-7.4) but huge setup
+  violation (-12.5). These may be DIFFERENT data path variants (not ECC).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 10.  RECOMMENDED ACTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  IMMEDIATE (this week):
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ 1. FILE SIO2PO HSD for DcL1RdDataIntM408H → WSBDataArrayMnnnH     │
+  │    Request: +10-15ps departure bound at par_pmh boundary            │
+  │    Owner: par_pmh (fnaseral)                                        │
+  │    Impact: Adds data delay, helps hold on all 1230 paths            │
+  │                                                                     │
+  │ 2. REQUEST par_meu (mfeldma1) add useful_skew:                     │
+  │    -5ps on WSBDataArrayMnnnH capture registers                      │
+  │    In: user_useful_skew.tcl at par_meu PO workspace                │
+  │    Impact: Fixes ~692 paths (56.3%), minimal setup impact           │
+  └─────────────────────────────────────────────────────────────────────┘
+  
+  SHORT TERM (next PO cycle):
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ 3. REQUEST par_pmh (fnaseral) add useful_skew:                     │
+  │    +10ps on DcL1RdDataIntM408H launch registers                     │
+  │    Impact: Helps hold without hurting endpoint setup                 │
+  │    Need: Verify par_pmh internal setup paths to these flops         │
+  │                                                                     │
+  │ 4. INVESTIGATE ICG merge opportunity:                               │
+  │    Can CG_RC_CG_HIER_INST99 be merged with ClkWSBWr4094MH?         │
+  │    Need: Clock architecture team input                              │
+  │    Impact: -22ps on capture latency → fixes 99% of paths            │
+  └─────────────────────────────────────────────────────────────────────┘
+  
+  LONGER TERM (if above insufficient):
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ 5. RETIME ECC LOGIC:                                                │
+  │    The dcl1_dat_hmatrix (ECC correction) is in the critical path    │
+  │    Moving it to an earlier pipeline stage would help                 │
+  │    Need: DCU L1 architect agreement                                 │
+  │                                                                     │
+  │ 6. CLOCK DOMAIN REASSIGNMENT:                                       │
+  │    Move WSBDataArray registers from mclk_meu → mclk_pmh             │
+  │    Eliminates cross-clock hold issue entirely                        │
+  │    Need: Major arch change, unlikely for A0                          │
+  └─────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 11.  APPENDIX — CLOCK SKEW FIX SENSITIVITY TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  If we reduce the capture-vs-launch skew by N ps:
+  
+  ┌──────────┬─────────────┬────────┬───────────┬──────────────────────────┐
+  │ Fix (ps) │ Paths Fixed │  %     │ Remaining │ Notes                    │
+  ├──────────┼─────────────┼────────┼───────────┼──────────────────────────┤
+  │    5     │     692     │ 56.3%  │    538    │ Safe (minimal setup hit) │
+  │   10     │   1,051     │ 85.4%  │    179    │ Moderate setup impact    │
+  │   15     │   1,177     │ 95.7%  │     53    │ Significant setup risk   │
+  │   20     │   1,218     │ 99.0%  │     12    │ High setup risk          │
+  │   25     │   1,228     │ 99.8%  │      2    │ Very high setup risk     │
+  │   30     │   1,230     │100.0%  │      0    │ All fixed but setup BAD  │
+  └──────────┴─────────────┴────────┴───────────┴──────────────────────────┘
+  
+  SETUP BUDGET CONSTRAINT:
+  - Worst setup slack today: -12.5ps (already failing!)
+  - Any capture clock reduction directly degrades setup
+  - Safe capture-side reduction: ~0-5ps only
+  - Launch-side delay: ~10-15ps (doesn't affect EP setup)
+  - Combined: ~15-20ps total improvement achievable
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 12.  NEW MODEL COMPARISON — fnaseral WW13B pantheon (CLK048)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  NEW MODEL: /nfs/site/disks/fnaseral_wa/BU_SIO/
+    GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW13B_ww11_pantheon-CLK048.bu_postcts
+  
+  Contains new par_meu PO, no PTECO applied, still building (no min_nom yet).
+  Available corners: func.min_low, func.max_high, func.max_nom
+
+
+  ┌─── HOLD COMPARISON (func.min_low, GBA) ────────────────────────────────┐
+  │                                                                        │
+  │  DCU L1 Databank: par_pmh → par_meu (dcl1rddatam408h)                │
+  │                                                                        │
+  │  ┌───────────────────────┬──────────────┬──────────────┬───────────┐   │
+  │  │                       │   REF (old)  │  TST (new)   │   DELTA   │   │
+  │  ├───────────────────────┼──────────────┼──────────────┼───────────┤   │
+  │  │ WNS                   │    -100ps    │    -111ps    │  -11ps ⚠  │   │
+  │  │ TNS                   │  -168,348    │  -168,794    │  -446  ⚠  │   │
+  │  │ Path count            │    3,325     │    3,149     │  -176  ✓  │   │
+  │  │ Launch clk (mclk_pmh) │     144ps    │     142ps    │   -2ps    │   │
+  │  │ Capture clk (mclk_meu)│     326ps    │     333ps    │   +7ps ⚠  │   │
+  │  │ Clock skew            │    +182ps    │    +191ps    │   +9ps ⚠  │   │
+  │  └───────────────────────┴──────────────┴──────────────┴───────────┘   │
+  │                                                                        │
+  │  VERDICT: NEW par_meu WORSE on hold by 11ps.                          │
+  │  Capture clock (mclk_meu) grew +7ps → clock skew increased +9ps.     │
+  │  The new CTS added latency to the capture tree (3 ICGs + more CTS).  │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌─── SETUP COMPARISON (func.max_high, GBA) ──────────────────────────────┐
+  │                                                                        │
+  │  DCU L1 Databank: par_pmh → par_meu (dcl1rddatam408h)                │
+  │                                                                        │
+  │  ┌───────────────────────┬──────────────┬──────────────┬───────────┐   │
+  │  │                       │   REF (old)  │  TST (new)   │   DELTA   │   │
+  │  ├───────────────────────┼──────────────┼──────────────┼───────────┤   │
+  │  │ WNS                   │     -52ps    │     -52ps    │    0ps    │   │
+  │  │ TNS                   │   -47,123    │   -43,488    │ +3,635 ✓  │   │
+  │  │ Path count            │    3,503     │    3,362     │  -141  ✓  │   │
+  │  │ Launch clk (mclk_pmh) │      89ps    │      91ps    │   +2ps    │   │
+  │  │ Capture clk (mclk_meu)│      75ps    │      73ps    │   -2ps    │   │
+  │  └───────────────────────┴──────────────┴──────────────┴───────────┘   │
+  │                                                                        │
+  │  VERDICT: Setup WNS unchanged, TNS improved slightly.                 │
+  │  Setup budget did NOT shrink — small positive for fix feasibility.    │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+  ESTIMATED PTECO SLACK DISTRIBUTION — NEW MODEL:
+  (PTECO slacks shifted by -11ps to reflect new capture clock latency)
+
+  ┌───────────────────────┬──────────────┬──────────────┬───────────┐
+  │ Metric                │   OLD model  │  NEW model   │   DELTA   │
+  ├───────────────────────┼──────────────┼──────────────┼───────────┤
+  │ Worst (P0)            │   -27.4ps    │   -38.4ps    │  -11ps    │
+  │ P10                   │   -11.6ps    │   -22.6ps    │  -11ps    │
+  │ P25                   │    -7.7ps    │   -18.7ps    │  -11ps    │
+  │ Median                │    -4.2ps    │   -15.2ps    │  -11ps    │
+  │ P75                   │    -2.0ps    │   -13.0ps    │  -11ps    │
+  │ Best                  │    -0.0ps    │   -11.0ps    │  -11ps    │
+  └───────────────────────┴──────────────┴──────────────┴───────────┘
+
+  NEW MODEL HOLD SLACK HISTOGRAM (1230 paths, estimated):
+  
+  -40 to -35ps  █                                        3 paths  (0.2%)
+  -35 to -25ps  ████                                    64 paths  (5.2%)
+  -25 to -20ps  ████████                               156 paths (12.7%)
+  -20 to -15ps  █████████████████████                  427 paths (34.7%)
+  -15 to -10ps  █████████████████████████████          580 paths (47.2%)
+                                                      ────────────
+                                                       1230 total
+  
+  → ALL 1230 paths now worse than -10ps (was 538 before)
+  → Even the "easy" paths (were -0 to -5ps) are now -11 to -16ps
+
+
+  CLOCK SKEW FIX IMPACT — NEW MODEL vs OLD:
+
+  ┌──────────┬──────────────────────┬──────────────────────┐
+  │ Fix (ps) │ OLD model            │ NEW model            │
+  │          │ Fixed    %   Remain  │ Fixed    %   Remain  │
+  ├──────────┼──────────────────────┼──────────────────────┤
+  │    5     │   692  56.3%    538  │     0   0.0%  1,230  │
+  │   10     │ 1,051  85.4%    179  │     0   0.0%  1,230  │
+  │   15     │ 1,177  95.7%     53  │   580  47.2%    650  │
+  │   20     │ 1,218  99.0%     12  │ 1,007  81.9%    223  │
+  │   25     │ 1,228  99.8%      2  │ 1,163  94.6%     67  │
+  │   30     │ 1,230 100.0%      0  │ 1,218  99.0%     12  │
+  │   35     │ 1,230 100.0%      0  │ 1,227  99.8%      3  │
+  │   40     │ 1,230 100.0%      0  │ 1,230 100.0%      0  │
+  └──────────┴──────────────────────┴──────────────────────┘
+  
+  → OLD: 5ps fix closed 56% → NEW: 5ps fix closes 0%
+  → OLD: 15ps fix closed 96% → NEW: need 25ps to close 95%
+  → OLD: 30ps fix closed all → NEW: need 40ps to close all
+  → Fix effort jumped by ~11ps across the board
+
+
+  BROADER IMPACT — ALL EXTERNAL INTERFACES (func.min_low):
+  
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  308 interfaces compared (TST vs REF):                                │
+  │    31 got WORSE  (>5ps degraded)  — ALL are par_meu receiving paths   │
+  │   252 SAME       (±5ps)                                               │
+  │    25 got BETTER (>5ps improved)                                      │
+  │                                                                        │
+  │  Top degraded par_meu interfaces:                                     │
+  │  ┌──────────────────────────────────────┬────────┬────────┬───────┐   │
+  │  │ Interface                            │REF WNS │TST WNS │ DELTA │   │
+  │  ├──────────────────────────────────────┼────────┼────────┼───────┤   │
+  │  │ par_meu→par_mlc (dcreqbyteenm402h)  │  -33ps │  -58ps │ -25ps │   │
+  │  │ par_pmh→par_meu (dc2dtlipprefadr)   │  -48ps │  -64ps │ -16ps │   │
+  │  │ par_ooo_int→par_meu (rscruopm302h)  │  -40ps │  -54ps │ -14ps │   │
+  │  │ par_exe→par_meu (siaessdeackctc)    │  -34ps │  -48ps │ -14ps │   │
+  │  │ par_pmh→par_meu (dcl1rddatam408h)   │ -100ps │ -111ps │ -11ps │   │
+  │  │ par_ooo_int→par_meu (crgroupm302h)  │  -62ps │  -73ps │ -11ps │   │
+  │  │ par_ooo_int→par_meu (rsearlyuop)    │  -54ps │  -63ps │  -9ps │   │
+  │  └──────────────────────────────────────┴────────┴────────┴───────┘   │
+  │                                                                        │
+  │  Top improved par_meu interfaces:                                     │
+  │  ┌──────────────────────────────────────┬────────┬────────┬───────┐   │
+  │  │ Interface                            │REF WNS │TST WNS │ DELTA │   │
+  │  ├──────────────────────────────────────┼────────┼────────┼───────┤   │
+  │  │ par_pmh→par_meu (mluncglobobsid)    │  -75ps │  -54ps │ +21ps │   │
+  │  │ par_pmh→par_meu (pmphyadrm402h)     │  -62ps │  -51ps │ +11ps │   │
+  │  └──────────────────────────────────────┴────────┴────────┴───────┘   │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+  UPDATED RECOMMENDATION WITH NEW MODEL:
+
+  The new par_meu makes the DCU L1 problem significantly harder:
+  
+  1. COMBINED STRATEGY (Section 6, Strategy E) needs STRONGER fixes:
+     - par_pmh: +15ps useful_skew (was +10ps) on DcL1RdDataIntM408H
+     - par_meu: -10ps useful_skew (was -5ps) on WSBDataArrayMnnnH
+     - SIO2PO:  +15ps departure bound (was +10ps)
+     - Total needed: ~40ps (was ~25ps) to close all paths
+  
+  2. ICG MERGE (Strategy D) becomes MORE critical:
+     - Removing CG_RC_CG_HIER_INST99 saves ~22ps
+     - Without it: need 40ps from other sources (very hard)
+     - With it: only need 18ps from other sources (feasible)
+  
+  3. ESCALATION NEEDED:
+     - The new par_meu CTS went in the wrong direction for hold
+     - Need to understand WHY capture latency grew +7ps
+     - Request par_meu PO owner to investigate CTS targeting
+     - Consider adding hold-aware CTS constraints for next PO
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ END OF REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

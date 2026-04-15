@@ -1,0 +1,33 @@
+#!/bin/tcsh
+
+alias cgrep_blue "grep --color=always \!* | sed 's/01;31m/01;34m/g'"
+
+set current_date = `date +%s`
+set hours = 24 
+set waiting_time = `expr 3600 \* $hours`
+
+
+if ( -e ~baselibr/STOD/tmp/gfc.rtl4be ) then 
+    set file_date = `date -r ~baselibr/STOD/tmp/gfc.rtl4be +%s`
+    if ( $file_date < `expr $current_date - $waiting_time ` ) then 
+        if ( $USER == baselibr ) then        
+           echo "Updating the Data Base - Please Wait "
+           /p/hdk/rtl/proj_tools/hsdes/linux-tools/prod/esquery -where "tenant='ip_cpu_bigcore' and title CONTAINS 'RTL4BE' and release='gfc-a0'" -show id,title,updated_date,owner,submitted_by,status,description > ~baselibr/STOD/tmp/gfc.rtl4be
+        else 
+            echo "The Data is more Than 10 Hours old - you can ask Basel to update it"
+        endif    
+    endif
+    if ( `less ~baselibr/STOD/tmp/gfc.rtl4be | wc -l` > 1  ) then
+        cgrep_blue -iF -e $1 -e "id          title"  ~baselibr/STOD/tmp/gfc.rtl4be
+    else 
+        echo "Error - Please ask baselibr to fix"
+    endif
+else 
+    if ( $USER == baselibr ) then        
+        echo "Updating the Data Base - Please Wait"
+           /p/hdk/rtl/proj_tools/hsdes/linux-tools/prod/esquery -where "tenant='ip_cpu_bigcore' and title CONTAINS 'RTL4BE' and release='gfc-a0'" -show id,title,updated_date,owner,submitted_by,status,description > ~baselibr/STOD/tmp/gfc.rtl4be
+        cgrep_blue -iF -e  $1 -e "id          title"  ~baselibr/STOD/tmp/gfc.rtl4be
+    else 
+       echo "The Data does not exist - ask Basel to create it"
+    endif  
+endif 

@@ -1,0 +1,100 @@
+================================================================================
+  RSMOClearVM803H — SHORT FIX SUMMARY
+  WA: FCT26WW11A  |  Date: 2026-03-09  |  Signal: RSMOClearVM803H (1 bit)
+  par_ooo_int → par_ooo_vec  |  Slack: -71.6ps  |  POR: +17ps
+================================================================================
+
+PATH: SP FF (1160,783) → port (652,505) → EP FF (440,357) = 1146um
+  SP: MBIT_RORtLdIncM904H_reg_4__RSMOClearVM803H (mclk_ooo_int)
+  EP: ROBEarlyQualJumpM304H_reg (mclk_ooo_vec)
+  Data: 242.9ps | Window: 168.2ps | Deficit: 74.7ps
+
+SPECS:
+  par_ooo_int: spec=34ps, used=140.5ps → OVER by 106.5ps ← ROOT CAUSE
+  par_ooo_vec: spec=134ps, used=115.2ps → UNDER by 18.8ps ✓
+
+ROOT CAUSE: Bad MBIT merge — RSMOClearVM803H packed with RORtLdIncM904H[4]
+  Q1: RORtLdIncM904H[4] → internal (0 failing) — happy at (1160,783)
+  Q2: RSMOClearVM803H → par_ooo_vec (6 failing!) — needs to be near port
+  → Forces 786um / 8-buffer chain in par_ooo_int (4x over 34ps spec)
+
+6 FAILING ENDPOINTS (all from same SP FF):
+  ROBEarlyQualJumpM304H  -71ps  (×2 icores)
+  ROMOClearStallM901H    -64ps  (×2 icores)
+  RSMOClearVM804H        -49ps  (×2 icores)
+
+DELAY SPLIT: Wire=123ps (51%) | Cell=119ps (49%) — wire dominated
+
+BOTTLENECKS:
+  G7: 281um wire → 20.6ps (WORST), input trans 37.4ps, DTrans 3.9ps
+  G5: 152um wire → 13.6ps, G6: 134um → 12.4ps
+  V2: 97um wire → 24.7ps, input trans 52.3ps
+  Vt: 15/17 ULVT, only V6 (OR2D1) + EP FF are LVT
+
+================================================================================
+  FIX OPTIONS
+================================================================================
+
+  #1 TIP (M17/M18 half shield)    │ +35-50ps │ ~1 wk │ LOW    │ par_ooo_int
+     L-shape: (1160,783)→(1140,505)→(440,505), 5-6 repeaters @170um
+     Ref: specstall has TIP, WNS=-43ps (same boundary)
+
+  #2 EP FF move                   │ +15-22ps │ ~1 wk │ LOW    │ par_ooo_vec
+     (440,357) → (520,470): 360um→167um, 0 as SP = SAFE
+
+  #3 Gate upsize (V1,V5,V6)       │  +5-8ps  │  ECO  │ LOW    │ par_ooo_vec
+     V5: INVD1→D4, V6: OR2D1→D4+ULVT, V1: BUFD4→D18
+
+  #4 ULVT swap (V6 + EP FF)      │  +3-5.5ps│  ECO  │ LOW    │ par_ooo_vec
+     Only 2 LVT cells left on path
+
+  #5 SP FF de-merge (synthesis)   │ +20-30ps │ ~2 wk │ HIGH   │ par_ooo_int
+     Split MB2, move VM803H to ~(1000,720): 786um→433um, -3 buffers
+     *** D2 input has only +38.6ps margin — limits FF movement! ***
+     Last driver at (1162,833) — safe range: (1000-1100, 700-780)
+     De-merge alone CANNOT close -71.6ps — TIP is mandatory
+
+================================================================================
+  STRATEGY
+================================================================================
+
+  A) FAST (#1+2+3+4): +58-86ps → slack -14 to +14ps  | ~1 wk | 60-70%
+  B) FULL (A + #5):   +78-116ps → slack +6 to +44ps  | ~2 wk | 95%
+
+  *** De-merge REVISED: +20-30ps (was +65-90ps) — D2 input limits FF move ***
+  PLAN: TIP is MANDATORY — start A now, request de-merge in parallel
+        D2 input path (+38.6ps margin) must be monitored
+
+  FILES:
+    rsmoclearvm803h.tp              — TIP plan + EP FF new placement (DRAFT)
+    RSMOClearVM803H_fix_summary.txt — full analysis (464 lines)
+
+================================================================================
+  TIP FILE: rsmoclearvm803h.tp (DRAFT — includes new EP FF placement)
+================================================================================
+
+  This .tp file combines FIX #1 (TIP) + FIX #2 (EP FF move) in one plan.
+  Pattern: bbox_percentage {50 50} + move_objects (per cookbook Section 14)
+
+  NODES (with move_objects to new placement):
+    NODE0 → par_ooo_int SP FF at (1160.376, 783.451)  — current location
+    NODE1 → par_ooo_vec EP FF at (520.000, 470.000)   — NEW PLACEMENT
+      EP FF ROBEarlyQualJumpM304H_reg moved: (440,357) → (520,470)
+      Wire saved: 360um → 167um = 193um reduction
+
+  TIP ROUTE (L-shape, M17/M18 half shield):
+    (1160,783) → (1140,783) → (1140,505) → (440,505)
+    Leg 1: M18  20um horizontal (near SP FF)
+    Leg 2: M17 278um vertical   (drop to port Y=505)
+    Leg 3: M18 700um horizontal (cross boundary → EP)
+
+  REPEATERS:
+    EDGE0 (par_ooo_int, 786um): 5 repeaters @170um spacing
+      Corner at 20um, mid at 159/298/468/638um
+    EDGE2 (par_ooo_vec, 212um): 1 mid-repeater at 106um
+
+  NER: BUFFSR2BFYD18 ULVT, buffer_spacing=170um
+  SHIELD: half shield {M18 0.5 0.5} {M17 0.5 0.5}
+
+  *** DRAFT: master_bound names need RTLFP validation before submission ***
+================================================================================

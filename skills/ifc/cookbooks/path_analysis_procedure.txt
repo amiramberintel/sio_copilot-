@@ -1,0 +1,937 @@
+================================================================================
+  CROSS-PARTITION TIMING PATH ANALYSIS PROCEDURE
+  Step-by-step guide for analyzing and debugging timing violations
+  Reusable template for copilot sessions
+  Author: sunger | Date: Feb 25, 2026
+================================================================================
+
+================================================================================
+  CROSS-PARTITION TIMING PATH ANALYSIS PROCEDURE
+  Step-by-step guide for analyzing and debugging timing violations
+  Generic — works for ANY partition crossing (par_msid, par_fe, par_be, etc.)
+  Reusable template for copilot sessions
+  Author: sunger | Date: Feb 25, 2026
+================================================================================
+
+PROJECT CONTEXT (GFC N2P)
+==========================
+  Process:       TSMC N2P (cell library = N3 platform, N3P48)
+  Cell height:   BWP156H (156nm, high-density)
+  Clock:         mclk (186ps period, ~5.4GHz) — same frequency all partitions,
+                 different clock trees per partition (mclk_msid, mclk_fe, etc.)
+  Coordinates:   DBU units in report_timing (1 DBU = 1 nm in GFC N2P)
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  COORDINATE CONVERSION QUICK REFERENCE                                 │
+  │                                                                        │
+  │  report_timing shows Location as (X, Y) in DBU (database units).       │
+  │  In GFC N2P: 1 DBU = 1 nm                                             │
+  │                                                                        │
+  │  To convert to MICRONS (μm):   divide by 1000                         │
+  │    Formula:  X_μm = X_DBU / 1000                                       │
+  │                                                                        │
+  │  Example:                                                              │
+  │    report_timing shows:  Location = (1363464, 93574)                   │
+  │    In microns:           (1363464/1000, 93574/1000) = (1363.5, 93.6)μm │
+  │                                                                        │
+  │  Manhattan distance in μm:                                             │
+  │    dist = (|X1-X2| + |Y1-Y2|) / 1000                                  │
+  │                                                                        │
+  │  Wire delay rule of thumb:  ~5-15ps per 100μm (layer dependent)        │
+  │  Distance red flags:  >200μm = needs repeaters, >500μm = placement fix │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  Corners:
+    max_high  = Slow process + High temp (85°C) + Low voltage → WORST for SETUP
+    max_nom   = Slow process + Nominal temp + Nominal voltage → Setup check
+    min_low   = Fast process + Low temp + High voltage → WORST for HOLD
+
+  Primary debug corners:
+    func.max_high.T_85.typical  — main setup corner (most timing violations)
+    func.max_nom                — secondary setup corner
+    func.min_low                — hold violations
+
+  Vt types (speed order):   ULVT (fastest) > LVT > SVT > HVT (slowest)
+  Drive strengths:          D1 (weakest) → D2 → D3 → D4 → D6 → D8 → D10 → D12 → D16 (strongest)
+
+  Typical cell delays at N2P:
+    Simple INV/BUFF:   2-5ps  (D4-D8 ULVT, good)
+                       7-15ps (D2-D3 LVT, weak — flag these!)
+    Complex logic:     4-10ps (NAND, NOR, AOI, OAI)
+    FF clk-to-Q:      12-18ps (OPTQF = fast Q, OPTQA = fast setup)
+    FF setup time:     6-12ps
+    SR2BFY buffer:     8-12ps (intentionally slow for signal integrity)
+    Wire RC per 100μm: 5-15ps (depends on metal layer and loading)
+    EBB/SRAM access:   50-120ps (memory macros)
+
+
+HOW TO READ report_timing OUTPUT
+==================================
+  Key columns:
+    Fanout  = number of sinks driven by this pin
+    Cap     = total capacitance at the pin (fF)
+    DTrans  = delta transition (crosstalk noise effect on transition)
+    Trans   = signal transition time (slew, in ps)
+    Delta   = crosstalk delta delay (ps)
+    Mean    = mean delay increment (ps)
+    Sensit  = sensitivity (statistical, sigma-related)
+    Incr    = incremental delay for this cell/wire (ps)
+    Path    = cumulative path delay (ps)
+    Location = (x,y) coordinates in DBU
+
+  Key markers:
+    r / f         = rise / fall transition at this pin
+    &             = cumulative (path continues from previous point)
+    (par_msid) <- = signal EXITS this partition (output boundary port)
+    (par_fe)      = signal ENTERS this partition (input boundary port)
+    unplaced      = hierarchical feedthrough pin (no physical location)
+    SDFQTXG...    = cell reference name (decode with naming guide)
+
+  Boundary crossing pattern in report:
+    ... some_net (net)
+    0.0    0.0    0.0 &  XXX.X f  (x,y)  icore0/par_msid/port_name (par_msid) <-   ← EXIT
+                                          icore0/signal_name (net)                    ← top-level
+    0.0    0.0    0.0 &  XXX.X f  (x,y)  icore0/par_fe/port_name (par_fe)           ← ENTER
+    The delay at boundary is usually 0 (logical connection, no physical cell)
+
+  Statistical timing (Sigma column):
+    Sigma value in header = statistical spread factor (e.g., 4.4 sigma)
+    Sensit column = how sensitive each cell is to process variation
+    Statistical adjustment at bottom = total sigma-based correction
+
+
+WHAT IS SIO (Sideload I/O Override)
+=====================================
+  SIO buffers are timing override buffers inserted at partition boundary ports.
+  Purpose: when a port's timing is not achievable with normal buffering,
+           an SIO buffer is added to "override" the delay and help meet timing.
+  
+  sio_buffer_delay in carpet:
+    = 0    → no SIO override on this path (normal)
+    > 0    → SIO buffer present — adds delay but was needed for previous model
+  
+  When SIO can be removed:
+    - If timing improved in new model and path now meets without SIO
+    - If the SIO was a temporary workaround and root cause is now fixed
+    - Removing SIO saves the buffer delay from the path
+  
+  When SIO must stay:
+    - Path still needs the override to meet timing on other paths
+    - SIO was added for hold fix (removing would break hold)
+
+
+CARPET DATA FORMAT (tab-separated)
+====================================
+  Column order (tab-separated, one path per line):
+  startpoint [tab] endpoint [tab] spec_port [tab] calculated_slack [tab]
+  delay [tab] clk_skew [tab] sio_buffer_delay [tab] latches_count [tab]
+  ebbs_count [tab] logic_count [tab] inv_buffs_count [tab] manh_dist [tab]
+  delay_per100um [tab] tot_dist [tab] rc_delay [tab] inv/buff_delay [tab]
+  logic_cell_delay [tab] ebb_delay
+
+  To parse: split line by tab character, map to column names above.
+  Units: delays in ps, distances in μm.
+
+
+================================================================================
+
+When user provides a timing report for a cross-partition path, follow these
+steps IN ORDER to produce a complete analysis.
+
+
+STEP 0: QUICK TRIAGE FROM CARPET DATA (if available)
+======================================================
+The carpet report gives fast summary data per path. Use it for initial
+screening BEFORE pulling the full report_timing.
+
+  Carpet columns and what to look for:
+  ─────────────────────────────────────────────────────────────────────────
+  Field              What it tells you              Red flag
+  ─────────────────  ─────────────────────────────  ──────────────────────
+  startpoint         Launch FF (clock pin)          -
+  endpoint           Boundary port or capture FF    -
+  spec_port          Port spec budget (ps)          Low budget = tight
+  calculated_slack   Slack after spec (ps)          Negative = failing
+  delay              Total data path delay (ps)     High = slow path
+  clk_skew           Clock skew (ps)                Large = clock issue
+  sio_buffer_delay   SIO override buffer delay (ps) >0 = SIO buffer in path
+  latches_count      Transparent latches in path    >0 = latch borrowing
+  ebbs_count         EBB macros in path             >0 = SRAM/memory
+  logic_count        Combinational logic cells      High = deep logic cone
+  inv_buffs_count    Inverter/buffer cells          High = long buffer chain
+  manh_dist          Manhattan distance (μm)        >200 = long wire path
+  delay_per100um     Delay efficiency (ps/100μm)    >80 = poor routing
+  tot_dist           Total wire distance (μm)       Compare with manh_dist
+  rc_delay           Wire RC delay (ps)             High = wire-dominated
+  inv/buff_delay     Buffer/inverter delay (ps)     High = buffer-dominated
+  logic_cell_delay   Logic + FF delay (ps)          High = logic-dominated
+  ebb_delay          EBB macro delay (ps)           High = memory in path
+
+  Example carpet data:
+  startpoint:  .../auto_vector_MBIT_IfqBrTakenIn32BM103H_reg_.../CP
+  endpoint:    icore0/par_fe/ifqbrtakenin32bm103h[0]
+  spec: 24ps | slack: -37.7ps | delay: 38ps | clk_skew: 23.4ps
+  logic: 0 | inv/buff: 3 | manh: 61μm | delay/100μm: 63ps
+  rc: 9.6ps | inv/buff_delay: 13.5ps | logic_delay: 15ps
+
+  Quick diagnosis from carpet:
+  ─────────────────────────────────────────────────────────────────────────
+  □ Compare delay vs spec budget → how far off are we?
+  □ Check delay composition: rc_delay + inv/buff_delay + logic_cell_delay
+    → Which component dominates? That's where to focus the fix.
+  □ rc_delay dominant       → wire problem → port relocation / FF near pin
+  □ inv/buff_delay dominant → buffer chain → sizing / buffer optimization
+  □ logic_cell_delay dominant → deep logic → retiming / logic restructure
+  □ ebb_delay dominant      → memory macro → talk to memory team
+  □ sio_buffer_delay > 0    → SIO override → check if SIO is still needed
+  □ delay_per100um > 80     → inefficient routing → reroute / better buffers
+  □ delay_per100um < 50     → good routing, problem is elsewhere
+  □ manh_dist > 200μm       → physically long → port/FF relocation
+  □ inv_buffs_count > 5     → heavy buffering → FF duplication to reduce
+
+  Prioritization (which paths to analyze first):
+    1. Worst slack paths (most negative calculated_slack)
+    2. Paths with high delay_per100um (poor routing efficiency)
+    3. Paths with high inv_buffs_count (opportunity for buffer optimization)
+    4. Paths with sio_buffer_delay > 0 (may be removable overrides)
+    5. Paths with ebbs_count > 0 (memory timing may need architecture fix)
+  ─────────────────────────────────────────────────────────────────────────
+
+
+STEP 1: EXTRACT PATH BASICS
+============================
+From the report_timing output, extract:
+  □ Startpoint FF name and cell type
+  □ Endpoint FF name and cell type
+  □ Path group and path type (max/min)
+  □ Clock names (source clock, destination clock)
+  □ Number of cycles (check clock edge: 1-cycle = same edge, 2-cycle = next)
+  □ Clock period (from "normalization delay" or clock edge values)
+  □ Slack value and violation amount
+  □ Total data arrival time
+  □ Total data required time
+
+
+STEP 2: IDENTIFY PARTITION CROSSING
+=====================================
+From the hierarchical pin names, determine:
+  □ Source partition (e.g., par_msid)
+  □ Destination partition (e.g., par_fe)
+  □ Boundary port name (look for "(par_msid) <-" or "(par_fe)" markers)
+  □ Direction: which partition is source, which is destination
+  □ Is it a boomerang path? (leaves and comes back to same partition)
+  □ Does it cross more than 2 partitions?
+
+
+STEP 3: PHYSICAL DISTANCE ANALYSIS
+====================================
+From the Location column (x,y coordinates):
+  □ Source FF location
+  □ Boundary port location
+  □ Destination FF location
+  □ Calculate Manhattan distance: |x1-x2| + |y1-y2|
+     (coordinates are in DBU — divide by 1000 for μm, see COORDINATE box above)
+  □ Note: large distance (>200μm) = likely needs repeater chain = slow
+  □ par_msid side distance: source FF to boundary port
+  □ par_fe side distance: boundary port to destination FF
+
+
+STEP 4: DELAY BREAKDOWN BY SEGMENT
+====================================
+Break the path into segments and calculate delay for each:
+  □ Clock network delay (source side)
+  □ FF clk-to-Q delay
+  □ Combinational logic delay in source partition
+  □ Buffer/repeater chain delay in source partition
+  □ Boundary crossing delay (usually 0, but check for port buffers)
+  □ Buffer/repeater chain delay in destination partition
+  □ Combinational logic delay in destination partition
+  □ Setup time at destination FF
+  □ Clock network delay (destination side)
+  □ Inter-clock uncertainty
+
+  Identify the BIGGEST delay segment — that's where to focus the fix.
+
+
+STEP 5: CELL ANALYSIS
+=======================
+For each cell in the path, note:
+  □ Cell type and decode the name (use library_cell_naming_reference.txt)
+  □ Drive strength (D1=weak, D16=strong)
+  □ Vt type (ULVT=fast, LVT=medium, SVT=slow, HVT=slowest)
+  □ Special types: SR2BFY (slow slew rate), OPTQA/OPTQF (FF optimization)
+  □ Fanout at each stage (from FO column)
+  □ Capacitance at each stage (from Cap column)
+  □ Transition time (from Trans column) — high trans = slow signal
+
+  Flag WEAK cells: D1-D3 with LVT/SVT, or cells driving high fanout/cap.
+  Flag SLOW cells: SR2BFY buffers, INVREP (repeaters for long wires).
+
+  ⚠️ CHECK FOR ILLEGAL CELLS:
+  ─────────────────────────────
+  CRITICAL: Verify no cells in the path are on the illegal cells list!
+  If PT used an illegal cell to "fix" timing, the fix is invalid and will
+  be rejected in physical design.
+
+  Illegal cells list location:
+    $wa/project/GFCN2CLIENTA0/illegal.txt
+
+  In the daily WA:
+    /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/<daily_wa>/project/GFCN2CLIENTA0/illegal.txt
+
+  Format: <lib_pattern>  <cell_name>  <reason>
+
+  The file has ~15,746 cells. Main banned categories:
+    • ELVT cells      (~4,885) — elvt_svt_cells_are_not_allowed
+    • LVTLL cells     (~5,026) — lvtll_cells_are_not_allowed
+    • PNNP OD flavor  (~1,765) — pnnp_OD_flavor_is_not_allowed
+    • M2 pitch        (~1,141) — illegal_M2_default_pitch
+    • Non-ULVT clocks (~368)   — only_ulvt_allowed_for_clock_cells
+    • ECO cells       (~282)   — eco_cells_are_not_allowed
+
+  Quick check: extract cell refs from path, grep against illegal list:
+    # From PT timing report, extract cell names (column with lib cell ref)
+    grep -oP '\S+HPNPN\S+' /tmp/path_report.txt | sort -u > /tmp/path_cells.txt
+
+    # Cross-check against illegal list
+    while read cell; do
+      grep -q "$cell" $wa/project/GFCN2CLIENTA0/illegal.txt && echo "ILLEGAL: $cell"
+    done < /tmp/path_cells.txt
+
+  PT shell check (inside pt_client):
+    # Get all cells in a path and check ref_name
+    set path [get_timing_paths -from <start> -to <end>]
+    foreach_in_collection cell [get_cells -of $path] {
+      set ref [get_attribute $cell ref_name]
+      puts "$ref"
+    }
+    # Then grep the output against illegal.txt
+
+  Common trap: PT may swap a LVT cell to ELVT for better timing during
+  optimization — the timing looks great but the cell is banned. Always
+  verify the Vt suffix in cell ref names:
+    CPDELVT  → BANNED (eLVT)
+    CPDLVTLL → BANNED (LVT low-leakage)
+    CPDLVT   → Check if PNNP flavor (may be banned)
+    CPDULVT  → OK (unless clock cell restrictions apply)
+    CPDULVTLL→ Check specific reason
+
+
+STEP 6: FANOUT ANALYSIS
+=========================
+For the source FF output pin:
+  □ Check FO from timing report (first-level fanout)
+  □ Run in pt_shell to get full fanout:
+    redirect /nfs/site/disks/sunger_wa/fc_data/fanout_<name>.txt {
+      set fo [all_fanout -from [get_pins <source_FF>/Q] -flat -endpoints_only]
+      puts "Total FF endpoints: [sizeof_collection $fo]"
+      foreach_in_collection p $fo { puts [get_attribute $p full_name] }
+    }
+  □ Count endpoints per partition (par_msid local vs par_fe external)
+  □ Identify signal groups (e.g., BrDispNotSigned, EndPlus1, etc.)
+  □ Count INPUT_DIODE cells (ESD protection, not functional FFs)
+
+For the boundary port:
+  □ Check fos_count from port_location_outside_bbox.csv:
+    grep "<port_name>" $links/$model/runs/$block/$tech/sta_pt/func.max_high.*/reports/port_location_outside_bbox.csv
+  □ fos_count = first-level fanout sinks in receiving partition
+  □ High fos_count (>100) = candidate for port duplication
+
+
+STEP 7: CHECK NEIGHBORING STAGE SLACK (RETIMING OPPORTUNITY)
+==============================================================
+CRITICAL: Before proposing a fix, check the stages BEFORE and AFTER the
+failing path. If a neighbor has positive slack (margin), retiming may be
+possible — move logic from the failing stage to the neighbor stage.
+
+  Check the stage BEFORE (feeding into source FF):
+  □ report_timing -to [get_pins <source_FF>/D] -max_paths 5
+  □ Record the worst slack feeding into the source FF
+  □ Positive slack = margin available = can push logic forward
+
+  Check the stage AFTER (from endpoint FF to its destinations):
+  □ report_timing -from [get_pins <endpoint_FF>/Q] -max_paths 5
+  □ Record the worst slack leaving the endpoint FF
+  □ Positive slack = margin available = can pull logic backward
+
+  Retiming analysis:
+  □ Failing path slack:        e.g., -102ps
+  □ Stage before slack:        e.g., +40ps  → can borrow up to ~40ps
+  □ Stage after slack:         e.g., +60ps  → can borrow up to ~60ps
+
+  If neighbor has margin → RETIMING is possible:
+    - Move combinational logic across the FF boundary
+    - Source FF absorbs logic from before → frees time for the failing path
+    - Endpoint FF pushes logic to after → frees time for the failing path
+    - NO new FFs added — just moving where the logic sits relative to FF
+
+  When retiming is NOT possible or too expensive:
+    - Neighbor stages also have negative slack (no margin to borrow)
+    - Logic cannot be moved (e.g., feedback loop, shared signals)
+    - Moving logic would require adding FFs to maintain other paths
+    - RTL change is complex and risky for the design team
+
+  PT commands for quick neighbor check (one-liners for copy-paste):
+  report_timing -to [get_pins <source_FF>/D] -nosplit -max_paths 3 > /tmp/before.txt
+  report_timing -from [get_pins <endpoint_FF>/Q] -nosplit -max_paths 3 > /tmp/after.txt
+
+
+STEP 8: IDENTIFY ROOT CAUSE
+=============================
+Based on steps 1-7, determine the primary timing violation cause:
+
+  □ Long physical distance (>200μm Manhattan)?
+    → Port relocation or FF placement near pin (ask PO)
+
+  □ High fanout from source FF to both internal + external?
+    → FF duplication
+
+  □ High fanout at boundary port (fos_count > 100)?
+    → Port duplication
+
+  □ Weak/slow cells in the path?
+    → Cell sizing (upsize drive strength, change to ULVT)
+    → ⚠️ Make sure replacement cell is NOT on the illegal list!
+
+  □ Illegal cells in the path? (see STEP 5)
+    → Cell is banned — timing gain is fake, fix will be rejected
+    → Replace with legal alternative (e.g., ELVT→LVT or ULVT)
+    → Recalculate slack with legal cell — the REAL gap may be worse
+
+  □ Unnecessary SR2BFY buffers?
+    → Buffer chain optimization
+
+  □ Endpoint FF far from boundary pin?
+    → Ask PO to place FF in bounding box near pin
+
+  □ Unfavorable clock relationship? (see SECTION 12: CLOCK SKEW FIX STRATEGY)
+    → First try USEFUL SKEW on specific FFs (local clock buf, low risk)
+    → Only if that fails → ask CLK team to adjust whole tree
+    → Clock adjustment / MCP as last resort
+
+  □ Path fundamentally too long for budget?
+    → Retiming or logic depth reduction (see RTL FIX RULES below)
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  ⚠ RTL FIX RULES — WHAT WE DO AND DON'T DO                            │
+  │                                                                        │
+  │  ✅ ALLOWED RTL4BE fixes:                                              │
+  │    • Retiming — rebalance FF positions (move logic across existing FF  │
+  │      boundary, no new FFs added, borrows slack from neighbor stages)   │
+  │    • Reduce logic depth — simplify combinational logic (fewer gates    │
+  │      between FFs, e.g. conditional→direct decode, merge selects)      │
+  │    • Pre-compute — shift logic to earlier cycle (compute partial       │
+  │      results in M106H so M107H→M108H crossing is lighter)            │
+  │                                                                        │
+  │  ❌ NEVER propose:                                                     │
+  │    • Adding pipeline stages (new FFs to cut path in half)             │
+  │      → Adds latency to the design (e.g., +1 cycle to branch dispatch) │
+  │      → Architecture change requiring FE architect approval            │
+  │      → Changes timing of ALL downstream consumers                     │
+  │      → This is NOT a standard timing fix, it changes functionality    │
+  │                                                                        │
+  │  BOTTOM LINE: We fix timing by MOVING or REDUCING logic,              │
+  │  never by ADDING pipeline stages.                                      │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+
+STEP 9: QUANTIFY FIX POTENTIAL
+================================
+For each proposed fix, estimate the timing gain:
+
+  Retiming (borrow from neighbor stage):
+    □ Check slack of stage before and after (Step 7)
+    □ If before has +Xps margin → can borrow up to ~X ps
+    □ If after has +Xps margin → can borrow up to ~X ps
+    □ Retiming = move logic across FF, no new FFs needed
+    □ BUT: not always possible (feedback, shared signals, both neighbors tight)
+
+  Cell sizing:
+    □ Count weak cells, estimate 2-5ps gain per cell upsized
+    □ Check if Vt change is possible (LVT→ULVT = 2-3ps per cell)
+
+  Buffer optimization:
+    □ Count buffer stages, estimate 10-30ps per removed stage
+    □ Identify SR2BFY buffers that could be replaced with fast BUFF
+
+  Port relocation:
+    □ Estimate wire delay reduction from shorter distance
+    □ ~0.5-1ps per μm of wire reduction
+
+  Port duplication:
+    □ Estimate buffer tree depth reduction from halving fanout
+    □ ~20-40ps typical gain
+
+  FF duplication:
+    □ Estimate buffer chain removal (40-70ps typical)
+    □ Count FFs to duplicate for area/power estimate
+
+  FF placement near pin (ask PO):
+    □ Calculate current distance from pin to endpoint FF
+    □ Estimate delay reduction: ~0.5-1ps per μm saved
+    □ Typical gain: 30-80ps
+    ⚠️ WARNING: moving FFs changes their clock tap point → clock latency
+       changes → any clock-based fix (useful skew) must be re-evaluated.
+       RULE: apply useful skew AFTER placement is final, not before.
+       Prefer TIP buffer insertion (no cell movement) over move_objects.
+
+
+STEP 10: GENERATE REPORT
+=========================
+Create a summary file with:
+  □ Path summary (source, endpoint, slack, crossing)
+  □ Delay breakdown table
+  □ Physical distance analysis
+  □ Fanout analysis results
+  □ Root cause identification
+  □ Recommended fix(es) with estimated gain
+  □ PT shell commands used
+  □ Save to: /nfs/site/disks/sunger_wa/fc_data/my_learns/temp_txt_files/
+
+  File naming: <signal_name>_path_analysis.txt
+  Example: BaEM64_IFC_path_duplication_analysis.txt
+
+
+STEP 11: CROSS-REFERENCE WITH FIX GUIDELINE
+=============================================
+  □ Read cross_partition_timing_fix_guideline.txt
+  □ Use the decision flowchart to confirm the recommended technique
+  □ Check if multiple techniques should be combined
+  □ Identify the owner for each fix action
+  □ Document the recommendation for the HSD/ticket
+
+
+================================================================================
+PT SHELL COMMAND REFERENCE FOR PATH ANALYSIS
+================================================================================
+
+  # Report timing for a specific path
+  report_timing -from [get_pins <source>] -to [get_pins <dest>] \
+    -nosplit -input_pins -nets -transition_time -capacitance \
+    -crosstalk_delta -physical
+
+  # Get all fanout endpoints from a pin
+  set fo [all_fanout -from [get_pins <pin>] -flat -endpoints_only]
+  puts "Total: [sizeof_collection $fo]"
+
+  # Redirect fanout list to file (one-liner for copy-paste)
+  redirect <file> { set fo [all_fanout -from [get_pins <pin>] -flat -endpoints_only]; puts "Total FF endpoints: [sizeof_collection $fo]"; foreach_in_collection p $fo { puts [get_attribute $p full_name] } }
+
+  # Get cell type and drive strength
+  get_attribute [get_cells <cell>] ref_name
+
+  # Get pin location
+  get_attribute [get_pins <pin>] location
+
+  # Get port fanout count from CSV
+  # grep <port> .../reports/port_location_outside_bbox.csv
+
+  # Filter endpoints by pattern (e.g., find all IfqRdPtr FFs)
+  set ifq [filter_collection $fo "full_name=~*IfqRdPtr*"]
+  puts "IfqRdPtr count: [sizeof_collection $ifq]"
+
+  # Get FF count for duplication estimate
+  sizeof_collection [get_cells -hier *<pattern>* -filter "is_sequential==true"]
+
+  # Check boundary port properties
+  get_attribute [get_ports <port>] direction
+  get_attribute [get_ports <port>] max_capacitance
+
+
+================================================================================
+KEY FILES TO REFERENCE
+================================================================================
+
+  Guideline:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/cross_partition_timing_fix_guideline.txt
+
+  Cell naming:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/library_cell_naming_reference.txt
+
+  PT commands:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/report_timing_command_reference.txt
+
+  Port locations:
+    $links/$model/runs/$block/$tech/sta_pt/func.max_high.*/reports/port_location_outside_bbox.csv
+
+  Previous analyses:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/temp_txt_files/BaEM64_IFC_path_duplication_analysis.txt
+
+  Colorized analysis viewer:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/ww10_4/colorize_analysis.sh
+
+================================================================================
+  SECTION 10: COLORED OUTPUT FOR ANALYSIS FILES
+================================================================================
+
+  After creating a path analysis .txt file, generate a colored terminal view
+  using the colorize_analysis.sh script.
+
+  USAGE:
+    bash colorize_analysis.sh <analysis_file.txt>
+
+  EXAMPLE:
+    bash ww10_4/colorize_analysis.sh ww10_4/DsbExitPointMaskM124H_path_analysis.txt
+
+  COLOR SCHEME:
+    Blue/Cyan   - Section headers and numbered titles
+    Red         - Negative slacks, VIOLATED, OVER, SYSTEMIC, impossible
+    Red BG      - Critical alerts (100% fail rate)
+    Yellow      - Bit references [N], Moderate severity
+    Green       - Fix options, Mild severity, nearly passing annotations
+    Magenta     - Title, spec owners (gilkeren etc)
+    Dim         - Structural info (bit structure)
+
+  The script works on ANY analysis file that follows the standard format
+  (numbered sections, slack values in "XX ps" format, severity labels).
+
+  NOTE: Colors are terminal-only (ANSI codes). The source .txt stays plain text.
+        When generating a new analysis file, always run the colorizer at the end
+        to verify formatting looks correct.
+
+
+================================================================================
+  SECTION 12: CLOCK SKEW FIX STRATEGY — USEFUL SKEW FIRST
+================================================================================
+
+  When clock skew hurts a path, DO NOT immediately ask CLK team to change the
+  whole clock tree. Always try LOCAL USEFUL SKEW on the specific FFs first.
+
+  PRIORITY ORDER (always follow this):
+  ─────────────────────────────────────────────────────────────────────────────
+  #1  USEFUL SKEW on specific FFs         (par owner, LOW risk)
+  #2  Reduce source clock tree latency    (CLK team, MEDIUM risk)
+  #3  Full clock tree restructuring       (CLK team, HIGH risk)
+  ─────────────────────────────────────────────────────────────────────────────
+
+  ─── WHAT IS USEFUL SKEW? ───
+
+  Insert a small clock buffer ONLY on the clock pins of the failing
+  endpoint FFs. This delays their capture clock locally, reducing skew
+  without touching any other FFs on the same clock tree.
+
+    mclk tree ──┬──► all other FFs on this clock (NO CHANGE)
+                └──► [CLK BUF +Xps] ──► only the N failing endpoint FFs
+                     (local delay)       (capture delayed → skew improved)
+
+  EXAMPLE (from DsbExitPointMaskM124H analysis):
+    Problem: mclk_fe=105ps launch, mclk_msid=91ps capture → skew = -14ps
+    Fix: insert +14ps clock buffer on 44 RecycExitMaskM183H FF clock pins
+    Result: capture becomes 105ps, skew → 0, path gains +14ps
+    Risk: only 44 FFs affected, not 312,290 paths on mclk_msid tree
+
+  ─── STEP-BY-STEP: USEFUL SKEW ANALYSIS ───
+
+  1. IDENTIFY the endpoint FFs (from the failing path)
+     □ Get register name and count (e.g., DsbqByp124RecycExitMaskM183H × 44)
+     □ Confirm they are all on the same clock domain
+
+  2. CALCULATE how much skew to borrow
+     □ Current skew = endpoint_clk_latency - startpoint_clk_latency
+     □ If negative: capture is early → we want to ADD delay to capture
+     □ Target: make skew ≈ 0 (match launch and capture latency)
+     □ Amount to borrow = |current_skew| (e.g., 14ps)
+
+  3. CHECK OUTPUT PATHS from those same FFs
+     This is the CRITICAL step — those FFs also LAUNCH data.
+     Delaying their clock helps INPUT but HURTS OUTPUT paths.
+
+     Run in PT:
+       report_timing -from [get_pins <endpoint_FF_pattern>*/CP] \
+                     -to [get_pins *] \
+                     -nworst 10 -nosplit
+     
+     Example:
+       report_timing -from [get_pins *DsbqByp124RecycExitMaskM183H_reg*/CP] \
+                     -nworst 10 -nosplit
+
+  4. DECISION TABLE based on output path slack
+     ┌─────────────────────────────┬──────────────────────────────────────┐
+     │ Output path worst slack     │ Action                               │
+     ├─────────────────────────────┼──────────────────────────────────────┤
+     │ > borrow_amount + 5ps       │ ✅ SAFE — insert full clock delay    │
+     │ > 0 but < borrow_amount     │ ⚠️  PARTIAL — borrow only up to     │
+     │                             │    (output_slack - 5ps margin)       │
+     │ ≤ 0 (already failing)       │ ❌ CANNOT use useful skew here      │
+     │                             │    → escalate to CLK team (#2 or #3)│
+     └─────────────────────────────┴──────────────────────────────────────┘
+
+  5. CHECK HOLD IMPACT before applying useful skew
+     Adding clock delay to capture FFs makes hold HARDER on output paths.
+     Check the hold (min) corner for paths FROM these FFs:
+
+     In timing_summary.xml (func.min_high corner):
+       grep '<FF_pattern>' *min*timing_summary.xml | grep 'startpoint=.*<FF>'
+
+     □ If hold paths go to /SI pins only → SCAN CHAIN, no functional risk
+       (scan hold is auto-fixed by PnR hold buffer insertion)
+     □ If hold paths go to /D pins → functional hold risk, calculate impact
+     □ Hold slack decreases by the same amount as the clock delay added
+
+  6. IMPLEMENT (if safe)
+     The par owner can do this — NO CLK team involvement needed:
+     □ Option A: Insert clock buffer cell on FF clock pins (physical)
+     □ Option B: set_clock_latency_adjustment on those FFs (SDC/constraint)
+     □ Option C: Place FFs near a later clock tap point (physical)
+
+  ─── SHORTCUT: CHECK OUTPUT PATHS WITHOUT PT ───
+
+  If you don't have PT access, use the timing_summary.xml:
+  The XML contains ALL paths with slack ≤ 0 (both setup and hold).
+  If the endpoint FFs appear ONLY as endpoints (never as startpoints):
+    → All output paths have POSITIVE slack → safe to borrow!
+
+  Example:
+    grep 'RecycExitMask' timing_summary.xml
+    → 116 hits as ENDPOINT, 0 as STARTPOINT
+    → output paths all positive → useful skew is safe
+
+  ─── WHEN TO ESCALATE TO CLK TEAM ───
+
+  Only ask CLK team to change the whole tree when:
+    □ Useful skew is not feasible (output paths already failing)
+    □ Too many FFs affected (>500 FFs → local buffer impractical)
+    □ Multiple clock domains involved (need tree-level rebalancing)
+    □ The clock latency is the HIGHEST of all variants (systemic issue)
+      Example: mclk_fe=105ps was highest of 12 variants → systemic
+
+  ─── TRADE-OFF ANALYSIS: CHECK BOTH DIRECTIONS ───
+
+  Before asking CLK team to change a tree, ALWAYS check REVERSE direction:
+    Forward:  clkA → clkB (the failing direction)
+    Reverse:  clkB → clkA (may depend on current skew!)
+
+  Example:
+    fe→msid: skew = -14ps (hurts), 15,308 violations
+    msid→fe: skew = +9ps (HELPS), 16,302 violations, worst = -97ps
+    
+    Reducing mclk_fe helps BOTH directions ✅
+    Increasing mclk_msid hurts reverse direction ❌
+
+  How to check reverse violations:
+    grep "startpoint_clock=\"mclk_msid\" endpoint_clock=\"mclk_fe\"" \
+      $WA/reports/*timing_summary.xml | wc -l
+
+  ─── FIX INTERACTIONS: CLOCK vs DATA PATH vs PHYSICAL ───
+
+  CRITICAL RULE: Clock-based fixes and physical cell moves INTERACT.
+  Data path (logic) fixes and clock fixes are INDEPENDENT.
+
+  ┌────────────────────────┬──────────────┬────────────────────────────┐
+  │ Fix type               │ Moves FFs?   │ Affects clock?             │
+  ├────────────────────────┼──────────────┼────────────────────────────┤
+  │ Spec rebalance         │ NO           │ NO — just XML numbers      │
+  │ Useful skew (clk buf)  │ NO           │ YES — clock pin only       │
+  │ Synthesis directives   │ NO           │ NO — combo logic only      │
+  │ TIP buffer insertion   │ NO           │ NO — data wire buffer      │
+  │ Logic restructuring    │ NO           │ NO — RTL combo gates       │
+  │ move_objects (PnR)     │ YES ⚠️       │ YES — clock tap changes    │
+  │ Pipeline FF insertion  │ NEW FFs      │ YES — new clock loads      │
+  │  ⚠ DO NOT USE — adds latency, needs architect approval!           │
+  └────────────────────────┴──────────────┴────────────────────────────┘
+
+  RULES:
+  1. Fixes that DON'T move FFs are independent → can stack freely
+  2. move_objects is a PnR command (Innovus/ICC2), NOT a TIP command
+     TIP can only: add_buffer, add_repeater, resize cells
+     PnR owner must do: move_objects, place_opt
+  3. If you move FFs → clock latency changes → must RE-EVALUATE:
+     - Useful skew buffer amount (may need more or less)
+     - Hold impact (new clock tap = different hold paths)
+     - Output path slack (launch timing changes)
+  4. ALWAYS apply useful skew AFTER placement is final
+     Never add clock buffer first then move the FF — the buffer
+     amount will be wrong after the move.
+  5. Prefer TIP buffer insertion (no cell movement) over
+     move_objects to avoid clock interactions.
+
+  RECOMMENDED FIX ORDER:
+    Step 1: Spec rebalance (FREE, no risk)
+    Step 2: Synthesis directives (zero risk, no physical change)
+    Step 3: TIP buffer insertion (data path, no FF movement)
+    Step 4: Logic restructuring (RTL, no FF movement)
+    Step 5: Useful skew (clock, after placement is final)
+    Step 6: move_objects (PnR, last resort — changes clock)
+
+  ─── PT COMMANDS FOR CLOCK ANALYSIS ───
+
+  # Get clock latency for a specific FF
+  report_timing -to [get_pins <FF>/D] -path_type full_clock_expanded
+
+  # Compare all clock tree latencies
+  report_clock_timing -type latency
+
+  # Get clock pins of specific FFs
+  get_pins -of_objects [get_cells -hier *<pattern>*] -filter "is_clock_pin==true"
+
+  # Check useful skew: report FROM the endpoint FFs (setup)
+  report_timing -from [get_pins *<endpoint_FF_pattern>*/CP] -nworst 10
+
+  # Check useful skew: report FROM the endpoint FFs (hold)
+  report_timing -from [get_pins *<endpoint_FF_pattern>*/CP] -delay min -nworst 10
+
+  # Count violations between two clock domains
+  # Use timing_summary.xml:
+  grep "startpoint_clock=\"clkA\" endpoint_clock=\"clkB\"" *timing_summary.xml | \
+    grep -c "slack=\"-"
+
+  # Check hold paths from specific FFs (without PT, using min corner XML):
+  grep '<FF_name>' *min*timing_summary.xml
+  # If all endpoints are /SI → scan only, no functional hold risk
+  # If any endpoint is /D → functional hold, calculate impact
+
+  # Check if FF appears as startpoint (output paths failing):
+  grep 'startpoint="[^"]*<FF_name>' *timing_summary.xml
+  # 0 results → all output paths have positive slack → safe for useful skew
+
+
+================================================================================
+  SECTION 13: FINDING NEARBY FF CLOCK LATENCY (FOR MOVE_OBJECTS ANALYSIS)
+================================================================================
+
+  When considering moving FFs/cells to a new placement location, you need
+  to estimate what the clock latency will be at the new location. Since CTS
+  builds the clock tree based on FF positions, moving an FF changes its
+  clock tap point and latency.
+
+  METHOD: Cross-reference DEF placement coordinates with XML clock latency
+  to find existing FFs near the target location and check their latency.
+
+  ─── STEP-BY-STEP PROCEDURE ───
+
+  1. FIND THE DEF FILE for the partition:
+     Path pattern:
+       <daily_wa>/runs/<partition>/n2p_htall_conf4/release/latest/sta_primetime/<partition>.def.gz
+     Example:
+       .../runs/par_msid/n2p_htall_conf4/release/latest/sta_primetime/par_msid.def.gz
+
+  2. CHECK DEF UNITS (always in header):
+     zcat <partition>.def.gz | head -20 | grep "UNITS DISTANCE"
+     → Example: UNITS DISTANCE MICRONS 2000  (means 1um = 2000 DEF units)
+
+  3. EXTRACT REGISTER CELLS from the module of interest:
+     zgrep "<module_path>.*_reg.*PLACED" <partition>.def.gz > /tmp/regs.txt
+     Example:
+       zgrep "dsbpriomux.*_reg.*PLACED" par_msid.def.gz > /tmp/regs.txt
+     This filters to only register FFs (not buffers/logic), and is fast
+     because zgrep streams without fully decompressing.
+
+  4. ESTABLISH COORDINATE MAPPING between partition DEF and icore PT:
+     The DEF has LOCAL coordinates (partition origin = 0,0).
+     PT report_timing -physical shows GLOBAL icore coordinates.
+     To find the offset:
+       a. Pick a known FF from the failing path (you have its icore coords
+          from PT report_timing output)
+       b. Find the same FF in the DEF extract:
+          grep "<FF_name>" /tmp/regs.txt
+       c. Calculate offset:
+          offset_x = icore_x - (DEF_x / DEF_units_per_um)
+          offset_y = icore_y - (DEF_y / DEF_units_per_um)
+
+     Example (DsbExitPointMaskM124H):
+       PT icore coords:  (1192.9, 302.1) um
+       DEF par_msid:     (1397568, 602888) → (698.8, 301.4) um
+       Offset:           (494.1, 0.7) um
+       Formula:          icore = par_msid_local + (494.1, 0.7)
+
+  5. CONVERT TARGET LOCATION to DEF coordinates:
+     target_DEF_x = (target_icore_x - offset_x) × DEF_units_per_um
+     target_DEF_y = (target_icore_y - offset_y) × DEF_units_per_um
+
+  6. SEARCH FOR FFs NEAR TARGET (Python recommended):
+     Parse /tmp/regs.txt, compute manhattan distance to target DEF coords.
+     Sort by distance, show closest 15-25 FFs.
+     Use 6um bounding box or wider if few FFs found near target.
+
+     Key pattern to parse DEF placement line:
+       - <cell_name> <cell_type> + PLACED ( <x> <y> ) <orient>
+
+  7. CROSS-REFERENCE WITH XML CLOCK LATENCY:
+     From timing_summary.xml, extract endpoint_clk_latency for each FF:
+       grep 'endpoint_clock="<clock_name>"' timing_summary.xml
+     Match FF names between DEF and XML:
+       DEF:  msid/dsbe/dsbpriomux/<cell_name>
+       XML:  icore0/par_msid/msid/dsbe/dsbpriomux/<cell_name>/<pin>
+
+     For MBIT (multibit) cells:
+       DEF name: auto_vector_MBIT_<FF1>_MBIT_<FF2>_MBIT_<FF3>
+       Individual FFs: split on _MBIT_ to get <FF1>, <FF2>, <FF3>
+       Look up each individually in XML.
+
+  8. BUILD THE LATENCY TABLE:
+     Sort FFs by distance to target, show:
+       Location (icore)  |  Distance  |  Clock latency  |  FF type
+
+  ─── INTERPRETING RESULTS ───
+
+  • If nearby FFs have LOWER latency than current FF:
+    → Moving FF there will WORSEN clock skew
+    → Useful skew buffer must INCREASE
+    → Makes move_objects LESS attractive
+
+  • If nearby FFs have HIGHER latency (closer to module average):
+    → Moving FF there may IMPROVE clock skew
+    → Useful skew buffer may DECREASE
+    → Makes move_objects MORE attractive
+
+  • If target is near PARTITION BOUNDARY (port zone):
+    → Likely NO FFs exist there (ports ≠ FF placement area)
+    → Must use FFs from nearest available area as estimate
+    → Add uncertainty margin: ±5ps minimum
+
+  • Rule of thumb: Within a 6um bounding box, clock latency
+    variation is typically ±2-3ps (CTS balances locally).
+    Across 50-100um, variation can be 10-20ps.
+
+  ─── QUICK COMMAND REFERENCE ───
+
+  # Extract all registers from a module in DEF
+  zgrep "<module>.*_reg.*PLACED" <partition>.def.gz > /tmp/regs.txt
+
+  # Get module-level clock latency stats from XML
+  python3 -c "
+  import re
+  lats = {}
+  for line in open('<timing_summary.xml>'):
+      if 'endpoint_clock=\"<clock>\"' not in line: continue
+      if '<module>' not in line: continue
+      m_l = re.search(r'endpoint_clk_latency=\"([^\"]+)\"', line)
+      m_e = re.search(r'endpoint=\"([^\"]+)\"', line)
+      if m_l and m_e:
+          ep = re.sub(r'/[A-Z]\d*$', '', m_e.group(1))
+          lat = float(m_l.group(1))
+          if ep not in lats or lat < lats[ep]: lats[ep] = lat
+  vals = list(lats.values())
+  print(f'FFs: {len(vals)}, Range: {min(vals):.1f}-{max(vals):.1f}ps, Avg: {sum(vals)/len(vals):.1f}ps')
+  "
+
+  # Parse DEF coordinates (Python one-liner)
+  python3 -c "
+  import re
+  for line in open('/tmp/regs.txt'):
+      m = re.search(r'- (\S+)\s+\S+\s+.*PLACED\s+\(\s+(\d+)\s+(\d+)\s+\)', line)
+      if m: print(f'{int(m.group(2))/2000:.1f} {int(m.group(3))/2000:.1f} {m.group(1)}')
+  " | sort -n | head -20
+
+  ─── LESSON LEARNED (DsbExitPointMaskM124H) ───
+
+  Original assumption: Moving FFs toward par_msid average latency (94.8ps)
+  would improve clock skew. This was based on partition-wide statistics.
+
+  Real data showed: FFs near the target location (1370, 370) actually have
+  LOWER latency (~86ps avg) than current (91ps). The target was near the
+  partition boundary where clock tree has less coverage.
+
+  Result: Moving FFs would WORSEN skew by ~5ps, requiring 19ps useful skew
+  buffer instead of 14ps. This changed Option B from "might help clock"
+  to "will hurt clock" — confirming Option A (TIP buffer, no FF movement)
+  as the better primary fix.
+
+  Takeaway: ALWAYS check real nearby-FF latency before recommending
+  move_objects. Module-wide averages can be misleading.
+
+
+================================================================================
+  File: path_analysis_procedure.txt
+  Location: /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/
+================================================================================

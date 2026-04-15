@@ -1,0 +1,22 @@
+================================================================
+COMPARISON REPORT: <build_A> vs <build_B>
+Date: <YYYY-MM-DD>  Partition: <par_name>
+================================================================
+SUMMARY: <overall_trend> [IMPROVED|DEGRADED|MIXED]
+----------------------------------------------------------------
+| Corner          | WNS_A   | WNS_B   | Delta  | Trend      |
+|-----------------|---------|---------|--------|------------|
+| func.max_high   |         |         |        |            |
+| func.max_med    |         |         |        |            |
+| func.max_low    |         |         |        |            |
+| func.min_low    |         |         |        |            |
+| fresh.min_fast  |         |         |        |            |
+----------------------------------------------------------------
+NEW VIOLATIONS (in B, not in A):
+  <list new failing endpoints>
+FIXED VIOLATIONS (in A, not in B):
+  <list fixed endpoints>
+PORT CHANGES:
+  Added:   <count>
+  Removed: <count>
+================================================================

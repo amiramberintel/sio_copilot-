@@ -1,0 +1,49 @@
+# EC Standard Login Environment -*- sh -*-
+# user .aliases file
+# $Source: /usr/cvs/cvsrep/ec_environ-1.0/release/user/aliases,v $
+# $Revision: 1.1 $
+
+# You may place your personal aliases here or in .cshrc.$USER
+#
+# examples:
+# alias . exit
+# alias e emacs
+# alias telnet ssh2
+
+setenv MYSTOD `realpath /nfs/site/disks/tsabek_wa01/`
+alias m "most"
+alias g "grep"
+alias gv "grep -v"
+alias l "less"
+alias ll "ls -ltr"
+
+#load primetime in nb
+alias load_pt_session_in_nb_express 'nbjob run --target sc8_express --qslot /c2dg/BE_BigCore/pnc/sd/sles12_sd --class "SLES12&&4C&&128G" /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh'
+alias load_pt_session_in_nb_express_256G 'nbjob run --target sc8_express --qslot /c2dg/BE_BigCore/pnc/sd/sles12_sd --class "SLES12&&4C&&256G" /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh'
+alias load_pt_session_in_nb_express_512G 'nbjob run --target sc8_express --qslot /c2dg/BE_BigCore/pnc/sd/sles12_sd --class "SLES12&&4C&&512G" /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh'
+
+alias FCT_RECIPE 'xterm -title "FCT_recipe" -e "l /nfs/site/home/gilkeren/rep_fct_recipe_gfc.csh"&'
+alias item '/nfs/site/home/baselibr/bin/item'
+
+alias cmprs 'python /nfs/site/disks/home_user/baselibr/PNC_script/compress_ports.py'
+alias rp "realpath"
+alias cgrep_red "grep --color=always \!* | sed 's/01;31m/01;31m/g'"
+alias cgrep_green "grep --color=always \!* | sed 's/01;31m/01;32m/g'"
+alias cgrep_yellow "grep --color=always \!* | sed 's/01;31m/01;33m/g'"
+alias cgrep_purple "grep --color=always \!* | sed 's/01;31m/01;35m/g'"
+alias cgrep_cyan "grep --color=always \!* | sed 's/01;31m/01;36m/g'"
+alias cgrep_white "grep --color=always \!* | sed 's/01;31m/01;37m/g'"
+alias cgrep_black "grep --color=always \!* | sed 's/01;31m/01;30m/g'"
+alias cgrep_blue "grep --color=always \!* | sed 's/01;31m/01;34m/g'"
+
+setenv GFC_LINKS `realpath /nfs/site/disks/pnc_fct_bu/work_area/fct_scripts/GFC/links/`
+
+source ~baselibr/.aliases
+
+alias copilot 'setenv NODE_OPTIONS "--disable-warning=ExperimentalWarning"; \
+setenv http_proxy http://proxy-dmz.intel.com:912; \
+setenv https_proxy http://proxy-dmz.intel.com:912; \
+setenv no_proxy intel.com,.intel.com,localhost,127.0.0.0/8,10.0.0.0/8,192.168.0.0/16,134.134.0.0/16; \
+cat /etc/ssl/certs/Intel_*.pem >! ~/intel-all.pem; \
+setenv NODE_EXTRA_CA_CERTS ~/intel-all.pem; \
+/p/hdk/cad/copilot/latest/copilot'

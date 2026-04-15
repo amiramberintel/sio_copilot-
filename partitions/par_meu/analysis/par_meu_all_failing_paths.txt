@@ -1,0 +1,290 @@
+================================================================================
+  PAR_MEU UARCH FAMILIES — DETAILED PATH REFERENCE
+  All 125 failing par_meu cross-partition paths from data_meu.csv
+  Sorted by slack (worst first) within each family
+  Source: WW13G daily (CLK050)
+================================================================================
+
+NOTE: "spec" values (when shown) are from par_meu_spec.csv.
+      slack = spec - actual_delay. Negative = failing.
+
+================================================================================
+FAMILY: 803 (Owner: Basel, WC: -77ps, LOS target: -30ps)
+  Status: MEU waiting for new CI from Michel
+  What: MOB write-back checks — validates ROB ordering before WB commits
+================================================================================
+
+  Port                                 Dir  Slack(ps)  Clocks
+  -----------------------------------  ---  ---------  -------------------------
+  mowbcheckrobidldm803h_*_[*]         out  -123.1     mclk_meu -> mclk_ooo_int
+    parts: par_ooo_int, par_meu
+    note: fix clock in meu + in to icg in ooo_int
+
+  rsearlycancelwbldm803h[*]           out   -77.4     mclk_meu -> mclk_ooo_int
+    parts: par_ooo_int, par_meu
+    note: fix flop placement in meu + TIP
+
+  molvpchkwbldm803h[*]                out   -77.1     mclk_meu -> mclk_ooo_int
+    parts: par_ooo_int, par_meu
+    note: port moved to be under the logic cells in meu + ooo_int flop on boundary
+
+  mowbcheckvldm802h[*]                out   -62.3     mclk_meu -> mclk_ooo_int
+    parts: par_ooo_int, par_meu
+    note: TIP
+
+  rsslowrobidvpm803h_*_                out   -59.0     mclk_meu -> mclk_ooo_vec/int
+    parts: par_ooo_vec, par_ooo_int, par_meu
+    note: bound meu flop in (330,50)+fix clock to be on target
+
+
+================================================================================
+FAMILY: 301H_int (Owner: Basel, WC: -71ps, LOS target: !!!!)
+  Status: BLOCKED — MEU waiting for new CI from Michel
+  What: RS dispatch data — reservation station sends micro-ops to MEU
+================================================================================
+
+  rslduopcodm301h_*_[*]               in   -70.6     mclk_ooo_int -> mclk_meu
+    parts: par_meu, par_ooo_int
+    note: TIP 15/100
+
+  rsstauopcodm301h_*_[*]              in   -53.5     mclk_ooo_int -> mclk_meu
+    parts: par_meu, par_ooo_int
+    note: ooo_int to meet spec in BE
+
+  rsbcastcolorm301h_*_*_[*]           in   -45.8     mclk_ooo_int -> mclk_meu
+    parts: par_meu, par_ooo_int
+    note: push clk by 10ps to RSBCastColorM302H_reg_7, improve routing
+
+  rsstduopcodm301h_*_[*]              in   -33.1     mclk_ooo_int -> mclk_meu
+    parts: par_meu, par_ooo_int
+    note: change spec to 110/50 ooo_int/meu
+
+  rsldimmctlm301h_*_[*]              in   -32.5     mclk_ooo_int -> mclk_meu
+    parts: par_meu, par_ooo_int
+    note: fixed in ex
+
+
+================================================================================
+FAMILY: rob-mob (Owner: Alex, WC: -63ps, LOS target: !!!!)
+  Status: MEU ? (unclear fix plan)
+  What: ROB-MOB ordering paths
+================================================================================
+
+  (Paths in UNKNOWN family — see section below)
+
+
+================================================================================
+FAMILY: QSF (Owner: Basel, WC: -61ps, LOS target: -10ps)
+  What: Queue/Scheduler Flags
+================================================================================
+
+  rsvecsbidm301h_*_[*]               in   -61.2     mclk_ooo_vec -> mclk_meu
+    parts: par_exe, par_ooo_vec, par_meu
+    note: delay meu clock to be +10 to target
+
+
+================================================================================
+FAMILY: Fault (Owner: Alex, WC: -58ps, LOS target: -10ps)
+  Status: MEU ? (unclear)
+  What: Machine check / fault information writeback
+================================================================================
+
+  miintwbfaultinfom805h_p_*__*_*_[*]  out  -57.6     mclk_meu -> mclk_ooo_int
+    parts: par_ooo_int, par_meu
+    note: improve routing
+
+  miintwbrealisfaultm805h_p_*_*__op_*  out  -39.0     mclk_meu -> mclk_ooo_int
+    parts: par_ooo_int, par_meu
+    note: meu improve routing, ooo_int should fix in BE to meet spec
+
+
+================================================================================
+FAMILY: JE (Owner: Fadi, WC: -55ps, LOS target: !!!!)
+  Status: BLOCKED — MEU waiting for new CI from Michel
+  What: Jump Execution — branch results, EIP clear
+================================================================================
+
+  jetakenbrclatem805h_*_                out  -55.1     mclk_meu -> mclk_ooo_int
+    note: fix clock in meu
+
+  exe_int_ieportedjeclearm805h_op_*     out  -48.4     mclk_meu -> mclk_ooo_int
+    note: remove buffers near flop (+12ps gain), ooo_int BE work
+
+  exe_int_ieportedjeclearm805h_op_1[*]  out  -38.4     mclk_meu -> mclk_ooo_int
+    note: same as above
+
+  exe_int_ieportedskidvalidm805h_*_     out  -34.8     mclk_meu -> mclk_ooo_int/vec
+    note: TIP in contour ww51
+
+  jeo2idataearlym804h[*]                out  -32.5     mclk_meu -> mclk_ooo_int
+    note: fix meu clock
+
+
+================================================================================
+FAMILY: wbdatavld (Owner: Alex, WC: -51ps, LOS target: !!!!)
+  Status: MEU ? (unclear)
+  What: Write-back data valid
+================================================================================
+
+  (Paths in UNKNOWN family)
+
+
+================================================================================
+FAMILY: rspsrcm301h_int (Owner: Basel, WC: -43ps, LOS target: !!!!)
+  Status: BLOCKED — MEU waiting for new CI from Michel
+  What: RS physical source dispatch
+================================================================================
+
+  (Paths in UNKNOWN family)
+
+
+================================================================================
+FAMILY: mlrd (Owner: Amir, WC: -31ps, LOS target: -5ps)
+  What: ML read operations
+================================================================================
+
+  (Details in UNKNOWN family)
+
+
+================================================================================
+FAMILY: 110.087 (Unassigned, WC: -144ps)
+  What: Simulation disable bugfix — cross FMA/MEU path
+================================================================================
+
+  simuldisablebugfixm3nnh                out  -144.2     0 -> mclk_meu
+    parts: par_fmav0, par_fmav1, par_meu
+    note: ww10 BE fma+meu -- fix routing in fmav0, if not fix path
+          can remove sideload inv in meu / delay clocks in fmav1
+
+
+================================================================================
+REMAINING PATHS (UNKNOWN family, 105 ports)
+  Sorted worst-first, top 40 shown
+================================================================================
+
+  rortpwrenm902h                        in  -108.5     mclk_ooo_vec -> mclk_meu
+    parts: par_ooo_vec, par_meu, par_ooo_int
+    note: (none)
+
+  miintwbrsderrm807h_*_                 out   -87.5     mclk_meu -> mclk_ooo_vec
+    parts: par_ooo_vec, par_ooo_int, par_meu
+    note: early clk to 90ps highV - flop will move above prf with new model
+
+  rsrealdispm304h_*___FEEDTHRU_*        out   -84.7     mclk_meu -> mclk_exe
+    parts: par_exe, par_meu
+    note: duplicate MOWBDataVLdRSM805H in RTL + bound logic to flops above PRF
+
+  moisgathervorm800h                    out   -71.8     mclk_meu -> mclk_ooo_int
+    note: (none)
+
+  miintrsderrm305h_*_                   out   -71.1     mclk_meu -> mclk_ooo_int
+    note: meu to meet spec in BE (rout + bound)
+
+  meu2oooxbarpwrupmnn3h                 out   -70.1     mclk_meu -> mclk_ooo_int
+    note: ooo_int bound to meet his spec
+
+  cr_ring4_out_crpwrupmh                out   -69.9     mclk_meu -> mclk_ooo_int
+    note: bound to meet spec in meu & ooo_int
+
+  mistdatam3n6h_*__*_[*]               in    -69.3     mclk_exe -> mclk_meu
+    note: exe to meet spec, meu to stress spec to 40
+
+  rsmoclearvm802h__FEEDTHRU_*           out   -68.1     mclk_ooo_int -> mclk_pmh
+    note: feed-through path (ooo_int -> meu -> pmh)
+
+  rsmoclearvm802h                       in    -68.1     mclk_ooo_int -> mclk_pmh/meu
+    note: same signal, input side
+
+  rsallgatherld1stm301h_*_              in    -67.3     mclk_ooo_int -> mclk_meu
+    note: bound logic + flop closer to ooo_int boundary in meu
+
+  icore_clk_..._mclkenmeubm007h_o      out   -64.9     mclk_meu -> mclk_ooo_int
+    note: bound flop in meu in (550,220) + bound in ooo_int / delay clk
+
+  mlnotmulpgfusemnn4h                   out   -62.7     mclk_meu -> mclk_ooo_int
+    note: in2icg in ooo_int
+
+  dcl1dataeccisdedm408h[*]              in    -60.0     mclk_pmh -> mclk_meu
+    note: meu push clk by 15ps + move logic cell to flop
+
+  agrsderr2robm307h_*_*_[*]            out   -57.4     mclk_meu -> mclk_ooo_vec
+    note: early clk to 95 highV
+
+  dcl1dataeccissecm408h[*]              in    -56.7     mclk_pmh -> mclk_meu
+    note: (none)
+
+  rsstddoublepumpm302h[*]              in    -56.4     mclk_ooo_int -> mclk_meu
+    note: (none)
+
+  lvptraininfomnn1h_...[*]             out   -56.0     mclk_meu -> mclk_ooo_int
+    note: bound in ooo_int to meet spec
+
+  rsvecldprfwrcancelm805h_*_           out   -57.9     mclk_meu -> mclk_exe
+    note: early clk to 100ps in highV
+
+  dcsdbchktagfaultm805h[*]             out   -57.7     mclk_meu -> mclk_ooo_int
+    note: bound flop in meu above PRF + bound flop in ooo_int
+
+  dcl1taghitportm405h_*_[*]            in    -58.2     mclk_pmh -> mclk_meu
+    note: rtl meu — yuval WIP
+
+  dcl1rddatam408h_*__*__*__*_[*]       in    -58.2     mclk_pmh -> mclk_meu
+    note: pmh to fix transition + routing ++ rtl to review
+
+  deponld_v2im303h_*__*_[*]            in    -58.7     mclk_exe -> mclk_meu
+    note: exe to move flop closer to meet spec
+
+  vmrnwdtrippedmnn1h                    out   -53.8     mclk_meu -> mclk_ooo_int
+    note: fix meu clock to be -10 to target
+
+  mlcringcntenmnnnh                     out   -53.4     mclk_meu -> mclk_pmh
+    note: delay pmh clock to 105 highv, check with exe rtl
+
+  momeutxmisspecm4nnh                   out   -53.1     mclk_meu -> mclk_ooo_int
+    note: bound in ooo_int
+
+  rsvecldportwritemuxctlm805h_*__*_    out   -52.4     mclk_meu -> mclk_exe
+    note: early clk to 100ps in highV
+
+  mefastlockretbypm899h                out   -51.0     mclk_meu -> mclk_ooo_int
+    note: change specs — meu/ooo_int 120/40
+
+  gatherelmidm805h_*_[*]               out   -50.9     mclk_meu -> mclk_exe
+    note: early clk by 20ps
+
+  altmpwrgoodmnnnh                      in    -50.9     mclk_ooo_int -> mclk_meu
+    note: (none)
+
+  dcl1demandreqm403h_*_[*]             out   -49.9     mclk_meu -> mclk_pmh
+    note: review path from par_meu/exe_int/agu/agus/agutop/agend/ags2dataz
+
+  cr_ring4_out_crdatamh[*]             out   -49.6     mclk_meu -> mclk_ooo_int
+    note: fix rout + clock in meu
+
+  mosbnoseniorm405h                     out   -49.5     mclk_meu -> mclk_ooo_int
+    note: bound meu & ooo_int to meet spec
+
+  reqiswbm403h[*]                       out   -49.1     mclk_meu -> mclk_pmh
+    note: delay clock of rfip to open transparency + bound
+
+  rsptpwrupintm300h_*_                  in    -49.0     mclk_ooo_int -> mclk_meu
+    note: ooo_int improve rout by TIP (10ps) + meu improve last stage to ICG
+
+  mluncorepmim5n1h                      out   -48.4     mclk_meu -> mclk_ooo_int
+    note: (none)
+
+  roldlapickm302h                       in    -48.2     mclk_ooo_int -> mclk_meu
+    note: bound flop to logic in ooo_int
+
+  pmblockm401h[*]                       in    -47.5     mclk_pmh -> mclk_meu
+    note: bound flop to logic and push clk to 100 in highv
+
+  cr_ring0_out_miint0_crpwrupmh        out   -46.9     mclk_meu -> mclk_exe
+    note: meu to meet spec in BE
+
+  moldclipstm406h_*_[*]                in    -46.5     mclk_pmh -> mclk_meu
+    note: check transition, nets delay in pmh — review in RTL
+
+  ... (65 more ports with slack -28 to -46ps)
+
+================================================================================

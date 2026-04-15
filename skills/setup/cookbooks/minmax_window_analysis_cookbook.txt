@@ -1,0 +1,232 @@
+================================================================================
+  SKILL: MIN/MAX WINDOW ANALYSIS FOR SIO TIMING DEBUG
+  (CORRECTED: True same-path matching by SFF + Port + EFF)
+================================================================================
+
+PURPOSE
+-------
+Identify paths with REAL min/max window issues: where setup + hold slack < 0
+for the SAME physical path (same Start FF, same Port, same End FF).
+
+CRITICAL LESSON: Matching by (Port, D-pin) alone produces FALSE min/max
+violations when multiple SFFs fan into the same endpoint. This is common
+in buses with ECC logic where setup-worst uses a long path from SFF-A
+and hold-worst uses a short path from SFF-B.
+
+WHEN TO USE
+-----------
+- Before doing ANY clock push/pull ECO
+- After generating PBA PT queries for a bus (setup + hold)
+- When you see paths with both setup and hold violations
+- When prioritizing data-path ECO work
+
+CONCEPT: WHAT IS A MIN/MAX WINDOW?
+-----------------------------------
+  Window = setup_slack + hold_slack
+
+  - Window > 0: Clock tuning can trade setup for hold. FIXABLE by clock.
+  - Window < 0: IMPOSSIBLE to fix both by clock alone. Need data-path ECO.
+
+  CRITICAL: The setup and hold slack MUST be from the SAME physical path:
+    Same Start FF (individual register, not MB8 cell)
+    Same Boundary Port
+    Same End FF (individual register)
+
+  If setup-worst comes from SFF-A and hold-worst from SFF-B, comparing
+  them is MEANINGLESS -- they are different physical paths with different
+  data logic, different wire routes, and different timing characteristics.
+
+  Example from dcl1rddatam408h:
+    Setup: reg_225/Q6 -> port[4] -> D5  slack = -31.3 ps (16-stage ECC path)
+    Hold WRONG (different SFF=reg_237):  slack =  -5.9 ps  window = -37.2 (FALSE!)
+    Hold RIGHT (same SFF=reg_225):       slack = +137.2 ps  window = +105.9 (REAL)
+
+PREREQUISITES
+-------------
+  Raw PBA PT report_timing output files:
+    1. Setup max_high:  report_timing -through <port> -to <eff> -pba_mode path -nosplit
+    2. Hold min_low:    report_timing -through <port> -to <eff> -delay_type min -pba_mode path
+    3. Hold fresh:      report_timing -through <port> -to <eff> -delay_type min -pba_mode path
+
+  These are the SAME files used by pba_full_bus_report.py.
+  See pba_full_bus_report_cookbook.txt for how to generate them.
+
+USAGE (RECOMMENDED: Raw PT files)
+----------------------------------
+  Script: /nfs/site/disks/sunger_wa/skills_for_sio_copilot/scripts/minmax_window_report.py
+
+  python3 minmax_window_report.py \
+    --setup /tmp/pba_setup_max_high.txt \
+    --hold-lo /tmp/pba_hold_min_low.txt \
+    --hold-fr /tmp/pba_hold_min_fast.txt \
+    --bus dcl1rddatam408h \
+    --daily "WW15D" \
+    --outdir /path/to/output/
+
+  This reads the raw PT paths, extracts individual SFF/EFF register names
+  from MB8 cells (using Q-pin and D-pin mapping), and matches setup+hold
+  by the (SFF, Port, EFF) triple.
+
+USAGE (FALLBACK: Bus report file)
+----------------------------------
+  python3 minmax_window_report.py \
+    --input /path/to/bus_report.txt \
+    --outdir /path/to/output/
+
+  WARNING: This uses bus report data which matches by (Port, D-pin) only.
+  May produce FALSE min/max violations. Use raw PT files for accuracy.
+
+HOW IT WORKS
+------------
+  1. Parse each PT report_timing output, extracting per-path:
+     - MB8 Startpoint cell + Q-pin -> individual SFF register name
+     - Boundary port
+     - MB8 Endpoint cell + D-pin -> individual EFF register name
+     - Slack value
+
+  2. For each setup path, find the hold path with MATCHING (SFF, Port, EFF).
+
+  3. Compute window = setup_slack + hold_slack for matched paths.
+
+  4. If no matching hold path found (different SFF in hold for that endpoint),
+     the path is "unmatched". This is EXPECTED -- it means hold-worst uses a
+     different (shorter) path from a different register.
+
+  5. Unmatched paths are NOT min/max issues. Their true same-SFF hold slack
+     is much better than the worst hold.
+
+REPORT SECTIONS
+---------------
+  1. KEY FINDING - Summary of false vs true min/max
+  2. SUMMARY - Counts: old vs corrected matching
+  3. WHY PATHS ARE UNMATCHED - Explanation of ECC vs direct path difference
+  4. TRUE UNFIXABLE PATHS - Only paths with same-SFF window < 0
+  5. WINDOW DISTRIBUTION - Histogram for matched paths
+  6. CONCLUSION - Whether clock push is safe
+
+HOW TO INTERPRET
+-----------------
+  - "FALSE min/max eliminated: N" = N paths that LOOKED unfixable but aren't
+  - "TRUE unfixable: 0" = SAFE for clock push
+  - "Unmatched: N" = N paths where hold uses a different SFF (normal, not an issue)
+  - If true unfixable count is small (< 5) with small negative window (> -5ps),
+    likely caused by OCV pessimism and may not be real
+
+ADAPTING FOR OTHER BUSES
+------------------------
+  The script currently hardcodes the port pattern (dcl1rddatam408h) and
+  register name patterns (IntM408H, M409H). For other buses:
+
+  1. Update the port regex in parse_pt_paths() if the port name is different
+  2. Update the SFF/EFF register regex patterns if cell names differ
+  3. The MB8 Q-pin/D-pin mapping logic is generic and should work for any MB8 cell
+
+  OR: Simply use the --input mode with a bus report (less accurate but generic).
+
+GOTCHAS
+-------
+  - ALWAYS use PBA mode for the PT queries. GBA overstates violations.
+  - The Q-pin to register mapping depends on register order in the MB8 cell name.
+    Q1=1st register listed, Q2=2nd, etc. This is standard for MB8 cells.
+  - "Unmatched" does NOT mean "unfixable". It means the setup and hold worst
+    paths use different SFFs, which is normal for buses with reconvergent logic.
+  - If you get many true min/max issues, verify AOCVM derate factors first.
+
+USEFUL SKEW ECO STRATEGY (AFTER MIN/MAX ANALYSIS)
+---------------------------------------------------
+  Once min/max analysis confirms the bus is safe for clock push:
+
+  1. USEFUL SKEW = PER-EFF PUSH, NOT GLOBAL TREE PUSH
+     - Push clock ONLY to the specific EFF cells with setup violations
+     - Do NOT push the entire destination clock tree (mclk_meu etc.)
+     - Other endpoints on the same clock tree are NOT affected
+     - This is a targeted buffer insertion on the clock leaf to each EFF
+
+  2. CORNER-TO-CORNER RATIO
+     - Pushing clock on max_high (setup) degrades hold on min_low
+     - Extract ratio from PT clock tree:
+         ratio = EFF_clock_network_delay(min_low) / EFF_clock_network_delay(max_high)
+     - Example: 870.9ps / 342.5ps = 2.54x
+     - Meaning: 1ps push for setup = 2.54ps hold degradation on min_low
+     - With POCV sigma overhead: effective ratio can be 3.0-3.5x
+     - Fresh corner ratio is ~1:1 (same process, same voltage)
+
+  3. HOW TO EXTRACT RATIO FROM PT
+     - Query clock tree delay for the EFF:
+       sg soc -c "pt_client.pl -model <model_max_high> -cmd 'report_clock_timing
+         -type latency -to [get_pins <EFF_cell>/CP]' > /tmp/clk_max_high.txt"
+       sg soc -c "pt_client.pl -model <model_min_low> -cmd 'report_clock_timing
+         -type latency -to [get_pins <EFF_cell>/CP]' > /tmp/clk_min_low.txt"
+     - Read "Clock Network Delay" from each report
+     - ratio = min_low_delay / max_high_delay
+
+  4. PUSH SWEEP TO FIND OPTIMAL AMOUNT
+     - For each push amount (0 to 25ps in 0.1ps steps):
+       setup_after  = setup_slack + push
+       hold_after   = hold_slack - (ratio * push)
+       fresh_after  = fresh_slack - (fresh_ratio * push)    [fresh_ratio ~ 1.0]
+     - Count violations at each push level
+     - Optimal = push amount that minimizes TOTAL violations
+     - WARNING: At ratio > 2x, optimal push is often very small (< 2ps)
+
+  5. STRATEGY: PUSH + PT ECO FIX_HOLD
+     - Even if optimal push is small, a LARGER push (10-15ps) may be valid
+     - Rationale: push fixes setup (hard problem), PT ECO fix_hold fixes new
+       hold violations later (easier — buffer insertion on data path)
+     - PT ECO fix_hold inserts delay buffers WITHOUT hurting setup
+     - This works because we push only specific EFFs, not the whole tree
+     - New hold violations are small (10-60ps) — well within PT ECO capability
+
+  6. CHECK RECONVERGENT PATHS AFTER PUSH
+     - Same-SFF window shrinks by: push * (ratio - 1)
+     - Example: 15ps push at 2.54x ratio -> window shrinks 23.1ps
+     - Any path with current same-SFF window < 23.1ps has window < 0
+     - BUT: window < 0 does NOT automatically mean unfixable!
+     - MUST CHECK: do setup and hold go through the SAME gates?
+       * If DIFFERENT logic depth (reconvergent fanout, e.g. ECC):
+         PT ECO fix_hold CAN fix it -- insert delay on the short
+         hold path without affecting the long setup path.
+       * If SAME gates (truly identical path): unfixable by buffer
+         insertion, needs VT swap / cell sizing.
+     - How to check: compare data path cells in PT report_timing
+       for setup (max_high) vs hold (min_low) with same -from/-to.
+       If the cell sequence diverges, it's reconvergent and fixable.
+
+  KEY INSIGHT: SAME SFF/PORT/EFF != SAME LOGIC PATH
+  --------------------------------------------------
+  Reconvergent fanout (common in ECC logic) creates multiple
+  combinational paths between the same SFF output and EFF input.
+  Setup-worst picks the LONGEST path; hold-worst picks the SHORTEST.
+  These share start/end pins but go through DIFFERENT gates.
+  PT ECO can independently add delay to the short hold path.
+  A TRUE unfixable min/max requires setup and hold going through
+  the EXACT SAME GATES -- then adding delay helps hold but hurts
+  setup equally. This is rare in practice.
+
+  7. GENERATING THE ECO SCRIPT
+     - Script output: dcl1rddatam408h_useful_skew_eco.tcl
+     - Contains:
+       a. PT set_clock_latency commands (for timing verification)
+       b. EFF clock pin list (for physical buffer insertion in Innovus)
+       c. Per-cell impact table (setup before/after, hold degradation)
+     - The physical ECO inserts a delay cell on the clock net to each EFF
+     - Cell selection: delay cell matching target push amount from library
+
+  KEY INSIGHT: USEFUL SKEW IS ALWAYS PER-ENDPOINT
+  ------------------------------------------------
+  When someone says "push the clock" for timing debug, they mean:
+    - Push clock to SPECIFIC failing EFFs only
+    - NOT the entire clock tree
+    - Other endpoints on the same tree are NOT affected
+    - Hold degradation only affects paths TO those specific EFFs
+  This is fundamental SIO methodology. Clock tree push = useful skew ECO.
+
+RELATED SKILLS
+--------------
+  - pba_full_bus_report_cookbook.txt  -- how to generate the raw PT input files
+  - cross_partition_debug_playbook.txt -- broader cross-partition debug flow
+  - master_timing_fix_cookbook.txt -- overall timing closure methodology
+
+================================================================================
+  END OF COOKBOOK
+================================================================================

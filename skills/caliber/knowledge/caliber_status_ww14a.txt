@@ -1,0 +1,63 @@
+Caliber Status - FCT26WW14A (GFC_CLIENT)
+==========================================
+Last updated: 2026-03-30
+Model: GFC_CLIENT_26ww12b_ww13_1_initial_with_TIP-FCT26WW14A_dcm_daily-CLK050.bu_postcts
+
+TOTAL VIOLATIONS: 212,956 (across 3 corners)
+  func.max_high.T_85.typical:  97,271
+  func.max_nom.T_85.typical:   75,745
+  func.max_low.T_85.typical:   39,940
+
+PER-PARTITION SUMMARY:
+  Partition       max_high  max_nom  max_low   TOTAL    %_of_total
+  par_meu          23,650   19,998   18,739   62,387    29.3%
+  par_msid         18,600    7,378    1,728   27,706    13.0%
+  par_ooo_int      17,554    6,093    1,953   25,600    12.0%
+  par_pm            3,258   16,541    2,930   22,729    10.7%
+  par_fe            9,740    5,709    2,671   18,120     8.5%
+  par_ooo_vec       5,035    4,978    3,820   13,833     6.5%
+  par_mlc           7,946    2,682    1,706   12,334     5.8%
+  par_exe           4,456    3,825    1,870   10,151     4.8%
+  par_pmh           4,050    2,563    1,977    8,590     4.0%
+  core_client       1,144    4,850    1,108    7,102     3.3%
+  par_fmav1         1,618      718      909    3,245     1.5%
+  par_fmav0           208      398      517    1,123     0.5%
+  par_tmul_stub        12       12       12       36     0.0%
+
+PER-RULE SUMMARY (max_high, top violations):
+  Rule                         Total   Owner    par_meu  par_msid  par_ooo_int
+  SlowSlope                   43,945   PO_PV      9,626    13,474       3,622
+  MaxCap                      21,989   PO_PV      4,173     2,578       3,207
+  ClockMinPulseWidth          14,057   PO_PV      8,261       653          18
+  LatchMarginWithRecovery     11,736   PO         1,436         0      10,183
+  ClockSlowSlope               3,382   PO_PV        134     1,879         518
+
+par_meu CALIBER BREAKDOWN (all corners):
+  Rule                       max_high  max_nom  max_low
+  SlowSlope                     9,626    2,551      594
+  ClockMinPulseWidth            8,261   11,356   13,582
+  MaxCap                        4,173    2,617    2,448
+  LatchMarginWithRecovery       1,436    1,662    2,092
+  HIPLCPControl                     -      620        -
+  LCPRFHookup                       -      620        -
+  RCBTieoff                         -      310        -
+  Other                           154      262       23
+  TOTAL                        23,650   19,998   18,739
+
+par_meu DETAILS (max_high):
+  SlowSlope by clock:    mclk_meu 9094 (94%), ssnclk 536, mclk_pmh 26
+  SlowSlope by hierarchy: mob/mosab 1112, mob/moiclb 1068, exe_int/ieu 828, dtlb 616
+  ClockMinPulseWidth:    all mclk_meu, worst=rsintprf/rsflagprf (136% viol)
+  MaxCap worst:          LTIELO_1189 tieoff 124K fF vs 21 limit (tsremotebjt nets)
+  LatchMarginWithRecovery: rsintprf_arrays MBIT memories
+
+  Cross-partition: only 6 MaxCap (LTIELO tieoff + DFT scan/ijtag)
+  is_interface: 0 out of 23,650 -- caliber violations are internal, not IFC
+
+OBSERVATIONS:
+  1. par_meu is #1 worst partition (29% of all violations)
+  2. Almost all violations are INTERNAL (not IFC/cross-partition)
+  3. ClockMinPulseWidth grows from high->low voltage (8K->14K)
+  4. SlowSlope shrinks from high->low voltage (10K->0.6K)
+  5. par_pm has anomalous max_nom spike (16K) -- WrongGatedClockColor
+  6. core_client max_nom spike (4.8K) -- CaliberError

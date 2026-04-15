@@ -1,0 +1,69 @@
+setenv ALIASES `realpath ~mburak/.aliases`
+setenv MYSTOD  `realpath  /nfs/site/disks/mburak_wa/`
+setenv IPX_LOCAL "/nfs/site/disks/idc_bei_hip"
+setenv FEV_LOCAL "/nfs/site/disks/idc_bei_fev/"
+
+alias l 'less -S'
+alias ll 'ls -ltr --color'
+alias x 'xterm -maximize -e \!* &'
+alias align '~baselibr/bin/align.pl'
+alias align_csv 'align -id "," -od "|" '
+alias strip "tr -s ' '"
+alias bus_compress_Full "sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*\//_*\//g' | sed -e 's/\[[0-9]*\]/\[*\]/g' | sed -e 's/\/d[0-9]/\/d*/g' | sed -e 's/\/D[0-9]/\/D*/g' "
+alias aligncsv '/p/mpg/proc/common2/da_utils/fct_skl42/bin//align.pl -id "," -od " "'
+alias fctxml ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2" "$3]==0) {b[$2" "$3]=$1} ; a[$2" "$3] += $1 ; c[$2" "$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths from startpoint to endpoint"} {print $1,$2,$3" -from "$4" -to "$5}'"'"' | column -t '
+alias fctxml_start ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2]==0) {b[$2]=$1} ; a[$2] += $1 ; c[$2] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint"} {print $1,$2,$3,$4}'"'"' | column -t '
+alias fctxml_end ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1} ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths endpoint"} {print $1,$2,$3,$4}'"'"' | column -t ' 
+alias fctxml_port ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $34}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1 ; d[$3] = $4","$5","$6 ; } ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i,d[i]}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths Ports"} {print $1,$2,$3,$4,$5}'"'"' | column -t '
+# alias only_commands "grep -v '^#' | grep -v '[ +]#' | grep -v '^$'"
+
+alias get_date 'sh /nfs/site/disks/mburak_wa/scripts/get_date.sh'
+alias get_time 'sh /nfs/site/disks/mburak_wa/scripts/get_time.sh'
+alias path2windows 'realpath \!* | perl -pe "s|^|\\\\sc8-samba.sc.intel.com|" | perl -pe "s|/|\\|g" | tee /dev/tty | xclip'
+alias CHOWN_THINGY 'stodfs chown --options "-R mburak" --path `realpath \!*`'
+alias maple '/p/hdk/cad/maple/latest/maple &'
+alias FCT_RECIPE_PNC 'xterm -title "FCT_recipe" -e "l /nfs/site/home/gilkeren/rep_fct_recipe_pnc.csh | sed 's/gvim/kate/g' | sed 's/latest_pnc0b_1278_core_client_bu_postcts/daily_pnc0b_1278_core_client_bu_postcts/g' | sed s/\<par1\>/\!:1/g | sed s/\<tag1\>/\!:2/g | l"&'
+alias FCT_RECIPE_GFC 'xterm -title "FCT_recipe" -e "l /nfs/site/disks/home_user/gilkeren/rep_fct_recipe_gfc.csh | sed 's/gvim/kate/g' | sed 's/latest_gfc0a_n2_core_server_bu_postcts/daily_gfc0a_n2_core_server_bu_postcts/g' | sed s/\<par1\>/\!:1/g | sed s/\<tag1\>/\!:2/g | l"&'
+alias check_size '/p/hdk/rtl/proj_tools/design-utils/xhdk74/latest/qdirstat \!* &'
+alias kill_in_path "lsof +D \!* | awk '{print $2}' | tail -n +2 | xargs -r kill -9"
+alias nbstatus_gui '/nfs/site/home/mfeldma1/scripts/unix/nbstatus_gui &'
+alias ff 'firefox --new-window \!* &'
+
+alias load_pts 'source ~/scripts/load_pts.csh'
+alias fct_xls 'ls -ltr runs/$block/$tech/$flow/*/reports/csv/*.xlsx runs/$block/$tech/$flow/*/reports/spec*/*.xlsx'
+alias PROMOTE_GOLDEN '$ARC/bin/arc.pl -copy -type arc -admin_disk $ADMINDISK -proj_archive $PROJ_ARCHIVE -block \!:1 -bundle sta_primetime -tag \!:2 -to_tag GOLDEN -logfile $ward/.${USER}_sta_promote_4fct.log'
+
+alias ipx_check_tag 'pi ip ls -v'
+alias ship_force_ci `grep "Running SHIP as" ship/log/*/latest/*.ship.stdout.log | sed 's/-I- Running SHIP as //g' | sed 's/$/ -mode force_archive_only/g'`
+alias fev_unmapped 'realpath runs/*/$tech/fev_conformal/fev_rtl2apr/reports/*.unmapped.rpt | grep -v comparePST'
+alias fev_noneq 'realpath runs/*/$tech/fev_conformal/fev_rtl2apr/reports/*.noneq.rpt | grep -v comparePST | grep -v compare.intent.noneq | grep -v consistency'
+alias fev_results 'realpath runs/*/$tech/fev_conformal/fev_rtl2apr/IF_*_fev_rtl2apr/logs/InspectFEV.log'
+alias fev_lec 'realpath runs/*/$tech/fev_conformal/fev_rtl2apr/logs/lec.log'
+alias ship_check_crossfire 'grep "^E" ship/ip/*/latest/crossfire/crossfire/*.latest/crossfire.run.log | l'
+alias ship_stdout 'cat ship/log/*/latest/*.ship.stdout.log'
+alias check_specs 'ag \!* ${PROJ_ARCHIVE}/arc/*/timing_specs/*LATEST/*.csv'
+alias check_ovrs 'ag \!* ${PROJ_ARCHIVE}/arc/*/sio_ovr/GOLDEN/*.tcl'
+# alias sio_ovr_diff 'meld runs/{\!*}/${tech}/release/latest/sio_ovr/ ${PROJ_ARCHIVE}/arc/\!*/sio_ovr/GOLDEN/'
+alias sio_ovr_diff 'meld runs/par_msid/${tech}/release/latest/sio_ovr/ ${PROJ_ARCHIVE}/arc/par_msid/sio_ovr/GOLDEN/'
+# alias sio_ovr_ci 'sio_ovr_diff \!* ; eco 'Thinking for 10s';sleep 10s; eouMGR --block \!* --bundle sio_ovr --tag GOLDEN --ward_tag latest --archive'
+alias sio_ovr_ci 'sio_ovr_diff ; echo 'Thinking for 10s exactly...';sleep 10s; eouMGR --block par_msid --bundle sio_ovr --tag GOLDEN --ward_tag latest --archive'
+
+#temp
+setenv meu_ecos `realpath $MYSTOD/files/meu_ecos/`
+
+if ( $?PROJECT ) then
+    setenv PROD `echo $PROJECT | awk -F'_' '{print $NF}'`
+    setenv HIPLIST_LOCAL "/nfs/site/disks/idc_bei_hip/${PROJECT_STEPPING}_HIPLIST/"
+
+    if ( $PROJECT == 'pnc_78_client' || $PROJECT == 'pnc_78_server') then
+        source /nfs/site/disks/mburak_wa/scripts/1278/pnc_aliases
+    else if ( $PROJECT == 'gfc_n2_client' || $PROJECT == 'gfc_n2_server' ) then
+        source /nfs/site/disks/mburak_wa/scripts/n2/gfc_aliases
+    else if ( $PROJECT == 'pnc_n2_client') then
+        source /nfs/site/disks/mburak_wa/scripts/n2/pncn2_aliases
+    endif
+
+    alias cdw 'cd $WORKAREA; pwd'
+    alias PVT 'l $FCT_MODEL/daily_pnc0b_1278_core_client_bu_postcts/project/${PROJECT_STEPPING}/pvt.tcl'
+    alias load_partition_pt 'load_pt_session_in_nb_express $PROJ_ARCHIVE/arc/\!:1/sta_primetime/GOLDEN/*.\!:2.* -title "\!:1_\!:2_`get_date`"'
+endif

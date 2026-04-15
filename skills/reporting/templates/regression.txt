@@ -1,0 +1,22 @@
+================================================================
+REGRESSION REPORT: <par_name>
+Period: WW<start> to WW<end>
+================================================================
+WNS TREND:
+  WW<N-3>: <wns>
+  WW<N-2>: <wns>
+  WW<N-1>: <wns>
+  WW<N>:   <wns>
+  Direction: [IMPROVING|DEGRADING|FLAT]
+
+TNS TREND:
+  <same format>
+
+FEP TREND:
+  <same format>
+
+SIGNIFICANT EVENTS:
+| Week  | Event                    | Impact         |
+|-------|--------------------------|----------------|
+|       |                          |                |
+================================================================

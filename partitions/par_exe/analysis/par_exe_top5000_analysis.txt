@@ -1,0 +1,252 @@
+================================================================================
+  par_exe TOP 5000 INTERNAL PATH ANALYSIS + ESTIMATED ECO IMPACT
+  Source: Avi's PO WA (apr_fc_cts_eco/clock_route_opt)
+  Date: 2026-03-22
+================================================================================
+
+================================================================================
+  SECTION 1: SCOPE & BASELINE
+================================================================================
+
+  Analysis scope: Top 5000 worst internal (mclk_exe) paths
+  Slack range:    -102.8ps to -32.4ps
+  Total R2R NVP:  22,772 (from design_qor.rpt)
+  Total R2R TNS:  -406,577ps
+  Total R2R WNS:  -102.812ps
+  Clock period:   274ps (mclk_exe ~3.65GHz)
+
+  Coverage: Top 5000 of 39,797 mclk_exe paths = 12.6% of all internal paths
+            but covers 100% of paths worse than -32.4ps
+
+================================================================================
+  SECTION 2: ROOT CAUSE CATEGORY BREAKDOWN
+================================================================================
+
+  Category                     Count      %     Worst Slack   Avg Slack
+  ─────────────────────────── ────── ──────── ──────────── ──────────
+  OT  (Data Path / Shifter)     3079    61.6%        -59.1ps     -38.4ps
+  LCS (Large Clock Skew)        1782    35.6%       -102.8ps     -48.3ps
+  LID (Large Input Delay)        139     2.8%        -62.5ps     -41.0ps
+  SM  (Small Violations)           0     0.0%     N/A          N/A
+
+  KEY INSIGHT (top 5000 vs top 1000):
+    - In top 1000: LCS=42.4%, OT=44.8% (nearly equal)
+    - In top 5000: LCS=35.6%, OT=61.6% (data path dominates)
+    → Expanding to 5000 reveals the long tail of moderate-slack data paths
+
+================================================================================
+  SECTION 3: SLACK HISTOGRAM WITH ESTIMATED CLOSURE
+================================================================================
+
+  Slack Range     │ Total │ LCS  │  OT  │ LID │ Est Closed │ Remain │ Close%
+  ────────────────┼───────┼──────┼──────┼─────┼────────────┼────────┼───────
+   -110 to  -100ps │     2 │    2 │    0 │   0 │          1 │      1 │  50.0%
+   -100 to   -90ps │    21 │   21 │    0 │   0 │         14 │      7 │  66.7%
+    -90 to   -80ps │    81 │   81 │    0 │   0 │         56 │     25 │  69.1%
+    -80 to   -70ps │   114 │  114 │    0 │   0 │         79 │     35 │  69.3%
+    -70 to   -60ps │   138 │  137 │    0 │   1 │         95 │     43 │  68.8%
+    -60 to   -50ps │   365 │  284 │   63 │  18 │        256 │    109 │  70.1%
+    -50 to   -40ps │  1346 │  373 │  929 │  44 │        551 │    795 │  40.9%
+    -40 to   -30ps │  2933 │  770 │ 2087 │  76 │       1777 │   1156 │  60.6%
+  ────────────────┼───────┼──────┼──────┼─────┼────────────┼────────┼───────
+  TOTAL           │  5000 │ 1782 │ 3079 │ 139 │       2824 │   2176 │  56.5%
+
+  Assumptions:
+    LCS close rate: 70% (critical <-60ps), 85% (moderate -60 to -40), 95% (easy >-40)
+    OT  close rate: 10% (hard <-50ps), 25% (moderate -50 to -40), 50% (easy >-40)
+    LID close rate: 5% (mostly IFC, external constraints)
+
+================================================================================
+  SECTION 4: ESTIMATED BEFORE / AFTER (GLOBAL IMPACT)
+================================================================================
+
+  Metric                │    BEFORE     │   AFTER (est)  │     DELTA     │ Status
+  ──────────────────────┼───────────────┼────────────────┼───────────────┼────────
+  Setup WNS R2R         │   -102.812ps  │     ~-49.0ps   │    +53.8ps    │   ▲
+  Setup TNS R2R         │  -406,577ps   │   ~-27,000ps   │  +~380,000ps  │   ▲
+  Setup NVP R2R         │     22,772    │    ~14,460     │    -8,312     │   ▲
+  ──────────────────────┼───────────────┼────────────────┼───────────────┼────────
+  Hold  WNS R2R         │   -121.028ps  │     ~-51.0ps   │    +70.0ps    │   ▲
+  Hold  NVP R2R         │     81,540    │    ~57,078     │   -24,462     │   ▲
+  ──────────────────────┼───────────────┼────────────────┼───────────────┼────────
+  Top 5000 paths closed │       0       │     ~2,824     │    -2,824     │   ▲
+  Top 5000 close rate   │      0%       │     56.5%      │   +56.5%      │   ▲
+  Top 5000 remaining    │     5,000      │     ~2,176     │    -2,824     │   ▲
+
+================================================================================
+  SECTION 5: PER-CATEGORY ECO IMPACT DETAIL
+================================================================================
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ ECO #1: Clock Balance (balance_byplevel_clk.tcl)                       │
+  │ Target: LCS category — 1,782 paths in top 5000                      │
+  ├─────────────────────────┬──────────┬──────────┬──────────┬────────────┤
+  │ Severity                │  Count   │ Est Close│ Remain   │ Close Rate │
+  ├─────────────────────────┼──────────┼──────────┼──────────┼────────────┤
+  │ Critical (<-60ps)       │     355   │     248  │     107  │    70%     │
+  │ Moderate (-60 to -40ps) │     657   │     558  │      99  │    85%     │
+  │ Easy (>-40ps)           │     770   │     731  │      39  │    95%     │
+  ├─────────────────────────┼──────────┼──────────┼──────────┼────────────┤
+  │ LCS TOTAL               │    1782   │    1537  │     245  │   86.3%   │
+  └─────────────────────────┴──────────┴──────────┴──────────┴────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ ECO #2: Shifter Data Path (fix_shifter_datapath.tcl)                   │
+  │ Target: OT category — 3,079 paths in top 5000                       │
+  ├─────────────────────────┬──────────┬──────────┬──────────┬────────────┤
+  │ Severity                │  Count   │ Est Close│ Remain   │ Close Rate │
+  ├─────────────────────────┼──────────┼──────────┼──────────┼────────────┤
+  │ Hard (<-50ps)           │      63   │       6  │      57  │    10%     │
+  │ Moderate (-50 to -40ps) │     929   │     232  │     697  │    25%     │
+  │ Easy (>-40ps)           │    2087   │    1043  │    1044  │    50%     │
+  ├─────────────────────────┼──────────┼──────────┼──────────┼────────────┤
+  │ OT TOTAL                │    3079   │    1281  │    1798  │   41.6%   │
+  └─────────────────────────┴──────────┴──────────┴──────────┴────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ Other Categories                                                       │
+  ├─────────────────────────┬──────────┬──────────┬──────────┬────────────┤
+  │ LID (Input Delay)       │     139   │       6  │     133  │     5%     │
+  │ SM  (Small)             │       0   │       0  │       0  │    90%     │
+  └─────────────────────────┴──────────┴──────────┴──────────┴────────────┘
+
+================================================================================
+  SECTION 6: TOP STARTPOINT / ENDPOINT FAMILIES
+================================================================================
+
+  Top Startpoint Families (driving violations):
+  ─────────────────────────────────────────────────────────────
+  miBypLevelM304H                                 954 (19.1%) worst: -102.8ps [LCS]
+  ShufS1dataM305H                                 920 (18.4%) worst:  -80.5ps [LCS]
+  addercin0M305H                                  672 (13.4%) worst:  -57.2ps [OT]
+  noninvsource1M305H                              572 (11.4%) worst:  -81.7ps [OT]
+  ShufS2dataM305H                                 484 ( 9.7%) worst:  -67.8ps [OT]
+  sis2dataM305H                                   439 ( 8.8%) worst:  -56.4ps [OT]
+  invsource2M305H                                 296 ( 5.9%) worst:  -65.7ps [OT]
+  IsPintMultiShiftqbM305H                         149 ( 3.0%) worst:  -61.4ps [OT]
+  sis1dataM305H                                    72 ( 1.4%) worst:  -49.8ps [OT]
+  noninvsource2M305H                               71 ( 1.4%) worst:  -62.0ps [OT]
+  auto_vector_MBIT_miBypFromVPLdM304H              60 ( 1.2%) worst:  -46.6ps [OT]
+  invsource1M305H                                  59 ( 1.2%) worst:  -81.7ps [OT]
+  miBypEnWBL123FromLdM304H                         35 ( 0.7%) worst:  -47.7ps [LCS]
+  miBypFromVPLdM304H                               13 ( 0.3%) worst:  -46.6ps [OT]
+  BypEnL0TmpM302H                                  12 ( 0.2%) worst:  -47.0ps [LCS]
+
+  Top Endpoint Families (receiving violations):
+  ─────────────────────────────────────────────────────────────
+  siSrcDataM305H                                 1162 (23.2%)
+  sis1dataM305H                                  1048 (21.0%)
+  sis2dataM305H                                   830 (16.6%)
+  sis3dataM305H                                   467 ( 9.3%)
+  shufS2dataM305H                                 349 ( 7.0%)
+  auto_vector_MBIT_siSrcDataM305H                 312 ( 6.2%)
+  ShufS2dataM305H                                 156 ( 3.1%)
+  ShufS1dataM305H                                 125 ( 2.5%)
+  shufS2OrgdataM305H                               92 ( 1.8%)
+  shufS1dataM305H                                  79 ( 1.6%)
+  shufS3dataM305H                                  61 ( 1.2%)
+  ShufS3dataM305H                                  59 ( 1.2%)
+  auto_vector_MBIT_miSrcDataM305H                  53 ( 1.1%)
+  auto_vector_MBIT_miBypWbParityErrM305H           33 ( 0.7%)
+  miV1BypCtrlM303H                                 32 ( 0.6%)
+
+================================================================================
+  SECTION 7: HIERARCHY BLOCK BREAKDOWN
+================================================================================
+
+  Block                                               Count      %
+  ─────────────────────────────────────────────────── ────── ──────
+  exe_vec/shuf/shufp3v1c                               940  18.8%
+  exe_vec/shuf/shufp6v1c                               790  15.8%
+  exe_vec/miv0c/mimxv0lc                               727  14.5%
+  exe_vec/siu/sishiftalup4v0                           703  14.1%
+  exe_vec/siu/sishiftalup1v0                           345   6.9%
+  exe_vec/shuf/shufp2v0c                               254   5.1%
+  exe_vec/shuf/shufp2v1c                               247   4.9%
+  exe_vec/miv1c/mimxv1hc                               209   4.2%
+  exe_vec/shuf/shufp6v0c                               142   2.8%
+  exe_vec/miv1c/mimxv1lc                               139   2.8%
+  exe_vec/shuf/shufp7v1c                               123   2.5%
+  exe_vec/siu/sishiftalup0v0                            96   1.9%
+  exe_vec/miv0c/mimxv0hc                                62   1.2%
+  exe_vec/shuf/shufp3v0c                                57   1.1%
+  exe_vec/siu/sishiftalup0v1                            39   0.8%
+  exe_vec/shuf/shufp7v0c                                23   0.5%
+  exe_vec/siu/sishiftalup4v1                            17   0.3%
+  exe_vec/siu/sishiftalup5v0                            14   0.3%
+  rs_vec_wrap/rsvecbpd/BypEnL1TmpM302H_reg_1__s_1__wb_7_     6   0.1%
+  rs_vec_wrap/rsvecbpd/LocPDstIsVecM807H_reg_0_          6   0.1%
+
+================================================================================
+  SECTION 8: COMPARISON — TOP 1000 vs TOP 5000
+================================================================================
+
+  Metric                    │  Top 1000  │  Top 5000  │  Delta
+  ──────────────────────────┼────────────┼────────────┼──────────
+  Slack range               │ -102.8 to  │ -102.8 to  │  -14.1ps
+                            │  -46.5ps   │  -32.4ps   │  deeper
+  ──────────────────────────┼────────────┼────────────┼──────────
+  LCS (Clock Skew)          │   424 (42%)│  1782 (36%)│ +1,358
+  OT  (Data Path)           │   448 (45%)│  3079 (62%)│ +2,631
+  LID (Input Delay)         │   128 (13%)│   139 ( 3%)│    +11
+  SM  (Small)               │     0 ( 0%)│     0 ( 0%)│     0
+  ──────────────────────────┼────────────┼────────────┼──────────
+  Est. paths closed         │   ~733(73%)│  ~2824(56%)│ +2091
+  Est. paths remaining      │   ~267     │  ~2176     │ +1909
+  ──────────────────────────┼────────────┼────────────┼──────────
+  Dominant bottleneck       │ LCS=OT     │ OT >> LCS  │ Data path
+                            │ (balanced) │ (dominates)│ is the
+                            │            │            │ long tail
+
+  KEY TAKEAWAY:
+    Moving from top 1000 to top 5000 reveals that data path violations
+    (OT category) are the dominant long-tail problem. Clock skew (LCS)
+    is concentrated in the worst paths, but the volume of moderate-slack
+    data path violations (3,079 paths between -59 and -32ps) is much
+    larger and harder to close with simple ECOs.
+
+================================================================================
+  SECTION 9: EXECUTION ORDER & RECOMMENDATIONS
+================================================================================
+
+  Recommended execution order:
+
+  STEP 1: Run balance_byplevel_clk.tcl (ECO #1 — Clock Balance)
+    - Expected: Close ~1537 of 1782 LCS paths (86%)
+    - WNS improvement: -102.8ps → ~-59ps (removes top 400+ paths)
+    - Risk: LOW (clock tree restructuring is well-understood)
+    - Must run BEFORE shifter fix (clock balance affects all timing)
+
+  STEP 2: Run fix_shifter_datapath.tcl (ECO #2 — Shifter Data Path)
+    - Expected: Close ~1281 of 3079 OT paths (42%)
+    - Focus on -60 to -32ps range where Vt swap + upsize is effective
+    - Risk: LOW (Vt swap) to MEDIUM (buffer insertion)
+    - Power impact: Est. 3-5% leakage increase in shifter blocks
+
+  STEP 3: Re-run timing analysis
+    - Compare actual vs estimated improvements
+    - Identify new critical paths that emerged
+    - Plan next ECO iteration if needed
+
+  COMBINED ESTIMATED IMPACT:
+    Top 5000 paths: 2824 of 5000 closed (56.5%)
+    Remaining:      ~2176 paths still failing
+    Global WNS:     -102.8ps → ~-49.0ps
+    Global NVP:     22,772 → ~14,460 (-36.5%)
+
+================================================================================
+  DISCLAIMER
+================================================================================
+
+  These are ESTIMATES based on conservative assumptions from the analyze_timing
+  report. Actual results will depend on:
+  - Physical constraints (congestion, DRCs, routing)
+  - Inter-path dependencies (fixing one path may degrade another)
+  - Power/area budget limits
+  - Tool behavior during ECO optimization
+  
+  Real before/after numbers require running the TCLs in fc_shell.
+
+================================================================================
+  END OF REPORT
+================================================================================

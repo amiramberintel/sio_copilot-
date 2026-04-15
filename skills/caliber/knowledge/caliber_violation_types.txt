@@ -1,0 +1,105 @@
+Caliber Violation Types - Reference
+====================================
+Last updated: 2026-03-30
+
+TOP VIOLATIONS (by count, FCT26WW14A max_high):
+================================================
+
+1. SlowSlope (43,945 total)
+   Owner: PO_PV | Severity: must
+   What: Signal transition time exceeds limit (too slow rise/fall).
+   Cause: High capacitance, weak drivers, long routes.
+   Fix: Buffer insertion, upsizing drivers, route optimization.
+   Key columns: pin_name, total_transition, transition_limit, violation_percent,
+                fastest_clock, partitions, is_interface, driver_name, fanout
+
+2. MaxCap (21,989 total)
+   Owner: PO_PV | Severity: must
+   What: Net capacitance exceeds allowed limit.
+   Cause: Long wires, high fanout, tieoff cells driving many loads.
+   Fix: Buffer insertion, net splitting, load reduction.
+   Key columns: pin_name, actual_cap, cap_limit, violation_percent,
+                fastest_clock, partitions, fanout, vio_type (TIED/RV)
+
+3. ClockMinPulseWidth (14,057 total)
+   Owner: PO_PV | Severity: must
+   What: Clock pulse width too narrow (high or low phase).
+   Cause: Clock tree imbalance, aggressive frequency vs cell capability.
+   Fix: Clock tree restructuring, cell replacement, pulse width relaxation.
+   Key columns: clkpin, masterclk, mclk_pd, worst_viol_delta_percent,
+                high_violated_slack, low_violated_slack
+
+4. LatchMarginWithRecovery (11,736 total)
+   Owner: PO | Severity: must
+   What: Latch timing margin insufficient with recovery time.
+   Cause: Memory BIST cells, latch-based designs with tight margins.
+   Fix: Latch margin adjustment, recovery time optimization.
+
+5. ClockSlowSlope (3,382 total)
+   Owner: PO_PV | Severity: must
+   What: Clock signal transition too slow (specifically on clock nets).
+   Cause: Clock tree buffer weakness, high clock net capacitance.
+   Fix: Clock tree optimization, stronger clock buffers.
+
+6. CaliberError (818 total)
+   Owner: PO | Severity: must
+   What: Caliber infrastructure error (missing data, config issues).
+   Only at core_client level (not partitions).
+
+7. WrongGatedClockColor (only in max_nom: 12,032)
+   Owner: PO_SYN | Severity: NA
+   What: Clock gating cell color attribute mismatch.
+   Only appears in max_nom corner.
+
+8. BadExtractionQuality (only in max_nom: 5,044)
+   Owner: PO | Severity: NA
+   What: Parasitic extraction quality below threshold.
+   Only appears in max_nom corner.
+
+OTHER VIOLATIONS (small counts):
+  MaxCapCharacterization  -- Cap exceeds characterized range
+  ConstantClockRegisters  -- Registers with constant clock
+  NoClocksOnRegisters     -- Registers missing clock
+  FullVoltageSwing        -- Signal swing issue
+  ZeroTransitionPins      -- Pins with no transitions
+  GeneratedClocksSource   -- Generated clock source issue
+  MissingClockOnDualClockCells  -- Dual-clock cell missing a clock
+  LogicOnClockPath        -- Logic gates on clock path (should be buffers)
+  HIPLCPControl           -- HIP LCP control issue
+  LCPRFHookup             -- LCP register file hookup
+  RCBTieoff               -- RCB tieoff issue
+  MinClockPeriod          -- Clock period below minimum
+  ClockNetMissingExtractionData  -- Missing parasitics on clock net
+  IllegalCells            -- Illegal cell types used
+  DanglingInNet           -- Unconnected input nets
+  MultilevelClockGating   -- Multi-level clock gating
+  TimingLoops             -- Combinational loops
+
+READING .rpt FILES:
+  Each rule has its own .rpt file in:
+    intel_caliber_all/<corner>/reports/caliber/<RuleName>.rpt
+  
+  Files are tab-separated with header row.
+  Key columns vary by rule but commonly include:
+    pin_name, partitions, is_interface, fastest_clock, violation_percent
+
+  Filter for a partition:
+    grep "par_meu" SlowSlope.rpt | wc -l
+  
+  Filter for cross-partition:
+    grep "par_meu" MaxCap.rpt | awk -F'\t' '$18 ~ /;/'
+  
+  Filter by clock:
+    grep "par_meu" SlowSlope.rpt | awk -F'\t' '{print $6}' | sort | uniq -c | sort -rn
+
+READING TRANSPOSE CSV:
+  File: sta_pt/reports/caliber_indicators/core_client.Un_Waived_Caliber_Violations.transpose.csv
+  Format: Rule, Severity, Owner, Scenario, Total, core_client, par_exe, par_fe, ...
+  
+  Parse with Python:
+    import csv
+    def safe_int(s):
+        s = s.strip().replace("*","").replace("+","")
+        if not s or s in ("NA","-1"): return 0
+        try: return int(s)
+        except: return 0

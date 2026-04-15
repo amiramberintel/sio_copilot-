@@ -1,0 +1,48 @@
+================================================================================
+  estimate_eco -- COMMAND QUICK REFERENCE
+================================================================================
+
+--- SIZE_CELL (check upsize / Vt-swap options) ---
+estimate_eco -type size_cell -sort_by slack -nosplit [get_cells <cell>]
+estimate_eco -type size_cell -sort_by slack -nosplit -max [get_cells <cell>]
+estimate_eco -type size_cell -sort_by slack -nosplit -min [get_cells <cell>]
+estimate_eco -type size_cell -sort_by slack -nosplit -rise [get_cells <cell>]
+estimate_eco -type size_cell -sort_by slack -nosplit -fall [get_cells <cell>]
+
+--- INSERT_BUFFER (check buffer insertion benefit) ---
+estimate_eco -type insert_buffer -sort_by slack -nosplit \
+  -lib_cells {BUFFD4BWP156HNPPN3P48CPDULVT BUFFD8BWP156HNPPN3P48CPDULVT} \
+  [get_pins <pin>]
+
+estimate_eco -type insert_buffer -sort_by slack -nosplit -min \
+  -lib_cells {BUFFD4BWP156HNPPN3P48CPDULVT BUFFD8BWP156HNPPN3P48CPDULVT} \
+  [get_pins <pin>]
+
+--- VT SWAP (explore voltage threshold alternatives) ---
+estimate_eco -max -nosplit -rise -sort_by slack \
+  -lib_cells [get_lib_cells <wildcard_for_vt_variants>] [get_cells <cell>]
+
+estimate_eco -max -nosplit -rise -sort_by slack -current_library [get_cells <cell>]
+
+--- VIA PT_CLIENT ---
+sg soc -c "pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+  -c 'estimate_eco -type size_cell -sort_by slack -nosplit [get_cells <cell>]'"
+
+--- COMMON BUFFER CELLS FOR GFC CLIENT A0 (N2P) ---
+BUFFD2BWP156HNPPN3P48CPDULVT
+BUFFD4BWP156HNPPN3P48CPDULVT
+BUFFD6BWP156HNPPN3P48CPDULVT
+BUFFD8BWP156HNPPN3P48CPDULVT
+BUFFD10BWP156HNPPN3P48CPDULVT
+BUFFD12BWP156HNPPN3P48CPDULVT
+
+--- FLAGS ---
+-type size_cell|insert_buffer   ECO type
+-sort_by slack                  Sort results by slack improvement
+-nosplit                        Don't split output across pages
+-max                            Setup analysis (func.max_* corners)
+-min                            Hold analysis (func.min_* corners)
+-rise / -fall                   Specific transition
+-lib_cells {list}               Target cells for swap/insert
+-current_library                Show current library alternatives only
+================================================================================

@@ -1,0 +1,65 @@
+================================================================================
+  FCN FEV GUIDE — Formal Equivalence Verification within FCN
+================================================================================
+
+=== WHAT IS FEV IN FCN? ===
+
+  FEV (Formal Equivalence Verification) checks that the synthesized
+  netlist is logically equivalent to the RTL source. It's the last
+  step before commit — ensures synthesis didn't introduce logic bugs.
+
+  Tool: Cadence Conformal LEC (Logic Equivalence Checker)
+
+=== WHEN TO RUN ===
+
+  After promote, before commit:
+    fcn_promote -no_check -run_fev
+
+=== FEV FLOW ===
+
+  1. FCN generates RTL-to-netlist mapping:
+     release/latest/fe_collateral/<par>.rtl2fev.tcl
+
+  2. FEV runs Conformal LEC:
+     - Reads RTL (golden reference)
+     - Reads synthesized netlist (implementation)
+     - Compares logic equivalence point by point
+
+  3. FEV checkpoint saved to:
+     runs/core_client/1278.6/fev_conformal/fev_fcl/checkpt_flat.lec
+
+  4. Log:
+     fcn_logs/job.core_client.fev.log
+
+=== DEBUGGING FEV FAILURES ===
+
+  Open checkpoint interactively:
+    debug_fev $ward/runs/core_client/1278.6/fev_conformal/fev_fcl/checkpt_flat.lec
+
+  Common FEV issues:
+    - NonEquivalent points: Logic changed during synthesis
+    - NotMapped points: RTL module not found in netlist (check BB list)
+    - RTLUndrivenNets: Floating nets in RTL
+    - BBox matching failures: Black box interface mismatch
+
+  FEV setup configuration:
+    fcn_scripts/fev_setup_commands.tcl
+    - VPX config for undriven signals
+    - Undefined cell handling
+
+=== FEV CONFIG (fcn_user_vars.tcl) ===
+
+  ivar(fcn,deep_fev_units) = { core_icg }
+    Units that get deep (hierarchical) FEV checking.
+    Most units get flat checking (faster).
+
+=== CONNECTION TO STANDALONE FEV ===
+
+  FCN FEV is a quick check during the release flow.
+  The full standalone FEV (gpavanku's flow) is more comprehensive:
+    /nfs/site/disks/idc_bei_fev/gpavanku/GFC_FEV_RUN/FEV_RUN/
+
+  FCN FEV catches gross synthesis errors.
+  Standalone FEV is the signoff-quality check.
+
+================================================================================

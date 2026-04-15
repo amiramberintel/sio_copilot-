@@ -1,0 +1,89 @@
+#!/usr/bin/tcsh -f
+
+# default Variables
+set value = ""
+unset clock 
+unset outfile 
+unset pin 
+set ci = "n" 
+set line="$argv"
+
+##Phrase Vars
+while ($#argv > 0)
+    set var = "$1"
+    switch ($var)
+    case -pin:
+        shift
+        set pin="$1"
+        shift
+    breaksw
+    case -clock:
+        shift
+        set clock="$1"
+        shift
+    breaksw
+    case -value:
+        shift
+        set value="$1"
+        shift
+    breaksw
+    case -file:
+    	shift
+    	set outfile="$1"
+	shift
+    breaksw
+    case -force:
+    	set ci = y 
+	shift
+    breaksw 
+    case -help:
+    echo "  \
+Flags :    \
+    case -pin:  <Pin name> \
+    case -clock: <clock>\
+    case -value: <Input / output delay value >  <optional> \
+    case -file: <the IO Constraint File> \
+    case -force: <force the Change to File without y/n question>  \
+Usage :  \
+    	~baselibr/LNC_script/IO_manip/Remove_IO_delay_in_IO_constraint -pin <pin_name> -clock <clk> -file <file> \
+    	if the port/clock name have [] or * pls add \ before "
+
+        exit 1
+        break
+    default:
+    	echo "[E] Unkown Switch - at ...Remove_IO_delay_in_IO_constraint $line"
+            exit 1
+        break
+    endsw
+end
+
+if ( $?clock && $?pin && $?outfile  ) then
+    if ( ! -e $outfile) then 
+    	echo "[E] File $outfile does not Exists"
+	exit 1
+    endif
+    set cmd="echo "'"'"$pin"'"'" | sed 's/\[/./g ; s/\]/./g;s/\*/\.\*/g '"
+    set pin_new="`$cmd`"
+    set cmd="echo "'"'"$clock"'"'" | sed 's/\*/\.\*/g' "
+    set clock_new="`$cmd`"
+    set file_base_name = `basename $outfile`_${USER}_`date +%H_%M_%S_%N`
+
+    sed -r "/\-clock.*${clock_new}.*$value.*get_ports[ ]*\-quiet.*${pin_new}/ s/(.*)/#\1/g" ${outfile} > /tmp/${file_base_name}_temp_IO
+    echo "[I] ...Remove_IO_delay_in_IO_constraint $line"
+    diff ${outfile} /tmp/${file_base_name}_temp_IO | grep -e "<" -e ">" | sed 's/</\nChanges: \nOld Line:/g' | sed 's/>/\nNew Line:/g'
+
+    if ( ${ci} != "y" ) then
+    	echo "OverRide The File? y/n" 
+    	set ans = "$<"
+    	if ($ans == "y" ) then
+        	cp /tmp/${file_base_name}_temp_IO $outfile  
+    	endif
+    else
+   	 cp /tmp/${file_base_name}_temp_IO $outfile 
+    endif
+    rm -f /tmp/${file_base_name}_temp_IO
+else 
+    echo "[E] Something went Wrong - at ...Remove_IO_delay_in_IO_constraint $line"
+endif
+
+

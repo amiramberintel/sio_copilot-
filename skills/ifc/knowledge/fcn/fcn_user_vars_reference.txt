@@ -1,0 +1,97 @@
+================================================================================
+  FCN USER VARS REFERENCE — How to Configure fcn_user_vars.tcl
+================================================================================
+
+  This is THE most important file in the FCN flow. Every run starts by
+  editing this file. Located at: $WA/fcn_scripts/fcn_user_vars.tcl
+
+=== MANDATORY IVARS TO UPDATE EVERY RUN ===
+
+  ivar(fcn,fe_model)
+    RTL model path. Get from Basel's mail.
+    Example: /nfs/site/proj/gfc/gfc.models.36/core/core-gfc-a0-master-26ww12b
+
+  ivar(fcn,hip_wa)
+    HIP work area path. Get from Maxim's mail.
+    Example: /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/core_client/
+             central_hip_list/GFCN2CLIENTA0V67_26ww14_Thu
+
+  ivar(fcn,clock_tag)
+    Clock constraint tag. Get from Haya's GFC TD daily mail.
+    *** IMPORTANT: Take BU_FCN tag, NOT prop tag! ***
+    Example: GFCA0_CLIENT_RTL26ww8b_26ww12B_ijtag_cdc_meu_unstamp_BU_FCN
+
+  ivar(fcn,timing_tag)
+    Top IO timing tag. Take latest from timing collateral.
+    Example: GFCA0_TOP_IO_26WW14.1
+
+=== STRUCTURAL IVARS (rarely change) ===
+
+  ivar(fcn,ref)
+    Path to reference WA (for TST vs REF comparison).
+    Example: /nfs/site/disks/idc_bei_fcn/GFC/FCN/gfc_client_netlist_runs/
+             rtl26ww10b_client_refresh_test_gui
+
+  ivar(fcn,top)               = core_client
+  ivar(fcn,target)            = client_n2
+  ivar(fcn,partitions)        = "par_exe par_fe par_msid par_fmav0 par_fmav1
+                                  par_meu par_mlc par_ooo_int par_ooo_vec
+                                  par_pm par_pmh par_tmul_stub"
+  ivar(fcn,subfcs)            = "icore"
+  ivar(fcn,scenario)          = "func.max_nom.T_85.typical"
+  ivar(fcn,top_upf)           = core_client.upf
+
+=== CTECH (CELL TECHNOLOGY) ===
+
+  ivar(fcn,ctech_exp_root)    = /nfs/site/disks/gfc_ctech_libs/ctech/
+                                  gfc_n2_2025ww12/ctech_exp/
+  ivar(import_design,ctech_process) = "n2p"
+  ivar(import_design,ctech_type)    = "h156p48"
+  ivar(import_design,ctech_variant) = "ulvt"
+
+=== FARM JOB CONFIG ===
+
+  ivar(fcn,nbpool)            = sc8_express
+  ivar(fcn,nbqslot)           = /c2dg/BE_BigCore/gfc/fct/sles15_fct
+  ivar(fcn,nbclass)           = SLES15&&64G&&4C  (default)
+  ivar(fcn,nbclass,cdns)      = SLES15&&128G&&8C  (Genus partitions)
+  ivar(fcn,nbclass,core_client) = SLES15&&256G&&8C  (top level)
+
+  Per-partition overrides (for large partitions):
+    ivar(fcn,nbclass,cdns,par_exe)     = SLES15&&256G&&16C
+    ivar(fcn,nbclass,cdns,par_msid)    = SLES15&&128G&&16C
+    ivar(fcn,nbclass,cdns,par_ooo_int) = SLES15&&128G&&16C
+
+=== HIP & FEV CONFIG ===
+
+  ivar(fcn,hip_tag_suffixes)  = [list hip_tags hip_tags_signoff]
+  ivar(fcn,hier_f_from_rtl)   = 1  (take hier_f from RTL)
+  ivar(fcn,hier_f_to_local_fe) = 1  (use .f from fe_collateral)
+  ivar(fcn,take_par_bb_from_rtl) = 1
+  ivar(fcn,deep_fev_units)    = { core_icg }
+
+=== SYNTHESIS CONTROL ===
+
+  ivar(fcn,start_cmd,snps)    = "eou::debug -stop_after initial_map"
+    -> Synopsys runs ONLY for FDR comparison, stops after initial_map
+
+  ivar(compile,enable_multibit) = 0  (multibit disabled)
+
+=== TOP ATTRIBUTE XML ===
+
+  ivar(fcn,top_attribute_xml)
+    Custom attribute XML (if default is wrong).
+    Example: /nfs/site/disks/fnaseral_wa/drops_GFC/updated_attribute_xml/
+             core_client.attribute.xml
+
+=== TEMPLATE: MINIMAL CHANGES FOR NEW RUN ===
+
+  # --- Update these 4 lines for every new FCN run ---
+  set ivar(fcn,fe_model)    "<RTL_PATH_FROM_BASEL>"
+  set ivar(fcn,hip_wa)      "<HIP_PATH_FROM_MAXIM>"
+  set ivar(fcn,clock_tag)   "<CLOCK_TAG_FROM_HAYA_BU_FCN>"
+  set ivar(fcn,timing_tag)  "<TOP_IO_TAG_LATEST>"
+  # --- Optionally update ref ---
+  set ivar(fcn,ref) "<PREVIOUS_WA_PATH>"
+
+================================================================================

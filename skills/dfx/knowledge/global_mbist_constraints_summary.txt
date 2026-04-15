@@ -1,0 +1,70 @@
+================================================================================
+            global_mbist_constraints.tcl - Explanation Summary
+================================================================================
+
+FILE LOCATION
+-------------
+/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_msid/timing_collateral/
+  GFCN2CLIENTA0P10_CONTOUR_26WW06E/global_mbist_constraints.tcl
+
+MCO (METHODOLOGY CHANGE ORDER) INFO
+-----------------------------------
+MCO ID:       UID_004001
+MCO Date:     29/1/2026
+MCO Writer:   Maha Masalha
+MCO Approver: Gal Fogel
+
+PURPOSE
+-------
+Applies timing exceptions for BISR (Built-In Self-Repair) clock mux select 
+signals in MBIST (Memory Built-In Self-Test) logic.
+
+APPLICABLE DESIGNS
+------------------
+Only applies to: core_server, core_client, or par_fmav1
+
+TARGET PINS
+-----------
+BISR clock mux select (S) pins:
+  - *core_rf_fmav*_s*_bisr_buffer/bisr_clk_mux_gated_dl*_ctech_lib_clk_mux_2to*_dcszo*/S
+  - *core_rf_fmav*_s*_bisr_buffer/bisr_clk_mux_ungated_ctech_lib_clk_mux_2to*_dcszo*/S
+
+These are the SELECT pins of clock muxes that switch between test clock and 
+functional clock during MBIST operations.
+
+TIMING CONSTRAINTS APPLIED
+--------------------------
+  Constraint              Value    Meaning
+  ----------------------  -----    ------------------------------------------
+  set_multicycle_path     
+    -setup 2              2        Allow 2 clock cycles for setup timing
+                                   (relaxed from default 1 cycle)
+    -hold 3               3        Hold check at cycle 3 
+                                   (formula: setup_cycles - 1 + hold_adder)
+
+WHY THESE CONSTRAINTS ARE NEEDED
+--------------------------------
+The BISR clock mux select signal is a SLOW CONTROL SIGNAL:
+  - Only changes during MBIST mode entry/exit
+  - Does NOT toggle every clock cycle
+  - Not timing critical for functional operation
+
+Without MCP (Multi-Cycle Path) constraints:
+  - STA would report false timing violations
+  - Setup/hold checks would be too aggressive for this slow signal
+
+With MCP constraints:
+  - Timing analysis reflects actual usage (signal stable for multiple cycles)
+  - Eliminates false violations
+  - Allows proper timing closure
+
+BISR BACKGROUND
+---------------
+BISR = Built-In Self-Repair
+  - Automatically repairs faulty memory cells using spare rows/columns
+  - Uses dedicated clock mux to switch between functional and test clocks
+  - Select signal is programmed once during test, then remains stable
+
+================================================================================
+Generated: 2026-02-17
+================================================================================

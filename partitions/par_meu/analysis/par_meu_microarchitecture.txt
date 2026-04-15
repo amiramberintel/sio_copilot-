@@ -1,0 +1,374 @@
+================================================================================
+  PAR_MEU — MICROARCHITECTURE DEEP DIVE
+  What MEU does, why it matters, and how data flows through it
+  GFC Client A0 (Lion Cove core)
+  Created: 2026-03-29
+================================================================================
+
+
+1. MEU IN THE CPU PIPELINE — THE BIG PICTURE
+=============================================
+
+MEU = Memory Execution Unit. It is the heart of the memory subsystem
+inside a single Lion Cove core.
+
+Every load, store, snoop, and cache access in the core flows through MEU.
+It is the most interconnected partition — it talks to 4 neighbors and
+handles the most critical timing paths because memory operations are
+on the performance-critical path of every workload.
+
+Pipeline position (simplified):
+
+  Front-End         Out-of-Order Engine        Execution           Memory
+  (fetch,decode)    (allocate,rename,schedule)  (ALU,AGU,FP)       (cache,TLB)
+  +---------+       +-------------------+      +----------+       +----------+
+  | par_fe  | ----> | par_ooo_int/vec   | ---> | par_exe  | ----> | PAR_MEU  |
+  | par_mlc |       | par_msid          |      |          |  <--- |          |
+  +---------+       +-------------------+      +----------+       +----+-----+
+                                                                       |
+                                                                  +----+-----+
+                                                                  | par_pmh  |
+                                                                  | (L1 tag  |
+                                                                  |  arrays) |
+                                                                  +----------+
+
+Why MEU is performance-critical:
+  - Load-to-use latency: how fast data gets from L1 cache to ALU
+  - Store throughput: how fast stores drain the store buffer
+  - Branch misprediction penalty: MEU sends JE (jump execution) results
+    back to OOO for fast recovery
+  - Cache miss handling: MEU initiates L1 misses, fill buffer management
+
+
+2. FUNCTIONAL SUB-BLOCKS INSIDE PAR_MEU
+=========================================
+
+par_meu contains 8 major functional units + infrastructure:
+
+  +================================================================+
+  |                        PAR_MEU                                  |
+  |                                                                 |
+  |  +------------------+    +------------------+                   |
+  |  |   exe_int        |    |   mob            |                   |
+  |  |   (Integer EXE   |    |   (Memory Order  |                   |
+  |  |    pipelines,    |    |    Buffer)        |                   |
+  |  |    AGU, bypass)  |    |                   |                   |
+  |  +------------------+    +------------------+                   |
+  |                                                                 |
+  |  +------------------+    +------------------+                   |
+  |  |   dcu_l0         |    |   dtlb           |                   |
+  |  |   (L0/L1 Data    |    |   (Data TLB -    |                   |
+  |  |    Cache Unit,   |    |    virtual-to-    |                   |
+  |  |    fill buffer,  |    |    physical addr) |                   |
+  |  |    SDB, ECC)     |    |                   |                   |
+  |  +------------------+    +------------------+                   |
+  |                                                                 |
+  |  +------------------+    +------------------+                   |
+  |  |   rsintprf_arrays|    |   rsbpd          |                   |
+  |  |   (RS + PRF      |    |   (RS Branch     |                   |
+  |  |    SRAM arrays)  |    |    Prediction     |                   |
+  |  |                  |    |    Data)          |                   |
+  |  +------------------+    +------------------+                   |
+  |                                                                 |
+  |  +------------------+    +------------------+                   |
+  |  |   tmaxehrd       |    |   siaxeld1vd     |                   |
+  |  |   (Thread Max    |    |   (SIA XE L1     |                   |
+  |  |    EXE HRD)      |    |    valid)         |                   |
+  |  +------------------+    +------------------+                   |
+  |                                                                 |
+  |  Infrastructure: meu_dcm_wrap (DCM), glbdrvff_* (clock drivers),|
+  |                  core_icg_* (clock gates), repeater, DFT/JTAG   |
+  +================================================================+
+
+Sub-block details:
+
+  exe_int (Integer Execution)
+  ---------------------------
+  The integer ALU pipelines that execute inside MEU. This includes:
+  - AGU (Address Generation Units) — compute load/store addresses
+  - Integer bypass network — forward results to dependent ops
+  - EXE writeback — send results back to ROB via ooo_int
+  Ports: JE signals (M805H), AGU signals, bypass, writeback data
+
+  mob (Memory Order Buffer)
+  -------------------------
+  Tracks all in-flight loads and stores to maintain memory ordering.
+  Functions:
+  - Load ordering: detect load-load and store-load conflicts
+  - Store forwarding: forward store data to dependent loads
+  - Write-back scheduling: decide when loads/stores can retire
+  - ROB ID tracking: correlate memory ops with ROB entries
+  Key signals: mowb* (M800-805H), molvp*, mosbno*, momeutx*
+
+  dcu_l0 (Data Cache Unit — L0 and L1)
+  -------------------------------------
+  The actual data cache hardware:
+  - L0 cache (small, fast, closest to execution)
+  - L1 cache tag and data arrays
+  - Fill buffer (FB) — holds pending cache line fills
+  - Store Data Buffer (SDB) — holds store data before commit
+  - ECC logic — error correction on cache data
+  - Snoop handling — respond to external cache coherence probes
+  Key signals: dcl1* (M403-408H), dcfb*, dcsdb*, dcsnp* (M399-404H)
+  Contains large SRAM macros (rfip arrays) for tag/data storage
+
+  dtlb (Data Translation Lookaside Buffer)
+  -----------------------------------------
+  Virtual-to-physical address translation cache for data accesses.
+  Provides fast address translation for loads and stores.
+  Key signals: tlb* (M404H)
+
+  rsintprf_arrays (RS + PRF SRAM arrays)
+  ----------------------------------------
+  Physical Register File arrays and Reservation Station arrays.
+  The PRF holds register values; RS holds micro-ops waiting for operands.
+  Key signals: rsintprf_*, PRF read/write ports
+  Contains the largest SRAM macros in MEU
+
+  rsbpd (RS Branch Prediction Data)
+  ----------------------------------
+  Stores branch prediction data associated with RS entries.
+  Used for branch misprediction recovery.
+  Key signals: rsbrpred* (M301H)
+
+  meu_dcm_wrap (DCM Wrapper)
+  ---------------------------
+  DCM = Dynamic Clock Management. Controls clock gating for MEU
+  sub-blocks to save power when units are idle.
+
+  tmaxehrd (Thread Max EXE HRD)
+  ------------------------------
+  Thread arbitration and max execution hardware. Manages multi-thread
+  resource allocation within MEU.
+
+
+3. DATA FLOW THROUGH THE MEU PIPELINE
+======================================
+
+The MEU pipeline stages follow the MxxxH naming convention where xxx
+is the stage number. Higher numbers = later in the pipeline.
+
+Stage Map (with signal counts from par_meu netlist):
+
+  STAGE     SIGNALS  WHAT HAPPENS
+  --------  -------  --------------------------------------------------
+  M300-301H    224   RS DISPATCH: Reservation Station sends micro-ops
+                     to MEU. Includes opcode, operand sources, color,
+                     immediate control. This is the "front door" —
+                     work enters MEU here from par_ooo_int.
+
+  M302-303H    107   SCHEDULE: Double-pump control, branch conflict
+                     detection, dependency resolution. MEU schedules
+                     when each micro-op will execute.
+
+  M304-306H     94   AGU EXECUTE: Address Generation Units compute
+                     load/store virtual addresses. Also handles
+                     real dispatch to execution pipes, store-load
+                     independence detection (islsd).
+
+  M398-400H     ~20  DC PIPELINE EARLY: Snoop request from MLC
+                     arrives. DCU starts tag lookup pipeline.
+                     MLC interface signals enter here.
+
+  M401-402H    124   PMH/FB STAGE: PMH port arbitration, fill buffer
+                     commit, MOB early operations. The address has
+                     been translated (DTLB) and tag lookup begins.
+
+  M403-404H     56   L1 TAG HIT: DCU L1 tag comparison complete.
+                     Hit/miss decision, victim way selection, snoop
+                     hit detection, FB allocation. Critical timing —
+                     many feed-through paths at this stage (SIO false
+                     paths in par_meu_sio_ovrs.tcl).
+
+  M405-406H     78   L1 DATA: Cache line data read, parity check,
+                     snoop response, MOB cleanup. Store data buffer
+                     operations. Writeback data to PMH.
+
+  M408H          4   L1 READ DATA: Final cache read data + ECC status
+                     sent to PMH. This is the last DCU stage.
+
+  M800-802H     26   MOB LOAD: Load data writeback stage. MOB validates
+                     load ordering, check valid, clear VM (virtual
+                     machine) state.
+
+  M803-804H     41   MOB WB CHECK: ROB ID check for load writeback.
+                     Cancel decisions. JE early output data.
+                     This is where 803 family paths live.
+
+  M805-807H    109   EXECUTION RESULTS: Final writeback stage.
+                     JE taken branch, fault info, WB data valid,
+                     RS errors to ROB. This is the "back door" —
+                     results leave MEU here to par_ooo_int/vec/exe.
+
+  M899-912H     44   LATE/POWER: Fast lock, return bypass, nuke
+                     signals, power management. Late-arriving
+                     global control signals.
+
+
+4. CROSS-PARTITION DATA FLOWS — WHY EACH MATTERS
+==================================================
+
+4a. OOO_INT <-> MEU (80 ports — 64% of all MEU paths)
+------------------------------------------------------
+This is the LARGEST interface. Two main flows:
+
+  INBOUND (ooo_int -> meu, 37 ports):
+    RS dispatches micro-ops to MEU for execution.
+    Includes: uop opcode, operand sources, ROB ID, branch prediction,
+    scheduling hints, power-up signals.
+
+    WHY CRITICAL: If RS dispatch is late, MEU can't start executing
+    the micro-op on time. This directly impacts IPC (Instructions
+    Per Cycle). Every ps of slack lost here is a ps of latency
+    added to EVERY load and store instruction.
+
+  OUTBOUND (meu -> ooo_int, 38 ports):
+    MEU sends execution results back to OOO for retirement.
+    Includes: MOB writeback status, JE branch results, ROB ordering
+    validation, error signals, power management.
+
+    WHY CRITICAL: MOB writeback determines when loads can retire.
+    JE branch results trigger misprediction recovery — the sooner
+    OOO gets the result, the faster it can redirect the front-end.
+    803 family (worst: -123ps) is the most critical path here.
+
+4b. PMH <-> MEU (30 ports — 24%)
+---------------------------------
+  INBOUND (pmh -> meu, 7 ports):
+    L1 tag hit results, cache read data, ECC status, PM block.
+    PMH owns the L1 tag arrays and returns hit/miss decisions.
+
+  OUTBOUND (meu -> pmh, 21 ports):
+    L1 demand requests, writeback requests, snoop responses.
+    MEU sends address + request type to PMH for tag lookup.
+
+    WHY CRITICAL: Load-to-use latency. The MEU-PMH round-trip
+    determines how fast a load instruction gets its data:
+      MEU sends address -> PMH does tag lookup -> PMH returns data -> MEU WB
+    This is typically 4-5 cycles and is THE key performance metric.
+
+4c. EXE <-> MEU (18 ports — 14%)
+---------------------------------
+  INBOUND (exe -> meu, 5 ports):
+    Store data, dependency info, AGU inputs from other EXE pipes.
+
+  OUTBOUND (meu -> exe, 12 ports):
+    Writeback data to PRF, cancel signals, gather element IDs.
+    Feed-through paths (rsrealdispm304h) also cross here.
+
+    WHY CRITICAL: Store data arrives from EXE and must be captured
+    in SDB before the store can commit. Also, vector gather
+    operations (gatherelmid) need MEU to provide element IDs
+    to the vector EXE unit.
+
+4d. OOO_VEC <-> MEU (6 ports — 5%)
+------------------------------------
+  INBOUND (ooo_vec -> meu, 2 ports):
+    Vector RS SB ID, RORT power enable.
+
+  OUTBOUND (meu -> ooo_vec, 2 ports):
+    Slow ROB ID for vector pipe, AGU RS errors.
+
+    WHY CRITICAL: Vector loads/stores share the MOB with integer ops.
+    The slow ROB ID path (rsslowrobidvpm803h) is a 3-partition path
+    (meu -> ooo_int -> ooo_vec) and is the longest physical distance.
+
+
+5. THE 803 FAMILY IN DEPTH — WHY IT'S THE WORST
+=================================================
+
+The 803 family (MOB WB Check, Basel, -77ps WNS) is the worst MEU family
+because of these architectural reasons:
+
+  WHAT 803 DOES:
+  When a load completes in MEU, the MOB must check:
+  1. Is the ROB ID valid? (hasn't been squashed by a branch mispredict)
+  2. Are there ordering conflicts with younger stores?
+  3. Should this write-back be cancelled?
+
+  This check requires comparing the load's ROB ID against the current
+  ROB state in par_ooo_int. The result must arrive at ooo_int's ICG
+  (Integrated Clock Gate) before the next clock edge.
+
+  WHY IT'S HARD:
+  - The check logic is deep (ROB ID compare + conflict detection)
+  - The physical distance is large (MEU center -> ooo_int boundary)
+  - The clock skew between mclk_meu and mclk_ooo_int is ~15ps
+  - The signal fans out to multiple consumers in ooo_int
+  - The spec budget is tight: ~120ps total, with MEU getting ~80ps
+
+  WHAT'S BEING DONE:
+  - Clock tuning: push mclk_meu earlier at the launching flop
+  - Flop bounding: place the MOB check flop near the ooo_int boundary
+  - TIP: topology plan to route the signal efficiently across partitions
+  - Waiting for CI: Michel's new clock integration will redistribute
+    clock budget between MEU and ooo_int
+
+
+6. SIGNAL NAMING CONVENTION DECODER
+=====================================
+
+Intel signal names encode a LOT of information:
+
+  Example: MoWbCheckRobIdLdM803H_0_[3]
+
+  Mo          = MOB (Memory Order Buffer) — functional unit prefix
+  Wb          = Writeback — operation type
+  Check       = check operation
+  RobId       = ROB ID — what's being checked
+  Ld          = Load — instruction type
+  M803H       = Pipeline stage 803, Half-cycle H (rising edge)
+  _0_         = Thread/port index
+  [3]         = Bit index
+
+  Common prefixes:
+    Rs    = Reservation Station
+    Mo    = Memory Order Buffer (MOB)
+    Dc    = Data Cache Unit (DCU)
+    Dcl1  = DCU Level 1
+    Dcl0  = DCU Level 0
+    Mi    = Machine Interrupt / MIINT
+    Je    = Jump Execution
+    Ag    = Address Generation Unit (AGU)
+    Pm    = Port Monitor Hub (PMH)
+    Ml    = Mid-Level Cache (MLC)
+    Tm    = Thread Manager
+    Ro    = Retire/Ordering (ROB-related)
+    Cr    = Configuration Ring
+    Fb    = Fill Buffer
+    Sdb   = Store Data Buffer
+    Snp   = Snoop
+    Lvp   = Low Voltage Performance
+    Me    = MEU control
+    Alt   = Always (power management)
+    Hgs   = HGS (telemetry)
+
+  Stage ranges by function:
+    M124-202H   = Allocate/Rename (early pipeline)
+    M300-307H   = RS dispatch and scheduling
+    M398-408H   = DCU cache pipeline (address -> tag -> data)
+    M500-504H   = MLC interface
+    M800-807H   = MOB and writeback
+    M899-912H   = Power management and nuke
+
+  Suffix conventions:
+    MxxxH       = Half-cycle (rising clock edge)
+    Mnn(n)H     = Multi-cycle signal (nnn = parameterized stage)
+    __FEEDTHRU  = Feed-through buffer (signal passes through partition)
+    _op_N       = Operation port N (RS slot)
+    _p_N        = Physical port N
+
+
+7. KEY NUMBERS
+===============
+
+  par_meu total ports:        3,774 (1,888 in + 1,886 out)
+  Timing specs (IO):          2,299 pins
+  Timing specs (FT):          3,254 feed-through paths
+  Failing cross-partition:    125 ports (all negative slack)
+  Pipeline stages:            68 unique stages (M001H to M912H)
+  Sub-blocks:                 8 functional + 5 infrastructure
+  SRAM macros:                ~40 (rfip arrays in dcu_l0, rsintprf)
+  Clock domain:               mclk_meu (single domain, ~186ps period)
+
+================================================================================

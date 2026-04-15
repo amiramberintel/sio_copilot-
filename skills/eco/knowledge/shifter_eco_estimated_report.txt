@@ -1,0 +1,172 @@
+
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║     PAR_EXE INTERNAL PATHS — ESTIMATED BEFORE vs AFTER ECO                     ║
+║     Source: Avi's PO WA (apr_fc_cts_eco, clock_route_opt)                      ║
+║     Date: 2026-03-22                                                            ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+
+  ECO Plan:
+    ECO #1: balance_byplevel_clk.tcl  — Clock skew fix (miBypLevelM304H)
+    ECO #2: fix_shifter_datapath.tcl  — Shifter data path (Vt swap + upsize)
+
+═══════════════════════════════════════════════════════════════════════════════════
+ SECTION 1: SETUP TIMING — BEFORE vs AFTER (ESTIMATED)
+═══════════════════════════════════════════════════════════════════════════════════
+
+  ┌──────────────────────┬──────────────┬──────────────┬──────────────┬──────────┐
+  │ Metric               │    BEFORE    │  AFTER (est) │    DELTA     │  Status  │
+  ├──────────────────────┼──────────────┼──────────────┼──────────────┼──────────┤
+  │ WNS R2R (setup)      │     -102.8ps │      -49.0ps │      +53.8ps │    ▲     │
+  │ TNS R2R (setup)      │    -406577ps │     -26901ps │    +379676ps │    ▲     │
+  │ NVP R2R (setup)      │     22,772    │     ~14,460    │     -8,312    │    ▲     │
+  ├──────────────────────┼──────────────┼──────────────┼──────────────┼──────────┤
+  │ WNS Total (setup)    │     -133.8ps │      -49.0ps │      +84.8ps │    ▲     │
+  │ TNS Total (setup)    │    -653198ps │    -273522ps │    +379676ps │    ▲     │
+  │ NVP Total (setup)    │     38,556    │    ~30,244    │     -8,312    │    ▲     │
+  └──────────────────────┴──────────────┴──────────────┴──────────────┴──────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+ SECTION 2: HOLD TIMING — BEFORE vs AFTER (ESTIMATED)
+═══════════════════════════════════════════════════════════════════════════════════
+
+  ┌──────────────────────┬──────────────┬──────────────┬──────────────┬──────────┐
+  │ Metric               │    BEFORE    │  AFTER (est) │    DELTA     │  Status  │
+  ├──────────────────────┼──────────────┼──────────────┼──────────────┼──────────┤
+  │ WNS R2R (hold)       │     -121.0ps │      -51.0ps │      +70.0ps │    ▲     │
+  │ TNS R2R (hold)       │    -955641ps │    -744237ps │    +211404ps │    ▲     │
+  │ NVP R2R (hold)       │     81,540    │     63,502    │    -18,038    │    ▲     │
+  └──────────────────────┴──────────────┴──────────────┴──────────────┴──────────┘
+
+  NOTE: Hold improves because clock skew fix (ECO #1) helps both setup AND hold.
+        Vt swap (ECO #2) may slightly degrade hold — monitor carefully.
+
+═══════════════════════════════════════════════════════════════════════════════════
+ SECTION 3: PER-CATEGORY BREAKDOWN (mclk_exe setup)
+═══════════════════════════════════════════════════════════════════════════════════
+
+  ┌────────────────────────┬──────────┬──────────┬──────────┬──────────┬─────────┐
+  │ Category               │ BEFORE   │ Closed   │ AFTER    │ Close %  │ ECO     │
+  │                        │ (paths)  │ (est)    │ (paths)  │          │         │
+  ├────────────────────────┼──────────┼──────────┼──────────┼──────────┼─────────┤
+  │ LCS (Clock Skew)       │   1,922  │   1,345  │     577  │     70%   │ ECO #1  │
+  │ OT  (Data Path)        │  29,598  │   5,906  │  23,692  │   20.0%  │ ECO #2  │
+  │ SM  (Small Viols)      │   8,054  │   7,248  │     806  │     90%   │ Both    │
+  │ LID (Input Delay)      │     223  │       0  │     223  │    0.0%  │ ECO #2  │
+  ├────────────────────────┼──────────┼──────────┼──────────┼──────────┼─────────┤
+  │ TOTAL                  │  39,797  │  14,499  │  25,298  │   36.4%  │         │
+  └────────────────────────┴──────────┴──────────┴──────────┴──────────┴─────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+ SECTION 4: VT DISTRIBUTION — BEFORE vs AFTER (ESTIMATED)
+═══════════════════════════════════════════════════════════════════════════════════
+
+  ┌────────────────────┬──────────────────┬──────────────────┬──────────────────┐
+  │ Vt Type            │     BEFORE       │   AFTER (est)    │     DELTA        │
+  ├────────────────────┼──────────────────┼──────────────────┼──────────────────┤
+  │ ULVT  (fastest)    │    991,378 ( 52.6%) │  1,011,378 ( 53.7%) │    +20,000      │
+  │ LVT   (balanced)   │    619,881 ( 32.9%) │    605,881 ( 32.2%) │    -14,000      │
+  │ ULVTLL (low leak)  │    272,283 ( 14.5%) │    266,283 ( 14.1%) │     -6,000      │
+  └────────────────────┴──────────────────┴──────────────────┴──────────────────┘
+
+  ⚠ Leakage impact: ~20000 cells swapped to ULVT → ~2x leakage increase
+    on those cells. Total partition leakage increase estimated at ~3-5%.
+
+═══════════════════════════════════════════════════════════════════════════════════
+ SECTION 5: TOP 1000 WORST PATHS — ESTIMATED IMPACT
+═══════════════════════════════════════════════════════════════════════════════════
+
+  BEFORE: Slack range -102.8ps to -46.5ps (all 1000 paths failing)
+
+  AFTER (estimated):
+  ┌────────────────────┬─────────┬────────────────────────────────────────────────┐
+  │ Slack Bucket       │ BEFORE  │ AFTER (estimated)                              │
+  ├────────────────────┼─────────┼────────────────────────────────────────────────┤
+  │ -110 to -100ps     │       2 │    0  ← clock fix closes these                │
+  │ -100 to  -90ps     │      21 │    0  ← clock fix closes these                │
+  │  -90 to  -80ps     │      81 │    0  ← clock fix closes these                │
+  │  -80 to  -70ps     │     114 │    0  ← clock fix closes these                │
+  │  -70 to  -60ps     │     138 │   ~4  ← clock fix closes most, ~4 remain      │
+  │  -60 to  -50ps     │     365 │  ~81  ← clock fix + Vt swap close ~78%        │
+  │  -50 to  -40ps     │     279 │ ~182  ← Vt swap closes ~35%                   │
+  ├────────────────────┼─────────┼────────────────────────────────────────────────┤
+  │ TOTAL top-1000     │   1,000 │ ~267  ← 73% of top 1000 closed               │
+  └────────────────────┴─────────┴────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+ SECTION 6: ECO SCRIPT SUMMARY
+═══════════════════════════════════════════════════════════════════════════════════
+
+  ┌──────────────────────────────────┬─────────────────────────────────────────────┐
+  │ Script                           │ Impact                                      │
+  ├──────────────────────────────────┼─────────────────────────────────────────────┤
+  │ balance_byplevel_clk.tcl         │ Creates 32 local ICGs for BypLevel regs     │
+  │   Technique: E1 (useful skew)    │ Fixes 1,922 LCS paths (~70% close)          │
+  │   Target: miBypLevelM304H        │ WNS: -102.8 → ~-49ps (+54ps)               │
+  │   Cells: 32 ICGs + ~64 inverters │ TNS recovery: ~85,271ps               │
+  ├──────────────────────────────────┼─────────────────────────────────────────────┤
+  │ fix_shifter_datapath.tcl         │ Vt swap + upsize on shifter data paths      │
+  │   Techniques: C1, C3, C4        │ Fixes ~5,906 OT paths + ~7,248 SM paths    │
+  │   Target: 15 shifter/ALU blocks  │ Gain: ~10ps avg per path                    │
+  │   Cells: ~20,000 Vt swaps + upsizes │ TNS recovery: ~294,405ps               │
+  ├──────────────────────────────────┼─────────────────────────────────────────────┤
+  │ COMBINED IMPACT                  │                                             │
+  │                                  │ Setup WNS R2R: -102.8 → ~-49ps (+54ps)     │
+  │                                  │ Setup NVP R2R: 22,772 → ~14,460 (-8,312)     │
+  │                                  │ Setup TNS R2R: ~+379,676ps recovered       │
+  │                                  │ Hold WNS R2R:  -121.0 → ~-51ps (+70ps)     │
+  └──────────────────────────────────┴─────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+ SECTION 7: ASSUMPTIONS & RISKS
+═══════════════════════════════════════════════════════════════════════════════════
+
+  Assumptions:
+  1. Clock balance ECO reduces skew by ~70ps average (based on ICG proximity)
+  2. 70% of LCS paths fully close after clock ECO
+  3. Vt swap + upsize gives ~10ps average improvement per data path
+  4. 90% of SM (small violation) paths close with any ECO
+  5. No illegal cell violations (must check against illegal.txt)
+
+  Risks:
+  1. Hold degradation — Vt swap (faster cells) may worsen hold timing
+     Mitigation: monitor hold after each step, insert hold buffers if needed
+  2. Max transition — upsizing output may cause upstream tran violations
+     Mitigation: check max_tran after upsize step
+  3. DRC increase — new cells + routing may add DRCs
+     Mitigation: route_eco + legalize after each step
+  4. Leakage — ULVT cells consume more power
+     Mitigation: only swap cells on critical paths, not blanket swap
+  5. FEV — any ECO requires FEV re-verification
+     Mitigation: run FEV after all ECOs complete
+
+═══════════════════════════════════════════════════════════════════════════════════
+ SECTION 8: EXECUTION ORDER
+═══════════════════════════════════════════════════════════════════════════════════
+
+  Step 1: Open Avi's design in fc_shell
+          open_block par_exe -lib apr_fc_cts_eco
+
+  Step 2: Run clock balance ECO FIRST (fixes biggest bottleneck)
+          source balance_byplevel_clk.tcl
+          balance_byplevel_clk
+          route_group -all_clock_nets
+          report_global_timing
+
+  Step 3: Run shifter datapath ECO SECOND
+          source fix_shifter_datapath.tcl
+          snapshot_timing BEFORE
+          fix_shifter_vt_swap
+          fix_shifter_upsize
+          fix_shifter_buffers
+          finalize_shifter_eco
+          snapshot_timing AFTER
+          compare_before_after
+          generate_eco_report
+
+  Step 4: Verify
+          report_global_timing
+          report_constraints -max_transition -all_violators
+          report_timing -delay_type min -group mclk_exe -max 20
+
+  Step 5: FEV check
+          Run Cadence Conformal LEC to verify equivalence

@@ -1,0 +1,333 @@
+alias fcts_bc_cth2      "/nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl"
+
+
+
+
+
+### LNCN3LNLCLIENB0
+
+
+# modelb_servers
+
+
+
+### PNC78SERVERB0
+
+
+# modelb_servers
+
+
+
+### LNCN3LNLCLIENA0
+
+
+# modelb_servers
+
+
+
+### LNC78B0
+
+
+# modelb_servers
+
+
+
+### LNC78A0
+
+
+# modelb_servers
+
+
+
+### LNCN3CLIENTA0
+
+
+# modelb_servers
+
+
+
+### PNC78CLIENTA0
+
+alias  pnc78clienta0bnfffrcffcminpcff125prc_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clienta0bnfffrcffcminpcff125prc   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clienta0bnfcdrcffcminpcffm40prc_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_fresh.min_fast_cold.rcffcminpcff_m40.prcs    -c "\!*"'
+alias  pnc78clienta0bnfcdrcffcminpcffm40prc   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_fresh.min_fast_cold.rcffcminpcff_m40.prcs    -c "\!*"'
+alias  pnc78clienta0bnnomttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnnomttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnlowttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnlowttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnhigttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnhigttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnturttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.min_turbo.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnturttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.min_turbo.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmnomttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmnomttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmlowttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmlowttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmhigttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmhigttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmmedttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmmedttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmlcottttcmaxttttm40ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clienta0bmlcottttcmaxttttm40ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clienta0lmlowttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_fcl_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0lmlowttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_fcl_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0lmhigttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clienta0_fcl_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0lmhigttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clienta0_fcl_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+# modelb_servers
+
+alias  pnc78clienta0bnfffrcffcminpcff125prc_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clienta0bnfffrcffcminpcff125prc0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clienta0bnfcdrcffcminpcffm40prc_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_fresh.min_fast_cold.rcffcminpcff_m40.prcs    -c "\!*"'
+alias  pnc78clienta0bnfcdrcffcminpcffm40prc0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_fresh.min_fast_cold.rcffcminpcff_m40.prcs    -c "\!*"'
+alias  pnc78clienta0bnnomttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnnomttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnlowttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnlowttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnhigttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnhigttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnturttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.min_turbo.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bnturttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.min_turbo.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmnomttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmnomttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmlowttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmlowttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmhigttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmhigttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmmedttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmmedttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0bmlcottttcmaxttttm40ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clienta0bmlcottttcmaxttttm40ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clienta0lmlowttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_fcl_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0lmlowttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_fcl_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0lmhigttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clienta0_fcl_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clienta0lmhigttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clienta0_fcl_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+alias  pnc78clientb0bnfcdrcffcminpcffm40prc_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_fresh.min_fast_cold.rcffcminpcff_m40.prcs    -c "\!*"'
+alias  pnc78clientb0bnfcdrcffcminpcffm40prc   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_fresh.min_fast_cold.rcffcminpcff_m40.prcs    -c "\!*"'
+alias  pnc78clientb0bnfcdrcffcminpcffm40prc_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_fresh.min_fast_cold.rcffcminpcff_m40.prcs    -c "\!*"'
+alias  pnc78clientb0bnfcdrcffcminpcffm40prc0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_fresh.min_fast_cold.rcffcminpcff_m40.prcs    -c "\!*"'
+
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+
+alias  pnc78clientb0bmfffrcffcminpcff125prc_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clientb0bmfffrcffcminpcff125prc   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clientb0bmfffrcffcminpcff125prc_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clientb0bmfffrcffcminpcff125prc0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_fast.rcffcminpcff_125.prcs    -c "\!*"'
+
+
+### PNC78CLIENTB0
+
+alias  pnc78clientb0bmnomttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmnomttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmmedttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmmedttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmhigttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmhigttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlowttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlowttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnnomttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnnomttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnhigttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnhigttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnlowttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnlowttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnfffrcffcminpcff125prc_a   'fcts_bc_cth2 -m modela_pnc78clientb0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clientb0bnfffrcffcminpcff125prc   'fcts_bc_cth2 -m latest_pnc78clientb0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+
+# modelb_servers
+
+alias  pnc78clientb0bmnomttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmnomttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmlcottttcmaxttttm40ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_low_cold.ttttcmaxtttt_m40.tttt    -c "\!*"'
+alias  pnc78clientb0bmmedttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmmedttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmhigttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmhigttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlowttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bmlowttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnnomttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnnomttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnhigttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnhigttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.min_high.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnlowttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnlowttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78clientb0bnfffrcffcminpcff125prc_b   'fcts_bc_cth2 -m modelb_pnc78clientb0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+alias  pnc78clientb0bnfffrcffcminpcff125prc0   'fcts_bc_cth2 -m prev_pnc78clientb0_bu_prp_fresh.min_fast.rcffcminpcff_125.prcs    -c "\!*"'
+
+
+### CGC78CLIENTB0
+
+alias  cgc78clientb0bnphircffcminpcff125pcc_a   'fcts_bc_cth2 -m modela_cgc78clientb0_bu_prp_fresh.min_pcss_high.rcffcminpcff_125.pcss    -c "\!*"'
+alias  cgc78clientb0bnphircffcminpcff125pcc   'fcts_bc_cth2 -m latest_cgc78clientb0_bu_prp_fresh.min_pcss_high.rcffcminpcff_125.pcss    -c "\!*"'
+alias  cgc78clientb0bnnomttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bnnomttttcmintttt100ttt   'fcts_bc_cth2 -m latest_cgc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmnomttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmnomttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_cgc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmlowttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clientb0_bu_prp_func.max_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmlowttttcmintttt100ttt   'fcts_bc_cth2 -m latest_cgc78clientb0_bu_prp_func.max_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmhigttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmhigttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_cgc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmmedttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmmedttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_cgc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+# modelb_servers
+
+alias  cgc78clientb0bnphircffcminpcff125pcc_b   'fcts_bc_cth2 -m modelb_cgc78clientb0_bu_prp_fresh.min_pcss_high.rcffcminpcff_125.pcss    -c "\!*"'
+alias  cgc78clientb0bnphircffcminpcff125pcc0   'fcts_bc_cth2 -m prev_cgc78clientb0_bu_prp_fresh.min_pcss_high.rcffcminpcff_125.pcss    -c "\!*"'
+alias  cgc78clientb0bnnomttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bnnomttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clientb0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmnomttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmnomttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clientb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmlowttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clientb0_bu_prp_func.max_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmlowttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clientb0_bu_prp_func.max_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmhigttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmhigttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clientb0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmmedttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clientb0bmmedttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clientb0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+
+### LNCN3CLIENTB0
+
+
+# modelb_servers
+
+
+
+### PNC78SERVERA0
+
+alias  pnc78servera0bnnomttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78servera0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bnnomttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78servera0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bnlowttttcmintttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78servera0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bnlowttttcmintttt100ttt   'fcts_bc_cth2 -m latest_pnc78servera0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmnomttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78servera0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmnomttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78servera0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmlowttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78servera0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmlowttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78servera0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmmedttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78servera0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmmedttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78servera0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+# modelb_servers
+
+alias  pnc78servera0bnnomttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78servera0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bnnomttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78servera0_bu_prp_func.min_nom.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bnlowttttcmintttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78servera0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bnlowttttcmintttt100ttt0   'fcts_bc_cth2 -m prev_pnc78servera0_bu_prp_func.min_low.ttttcmintttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmnomttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78servera0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmnomttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78servera0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmlowttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78servera0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmlowttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78servera0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmmedttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78servera0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78servera0bmmedttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78servera0_bu_prp_func.max_med.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+### PNC78SERVERB0
+
+
+# modelb_servers
+
+alias  pnc78serverb0bmlowttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78serverb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78serverb0bmlowttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78serverb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78serverb0bmnomttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_pnc78serverb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78serverb0bmnomttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_pnc78serverb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78serverb0bmlowttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78serverb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78serverb0bmlowttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78serverb0_bu_prp_func.max_low.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78serverb0bmnomttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_pnc78serverb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  pnc78serverb0bmnomttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_pnc78serverb0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+### PNC78ICOREA0
+
+
+# modelb_servers
+
+
+
+### CGC78CLIENTA0
+
+alias  cgc78clienta0bmnomttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmnomttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_cgc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmhigttttcmaxtttt100ttt_a   'fcts_bc_cth2 -m modela_cgc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmhigttttcmaxtttt100ttt   'fcts_bc_cth2 -m latest_cgc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+# modelb_servers
+
+alias  cgc78clienta0bmnomttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmnomttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clienta0_bu_prp_func.max_nom.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmhigttttcmaxtttt100ttt_b   'fcts_bc_cth2 -m modelb_cgc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+alias  cgc78clienta0bmhigttttcmaxtttt100ttt0   'fcts_bc_cth2 -m prev_cgc78clienta0_bu_prp_func.max_high.ttttcmaxtttt_100.tttt    -c "\!*"'
+
+#ivnc0133> most /nfs/iil/proj/lnl/pt_server/cth2_ptserver/cth2_ptserver_root/pt_server_model_link/modela_lnlca0_bu/project/lnllnc/h169p45_80nm_tsmc_m18/pvt.tcl | g scenario_delay_type_map | item 3 | sed -s 's/{"//' | sed -s 's/"//' | g -v scenario_delay_type_map
+#{}
+#func.max_low.T_85.typical
+#func.max_nom.T_85.typical
+#func.max_nom1.S_125.cworst_CCworst
+#func.max_med.T_85.typical
+#func.max_high.T_85.typical
+#func.max_turbo.T_85.typical
+#func.max_dvfs.T_85.typical
+#func.min_low.T_85.typical
+#func.min_nom.T_85.typical
+#func.min_nom1.S_125.cworst_CCworst
+#func.min_med.T_85.typical
+#func.min_high.T_85.typical
+#func.min_turbo.T_85.typical
+#func.min_low_cold.S_M40.typical
+#func.min_nom_cold.S_M40.typical
+#func.min_high_cold.F_M40.typical
+#func.min_dvfs.T_85.typical
+#func.min_dvfs_cold.S_M40.typical
+#func.noise_low.S_M40.cworst_CCworst
+#func.noise_high.F_125.rcworst_CCworst
+
+
+#/nfs/site/stod/stod253/w.rkurtz.103/LNL/test_setup/REFLATEST-FCT20WW46D_rkurtz_sbox_ww46-CLK009.fcl/project/lnllnc/1277.2/pvt.tcl
+#lappend ivar(sta,scenario_delay_type_map) {"func.max_low.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.max_nom.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.max_med.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.max_high.TT_100.tttt"       "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.max_low.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.max_nom.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.max_med.TT_100.tttt"        "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.max_high.TT_100.tttt"       "max"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.min_low.TM_100.tttt"        "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func_fresh.min_low.TM_100.tttt"  "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.min_nom.TM_100.tttt"        "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func_fresh.min_nom.TM_100.tttt"  "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.min_high.TM_100.tttt"       "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.min_low.TM_100.tttt"        "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan_fresh.min_low.TM_100.tttt"  "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.min_nom.TM_100.tttt"        "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan_fresh.min_nom.TM_100.tttt"  "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"scan.min_high.TM_100.tttt"       "min"}
+#lappend ivar(sta,scenario_delay_type_map) {"func.min_burnin.RF_110.tttt"     "min"}
+
+#ivnc0133> most /nfs/iil/proj/lnl/pt_server/cth2_ptserver/cth2_ptserver_root/pt_server_model_link/modela_lnlca0_bu/project/lnlc/h169p45_80nm_tsmc_m18/pvt.tcl | g scenario_delay_type_map | item 3 | sed -s 's/{"//' | sed -s 's/"//' | g -v scenario_delay_type_map
+#func.max_low.T_85.typical
+#func.max_nom.T_85.typical
+#func.max_med.T_85.typical
+#func.max_high.T_85.typical
+#func.max_turbo.T_85.typical
+#func.max_hi_lo_lo.T_85.typical
+#func.max_hi_hi_lo.T_85.typical
+#func.max_hi_lo_hi.T_85.typical
+#func.max_lo_lo_hi.T_85.typical
+#func.max_lo_hi_lo.T_85.typical
+#func.max_lo_hi_hi.T_85.typical
+#func.max_dvfs.T_85.typical
+#func.min_low.T_85.typical
+#func.min_high.T_85.typical
+#func.min_high_cold.F_0.typical
+#func.min_hi_lo_lo.T_85.typical
+#func.min_hi_hi_lo.T_85.typical
+#func.min_hi_lo_hi.T_85.typical
+#func.min_lo_lo_hi.T_85.typical
+#func.min_lo_hi_lo.T_85.typical
+#func.min_dvfs.T_85.typical
+#func.noise_low.S_M40.cworst_CCworst
+#func.noise_high.F_125.rcworst_CCworst

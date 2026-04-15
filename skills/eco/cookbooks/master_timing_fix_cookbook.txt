@@ -1,0 +1,990 @@
+================================================================================
+  MASTER TIMING FIX COOKBOOK — ALL TECHNIQUES × PROJECT STAGES
+  One-stop reference for every fix option available at each project phase
+  Author: sunger | Created: 2026-03-16 (WW12.2)
+  Project: GFC Client A0 (TSMC N2P, 5.4GHz mclk, 186ps period)
+================================================================================
+
+
+================================================================================
+  HOW TO USE THIS COOKBOOK
+================================================================================
+
+  YOU pick a MODE (or combine modes) based on what kind of fixes you want.
+  Then the analysis will only consider techniques from your selected mode(s).
+
+  USAGE:
+    "analyze signal X with mode 1"      → ECO fixes only
+    "analyze signal X with mode 1+3"    → ECO + SIO2PO
+    "analyze signal X with mode 4"      → all physical fixes
+    "analyze signal X with mode 4+5"    → physical + RTL
+    "analyze signal X with mode 8"      → everything
+
+  This cookbook is the MASTER reference. Individual cookbooks have deeper
+  detail — see the COOKBOOK REFERENCE at the end for where to find what.
+
+
+================================================================================
+  RUN MODES — PICK YOUR MODE
+================================================================================
+
+  ┌──────┬────────────────────┬─────────────────────────────────────────────────┐
+  │ Mode │ Name               │ What's included                                │
+  ├──────┼────────────────────┼─────────────────────────────────────────────────┤
+  │  1   │ ECO                │ C1-C7: size_cell up/down, Vt swap, insert/     │
+  │      │                    │   remove buffer, move_objects, route_eco        │
+  ├──────┼────────────────────┼─────────────────────────────────────────────────┤
+  │  2   │ ECO+CLOCK          │ Mode 1 + E1-E3: useful skew, CTS sizing,      │
+  │      │                    │   clock buffer insertion                        │
+  ├──────┼────────────────────┼─────────────────────────────────────────────────┤
+  │  3   │ SIO2PO             │ D1-D7: bound source/receiver FF, push clock,   │
+  │      │                    │   port relocation/duplication, FF dup, port buf │
+  ├──────┼────────────────────┼─────────────────────────────────────────────────┤
+  │  4   │ PHYSICAL           │ Mode 1+2+3 + G1-G3: all physical fixes incl    │
+  │      │ (ECO+CLK+SIO+MBIT) │   MBIT demerge/regroup, FF placement fix       │
+  ├──────┼────────────────────┼─────────────────────────────────────────────────┤
+  │  5   │ RTL                │ B1-B4: retiming, reduce logic depth,           │
+  │      │                    │   pre-compute, FF duplication (RTL)             │
+  ├──────┼────────────────────┼─────────────────────────────────────────────────┤
+  │  6   │ TIP                │ F1-F3: TIP buffer insertion, TIP cell          │
+  │      │                    │   insertion, TIP bound (placement)              │
+  ├──────┼────────────────────┼─────────────────────────────────────────────────┤
+  │  7   │ SPEC               │ A1-A3: spec rebalance, update specs,           │
+  │      │                    │   synthesis directives                          │
+  ├──────┼────────────────────┼─────────────────────────────────────────────────┤
+  │  8   │ ALL                │ Everything (A+B+C+D+E+F+G = 26 techniques)     │
+  └──────┴────────────────────┴─────────────────────────────────────────────────┘
+
+
+================================================================================
+  COMBINING MODES — EXAMPLES
+================================================================================
+
+  "mode 1"     → ECO only (I'm PO, doing manual fixes in ICC2)
+  "mode 2"     → ECO+Clock (PO fixes including clock tree)
+  "mode 3"     → SIO2PO only (filing HSDs, SIO team does the work)
+  "mode 4"     → Full physical (everything except RTL/TIP/spec)
+  "mode 1+5"   → ECO + RTL (PO fixes + ask RTL team for help)
+  "mode 1+3"   → ECO + SIO2PO (PO fixes + file SIO HSDs)
+  "mode 3+6"   → SIO2PO + TIP (SIO does HSD + topology plans)
+  "mode 4+5"   → Physical + RTL (all physical + RTL team)
+  "mode 7+4"   → Spec + Physical (start with spec, then physical)
+  "mode 8"     → ALL (consider everything)
+
+
+================================================================================
+  FULL TECHNIQUE LIST PER MODE
+================================================================================
+
+  MODE 1: ECO  (PO works in ICC2, data path only)
+  ─────────────────────────────────────────────────
+  ID  │ Technique              │ What it does                     │ Gain       │ Risk
+  ────┼────────────────────────┼──────────────────────────────────┼────────────┼────────
+  C1  │ size_cell (upsize)     │ Increase drive: D2→D4→D8→D16    │ 2-5ps/cell │ LOW
+  C2  │ size_cell (downsize)   │ Decrease drive (fix hold/power)  │ varies     │ LOW
+  C3  │ Vt swap                │ LVT→ULVT (faster, more power)   │ 2-3ps/cell │ LOW
+  C4  │ insert_buffer          │ Add buffer on long wire (>100μm) │ 5-15ps     │ LOW-MED
+  C5  │ remove_buffer          │ Remove unnecessary SR2BFY/buff   │ 3-8ps      │ LOW
+  C6  │ move_objects           │ Move data cell to better spot    │ 10-40ps    │ HIGH
+  C7  │ route_eco              │ Reroute after changes (cleanup)  │ N/A        │ LOW
+
+  MODE 2: ECO+CLOCK  (Mode 1 + clock tree changes)
+  ─────────────────────────────────────────────────
+  All of Mode 1, PLUS:
+  E1  │ Useful skew            │ Adjust local clock delay on FF   │ 10-25ps    │ LOW-MED
+  E2  │ CTS buffer sizing      │ Size CKND/CKBUF/ZCTSINV cells   │ 4-8ps      │ LOW-MED
+  E3  │ Clock buffer insertion │ Add buffer in clock tree         │ 5-15ps     │ MED-HIGH
+
+  MODE 3: SIO2PO  (file HSD, SIO/PO team executes)
+  ─────────────────────────────────────────────────
+  D1  │ Bound source FF        │ Move source FF closer to port    │ 10-30ps    │ LOW-MED
+  D2  │ Bound receiver FF      │ Move dest FF closer to port      │ 15-35ps    │ MED
+  D3  │ Push clock             │ Early clock arrival at endpoint   │ 15-25ps    │ LOW-MED
+  D4  │ Port relocation        │ Slide port along boundary (Y)    │ 5-15ps     │ MED
+  D5  │ Port duplication       │ Split high-fanout port into 2+   │ 20-40ps    │ MED
+  D6  │ FF duplication (phys)  │ Clone FF to split fanout         │ 10-25ps    │ MED
+  D7  │ Buffer insert at port  │ SIO adds/removes port repeater   │ 5-15ps     │ LOW
+
+  MODE 4: PHYSICAL  (Mode 1+2+3 + MBIT/FF structure)
+  ─────────────────────────────────────────────────
+  All of Mode 1+2+3, PLUS:
+  G1  │ MBIT demerge           │ Split MB4/MB8 into single FFs    │ enables D2 │ MED
+  G2  │ MBIT regroup           │ Regroup FFs to different bank    │ better plc │ MED
+  G3  │ FF placement fix       │ Move FF near port (check D-pin!) │ 15-40ps    │ MED-HIGH
+
+  MODE 5: RTL  (RTL designer via RTL4BE HSD)
+  ─────────────────────────────────────────────────
+  B1  │ Retiming               │ Move logic across existing FF    │ 10-40ps    │ MED
+  B2  │ Reduce logic depth     │ Simplify combo cone (fewer gates)│ 10-60ps    │ MED-HIGH
+  B3  │ Pre-compute            │ Shift logic to earlier cycle     │ 15-40ps    │ MED
+  B4  │ FF duplication (RTL)   │ Duplicate register in RTL source │ 10-25ps    │ LOW-MED
+  ❌  │ Pipeline insertion     │ NEVER — adds latency             │ ──────     │ ──────
+
+  MODE 6: TIP  (SIO creates .tp topology plan files)
+  ─────────────────────────────────────────────────
+  F1  │ TIP buffer insertion   │ add_buffer in data path via .tp  │ 10-40ps    │ LOW
+  F2  │ TIP cell insertion     │ Add RTL cell via topology plan   │ 20-60ps    │ MED
+  F3  │ TIP bound              │ Constrain placement via .tp      │ 10-30ps    │ LOW-MED
+
+  MODE 7: SPEC  (timing budget, no physical change)
+  ─────────────────────────────────────────────────
+  A1  │ Spec rebalance         │ Adjust IO delay budget in XML    │ FREE       │ NONE
+  A2  │ Update timing specs    │ Fix missing/wrong/stale specs    │ varies     │ LOW
+  A3  │ Synthesis directives   │ dont_touch, set_max_delay        │ guides     │ NONE
+
+  MODE 8: ALL = 26 techniques (A1-A3 + B1-B4 + C1-C7 + D1-D7 + E1-E3 + F1-F3 + G1-G3)
+
+
+================================================================================
+  RECOMMENDED FIX ORDER (within your selected mode)
+================================================================================
+
+  When your mode includes multiple techniques, apply in this priority
+  order — safest and cheapest first:
+
+  1. A1  Spec rebalance              — FREE, zero risk           (mode 7)
+  2. A3  Synthesis directives        — zero risk, no phys change (mode 7)
+  3. F1  TIP buffer insertion        — data path, no FF movement (mode 6)
+  4. C1  size_cell (upsize)          — safest physical fix       (mode 1)
+  5. C4  insert_buffer               — low risk, breaks wires    (mode 1)
+  6. D3  Push clock                  — clock fix, low-medium risk (mode 3)
+  7. E1  Useful skew                 — after placement is final   (mode 2)
+  8. D1  Bound source FF             — SIO2PO, move FF closer     (mode 3)
+  9. D2  Bound receiver FF           — SIO2PO, move dest closer   (mode 3)
+  10. G1 MBIT demerge                — free FF from MBIT bank     (mode 4)
+  11. G3 FF placement fix            — move FF near port          (mode 4)
+  12. D5 Port duplication            — medium risk                (mode 3)
+  13. D6 FF duplication (physical)   — medium risk                (mode 3)
+  14. B1 Retiming                    — RTL change                 (mode 5)
+  15. B2 Reduce logic depth          — RTL change                 (mode 5)
+  16. C6 move_objects                — LAST RESORT (changes clock) (mode 1)
+
+  RULE: clock fixes (E1, E2, E3) AFTER placement is final.
+  RULE: always check hold after any clock change.
+  RULE: always check illegal.txt before any size_cell or insert_buffer.
+
+
+================================================================================
+  TECHNIQUE DETAIL CARDS
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────
+  A1: SPEC REBALANCE
+────────────────────────────────────────────────────────────────────────────
+  What:     Adjust IO delay budget numbers in XML timing specs
+  Gain:     FREE — no physical change, just different timing math
+  Risk:     NONE (but must verify both sides of crossing benefit)
+  Who:      SIO (updates spec XML)
+  Stages:   ✅ ALL
+
+  When to use:
+    - IO delay budget is too generous on one side, too tight on other
+    - Spec was written before placement — actual distances differ
+    - One partition has margin, other is tight on same crossing
+
+  How:
+    Check spec_status reports for over/under-budgeted specs.
+    See: spec_status_cookbook.txt
+
+────────────────────────────────────────────────────────────────────────────
+  A2: UPDATE TIMING SPECS
+────────────────────────────────────────────────────────────────────────────
+  What:     Fix missing, wrong, or stale timing specifications
+  Gain:     Removes false violations or exposes real ones
+  Risk:     LOW (but wrong specs can hide real problems)
+  Who:      SIO
+  Stages:   ✅ 1-3, ⚠️ 4
+
+────────────────────────────────────────────────────────────────────────────
+  A3: SYNTHESIS DIRECTIVES
+────────────────────────────────────────────────────────────────────────────
+  What:     Constraints like don't_touch, set_max_delay, group_path
+  Gain:     Guides synthesis optimizer to focus on critical paths
+  Risk:     NONE (no physical change)
+  Who:      SIO / synthesis engineer
+  Stages:   ✅ 1-2, ❌ 3-4 (too late, synthesis already done)
+
+
+────────────────────────────────────────────────────────────────────────────
+  B1: RETIMING
+────────────────────────────────────────────────────────────────────────────
+  What:     Move combinational logic across existing FF boundary.
+            Borrows slack from neighbor stages — no new FFs added.
+  Gain:     10-40ps (depends on neighbor margin)
+  Risk:     MEDIUM (RTL change, needs verification)
+  Who:      RTL designer via RTL4BE HSD
+  Stages:   ✅ 1 only (before RTL freeze)
+
+  Prerequisites:
+    - Check neighbor stage slack (BEFORE and AFTER) via pt_client
+    - Positive slack in neighbor = margin to borrow
+    - Both neighbors tight = retiming NOT possible
+
+  pt_client commands:
+    # Stage BEFORE:
+    pt_client.pl -m $MODEL -c 'report_timing -to icore0/<src_FF>/D \
+      -max_paths 5 -nosplit -significant_digits 1 \
+      -attributes points.object.max_slack'
+    # Stage AFTER:
+    pt_client.pl -m $MODEL -c 'report_timing -from icore0/<ep_FF>/CP \
+      -max_paths 5 -nosplit -significant_digits 1 \
+      -attributes points.object.max_slack'
+
+  See: path_analysis_procedure.txt STEP 7
+
+────────────────────────────────────────────────────────────────────────────
+  B2: REDUCE LOGIC DEPTH
+────────────────────────────────────────────────────────────────────────────
+  What:     Simplify combinational logic cone (fewer gates between FFs)
+  Gain:     10-60ps (depends on how many levels can be removed)
+  Risk:     MEDIUM-HIGH (RTL change, functional risk)
+  Who:      RTL designer via RTL4BE HSD
+  Stages:   ✅ 1 only
+
+  When to use:
+    - Logic depth > 15 levels between FFs
+    - Conditional decode that could be direct
+    - Redundant qualification logic that can be merged
+    - Mux chain that can be simplified
+
+────────────────────────────────────────────────────────────────────────────
+  B3: PRE-COMPUTE
+────────────────────────────────────────────────────────────────────────────
+  What:     Shift part of combinational logic to earlier cycle
+            (e.g., compute partial result in M106H so M107→M108 is lighter)
+  Gain:     15-40ps
+  Risk:     MEDIUM (RTL change, but doesn't add pipeline depth)
+  Who:      RTL designer via RTL4BE HSD
+  Stages:   ✅ 1 only
+
+────────────────────────────────────────────────────────────────────────────
+  B4: FF DUPLICATION (RTL)
+────────────────────────────────────────────────────────────────────────────
+  What:     Duplicate a register in RTL to split internal vs external fanout
+  Gain:     10-25ps (reduces load on critical output)
+  Risk:     LOW-MEDIUM (adds area/power, but functionally safe)
+  Who:      RTL designer via RTL4BE HSD
+  Stages:   ✅ 1 only
+
+  When to use:
+    - Source FF drives BOTH internal logic AND boundary port
+    - High fanout (>100) — duplication splits the load
+    - One copy drives internal, other drives external path
+
+────────────────────────────────────────────────────────────────────────────
+  ❌ PIPELINE INSERTION — NEVER ALLOWED
+────────────────────────────────────────────────────────────────────────────
+  What:     Adding new FF to cut path in half
+  Why not:  Adds latency to design (e.g., +1 cycle to branch dispatch)
+            Architecture change requiring FE architect approval
+            Changes timing of ALL downstream consumers
+            This is NOT a timing fix — it changes functionality
+
+  RULE: We fix timing by MOVING or REDUCING logic, never by ADDING FFs.
+
+
+────────────────────────────────────────────────────────────────────────────
+  C1: SIZE_CELL (UPSIZE)
+────────────────────────────────────────────────────────────────────────────
+  What:     Increase cell drive strength (e.g., D2→D4, D4→D8)
+  Gain:     2-5ps per cell
+  Risk:     LOW (same footprint, no topology change)
+  Who:      PO in ICC2
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  ICC2 command:
+    size_cell <cell_path> <target_lib_cell>
+    # Example: size_cell exe_vec/shuf/.../cell_4757944 \
+    #   INR2D4BWP156HPNPN3P48CPDULVT
+
+  ⚠ BEFORE sizing: check target cell against illegal.txt!
+    grep "<target_cell>" $WA/project/GFCN2CLIENTA0/illegal.txt
+
+  What to upsize (priority):
+    - D1 or D2 cells → always upsize (too weak)
+    - High input transition (>15ps) → upstream driver too weak
+    - High output cap (>5fF) with small drive → mismatch
+
+  Cell naming: <function><drive>BWP156<track><process><Vt>
+    Change only the D<number>: D1→D4, D2→D4, D4→D8, etc.
+
+  Revert: size_cell <cell> <original_lib_cell>
+
+  See: icc2_eco_fix_cookbook.txt STAGE 2
+
+────────────────────────────────────────────────────────────────────────────
+  C2: SIZE_CELL (DOWNSIZE)
+────────────────────────────────────────────────────────────────────────────
+  What:     Decrease cell drive strength to save power/area
+  Gain:     Reduces unnecessary power; can fix hold violations
+  Risk:     LOW (but verify setup doesn't degrade)
+  Who:      PO in ICC2
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  When to use:
+    - Cell output drives only 1 sink with <1fF cap but cell is D16
+    - Hold violation requires slowing down a path
+    - Fixing overdriving that causes crosstalk
+
+────────────────────────────────────────────────────────────────────────────
+  C3: VT SWAP
+────────────────────────────────────────────────────────────────────────────
+  What:     Change threshold voltage type (LVT→ULVT = faster, more power)
+  Gain:     2-3ps per cell (LVT→ULVT)
+  Risk:     LOW (same footprint), but check power budget
+  Who:      PO in ICC2
+  Stages:   ✅ 1-3, ❌ 4
+
+  ⚠ Check illegal cells — many ELVT, LVTLL, some track combos are banned!
+  Safe:  CPDULVT with HPNPN or HNPPN (most are legal)
+  Risky: CPDELVT (all banned), CPDLVTLL (all banned)
+
+────────────────────────────────────────────────────────────────────────────
+  C4: INSERT_BUFFER
+────────────────────────────────────────────────────────────────────────────
+  What:     Add buffer cell on a long wire to reduce RC delay
+  Gain:     5-15ps per buffer (depends on wire length)
+  Risk:     LOW-MEDIUM (changes topology, needs route_eco)
+  Who:      PO in ICC2
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  ICC2 command:
+    set buf [insert_buffer [get_pins <sink_cell>/<input_pin>] \
+        <buffer_lib_cell>]
+    move_objects $buf -to {x y}
+    route_eco
+
+  Rules:
+    - insert_buffer on SINK PIN (not net!)
+    - Place at MIDPOINT of long wire (driver/sink coords average)
+    - ⚠ Check buffer cell against illegal.txt
+    - Wires > 10ps delay (>100μm) are candidates
+
+  Revert: remove_buffer $buf
+
+────────────────────────────────────────────────────────────────────────────
+  C5: REMOVE_BUFFER
+────────────────────────────────────────────────────────────────────────────
+  What:     Remove unnecessary buffer from path
+  Gain:     3-8ps (removes buffer delay + simplifies routing)
+  Risk:     LOW (but verify timing doesn't degrade downstream)
+  Who:      PO in ICC2
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  ICC2 command:
+    remove_buffer <buffer_cell_name>
+
+  When to use:
+    - SR2BFY buffers in data path (intentionally slow)
+    - Buffer chain with >5 buffers (over-buffered)
+    - SIO override buffer that's no longer needed
+
+────────────────────────────────────────────────────────────────────────────
+  C6: MOVE_OBJECTS
+────────────────────────────────────────────────────────────────────────────
+  What:     Move cell to different physical location
+  Gain:     10-40ps (if moving FF closer to port)
+  Risk:     HIGH — changes clock tree tap, affects hold
+  Who:      PO in ICC2 (PnR command)
+  Stages:   ✅ 1-2, ⚠️ 3, ❌ 4
+
+  ICC2 command:
+    move_objects <cell> -to {x y}
+    # Coordinates in DBU (nm). Divide by 1000 for μm.
+
+  ⚠ CRITICAL RULES:
+    - TIP can only: add_buffer, add_repeater, resize cells
+    - PnR owner must do: move_objects, place_opt
+    - Moving FFs changes clock latency → MUST re-evaluate:
+      • Useful skew amount (may need more or less)
+      • Hold impact (new clock tap = different hold paths)
+    - ALWAYS apply useful skew AFTER placement is final
+    - Prefer TIP buffer insertion over move_objects
+
+  See: path_analysis_procedure.txt SECTION 12
+
+────────────────────────────────────────────────────────────────────────────
+  C7: ROUTE_ECO
+────────────────────────────────────────────────────────────────────────────
+  What:     Reroute connections after ECO changes
+  Gain:     N/A (cleanup step, not a fix itself)
+  Risk:     LOW
+  Who:      PO in ICC2
+  Stages:   ✅ ALL
+
+  ICC2 command:
+    route_eco
+    check_legality
+
+
+────────────────────────────────────────────────────────────────────────────
+  D1: BOUND SOURCE FF (SIO2PO)
+────────────────────────────────────────────────────────────────────────────
+  What:     Move source FF closer to output port (reduce MSID-side wire)
+  Gain:     10-30ps
+  Risk:     LOW-MEDIUM (SIO executes, PO validates)
+  Who:      File SIO2PO HSD, SIO team executes
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  When to use:
+    - Source FF is far from partition boundary port
+    - Wire delay from FF to port is >15ps
+    - FF has low fanout to internal logic (moving won't hurt others)
+
+  ⚠ Before proposing: check D-pin slack on MBIT FFs!
+    If D2 has only +38ps margin → FF can only move within safe range
+
+────────────────────────────────────────────────────────────────────────────
+  D2: BOUND RECEIVER FF (SIO2PO)
+────────────────────────────────────────────────────────────────────────────
+  What:     Move destination FF closer to input port
+  Gain:     15-35ps
+  Risk:     MEDIUM (endpoint may be in MBIT bank — can't move!)
+  Who:      File SIO2PO HSD
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  ⚠ MBIT CONSTRAINT: If endpoint FF is in a multi-bit bank (MB4/MB8),
+    moving it would break the bank → WONT_DO.
+    In this case: use G1 (MBIT demerge) first, THEN bound.
+
+  Real example:
+    SIO2PO 13014727431 for brdispnotsignedm107h was WONT_DO because
+    endpoint is MB8SRLSDFQTXG2442 — can't move without demerging.
+
+────────────────────────────────────────────────────────────────────────────
+  D3: PUSH CLOCK (SIO2PO)
+────────────────────────────────────────────────────────────────────────────
+  What:     Make clock arrive earlier at endpoint FF → more setup margin
+  Gain:     15-25ps
+  Risk:     LOW-MEDIUM (only affects endpoint clock path)
+  Who:      File SIO2PO HSD, CLK team executes
+  Stages:   ✅ ALL
+
+  When to use:
+    - Clock skew is unfavorable (launch clock arrives too early)
+    - Endpoint has positive useful skew opportunity
+    - All bits in same MBIT bank are from same crossing (safe)
+
+  ⚠ MUST check hold after push clock!
+    report_timing -through <clock_pin> -delay_type min -max_paths 5
+
+────────────────────────────────────────────────────────────────────────────
+  D4: PORT RELOCATION (SIO2PO)
+────────────────────────────────────────────────────────────────────────────
+  What:     Move partition boundary port to different Y position
+  Gain:     5-15ps (0.5-1ps per μm saved)
+  Risk:     MEDIUM (affects all paths through this port)
+  Who:      File SIO2PO HSD
+  Stages:   ✅ 1-2, ⚠️ 3, ❌ 4
+
+  Note: Port X position is FIXED (on partition boundary).
+        Only Y position can slide along the boundary edge.
+
+────────────────────────────────────────────────────────────────────────────
+  D5: PORT DUPLICATION (SIO2PO)
+────────────────────────────────────────────────────────────────────────────
+  What:     Split high-fanout port into 2+ ports to reduce buffering
+  Gain:     20-40ps
+  Risk:     MEDIUM (adds ports, changes routing)
+  Who:      File SIO2PO HSD
+  Stages:   ✅ 1-2, ⚠️ 3, ❌ 4
+
+  When to use:
+    - Port fos_count > 100 (check port_location_outside_bbox.csv)
+    - Heavy buffer tree from port to destinations
+
+────────────────────────────────────────────────────────────────────────────
+  D6: FF DUPLICATION (physical, SIO2PO)
+────────────────────────────────────────────────────────────────────────────
+  What:     Clone FF in physical design to split internal/external fanout
+  Gain:     10-25ps
+  Risk:     MEDIUM (adds area/power, needs routing)
+  Who:      File SIO2PO HSD
+  Stages:   ✅ 1-2, ⚠️ 3, ❌ 4
+
+  When to use:
+    - Source FF drives both internal logic AND boundary port
+    - Fanout > 100 from source FF
+    - One copy drives internal, other drives crossing
+
+────────────────────────────────────────────────────────────────────────────
+  D7: BUFFER INSERT/REMOVE AT PORT (SIO2PO)
+────────────────────────────────────────────────────────────────────────────
+  What:     SIO adds or removes repeater buffers near partition boundary
+  Gain:     5-15ps
+  Risk:     LOW
+  Who:      File SIO2PO HSD
+  Stages:   ✅ 1-3, ⚠️ 4
+
+
+────────────────────────────────────────────────────────────────────────────
+  E1: USEFUL SKEW
+────────────────────────────────────────────────────────────────────────────
+  What:     Adjust local clock delay on specific FFs
+  Gain:     10-25ps
+  Risk:     LOW-MEDIUM
+  Who:      PO / CLK team
+  Stages:   ✅ ALL
+
+  ⚠ RULES:
+    - Apply AFTER placement is final (never before move_objects!)
+    - ALWAYS check hold after applying useful skew
+    - Data path fixes and clock fixes are INDEPENDENT
+    - If you move FFs later → skew amount will be wrong
+
+  See: path_analysis_procedure.txt SECTION 12
+
+────────────────────────────────────────────────────────────────────────────
+  E2: CTS BUFFER SIZING
+────────────────────────────────────────────────────────────────────────────
+  What:     Size up/down clock tree inverters and buffers
+  Gain:     4-8ps
+  Risk:     LOW-MEDIUM (check hold after!)
+  Who:      PO in ICC2
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  ICC2: same size_cell command as C1, but on CKND/CKBUF/ZCTSINV cells
+
+────────────────────────────────────────────────────────────────────────────
+  E3: CLOCK BUFFER INSERTION
+────────────────────────────────────────────────────────────────────────────
+  What:     Add buffer in clock tree to adjust latency
+  Gain:     5-15ps
+  Risk:     MEDIUM-HIGH (affects entire clock tree downstream)
+  Who:      CLK team
+  Stages:   ✅ 1-2, ⚠️ 3, ❌ 4
+
+
+────────────────────────────────────────────────────────────────────────────
+  F1: TIP BUFFER INSERTION
+────────────────────────────────────────────────────────────────────────────
+  What:     Add buffer in data path via TIP topology plan (.tp file)
+  Gain:     10-40ps
+  Risk:     LOW (data path only, NO FF movement, NO clock change)
+  Who:      SIO creates .tp file, applied in build flow
+  Stages:   ✅ 1-2, ❌ 3-4 (TIP runs during build, not in manual ECO)
+
+  Key advantage over C4/C6:
+    - TIP buffers are applied automatically in every new build
+    - No manual ICC2 work needed from PO
+    - NO clock interaction (data path only)
+
+  TIP commands (in .tp file):
+    add_buffer    — insert buffer on data wire
+    add_repeater  — insert repeater cell
+    resize        — change cell size
+
+  See: TIP_tp_creation_cookbook.txt for full .tp file syntax
+
+────────────────────────────────────────────────────────────────────────────
+  F2: TIP CELL INSERTION (RTL)
+────────────────────────────────────────────────────────────────────────────
+  What:     Insert RTL-level cell via TIP topology plan
+  Gain:     20-60ps
+  Risk:     MEDIUM (RTL change applied via TIP infrastructure)
+  Who:      SIO creates .tp file + RTL4BE HSD
+  Stages:   ✅ 1 only (needs RTL change)
+
+────────────────────────────────────────────────────────────────────────────
+  F3: TIP BOUND (PLACEMENT CONSTRAINT)
+────────────────────────────────────────────────────────────────────────────
+  What:     Constrain FF/cell placement via TIP .tp file
+  Gain:     10-30ps (places FF closer to port automatically)
+  Risk:     LOW-MEDIUM
+  Who:      SIO creates .tp file
+  Stages:   ✅ 1-2, ❌ 3-4
+
+  TIP bound syntax:
+    set_bound -source <FF> -destination <port> -distance <max_dist>
+
+  ⚠ Check D-pin slack before bounding — bounding too tight breaks
+    other paths into the same FF.
+
+
+────────────────────────────────────────────────────────────────────────────
+  G1: MBIT DEMERGE
+────────────────────────────────────────────────────────────────────────────
+  What:     Split multi-bit FF (MB4/MB8) into individual single-bit FFs
+  Gain:     Enables D2 (bound receiver) and G3 (placement fix)
+  Risk:     MEDIUM (increases cell count, changes placement)
+  Who:      PO in ICC2 or synthesis team
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  When to use:
+    - SIO2PO bound receiver was WONT_DO because of MBIT constraint
+    - Need to move one bit independently from the bank
+    - One bit is critical but other bits in bank are OK
+
+  After demerge: can freely move the single-bit FF → do D2 or G3
+
+  Real example:
+    brdispnotsignedm107h endpoint is MB8SRLSDFQTXG2442 (8-bit bank)
+    → Can't bound bit [40] without affecting bits [38,41,42,45,47,49,52]
+    → Demerge first, then bound just bit [40]
+
+────────────────────────────────────────────────────────────────────────────
+  G2: MBIT REGROUP
+────────────────────────────────────────────────────────────────────────────
+  What:     Regroup FFs into different multi-bit bank composition
+  Gain:     Enables better placement (group by crossing, not by name)
+  Risk:     MEDIUM
+  Who:      Synthesis team
+  Stages:   ✅ 1-2, ⚠️ 3, ❌ 4
+
+────────────────────────────────────────────────────────────────────────────
+  G3: FF PLACEMENT FIX
+────────────────────────────────────────────────────────────────────────────
+  What:     Move FF to better physical location (near port, near logic)
+  Gain:     15-40ps (0.5-1ps per μm saved)
+  Risk:     MEDIUM-HIGH (changes clock tap → check hold!)
+  Who:      PO in ICC2 (move_objects) or SIO (TIP bound)
+  Stages:   ✅ 1-3, ⚠️ 4
+
+  ⚠ BEFORE moving any FF:
+    1. Check D-pin slack (all D-pin inputs must have margin)
+    2. If MBIT → demerge first (G1), then move
+    3. Calculate safe movement range from D-pin margins
+    4. After move → check hold, re-evaluate useful skew
+
+  pt_client command to check D-pin slack:
+    pt_client.pl -m $MODEL -c 'report_timing -to icore0/<FF>/D2 \
+      -max_paths 1 -nosplit -significant_digits 1'
+
+  Coordinates: DBU / 1000 = μm
+    Example: (1363464, 93574) → (1363.5, 93.6)μm
+
+
+================================================================================
+  DECISION TREE — "I HAVE X GAP, WHAT DO I DO?"
+================================================================================
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  GAP < 20ps                                                                │
+  │  → C1 size_cell (upsize weak cells)                     ~2-5ps per cell   │
+  │  → C5 remove_buffer (unnecessary SR2BFY)                ~3-8ps            │
+  │  → E1 useful skew (if clock is unfavorable)             ~10-25ps          │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │  GAP 20-50ps                                                               │
+  │  → C1 size_cell (multiple cells)                        ~10-15ps          │
+  │  → C4 insert_buffer (break long wires >100μm)           ~5-15ps           │
+  │  → D3 push clock                                        ~15-25ps          │
+  │  → D1 bound source FF                                   ~10-30ps          │
+  │  → F1 TIP buffer insertion                               ~10-40ps          │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │  GAP 50-80ps                                                               │
+  │  → Combine: C1 + C4 + D1 + D3                           ~40-75ps          │
+  │  → G1 MBIT demerge + D2 bound receiver                  ~15-35ps          │
+  │  → D5 port duplication (if fos_count >100)               ~20-40ps          │
+  │  → D6 FF duplication (if high fanout from source)        ~10-25ps          │
+  │  → B1 retiming (Stage 1 only)                            ~10-40ps          │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │  GAP > 80ps                                                                │
+  │  → Combine ALL available fixes (may not be enough alone)                  │
+  │  → B1 + B2 retiming + logic depth reduction (Stage 1)    ~30-60ps          │
+  │  → If post-synthesis: likely needs escalation to architect                 │
+  │  → Check risk category: probably NO SOLUTION or HIGH RISK                 │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ⚠ If gap > sum of all feasible fixes at your current stage → ESCALATE.
+    File RTL4BE (if Stage 1) or report as NO SOLUTION (if Stage 3-4).
+
+
+================================================================================
+  QUICK REFERENCE — pt_client COMMANDS
+================================================================================
+
+  MODEL=latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical
+
+  # Worst path:
+  pt_client.pl -m $MODEL -c 'report_timing -through icore0/*<signal>* \
+    -max_paths 1 -nosplit -input_pins -nets -transition_time \
+    -capacitance -physical -include_hierarchical_pins \
+    -significant_digits 1' -o <signal>_worst_path.rpt
+
+  # Bus scan (all bits):
+  pt_client.pl -m $MODEL -c 'report_timing -through icore0/<part>/<signal>* \
+    -max_paths 50 -nosplit -significant_digits 1' -o <signal>_bus.rpt
+
+  # Fanout count:
+  pt_client.pl -m $MODEL -c 'sizeof_collection [all_fanout \
+    -from icore0/<part>/<FF>/Q -flat -endpoints_only]'
+
+  # Neighbor slack (stage before):
+  pt_client.pl -m $MODEL -c 'report_timing -to icore0/<part>/<FF>/D \
+    -max_paths 5 -nosplit -significant_digits 1 \
+    -attributes points.object.max_slack'
+
+  # Neighbor slack (stage after):
+  pt_client.pl -m $MODEL -c 'report_timing -from icore0/<part>/<FF>/CP \
+    -max_paths 5 -nosplit -significant_digits 1 \
+    -attributes points.object.max_slack'
+
+  # Pin location:
+  pt_client.pl -m $MODEL -c 'get_attribute [get_pins icore0/<pin>] location'
+
+  # Check if MBIT:
+  pt_client.pl -m $MODEL -c 'get_attribute [get_cells icore0/<cell>] ref_name'
+
+
+================================================================================
+  COORDINATE CONVERSION
+================================================================================
+
+  report_timing coordinates are in DBU (1 DBU = 1nm in GFC N2P)
+
+  To convert to microns (μm):   X_μm = X_DBU / 1000
+
+  Example: (1363464, 93574) → (1363.5, 93.6)μm
+
+  Manhattan distance (μm) = (|X1-X2| + |Y1-Y2|) / 1000
+
+  Wire delay rules of thumb:
+    ~5-15ps per 100μm (layer dependent)
+    0.5-1ps per μm of wire reduction
+
+  Distance red flags:
+    > 200μm = needs repeaters
+    > 500μm = placement fix needed
+
+
+================================================================================
+  ILLEGAL CELLS — ALWAYS CHECK BEFORE ANY FIX
+================================================================================
+
+  Location: $WA/project/GFCN2CLIENTA0/illegal.txt (15,746 cells)
+
+  Check:    grep "<target_cell_name>" $WA/project/GFCN2CLIENTA0/illegal.txt
+            No output = LEGAL ✓  |  Output = ILLEGAL ❌
+
+  Main banned categories:
+    CPDELVT    → elvt_svt_cells_are_not_allowed
+    CPDLVTLL   → lvtll_cells_are_not_allowed
+    PNNP OD    → pnnp_OD_flavor_is_not_allowed
+    ECO cells  → eco_cells_are_not_allowed
+
+  Safe bets:  CPDULVT with HPNPN3P48 or HNPPN3P48 track
+
+
+================================================================================
+  RTL FIX RULES — WHAT WE DO AND DON'T DO
+================================================================================
+
+  ✅ ALLOWED:
+    • Retiming — rebalance FF positions (no new FFs)
+    • Reduce logic depth — simplify combinational cone
+    • Pre-compute — shift logic to earlier cycle
+    • FF duplication — clone FF to split fanout
+
+  ❌ NEVER:
+    • Adding pipeline stages (adds latency)
+    • This is an architecture change, NOT a timing fix
+    • We fix timing by MOVING or REDUCING logic, never by ADDING FFs
+
+
+================================================================================
+  COOKBOOK REFERENCE — WHERE TO FIND FULL DETAILS
+================================================================================
+
+  This master cookbook:          cookbooks/master_timing_fix_cookbook.txt
+  Path analysis procedure:      cookbooks/path_analysis_procedure.txt
+  pt_client quick reference:    cookbooks/pt_client_cookbook.txt
+  pt_client full debug flow:    cookbooks/cross_partition_debug_with_pt_client_cookbook.txt
+  ICC2 ECO fix scripts:         cookbooks/icc2_eco_fix_cookbook.txt
+  TIP topology plans:           cookbooks/TIP_tp_creation_cookbook.txt
+  SIO risk assessment:          cookbooks/sio_risk_assessment_cookbook.txt
+  Daily update workflow:        cookbooks/daily_update_cookbook.txt
+  Spec status reference:        cookbooks/spec_status_cookbook.txt
+  par_status tool:              cookbooks/par_status_cookbook.txt
+  par_status diff:              cookbooks/par_status_diff_cookbook.txt
+  RTL model compare:            cookbooks/rtl_model_compare_cookbook.txt
+  Cross-partition playbook:     cookbooks/cross_partition_debug_playbook.txt
+  Illegal cells guide:          path_analysis_procedure.txt STEP 5
+
+
+================================================================================
+  INTERACTIVE WORKFLOW — "run master"
+================================================================================
+
+  When the user says "run master" (or "analyze with master cookbook"), the
+  copilot follows this interactive flow. It asks the user for inputs at
+  each step and then runs the full analysis autonomously.
+
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                         INTERACTIVE FLOW                                │
+  │                                                                        │
+  │  USER: "run master"                                                    │
+  │                                                                        │
+  │  STEP 1 — ASK MODE (show FULL technique table, let user choose)         │
+  │  ┌──────────────────────────────────────────────────────────────┐       │
+  │  │ Copilot MUST display the FULL technique breakdown below     │       │
+  │  │ before asking — user needs to see what each mode contains:  │       │
+  │  │                                                              │       │
+  │  │ MODE 1 — ECO (PO works in ICC2, data path only)             │       │
+  │  │   C1  size_cell (upsize)      D2→D4→D8→D16     2-5ps  LOW  │       │
+  │  │   C2  size_cell (downsize)    fix hold/power    varies LOW  │       │
+  │  │   C3  Vt swap                 LVT→ULVT          2-3ps  LOW  │       │
+  │  │   C4  insert_buffer           long wire >100μm   5-15ps MED │       │
+  │  │   C5  remove_buffer           remove SR2BFY      3-8ps  LOW │       │
+  │  │   C6  move_objects            move cell          10-40ps HI │       │
+  │  │   C7  route_eco               reroute after ECO  N/A   LOW  │       │
+  │  │                                                              │       │
+  │  │ MODE 2 — ECO+CLOCK (Mode 1 + clock tree)                    │       │
+  │  │   All of Mode 1, PLUS:                                       │       │
+  │  │   E1  Useful skew             adjust local clk   10-25ps MED│       │
+  │  │   E2  CTS buffer sizing       size CKND/CKBUF    4-8ps  MED │       │
+  │  │   E3  Clock buffer insertion  add clk buffer     5-15ps HI  │       │
+  │  │                                                              │       │
+  │  │ MODE 3 — SIO2PO (file HSD, SIO/PO team executes)            │       │
+  │  │   D1  Bound source FF         move src FF→port   10-30ps MED│       │
+  │  │   D2  Bound receiver FF       move dst FF→port   15-35ps MED│       │
+  │  │   D3  Push clock              early clk arrival  15-25ps MED│       │
+  │  │   D4  Port relocation         slide port on Y    5-15ps  MED│       │
+  │  │   D5  Port duplication        split hi-fanout    20-40ps MED│       │
+  │  │   D6  FF duplication (phys)   clone FF           10-25ps MED│       │
+  │  │   D7  Buffer at port          SIO port repeater  5-15ps  LOW│       │
+  │  │                                                              │       │
+  │  │ MODE 4 — PHYSICAL (Mode 1+2+3 + MBIT/FF structure)          │       │
+  │  │   All of Mode 1+2+3, PLUS:                                   │       │
+  │  │   G1  MBIT demerge            split MB4/MB8      enabler MED│       │
+  │  │   G2  MBIT regroup            regroup FFs        plc fix MED│       │
+  │  │   G3  FF placement fix        move FF near port  15-40ps HI │       │
+  │  │                                                              │       │
+  │  │ MODE 5 — RTL (RTL designer via RTL4BE HSD)                   │       │
+  │  │   B1  Retiming                move logic ↔ FF    10-40ps MED│       │
+  │  │   B2  Reduce logic depth      simplify cone      10-60ps HI │       │
+  │  │   B3  Pre-compute             shift to prev cyc  15-40ps MED│       │
+  │  │   B4  FF duplication (RTL)    duplicate in RTL   10-25ps MED│       │
+  │  │   ❌  Pipeline insertion      NEVER — adds latency          │       │
+  │  │                                                              │       │
+  │  │ MODE 6 — TIP (SIO creates .tp topology plan)                 │       │
+  │  │   F1  TIP buffer insertion    add_buffer via .tp  10-40ps LO│       │
+  │  │   F2  TIP cell insertion      add RTL cell .tp    20-60ps ME│       │
+  │  │   F3  TIP bound               constrain plc .tp   10-30ps LO│       │
+  │  │                                                              │       │
+  │  │ MODE 7 — SPEC (timing budget, no physical change)            │       │
+  │  │   A1  Spec rebalance          adjust IO delay     FREE  NONE│       │
+  │  │   A2  Update timing specs     fix wrong specs     varies LOW│       │
+  │  │   A3  Synthesis directives    dont_touch etc      guides NONE│       │
+  │  │                                                              │       │
+  │  │ MODE 8 — ALL (26 techniques)                                 │       │
+  │  │                                                              │       │
+  │  │ Can combine: 1+3, 4+5, 1+5+7, etc.                         │       │
+  │  │                                                              │       │
+  │  │ Copilot then proposes a mode based on user constraints      │       │
+  │  │ (e.g., "no RTL no TIP" → suggests mode 4+7) and lets       │       │
+  │  │ the user confirm or change.                                  │       │
+  │  └──────────────────────────────────────────────────────────────┘       │
+  │  User answers: e.g., "mode 4+5"                                        │
+  │                                                                        │
+  │  STEP 2 — ASK WA (work area)                                           │
+  │  ┌──────────────────────────────────────────────────────────────┐       │
+  │  │ Copilot asks: "Which daily WA?"                             │       │
+  │  │ Options:                                                     │       │
+  │  │   - Use current (show latest detected WA path)              │       │
+  │  │   - User provides new WA path                               │       │
+  │  └──────────────────────────────────────────────────────────────┘       │
+  │  User answers: e.g., "use current" or pastes a WA path                 │
+  │                                                                        │
+  │  STEP 3 — ASK SIGNALS                                                  │
+  │  ┌──────────────────────────────────────────────────────────────┐       │
+  │  │ Copilot asks: "Which signals to analyze?"                   │       │
+  │  │ Options:                                                     │       │
+  │  │   a) All UNTRACKED from par_*_status.txt                    │       │
+  │  │   b) Worst N signals (user picks N, e.g., "worst 5")       │       │
+  │  │   c) Specific partition (e.g., "par_fe only")              │       │
+  │  │   d) Specific signal name (e.g., "brdispnotsignedm107h")  │       │
+  │  │   e) All signals worse than Xps (e.g., "worse than -50ps") │       │
+  │  └──────────────────────────────────────────────────────────────┘       │
+  │  User answers: e.g., "worst 3" or "par_fe" or signal name             │
+  │                                                                        │
+  │  STEP 4 — ASK OUTPUT DIR                                               │
+  │  ┌──────────────────────────────────────────────────────────────┐       │
+  │  │ Copilot asks: "Output directory?"                           │       │
+  │  │ Default: current ww dir (e.g., ww12_2/)                    │       │
+  │  └──────────────────────────────────────────────────────────────┘       │
+  │  User answers: e.g., "ww12_2" or just enter for default               │
+  │                                                                        │
+  │  STEP 5 — RUN (autonomous, no more questions)                          │
+  │  ┌──────────────────────────────────────────────────────────────┐       │
+  │  │ For EACH selected signal, copilot runs:                     │       │
+  │  │                                                              │       │
+  │  │  5a. Get worst path via pt_client (report_timing)           │       │
+  │  │  5b. Get bus timing (all bits)                              │       │
+  │  │  5c. Get fanout (source + endpoint)                         │       │
+  │  │  5d. Get neighbor stage slack (retiming check)              │       │
+  │  │  5e. Search HSD databases (RTL4BE + SIO2PO)                │       │
+  │  │  5f. Check illegal cells for all target fixes               │       │
+  │  │  5g. Identify fix candidates (ONLY from selected mode!)    │       │
+  │  │  5h. Calculate closure (combined gain vs gap)               │       │
+  │  │  5i. Determine risk category (NO SOLUTION/HIGH/MED/NO)     │       │
+  │  └──────────────────────────────────────────────────────────────┘       │
+  │                                                                        │
+  │  STEP 6 — OUTPUT (generated automatically)                             │
+  │  ┌──────────────────────────────────────────────────────────────┐       │
+  │  │ For EACH signal, creates:                                    │       │
+  │  │                                                              │       │
+  │  │  DEFAULT output (always generated):                         │       │
+  │  │  <signal>_eco_report.txt       Full analysis (colored)      │       │
+  │  │  <signal>_eco_report_short.txt Short summary (colored)      │       │
+  │  │                                                              │       │
+  │  │  OPTIONAL output (only if user asks "with TCL"):            │       │
+  │  │  <signal>_<src>_fixes.tcl      ICC2 TCL for source PO       │       │
+  │  │  <signal>_<dst>_fixes.tcl      ICC2 TCL for dest PO         │       │
+  │  │                                                              │       │
+  │  │  TCL files are NOT generated by default — saves runtime.    │       │
+  │  │  User must request: "run master with TCL" or "add TCL".     │       │
+  │  │                                                              │       │
+  │  │  Color scheme (baked-in ANSI, no yellow → magenta):         │       │
+  │  │    RED=worst  MAG=warnings  CYN=info  GRN=good  DIM=meta   │       │
+  │  └──────────────────────────────────────────────────────────────┘       │
+  │                                                                        │
+  │  STEP 7 — SUMMARY                                                      │
+  │  ┌──────────────────────────────────────────────────────────────┐       │
+  │  │ Print quick summary table:                                   │       │
+  │  │   Signal | WNS | Mode gain | Closes? | Risk | Files created │       │
+  │  └──────────────────────────────────────────────────────────────┘       │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+  EXAMPLE SESSION:
+
+    User:    "run master"
+    Copilot: "Which mode? (1=ECO, 2=ECO+CLK, 3=SIO2PO, 4=PHYSICAL,
+              5=RTL, 6=TIP, 7=SPEC, 8=ALL, or combine like 1+3)"
+    User:    "mode 1+3"
+    Copilot: "Which WA? Current is WW12A CLK045"
+    User:    "use current"
+    Copilot: "Which signals? (all / worst N / partition / specific signal
+              / worse than Xps)"
+    User:    "worst 3 from par_fe"
+    Copilot: "Output dir? Default: ww12_2/"
+    User:    (enter)
+    Copilot: → runs analysis on 3 worst par_fe signals with ECO+SIO2PO
+             → generates 3 × (report + short)
+             → prints summary table
+             (add "with TCL" to also generate fix scripts)
+
+  QUICK TRIGGERS (skip the questions):
+
+    "run master mode 1 worst 5"
+      → ECO mode, current WA, worst 5 across all partitions, default dir
+
+    "run master mode 4+5 par_fe brdispnotsignedm107h"
+      → PHYSICAL+RTL, current WA, specific signal, default dir
+
+    "run master mode 8 all worse than -60ps"
+      → ALL modes, current WA, all signals with WNS ≤ -60ps, default dir
+
+
+================================================================================
+  CHANGE LOG
+================================================================================
+
+  2026-03-16  Created — 7 categories, 26 techniques, 8 run modes
+              Includes: mode menu, decision tree, pt_client commands,
+              coordinate conversion, illegal cells reference, RTL fix rules
+              Added: interactive workflow ("run master"), quick triggers,
+              output file specification, color scheme
+
+================================================================================

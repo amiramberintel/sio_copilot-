@@ -1,0 +1,687 @@
+================================================================================
+   par_exe EXTERNAL UNCONSTRAINED ENDPOINTS WITHOUT WAIVER - DETAILED ANALYSIS
+================================================================================
+
+SOURCE:  /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_exe/sta_primetime/GOLDEN/
+WAIVERS: unconstrained.waivers.csv
+CORNER:  func.max_high.T_85.typical
+
+NOTE: This report covers EXTERNAL PORTS ONLY (partition boundary signals)
+      4 internal DFT signals excluded from this analysis
+
+================================================================================
+                    QUICK REFERENCE - SUMMARY TABLE (EXTERNAL ONLY)
+================================================================================
+
+Category                      Count  Issue                              Action Required
+----------------------------  -----  ---------------------------------  ------------------------------------------
+rsveceuuopcodm303h_*          112    Missing par_exe→par_ooo_vec spec   Add set_output_delay or request spec
+rsvecstackeuctlm303h_*         32    Vector stack control interface     Handle with rsvec* signals
+specpdstforldbundlecancel*     32    Missing load cancel spec (M801)    Add tight timing spec (~50ps)
+mi2*                           17    Missing MI2 bus interface spec     Add timing spec for dispatch interface
+rsvecstackstdctlm303h_*        12    Vector store control interface     Handle with rsvec* signals
+rsvec*specuop*                 11    Speculative uop interface          Add spec or waiver
+siaessdeerror*                  8    Error reporting unconstrained      Waiver OK (errors are rare events)
+realdispm304h*                  6    AGU displacement output            Add memory interface spec
+rsqsfwbdatavld*                 4    Writeback valid (late stage M804)  Add tight timing spec
+FEEDTHRU                        4    Combinational feedthrough paths    Add set_max_delay or waiver
+mnsclk*                         2    Clock distribution outputs         Check clock constraints
+mivecstdimmdata*                3    Vector store immediate data        Add with rsvec* specs
+exe_tfb_tfb_out                 1    Debug trace output                 Waiver OK (debug signal)
+scan_channel*                   1    Scan channel repeater              Waiver OK (scan mode only)
+----------------------------  -----  ---------------------------------  ------------------------------------------
+TOTAL EXTERNAL                247
+
+================================================================================
+                              EXECUTIVE SUMMARY
+================================================================================
+
+  Total Unconstrained in GOLDEN:         251 endpoints
+  Internal DFT signals (excluded):         4 signals
+  EXTERNAL PORTS without waiver:         247 endpoints
+  
+  Total Waived Ports in waivers.csv:     244 ports
+  
+  CRITICAL: The 244 waivers cover DIFFERENT signals than the 247 unconstrained!
+            ALL 247 external unconstrained endpoints need either:
+            - New waiver with justification
+            - Timing spec added (set_output_delay)
+            - RTL fix if signal should not exist
+
+================================================================================
+                    DETAILED BREAKDOWN BY CATEGORY
+================================================================================
+
+-------------------------------------------------------------------------------
+1. rsveceuuopcodm303h_* (112 endpoints) - VECTOR EU MICRO-OP CODE
+-------------------------------------------------------------------------------
+
+SIGNALS: rsveceuuopcodm303h_0_[0:13] through rsveceuuopcodm303h_7_[0:13]
+         8 instances x 14 bits each = 112 signals
+
+FUNCTION:
+  - RS (Reservation Station) output to Vector Execution Unit
+  - Carries micro-op code for vector operations
+  - Controls what vector operation the EU will perform
+  - Stage M303H indicates pipeline stage 303 in high phase
+
+INTERFACE: par_exe → par_ooo_vec (Out-of-Order Vector unit)
+
+ROOT CAUSE:
+  - Missing set_output_delay constraint in par_exe_spec.csv
+  - Interface timing specification not defined between par_exe and par_ooo_vec
+  - These outputs need timing budget allocation for the receiving partition
+
+IMPACT IF NOT FIXED:
+  - Timing path from par_exe flops to par_ooo_vec flops is not verified
+  - Could cause setup violations at chip integration
+  - May result in functional failures in vector operations
+
+ACTION REQUIRED:
+  Option A: Add timing spec (RECOMMENDED)
+    - Add to par_exe_spec.csv:
+      rsveceuuopcodm303h_*,output,mclk_exe,0.100,setup
+    - Or add SDC constraint:
+      set_output_delay -clock mclk_exe -max 0.100 [get_ports rsveceuuopcodm303h_*]
+  
+  Option B: Add waiver if interface is async or MCP
+    - Add to unconstrained.waivers.csv:
+      par_exe/rsveceuuopcodm303h_*,<owner_name> - <justification>
+
+OWNER: Vector Execution Unit PO (need to confirm with OOO_VEC team)
+
+-------------------------------------------------------------------------------
+2. rsvecstackeuctlm303h_* (32 endpoints) - VECTOR STACK EU CONTROL
+-------------------------------------------------------------------------------
+
+SIGNALS: rsvecstackeuctlm303h_0_[0:3] through rsvecstackeuctlm303h_7_[0:3]
+         8 instances x 4 bits each = 32 signals
+
+FUNCTION:
+  - RS Vector Stack control signals to Execution Unit
+  - Controls stack operations for vector instructions
+  - 4-bit control per EU instance (8 EUs total)
+
+INTERFACE: par_exe → par_ooo_vec
+
+ROOT CAUSE:
+  - Same as rsveceuuopcodm303h - missing interface spec
+  - Part of the same vector execution interface
+
+IMPACT IF NOT FIXED:
+  - Vector stack operations may have timing issues
+  - Could cause incorrect stack pointer updates
+
+ACTION REQUIRED:
+  - Same as rsveceuuopcodm303h - add spec or waiver
+  - Should be handled together with all rsvec* signals
+
+OWNER: Vector Execution Unit PO
+
+-------------------------------------------------------------------------------
+3. specpdstforldbundlecancelm801h_* (32 endpoints) - SPEC PDST FOR LD BUNDLE CANCEL
+-------------------------------------------------------------------------------
+
+SIGNALS: specpdstforldbundlecancelm801h_0_[0:3] through _7_[0:3]
+         8 instances x 4 bits each = 32 signals
+
+FUNCTION:
+  - Speculative Physical Destination for Load Bundle Cancel
+  - Used in memory disambiguation and load speculation
+  - When a load is cancelled, this signal indicates which physical 
+    destination register was speculatively allocated
+  - Stage M801H = late pipeline stage (stage 801)
+
+INTERFACE: par_exe → par_ooo_int or par_meu (Memory Execution Unit)
+
+ROOT CAUSE:
+  - Missing output delay spec for load cancellation interface
+  - This is a late-stage signal (801) so timing may be critical
+
+IMPACT IF NOT FIXED:
+  - Load speculation/cancellation timing not verified
+  - Could cause incorrect register allocation on mis-speculation
+
+ACTION REQUIRED:
+  - Add timing spec with appropriate budget for late-stage signal
+  - May need aggressive timing (stage 801 is late in pipe)
+  - Example: set_output_delay -clock mclk_exe -max 0.050 [get_ports specpdstforldbundlecancelm801h_*]
+
+OWNER: Load/Store Unit PO or MEU PO
+
+-------------------------------------------------------------------------------
+4. mi2* (17 endpoints) - MI2 INTERFACE SIGNALS
+-------------------------------------------------------------------------------
+
+SIGNALS:
+  - mi2intveceuuopvm303h[0:7]        (8 bits) - INT/VEC EU uop valid
+  - mi2intvecstduopvm303h[10:12]     (3 bits) - INT/VEC STD uop valid
+  - mi2v0uopcodm303h_p_2_[6,12]      (2 bits) - V0 uop code pipe 2
+  - mi2v0uopcodm303h_p_3_[6,12]      (2 bits) - V0 uop code pipe 3
+  - mi2v0fma23stckpwrupm302h         (1 bit)  - V0 FMA stack power up
+  - mi2v1fma23stckpwrupm302h         (1 bit)  - V1 FMA stack power up
+
+FUNCTION:
+  - MI2 = Micro-instruction Interface 2 (between scheduler and execution)
+  - Controls micro-op dispatch to integer and vector execution units
+  - FMA (Fused Multiply-Add) stack power control for power management
+
+INTERFACE: par_exe internal or → par_fmav0/par_fmav1
+
+ROOT CAUSE:
+  - Missing interface specs for MI2 bus signals
+  - These control vector/FMA execution unit selection
+
+IMPACT IF NOT FIXED:
+  - Dispatch timing to vector units not verified
+  - FMA power-up timing may have issues
+
+ACTION REQUIRED:
+  - Add timing specs for MI2 interface
+  - FMA power signals may need special handling (could be async)
+
+OWNER: Execution Unit Scheduler PO
+
+-------------------------------------------------------------------------------
+5. siaessdeerror* (8 endpoints) - SIA SDE ERROR SIGNALS
+-------------------------------------------------------------------------------
+
+SIGNALS:
+  - siaessdeerrorv0m310h_0_, _1_, _4_, _5_  (4 signals)
+  - siaessdeerrorv1m310h_0_, _1_, _4_, _5_  (4 signals)
+
+FUNCTION:
+  - SIA = Silicon Architecture (or possibly SIMD Integer ALU)
+  - SDE = Single-bit Data Error (ECC error detection)
+  - Reports ECC errors from vector execution units V0 and V1
+  - Stage M310H = error reporting stage
+
+INTERFACE: par_exe → error handling logic (possibly par_pm or core_client)
+
+ROOT CAUSE:
+  - Error reporting interface spec missing
+  - May be intentionally relaxed (errors are rare events)
+
+IMPACT IF NOT FIXED:
+  - Error reporting timing not verified
+  - May delay error detection/handling
+
+ACTION REQUIRED:
+  - Option A: Add timing spec if error latency is critical
+  - Option B: Add waiver if error paths are intentionally relaxed
+    (common for error signals - they're rare events)
+
+OWNER: RAS (Reliability) PO or Error Handling PO
+
+-------------------------------------------------------------------------------
+6. rsvecstackstdctlm303h_* (12 endpoints) - VECTOR STACK STORE CONTROL
+-------------------------------------------------------------------------------
+
+SIGNALS: rsvecstackstdctlm303h_10_[0:3], _11_[0:3], _12_[0:3]
+         3 instances x 4 bits = 12 signals
+
+FUNCTION:
+  - RS Vector Stack Store (STD) control
+  - Controls store operations for vector stack
+  - Instances 10, 11, 12 suggest specific store ports
+
+INTERFACE: par_exe → par_ooo_vec
+
+ROOT CAUSE: Same as other rsvec* signals - missing interface spec
+
+ACTION REQUIRED: Handle with other rsvec* signals
+
+-------------------------------------------------------------------------------
+7. rsveceuspecuopvm302h* (8 endpoints) - VECTOR EU SPEC UOP VALID
+-------------------------------------------------------------------------------
+
+SIGNALS: rsveceuspecuopvm302h[0:7] - 8 bits
+
+FUNCTION:
+  - Speculative micro-op valid signals for vector EUs
+  - Indicates which speculative uops are valid
+  - Stage M302H (slightly earlier than M303H)
+
+INTERFACE: par_exe → par_ooo_vec
+
+ROOT CAUSE: Missing spec for speculative execution interface
+
+ACTION REQUIRED: Add timing spec or waiver
+
+-------------------------------------------------------------------------------
+8. rsvecstdspecuopvm302h* (3 endpoints) - VECTOR STD SPEC UOP VALID  
+-------------------------------------------------------------------------------
+
+SIGNALS: rsvecstdspecuopvm302h[10:12] - 3 bits
+
+FUNCTION:
+  - Speculative store micro-op valid for vector
+  - Part of store speculation mechanism
+
+INTERFACE: par_exe → par_ooo_vec
+
+ACTION REQUIRED: Handle with other rsvec* signals
+
+-------------------------------------------------------------------------------
+9. realdispm304h_7_0_* (6 endpoints) - REAL DISPLACEMENT
+-------------------------------------------------------------------------------
+
+SIGNALS: realdispm304h_7_0_[2:7] - 6 bits
+
+FUNCTION:
+  - Real (non-speculative) displacement value
+  - Used in address calculation for memory operations
+  - Part of AGU (Address Generation Unit) output
+
+INTERFACE: par_exe → par_meu or memory subsystem
+
+ROOT CAUSE: Missing AGU output timing spec
+
+ACTION REQUIRED:
+  - Add timing spec for memory address interface
+  - This is likely critical path - AGU timing affects memory latency
+
+OWNER: AGU/MEU PO
+
+-------------------------------------------------------------------------------
+10. rsqsfwbdatavldm804h_* (4 endpoints) - RSQ FORWARD WRITEBACK DATA VALID
+-------------------------------------------------------------------------------
+
+SIGNALS: rsqsfwbdatavldm804h_20_, _21_, _22_, _23_ - 4 signals
+
+FUNCTION:
+  - RSQ = Reservation Station Queue
+  - FWB = Forward Writeback
+  - Indicates valid data for forwarding/bypass
+  - Stage M804H = very late pipeline stage
+
+INTERFACE: par_exe → writeback logic
+
+ROOT CAUSE: Missing writeback interface spec
+
+IMPACT: Late stage - timing critical for forwarding
+
+ACTION REQUIRED: Add timing spec with tight budget (late stage)
+
+-------------------------------------------------------------------------------
+11. FEEDTHRU Signals (4 endpoints) - FEEDTHROUGH PATHS
+-------------------------------------------------------------------------------
+
+SIGNALS:
+  - bisr_chain_tclk_in__FEEDTHRU_1    (BISR test clock feedthrough)
+  - rsooorealdispm305h_12_10___FEEDTHRU_1[10:12] (real disp feedthrough)
+
+FUNCTION:
+  - Combinational paths from input to output (no register)
+  - BISR = Built-In Self Repair (test infrastructure)
+  - rsooorealdispm305h = passes through to OOO
+
+ROOT CAUSE:
+  - Feedthrough by design - no internal logic
+  - Timing must be constrained at source/destination
+
+ACTION REQUIRED:
+  - Add feedthrough timing constraint:
+    set_max_delay 0.300 -from [get_ports *FEEDTHRU_0] -to [get_ports *FEEDTHRU_1]
+  - Or add waiver explaining feedthrough is constrained elsewhere
+
+-------------------------------------------------------------------------------
+12. mnsclk_icore_* (2 endpoints) - MNS CLOCK SIGNALS
+-------------------------------------------------------------------------------
+
+SIGNALS:
+  - mnsclk_icore_s7n5
+  - mnsclk_icore_s7n10
+
+FUNCTION:
+  - MNS = Mesh Network Switch (or similar clock distribution)
+  - Clock signals to icore
+  - s7n5, s7n10 = specific clock tree nodes
+
+ROOT CAUSE:
+  - Clock outputs typically don't have set_output_delay
+  - May need special clock output constraints
+
+ACTION REQUIRED:
+  - Check if these are clock outputs (use set_clock_uncertainty or similar)
+  - Or add waiver for clock distribution signals
+
+-------------------------------------------------------------------------------
+13. Other External Signals (5 endpoints)
+-------------------------------------------------------------------------------
+
+exe_tfb_tfb_out[0]:
+  - TFB = Trace Fabric Buffer (debug/trace)
+  - Debug output - may not need tight timing
+  - Action: Waiver or relaxed timing spec
+
+mivecstdimmdatam303h_10_[1], _11_[1], _12_[1]:
+  - MI Vector Store Immediate Data
+  - Part of vector store interface
+  - Action: Add timing spec with rsvec* signals
+
+scan_channel_repeater_tmul_via_exe_uscan_scanclk:
+  - Scan channel repeater for TMUL
+  - Scan infrastructure signal
+  - Action: Add waiver - scan mode only
+
+================================================================================
+                         RECOMMENDED ACTION PLAN
+================================================================================
+
+PRIORITY 1 - HIGH (Interface specs needed - 205 signals):
+  [ ] rsveceuuopcodm303h_* (112) - Add par_exe→par_ooo_vec spec
+  [ ] rsvecstackeuctlm303h_* (32) - Same interface
+  [ ] specpdstforldbundlecancelm801h_* (32) - Add load cancel spec
+  [ ] mi2* signals (17) - Add MI2 interface spec
+  [ ] rsvecstackstdctlm303h_* (12) - Same as rsvec* interface
+
+PRIORITY 2 - MEDIUM (Need owner decision - 29 signals):
+  [ ] siaessdeerror* (8) - Decide if waiver OK for error signals
+  [ ] rsveceuspecuopvm302h* (8) - Add spec or waiver
+  [ ] realdispm304h* (6) - Add AGU output spec
+  [ ] rsqsfwbdatavldm804h* (4) - Add writeback spec
+  [ ] rsvecstdspecuopvm302h* (3) - Add spec or waiver
+
+PRIORITY 3 - LOW (Waivers likely OK - 13 signals):
+  [ ] FEEDTHRU (4) - Add feedthrough constraint or waiver
+  [ ] mnsclk* (2) - Check clock constraints
+  [ ] exe_tfb_tfb_out (1) - Waiver for debug
+  [ ] mivecstdimmdata* (3) - Add with rsvec* specs
+  [ ] scan_channel* (1) - Waiver for scan
+
+================================================================================
+                         WAIVER REQUEST TEMPLATE
+================================================================================
+
+For signals that need waivers, use this format in unconstrained.waivers.csv:
+
+par_exe/<signal_name>,<approver_name> - <justification>
+
+Examples:
+par_exe/siaessdeerrorv0m310h_*,<RAS_PO> - Error signals intentionally relaxed timing
+par_exe/bisr_chain_tclk_in__FEEDTHRU_1,<BISR_PO> - Feedthrough constrained at source
+par_exe/exe_tfb_tfb_out[0],<Debug_PO> - Debug trace signal not timing critical
+
+================================================================================
+                         SDC CONSTRAINT EXAMPLES
+================================================================================
+
+# Vector EU interface (add to par_exe constraints)
+set_output_delay -clock mclk_exe -max 0.100 [get_ports rsveceuuopcodm303h_*]
+set_output_delay -clock mclk_exe -max 0.100 [get_ports rsvecstackeuctlm303h_*]
+set_output_delay -clock mclk_exe -max 0.100 [get_ports rsvecstackstdctlm303h_*]
+
+# Late stage signals (tighter budget)
+set_output_delay -clock mclk_exe -max 0.050 [get_ports specpdstforldbundlecancelm801h_*]
+set_output_delay -clock mclk_exe -max 0.050 [get_ports rsqsfwbdatavldm804h_*]
+
+# Feedthrough
+set_max_delay 0.300 -from [get_ports *FEEDTHRU_0] -to [get_ports *FEEDTHRU_1]
+
+================================================================================
+                  EXCLUDED: INTERNAL DFT SIGNALS (4 signals)
+================================================================================
+
+The following internal DFT signals were excluded from this external-only report:
+  - par_exe_dft/usc_exe/i_ult_parctl/i_fscan_byplatrst_b/.../S (2 signals)
+  - par_exe_dft/usc_exe/i_ult_parctl/i_fscan_byprst_b/.../S    (2 signals)
+
+These are internal scan mux select signals - not external partition interfaces.
+Action: Add set_false_path in functional mode SDC
+
+================================================================================
+                   FULL EXTERNAL SIGNAL LIST (247 signals)
+================================================================================
+
+bisr_chain_tclk_in__FEEDTHRU_1
+exe_tfb_tfb_out[0]
+mi2intveceuuopvm303h[0]
+mi2intveceuuopvm303h[1]
+mi2intveceuuopvm303h[2]
+mi2intveceuuopvm303h[3]
+mi2intveceuuopvm303h[4]
+mi2intveceuuopvm303h[5]
+mi2intveceuuopvm303h[6]
+mi2intveceuuopvm303h[7]
+mi2intvecstduopvm303h[10]
+mi2intvecstduopvm303h[11]
+mi2intvecstduopvm303h[12]
+mi2v0fma23stckpwrupm302h
+mi2v0uopcodm303h_p_2_[12]
+mi2v0uopcodm303h_p_2_[6]
+mi2v0uopcodm303h_p_3_[12]
+mi2v0uopcodm303h_p_3_[6]
+mi2v1fma23stckpwrupm302h
+miismaskzero4divpipem306h[0]
+miismaskzero4divpipem306h[1]
+mivecstdimmdatam303h_10_[1]
+mivecstdimmdatam303h_11_[1]
+mivecstdimmdatam303h_12_[1]
+mnsclk_icore_s7n10
+mnsclk_icore_s7n5
+realdispm304h_7_0_[2]
+realdispm304h_7_0_[3]
+realdispm304h_7_0_[4]
+realdispm304h_7_0_[5]
+realdispm304h_7_0_[6]
+realdispm304h_7_0_[7]
+rsooorealdispm305h_12_10___FEEDTHRU_1[10]
+rsooorealdispm305h_12_10___FEEDTHRU_1[11]
+rsooorealdispm305h_12_10___FEEDTHRU_1[12]
+rsqsfwbdatavldm804h_20_
+rsqsfwbdatavldm804h_21_
+rsqsfwbdatavldm804h_22_
+rsqsfwbdatavldm804h_23_
+rsveceuspecuopvm302h[0]
+rsveceuspecuopvm302h[1]
+rsveceuspecuopvm302h[2]
+rsveceuspecuopvm302h[3]
+rsveceuspecuopvm302h[4]
+rsveceuspecuopvm302h[5]
+rsveceuspecuopvm302h[6]
+rsveceuspecuopvm302h[7]
+rsveceuuopcodm303h_0_[0]
+rsveceuuopcodm303h_0_[10]
+rsveceuuopcodm303h_0_[11]
+rsveceuuopcodm303h_0_[12]
+rsveceuuopcodm303h_0_[13]
+rsveceuuopcodm303h_0_[1]
+rsveceuuopcodm303h_0_[2]
+rsveceuuopcodm303h_0_[3]
+rsveceuuopcodm303h_0_[4]
+rsveceuuopcodm303h_0_[5]
+rsveceuuopcodm303h_0_[6]
+rsveceuuopcodm303h_0_[7]
+rsveceuuopcodm303h_0_[8]
+rsveceuuopcodm303h_0_[9]
+rsveceuuopcodm303h_1_[0]
+rsveceuuopcodm303h_1_[10]
+rsveceuuopcodm303h_1_[11]
+rsveceuuopcodm303h_1_[12]
+rsveceuuopcodm303h_1_[13]
+rsveceuuopcodm303h_1_[1]
+rsveceuuopcodm303h_1_[2]
+rsveceuuopcodm303h_1_[3]
+rsveceuuopcodm303h_1_[4]
+rsveceuuopcodm303h_1_[5]
+rsveceuuopcodm303h_1_[6]
+rsveceuuopcodm303h_1_[7]
+rsveceuuopcodm303h_1_[8]
+rsveceuuopcodm303h_1_[9]
+rsveceuuopcodm303h_2_[0]
+rsveceuuopcodm303h_2_[10]
+rsveceuuopcodm303h_2_[11]
+rsveceuuopcodm303h_2_[12]
+rsveceuuopcodm303h_2_[13]
+rsveceuuopcodm303h_2_[1]
+rsveceuuopcodm303h_2_[2]
+rsveceuuopcodm303h_2_[3]
+rsveceuuopcodm303h_2_[4]
+rsveceuuopcodm303h_2_[5]
+rsveceuuopcodm303h_2_[6]
+rsveceuuopcodm303h_2_[7]
+rsveceuuopcodm303h_2_[8]
+rsveceuuopcodm303h_2_[9]
+rsveceuuopcodm303h_3_[0]
+rsveceuuopcodm303h_3_[10]
+rsveceuuopcodm303h_3_[11]
+rsveceuuopcodm303h_3_[12]
+rsveceuuopcodm303h_3_[13]
+rsveceuuopcodm303h_3_[1]
+rsveceuuopcodm303h_3_[2]
+rsveceuuopcodm303h_3_[3]
+rsveceuuopcodm303h_3_[4]
+rsveceuuopcodm303h_3_[5]
+rsveceuuopcodm303h_3_[6]
+rsveceuuopcodm303h_3_[7]
+rsveceuuopcodm303h_3_[8]
+rsveceuuopcodm303h_3_[9]
+rsveceuuopcodm303h_4_[0]
+rsveceuuopcodm303h_4_[10]
+rsveceuuopcodm303h_4_[11]
+rsveceuuopcodm303h_4_[12]
+rsveceuuopcodm303h_4_[13]
+rsveceuuopcodm303h_4_[1]
+rsveceuuopcodm303h_4_[2]
+rsveceuuopcodm303h_4_[3]
+rsveceuuopcodm303h_4_[4]
+rsveceuuopcodm303h_4_[5]
+rsveceuuopcodm303h_4_[6]
+rsveceuuopcodm303h_4_[7]
+rsveceuuopcodm303h_4_[8]
+rsveceuuopcodm303h_4_[9]
+rsveceuuopcodm303h_5_[0]
+rsveceuuopcodm303h_5_[10]
+rsveceuuopcodm303h_5_[11]
+rsveceuuopcodm303h_5_[12]
+rsveceuuopcodm303h_5_[13]
+rsveceuuopcodm303h_5_[1]
+rsveceuuopcodm303h_5_[2]
+rsveceuuopcodm303h_5_[3]
+rsveceuuopcodm303h_5_[4]
+rsveceuuopcodm303h_5_[5]
+rsveceuuopcodm303h_5_[6]
+rsveceuuopcodm303h_5_[7]
+rsveceuuopcodm303h_5_[8]
+rsveceuuopcodm303h_5_[9]
+rsveceuuopcodm303h_6_[0]
+rsveceuuopcodm303h_6_[10]
+rsveceuuopcodm303h_6_[11]
+rsveceuuopcodm303h_6_[12]
+rsveceuuopcodm303h_6_[13]
+rsveceuuopcodm303h_6_[1]
+rsveceuuopcodm303h_6_[2]
+rsveceuuopcodm303h_6_[3]
+rsveceuuopcodm303h_6_[4]
+rsveceuuopcodm303h_6_[5]
+rsveceuuopcodm303h_6_[6]
+rsveceuuopcodm303h_6_[7]
+rsveceuuopcodm303h_6_[8]
+rsveceuuopcodm303h_6_[9]
+rsveceuuopcodm303h_7_[0]
+rsveceuuopcodm303h_7_[10]
+rsveceuuopcodm303h_7_[11]
+rsveceuuopcodm303h_7_[12]
+rsveceuuopcodm303h_7_[13]
+rsveceuuopcodm303h_7_[1]
+rsveceuuopcodm303h_7_[2]
+rsveceuuopcodm303h_7_[3]
+rsveceuuopcodm303h_7_[4]
+rsveceuuopcodm303h_7_[5]
+rsveceuuopcodm303h_7_[6]
+rsveceuuopcodm303h_7_[7]
+rsveceuuopcodm303h_7_[8]
+rsveceuuopcodm303h_7_[9]
+rsvecstackeuctlm303h_0_[0]
+rsvecstackeuctlm303h_0_[1]
+rsvecstackeuctlm303h_0_[2]
+rsvecstackeuctlm303h_0_[3]
+rsvecstackeuctlm303h_1_[0]
+rsvecstackeuctlm303h_1_[1]
+rsvecstackeuctlm303h_1_[2]
+rsvecstackeuctlm303h_1_[3]
+rsvecstackeuctlm303h_2_[0]
+rsvecstackeuctlm303h_2_[1]
+rsvecstackeuctlm303h_2_[2]
+rsvecstackeuctlm303h_2_[3]
+rsvecstackeuctlm303h_3_[0]
+rsvecstackeuctlm303h_3_[1]
+rsvecstackeuctlm303h_3_[2]
+rsvecstackeuctlm303h_3_[3]
+rsvecstackeuctlm303h_4_[0]
+rsvecstackeuctlm303h_4_[1]
+rsvecstackeuctlm303h_4_[2]
+rsvecstackeuctlm303h_4_[3]
+rsvecstackeuctlm303h_5_[0]
+rsvecstackeuctlm303h_5_[1]
+rsvecstackeuctlm303h_5_[2]
+rsvecstackeuctlm303h_5_[3]
+rsvecstackeuctlm303h_6_[0]
+rsvecstackeuctlm303h_6_[1]
+rsvecstackeuctlm303h_6_[2]
+rsvecstackeuctlm303h_6_[3]
+rsvecstackeuctlm303h_7_[0]
+rsvecstackeuctlm303h_7_[1]
+rsvecstackeuctlm303h_7_[2]
+rsvecstackeuctlm303h_7_[3]
+rsvecstackstdctlm303h_10_[0]
+rsvecstackstdctlm303h_10_[1]
+rsvecstackstdctlm303h_10_[2]
+rsvecstackstdctlm303h_10_[3]
+rsvecstackstdctlm303h_11_[0]
+rsvecstackstdctlm303h_11_[1]
+rsvecstackstdctlm303h_11_[2]
+rsvecstackstdctlm303h_11_[3]
+rsvecstackstdctlm303h_12_[0]
+rsvecstackstdctlm303h_12_[1]
+rsvecstackstdctlm303h_12_[2]
+rsvecstackstdctlm303h_12_[3]
+rsvecstdspecuopvm302h[10]
+rsvecstdspecuopvm302h[11]
+rsvecstdspecuopvm302h[12]
+scan_channel_repeater_tmul_via_exe_uscan_scanclk
+siaessdeerrorv0m310h_0_
+siaessdeerrorv0m310h_1_
+siaessdeerrorv0m310h_4_
+siaessdeerrorv0m310h_5_
+siaessdeerrorv1m310h_0_
+siaessdeerrorv1m310h_1_
+siaessdeerrorv1m310h_4_
+siaessdeerrorv1m310h_5_
+specpdstforldbundlecancelm801h_0_[0]
+specpdstforldbundlecancelm801h_0_[1]
+specpdstforldbundlecancelm801h_0_[2]
+specpdstforldbundlecancelm801h_0_[3]
+specpdstforldbundlecancelm801h_1_[0]
+specpdstforldbundlecancelm801h_1_[1]
+specpdstforldbundlecancelm801h_1_[2]
+specpdstforldbundlecancelm801h_1_[3]
+specpdstforldbundlecancelm801h_2_[0]
+specpdstforldbundlecancelm801h_2_[1]
+specpdstforldbundlecancelm801h_2_[2]
+specpdstforldbundlecancelm801h_2_[3]
+specpdstforldbundlecancelm801h_3_[0]
+specpdstforldbundlecancelm801h_3_[1]
+specpdstforldbundlecancelm801h_3_[2]
+specpdstforldbundlecancelm801h_3_[3]
+specpdstforldbundlecancelm801h_4_[0]
+specpdstforldbundlecancelm801h_4_[1]
+specpdstforldbundlecancelm801h_4_[2]
+specpdstforldbundlecancelm801h_4_[3]
+specpdstforldbundlecancelm801h_5_[0]
+specpdstforldbundlecancelm801h_5_[1]
+specpdstforldbundlecancelm801h_5_[2]
+specpdstforldbundlecancelm801h_5_[3]
+specpdstforldbundlecancelm801h_6_[0]
+specpdstforldbundlecancelm801h_6_[1]
+specpdstforldbundlecancelm801h_6_[2]
+specpdstforldbundlecancelm801h_6_[3]
+specpdstforldbundlecancelm801h_7_[0]
+specpdstforldbundlecancelm801h_7_[1]
+specpdstforldbundlecancelm801h_7_[2]
+specpdstforldbundlecancelm801h_7_[3]
+
+================================================================================
+Generated: 2026-02-18 06:01
+================================================================================

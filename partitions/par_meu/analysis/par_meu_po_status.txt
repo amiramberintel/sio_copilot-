@@ -1,0 +1,252 @@
+================================================================================
+  par_meu PO STATUS REPORT — max_high CORNER (186ps)
+  Source: mfeldma1's PO WA (par_meu_ww11)
+  Path: /nfs/site/disks/mfeldma1_wa/gfc/par_meu_ww11/runs/par_meu/n2p_htall_conf4
+  Date: 2026-03-22
+================================================================================
+
+================================================================================
+  SECTION 1: PO WORKSPACE OVERVIEW
+================================================================================
+
+  Owner:           mfeldma1
+  Config:          par_meu_ww11
+  Arc Version:     GFCN2CLIENTA0_SC8_VER_053
+  Arc Tag:         par_meu_ww11,GFCN2CLIENTA0LATEST
+  Archive Date:    Thu Mar 19 09:14:38 2026
+  Tool:            PrimeTime V-2023.12-SP5-2-T-20250321
+  STA Date:        Wed Mar 18 19:18:33 2026
+
+  Daily BU:        GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW12G_dcm_daily-CLK048
+  Daily uses SAME arc version: GFCN2CLIENTA0_SC8_VER_053 (confirmed)
+
+  P&R Flow Stage:  invs_route_opt (Cadence Innovus, CTS + route optimized)
+  Dball stages:    genus_elab -> genus_init_design -> genus_generic -> genus_map
+                   -> genus_multibit -> genus_dft -> invs_import_design
+                   -> invs_floorplan -> invs_place -> invs_power_plan
+                   -> invs_cts -> invs_fill -> invs_route_opt (FINAL)
+
+  STA Scenarios:
+    - func.max_high.T_85.typical          (setup, 186ps — PRIMARY TARGET)
+    - func.max_nom.T_85.typical           (setup, 274ps — nominal)
+    - func.min_low.T_85.typical           (hold)
+    - func.rv_em_core.F_125.rcworst_CCworst (EM reliability)
+    - fresh.min_fast_cold.F_M40.rcworst_CCworst (hold cold)
+
+================================================================================
+  SECTION 2: CLOCK DEFINITION
+================================================================================
+
+  Clock Name:      mclk_meu
+  Period:          186.000ps (~5.38GHz)
+  Waveform:        {0.000 93.000} (50% duty cycle)
+  Source latency:  -90.000ps (all edges)
+  
+  Virtual clocks (IFC timing):
+    mclk_exe_VIRTUAL_no_exception        (to par_exe)
+    mclk_fe_VIRTUAL_no_exception         (to par_fe)
+    mclk_fmav0_VIRTUAL_no_exception      (to par_fmav0)
+    mclk_fmav1_VIRTUAL_no_exception      (to par_fmav1)
+    mclk_mlc_VIRTUAL_no_exception        (to par_mlc)
+    mclk_mlc_VIRTUAL_4_3_end_start       (MLC cross-cycle)
+    mclk_mlc_VIRTUAL_5_4_end_start       (MLC cross-cycle)
+    mclk_msid_VIRTUAL_no_exception       (to par_msid)
+    mclk_ooo_int_VIRTUAL_no_exception    (to par_ooo_int)
+    mclk_ooo_vec_VIRTUAL_no_exception    (to par_ooo_vec)
+    mclk_pm_VIRTUAL_4_3_end_start        (to par_pm)
+    mclk_pmh_VIRTUAL_no_exception        (to par_pmh)
+
+================================================================================
+  SECTION 3: TCL SCRIPTS USED
+================================================================================
+
+  bscript/ (user timing constraints):
+    pt_user_timing_constraints.tcl    — Main user constraints file
+      - DisableMbist = 1 (false_path through mec_arrays mbist)
+      - EnableClockShift = 0 (clock shift disabled)
+      - EnableFdrOverride = 0 (FDR multicycle disabled)
+      - EnableSsbOverride = 0
+
+    vars.tcl                          — Variable definitions
+    output_procs.tcl                  — Output report procedures
+    par_meu.clock_types.tcl           — Clock type definitions
+    par_meu_data_source_search_paths.tcl — Data source paths
+    macro_placement_attribute_change.tcl — Macro attributes
+    mf_fixed_cells_placement.tcl      — Fixed cell placement
+    cts_settings_for_csi.tcl          — CTS settings for CSI
+    nb_vars.tcl                       — NB variables
+    power.POST.pre_power_save_session.tcl
+    power.PRE.power_save_session.tcl
+
+  Run script: run.func.max_high.T_85.typical.tcl
+    - Sources pt.tcl (main PrimeTime flow)
+    - PBA mode: path-based analysis
+    - KPI metrics enabled
+
+================================================================================
+  SECTION 4: TIMING STATUS — max_high (186ps) — GLOBAL SUMMARY
+================================================================================
+
+  report_global_timing (setup):
+  ─────────────────────────────────────────────────────────────────
+              Total      reg->reg     in->reg    reg->out     in->out
+  ─────────────────────────────────────────────────────────────────
+  WNS     -586.043    -276.727     -96.382    -109.347    -586.043
+  TNS  -359836.350 -127484.505 -185591.740  -46094.903    -665.202
+  NVP       18667        9213        6220        3229           5
+  ─────────────────────────────────────────────────────────────────
+
+  NOTE: WNS -586ps is from feedthrough_virtual_clock (in->out path)
+        Real internal WNS (reg->reg) = -276.727ps (ijtag_tck group!)
+        Real mclk_meu internal WNS = -101.328ps
+
+================================================================================
+  SECTION 5: PER-GROUP TIMING — VIOLATING GROUPS ONLY
+================================================================================
+
+  Path Group                           WNS(ps)    TNS(ps)      NVP   Type
+  ─────────────────────────────────── ──────── ─────────── ──────── ──────
+  mclk_meu (INTERNAL R2R)             -101.328  -309,903    15,265  R2R
+  mclk_ooo_int_VIRTUAL_no_exception   -109.347   -12,282       588  IFC
+  mclk_ooo_vec_VIRTUAL_no_exception    -96.615    -2,472        98  IFC
+  mclk_exe_VIRTUAL_no_exception        -93.368    -4,113       201  IFC
+  mclk_fe_VIRTUAL_no_exception         -89.907    -2,232       203  IFC
+  mclk_pmh_VIRTUAL_no_exception        -62.911   -15,700     1,059  IFC
+  clock_gating_default                 -61.278    -1,168       155  CG
+  feedthrough_virtual_clock           -586.043      -665         5  FT
+  mclk_fmav1_VIRTUAL_no_exception     -21.414    -5,770       527  IFC
+  mclk_mlc_VIRTUAL_no_exception        -31.825    -1,294       161  IFC
+  mclk_fmav0_VIRTUAL_no_exception      -27.727    -2,864       409  IFC
+  ijtag_tck                           -276.727    -2,006        13  JTAG
+  mclk_msid_VIRTUAL_no_exception       -89.907      -426        12  IFC
+  mclk_meu_VIRTUAL_no_exception        -13.748       -14         1  IFC
+  mclk_mlc_VIRTUAL_4_3_end_start       -49.453       -49         1  IFC
+  mclk_mlc_VIRTUAL_5_4_end_start       -12.928       -13         1  IFC
+  mclk_pm_VIRTUAL_4_3_end_start        -49.453       -49         1  IFC
+  mclk_pm_VIRTUAL_5_4_end_start        -12.928       -13         1  IFC
+  ─────────────────────────────────── ──────── ─────────── ──────── ──────
+  TOTAL                               -586.043  -359,836    18,667
+
+  Clean groups (WNS >= 0):
+    async_default, default, dcmcbbclk, idvfreqOut, idvfreqOut_div2/4/8,
+    idvfreqlvtOut, idvfreqlvtOut_div2/4/8, mclk_pll,
+    mclk_ooo_int_VIRTUAL_4_3_end_start, mclk_mlc_VIRTUAL_5_4_start_start,
+    mclk_pm_VIRTUAL_88_88_end_end, mclk_pmh_VIRTUAL_4_3_end_start,
+    scanclk_div, scanclk_div_VIRTUAL_no_exception, scanclk_div_phyex,
+    scanclk_notdiv, scanclk_notdiv_phyex, ssh_ijtag
+
+================================================================================
+  SECTION 6: INTERNAL (mclk_meu) — TOP WORST PATHS
+================================================================================
+
+  The mclk_meu group is the MAIN focus for timing closure:
+    WNS: -101.328ps  |  TNS: -309,903ps  |  NVP: 15,265
+    WNS as % of period: 54.5%  (very significant)
+
+  Top 20 worst mclk_meu paths (from full_summary_table.csv):
+
+  #  | Slack(ps) | CombCnt | Length(um) | Startpoint                        | Endpoint
+  ───┼───────────┼─────────┼────────────┼───────────────────────────────────┼─────────────────────────
+  15 | -101.328  |    27   |   392.0    | mob/momclb/MCLBAryRdM402H_41      | mob/mosab/SABTSBAryRd..M401H
+  16 | -100.969  |    28   |   438.9    | mob/momclb/MCLBAryRdM402H_41      | mob/mosab/STATSBDisp..M401H
+  19 |  -98.938  |    29   |   438.2    | mob/momclb/MCLBAryRdM402H_41      | mob/mosab/STATSBDisp..M401H
+  20 |  -98.746  |    28   |   409.7    | mob/momclb/MCLBAryRdM402H_41      | mob/mosab/STATSBDisp..M401H
+  26 |  -95.043  |    28   |   373.6    | mob/momclb/MCLBAryRdM402H_41      | mob/mosab/SABTSBAryRd..M401H
+  33 |  -91.551  |    26   |   441.6    | mob/momclb/MCLBAryRdM402H_41      | mob/mosab/SABTSBAryRd..M401H
+  35 |  -91.258  |    26   |   402.4    | mob/momclb/MCLBAryRdM402H_41      | mob/mosab/SABTSBAryRd..M401H
+  37 |  -90.645  |    25   |   415.8    | mob/momclb/MCLBAryRdM402H_41      | mob/mosab/SABTSBAryRd..M401H
+
+  KEY OBSERVATION:
+    The worst mclk_meu paths are ALL from mob/momclb/MCLBAryRdM402H
+    (MCLB Array Read at M402H stage) going to mob/mosab/ (SAB/STAT blocks at M401H).
+    These are M402H -> M401H paths with 25-29 combinational cells.
+    This is the #1 internal bottleneck for par_meu.
+
+================================================================================
+  SECTION 7: IFC (INTER-PARTITION) — TOP VIOLATIONS
+================================================================================
+
+  Worst IFC paths by destination partition:
+
+  Partition        | WNS(ps)  | TNS(ps)     | NVP  | Type        | Worst Path From
+  ─────────────────┼──────────┼─────────────┼──────┼─────────────┼──────────────────────
+  par_ooo_int      | -109.347 |  -12,282    |  588 | reg->out    | MOWBCheckRobIdM803H
+  par_ooo_vec      |  -96.615 |   -2,472    |   98 | reg->out    | miIntWbRsdErrM807H
+  par_exe          |  -93.368 |   -4,113    |  201 | reg->out    | MOWBDataVLdRSM805H
+  par_fe           |  -89.907 |   -2,232    |  203 | reg->out    | (various)
+  par_msid          |  -89.907 |     -426    |   12 | reg->out    | (various)
+  par_pmh          |  -62.911 |  -15,700    | 1059 | port->reg   | dcl1taghitportM405H
+  par_mlc          |  -31.825 |   -1,294    |  161 | mixed       | (various)
+  par_fmav0        |  -27.727 |   -2,864    |  409 | mixed       | (various)
+  par_fmav1        |  -21.414 |   -5,770    |  527 | mixed       | (various)
+
+  Worst overall IFC: mclk_ooo_int at -109.347ps
+    Path: mob/momclb/MOWBCheckRobIdM803H -> mowbcheckrobidldm803h (output port)
+    This is a long output path (510um, 5 buffers) from MEU to ooo_int
+
+================================================================================
+  SECTION 8: WORST PATH FAMILIES (from full summary CSV)
+================================================================================
+
+  Startpoint families (internal mclk_meu, top worst):
+  ──────────────────────────────────────────────────────
+  1. mob/momclb/MCLBAryRdM402H    — Worst -101.3ps, ~26-29 comb cells
+     Memory Controller Line Buffer array read at M402H
+     Multiple bits (41 entries, 8-bit RobId address)
+     Endpoints: mosab/SABTSBAryRdOnlyInfo, mosab/STATSBDisp, etc.
+
+  2. mob/momclb/MOWBCheckRobIdM803H — Worst -109.3ps (IFC to ooo_int)
+     Write-Back check logic, goes out to output ports
+
+  3. dcu_l0/dcl1taghitportM405H    — Worst -90.9ps (IFC from port)
+     L0 data cache tag hit port, input from outside
+
+  IFC startpoint families:
+  ──────────────────────────────────────────────────────
+  1. MOWBCheckRobIdM803H_42/41      — to ooo_int (-109/-98ps)
+  2. miIntWbRsdErrM807H              — to ooo_vec (-96.6ps)
+  3. MOWBDataVLdRSM805H              — to exe (-93.4ps)
+  4. dcl1taghitportM405H             — from port to pmh (-90.9ps)
+
+================================================================================
+  SECTION 9: SUMMARY & KEY FINDINGS
+================================================================================
+
+  TIMING HEALTH SUMMARY:
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                      max_high (186ps)                               │
+  ├─────────────────────┬───────────┬──────────────┬───────────────────┤
+  │ Category            │ WNS (ps)  │ TNS (ps)     │ NVP              │
+  ├─────────────────────┼───────────┼──────────────┼───────────────────┤
+  │ Internal (mclk_meu) │  -101.328 │   -309,903   │  15,265          │
+  │ IFC (all VIRTUAL)   │  -109.347 │    -49,852   │   3,267          │
+  │ Clock gating        │   -61.278 │     -1,168   │     155          │
+  │ Feedthrough         │  -586.043 │       -665   │       5          │
+  │ JTAG                │  -276.727 │     -2,006   │      13          │
+  ├─────────────────────┼───────────┼──────────────┼───────────────────┤
+  │ TOTAL               │  -586.043 │   -359,836   │  18,667          │
+  └─────────────────────┴───────────┴──────────────┴───────────────────┘
+
+  KEY FINDINGS:
+  
+  1. Internal WNS = -101.3ps (54.5% of 186ps period) — CRITICAL
+     Bottleneck: mob/momclb/MCLBAryRdM402H -> mob/mosab (M402H->M401H)
+     26-29 combinational cells, 370-440um wire length
+  
+  2. IFC WNS = -109.3ps (to par_ooo_int)
+     MOWBCheckRobIdM803H output paths, long wire + buffers
+  
+  3. par_pmh IFC has highest NVP (1,059 paths, -62.9ps WNS)
+     dcl1taghitport input paths dominate
+  
+  4. Feedthrough -586ps and JTAG -276.7ps are special cases
+     (feedthrough has only 5 paths, JTAG has 13 — low priority)
+  
+  5. Total 18,667 violating paths in max_high corner
+     Internal (mclk_meu) is 82% of violations (15,265 of 18,667)
+
+  6. mclk_meu source latency = -90ps — significant clock insertion delay
+
+================================================================================
+  END OF REPORT
+================================================================================

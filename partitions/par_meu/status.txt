@@ -1,0 +1,15 @@
+# par_meu -- Timing Status
+# Last updated: 2026-03-30 (ww14_2)
+# Build: FCT26WW13G / CLK050
+
+setup_wns:          -103ps
+setup_tns:          -309ps (estimated)
+hold_wns:           -4ps (mn_low/mn_nom)
+num_ifc_families:   246
+matched_to_xml:     218/246
+worst_setup_signal: rsslowrobidvpm803h
+worst_setup_corner: func.max_high
+
+PTECO status (ww12):
+  Hold: nearly clean (mn_low/mn_nom: 1 family at -4ps)
+  Setup: worse on some (simuldisablebugfixm3nnh: -221ps)

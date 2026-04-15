@@ -1,0 +1,1002 @@
+================================================================================
+         par_msid Unconstrained Signals Report - Detailed Analysis
+================================================================================
+
+LOCATION: /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_msid/sta_primetime/GOLDEN/
+CORNER:   func.max_high.T_85.typical
+
+================================================================================
+                              SUMMARY
+================================================================================
+
+  Category                    Count    Description
+  ------------------------    -----    ------------------------------------------
+  Unconstrained Endpoints     370      Output ports without max delay constraint
+  No Input Delay Ports        450      Input ports without set_input_delay
+  ------------------------    -----
+  TOTAL                       820      Signals needing attention
+
+================================================================================
+           UNCONSTRAINED ENDPOINTS (370 outputs) - BY CATEGORY
+================================================================================
+
+These are OUTPUT PORTS where paths TO them have no max_delay constraint.
+
+CATEGORY                              COUNT   LIKELY REASON
+------------------------------------  -----   ------------------------------------------
+1. IQ/Dispatch signals                112     Async interface to OOO_INT partition
+   (iqebacdispnotsignedfirst*)               No timing spec defined for this interface
+   (iqebacdispnotsignedfirstaftcall*)        May need TD (top-down) constraints
+
+2. LSD signals                        64      Loop Stream Detector interface
+   (lsdstartmitem110h*)                      Interface to FE partition
+   (lsdendmitem110h*)                        May be async or spec-less
+   (lsdstartdsbm110h*)
+   (lsdenddsbm110h*)
+
+3. DSP/Prefetch signals               83      DSB Prefetch interface
+   (dspfpreappbrtypefullprem111h*)           Complex timing - may need MCP
+   (dspfpreappbroffsetfullm111h*)            Interface timing not fully specified
+   (dspfpreappciscorlilocm111h*)
+
+4. Branch signals                     37      Branch prediction interface
+   (flbrlocvecm110h*)                        Fast paths - may be intentionally relaxed
+   (baendplus1firstuncondaftcallm108h*)
+
+5. LI signals                         22      LI (Load/Store) interface
+   (li_xidm169h*)                            Interface to memory partition
+   (li_setm169h*)
+   (li_waym169h*)
+
+6. LVP signals                        11      LVP (Load Value Predictor) interface
+   (lvpinvalidationsetmnn2h*)                Invalidation - may be async
+   (lvpinvalidationwaymnn2h*)
+   (lvpinvalidationenmnn2h)
+   (lvpclkenparfem167h)
+
+7. IDF signals                        16      IDF Stack control
+   (idfstackctlm200h*)                       Control interface - needs spec
+
+8. DFT/Scan signals                   5       DFT infrastructure
+   (par_msid_dft/usc_msid/...)               Not timing critical in func mode
+   (msid_sib_out_o_ijtag_tck)                JTAG interface - separate clock domain
+
+9. Feedthrough signals                1       Pass-through paths
+   (core_rf_bisr_chain_clk__FEEDTHRU_1)      No logic - just routing
+
+10. Other misc signals                19      Various control signals
+    (upredbitm184h)                          Need individual investigation
+    (reporprdcycsm105h)
+    (dsbqsyncpmont_m184h)
+    etc.
+
+================================================================================
+           NO INPUT DELAY PORTS (450 inputs) - BY CATEGORY
+================================================================================
+
+These are INPUT PORTS without set_input_delay constraint - paths FROM them
+are unconstrained.
+
+CATEGORY                              COUNT   LIKELY REASON
+------------------------------------  -----   ------------------------------------------
+1. IF/BLIP signals                    220     Instruction Fetch BLIP interface
+   (ifbliptoiqsm106h*)                       From FE partition
+   (ifclipm105h*)                            Interface timing specs missing
+   (ifbliphighorsm106h*)                     May be spec'd at top level only
+
+2. DSB signals                        97      Decode Stream Buffer interface
+   (dsbentrypointmaskm124h*)                 From FE/DSB partition
+   (dsbexitpointmaskm124h*)                  Complex masks - timing relaxed
+   (dsbfespec*, dsbsortslowdata*)
+
+3. DS signals                         54      Decode Stage interface
+   (dscyclevalidqforhitm124h*)               Various decode signals
+   (dsdisham*, dseomuopvecm124h*)            May need specs from FE
+   (dsupredbitm125h*)
+
+4. CS Limit signals                   37      Code Segment limits
+   (cslimitcm107h[0:31])                     32-bit limit register
+   (cslimitm105h[0:4])                       Slow changing - may be relaxed
+
+5. Feedthrough signals                13      Pass-through signals
+   (*_FEEDTHRU_0)                            No logic delay - just routing
+   (RAWhisper*, dfx_sfe_vsense*)             DFX signals pass through
+
+6. Scan/DFT signals                   3       Scan infrastructure
+   (scan_channel_repeater_*)                 Not constrained in func mode
+
+7. BPU signals                        11      Branch Prediction Unit
+   (bptakenm124h*)                           From FE partition
+   (bpurepairbiqm807h*)                      May need interface specs
+
+8. Mode/Control signals               7       Static/slow control
+   (modemnn1h*, newcycm102h*)                Slow changing signals
+   (probemodem101h, startstg1stall*)         May be intentionally relaxed
+
+9. RAWhisper signals                  12      Whisper restore events
+   (RAWhisperPsvRstrEvM203H[0:11])           DFX/debug signals
+
+================================================================================
+                         COMMON REASONS FOR UNCONSTRAINED
+================================================================================
+
+1. MISSING INTERFACE SPECS
+   - Partition interfaces without timing specs defined
+   - Need to add specs in timing_specs/par_msid_spec.csv
+   - Or add TD (top-down) constraints from core_client level
+
+2. ASYNC INTERFACES
+   - Signals crossing clock domains
+   - Handled by CDC (Clock Domain Crossing) constraints
+   - Not constrained for setup/hold - use set_false_path
+
+3. FEEDTHROUGH PATHS
+   - Signals that pass through without register stages
+   - No internal delay to constrain
+   - Constrained at source/destination partitions instead
+
+4. DFT/SCAN SIGNALS
+   - Not timing critical in functional mode
+   - Constrained separately for scan mode
+
+5. SLOW/STATIC SIGNALS
+   - Control signals that change rarely
+   - May use multicycle path (MCP) instead of single-cycle
+
+6. INTENTIONALLY RELAXED
+   - Some paths deemed non-critical
+   - May be waived or excluded from signoff
+
+================================================================================
+                         RECOMMENDED ACTIONS
+================================================================================
+
+1. FOR MISSING SPECS:
+   - Review par_msid_spec.csv for missing pins
+   - Add set_input_delay / set_output_delay in SDC
+   - Request specs from interface owners
+
+2. FOR ASYNC INTERFACES:
+   - Add set_false_path for true async paths
+   - Add set_max_delay for quasi-static signals
+   - Document in FDR exceptions
+
+3. FOR FEEDTHROUGH:
+   - Verify constrained at other partition
+   - Add feedthrough_virtual_clock constraints if needed
+
+4. CHECK COVERAGE:
+   pt_shell> report_analysis_coverage -untested
+   pt_shell> report_timing -from [get_ports <port>] -unconstrained
+
+================================================================================
+                         FULL SIGNAL LISTS
+================================================================================
+
+=== UNCONSTRAINED ENDPOINTS (370) ===
+lsdendmitem110h[10]
+dsbqsyncpmont_m184h
+lsdstartmitem110h[0]
+lsdstartdsbm110h[3]
+msid_sib_out_o_ijtag_tck
+ilgignoreallforfem107h
+dspfpreappbrtypefullprem111h[0]
+dspfpreappbrtypefullprem111h[9]
+dspfpreappbrtypefullprem111h[10]
+dspfpreappbrtypefullprem111h[12]
+dspfpreappbrtypefullprem111h[13]
+dspfpreappbrtypefullprem111h[5]
+dspfpreappbrtypefullprem111h[6]
+dspfpreappbrtypefullprem111h[8]
+dspfpreappbrtypefullprem111h[4]
+dspfpreappbrtypefullprem111h[2]
+dspfpreappbrtypefullprem111h[1]
+lsdstartdsbm110h[17]
+lsdenddsbm110h[15]
+li_xidm169h[2]
+baendplus1firstuncondaftcallm108h[1]
+li_xidm169h[10]
+flbrlocvecm110h_4_[3]
+flbrlocvecm110h_3_[4]
+flbrlocvecm110h_1_[1]
+upredbitm184h
+baendplus1firstuncondaftcallm108h[0]
+baendplus1firstuncondaftcallm108h[4]
+li_setm169h[2]
+reporprdcycsm105h
+ifwrapdatavalidm107h[1]
+li_setm169h[3]
+iqebacdispnotsignedfirstm108h[47]
+iqebacdispnotsignedfirstm108h[44]
+iqebacdispnotsignedfirstm108h[34]
+iqebacdispnotsignedfirstm108h[31]
+iqebacdispnotsignedfirstm108h[5]
+iqebacdispnotsignedfirstm108h[17]
+iqebacdispnotsignedfirstm108h[20]
+iqebacdispnotsignedfirstaftcallm108h[22]
+iqebacdispnotsignedfirstaftcallm108h[18]
+iqebacdispnotsignedfirstaftcallm108h[15]
+iqebacdispnotsignedfirstm108h[4]
+iqebacdispnotsignedfirstaftcallm108h[13]
+iqebacdispnotsignedfirstaftcallm108h[2]
+iqebacdispnotsignedfirstaftcallm108h[1]
+iqebacdispnotsignedfirstm108h[18]
+iqebacdispnotsignedfirstm108h[15]
+iqebacdispnotsignedfirstm108h[9]
+flbrlocvecm110h_3_[2]
+flbrlocvecm110h_2_[3]
+iqebacdispnotsignedfirstm108h[8]
+iqebacdispnotsignedfirstm108h[2]
+iqebacdispnotsignedfirstm108h[0]
+lsdstartmitem110h[3]
+iqebacdispnotsignedfirstaftcallm108h[39]
+iqebacdispnotsignedfirstaftcallm108h[31]
+iqebacdispnotsignedfirstaftcallm108h[21]
+lsdstartdsbm110h[19]
+lsdenddsbm110h[3]
+iqebacdispnotsignedfirstaftcallm108h[10]
+iqebacdispnotsignedfirstaftcallm108h[8]
+iqebacdispnotsignedfirstaftcallm108h[53]
+iqebacdispnotsignedfirstaftcallm108h[49]
+iqebacdispnotsignedfirstaftcallm108h[45]
+iqebacdispnotsignedfirstaftcallm108h[44]
+iqebacdispnotsignedfirstaftcallm108h[40]
+iqebacdispnotsignedfirstm108h[30]
+iqebacdispnotsignedfirstm108h[32]
+iqebacdispnotsignedfirstm108h[26]
+iqebacdispnotsignedfirstm108h[27]
+lsdstartdsbm110h[7]
+lsdstartdsbm110h[13]
+iqebacdispnotsignedfirstm108h[55]
+iqebacdispnotsignedfirstm108h[53]
+iqebacdispnotsignedfirstm108h[49]
+dspfappfirstuop2m110h
+iqebacdispnotsignedfirstm108h[46]
+iqebacdispnotsignedfirstm108h[40]
+iqebacdispnotsignedfirstm108h[39]
+lsdenddsbm110h[9]
+li_xidm169h[0]
+dspfpreappbroffsetfullm111h_1_[5]
+dspfpreappciscorlilocm111h_3_[3]
+flbrlocvecm110h_5_[4]
+dspfpreappciscorlilocm111h_2_[1]
+dsforcejeclrsetm186h[5]
+par_msid_dft/usc_msid/i_ult_parctl/i_fscan_byprst_b/i_ctech_dynrst_holdmux_i_core_ctech_lib_clk_mux_2to1_ctech_lib_clk_mux_2to1_dcszo/S
+flbrlocvecm110h_2_[1]
+baendplus1firstuncondaftcallm108h[3]
+iqebacdispnotsignedfirstaftcallm108h[35]
+iqebacdispnotsignedfirstaftcallm108h[29]
+li_setm169h[1]
+iqebacdispnotsignedfirstaftcallm108h[52]
+par_msid_dft/usc_msid/i_ult_parctl/i_fscan_byplatrst_b/i_ctech_byprst_mux_i_core_ctech_lib_clk_mux_2to1_ctech_lib_clk_mux_2to1_dcszo/S
+lsdendmitem110h[4]
+iqebacdispnotsignedfirstm108h[25]
+iqebacdispnotsignedfirstm108h[35]
+flbrlocvecm110h_1_[2]
+msid2robsmcsnprspmnn3h_0__1__robid_wrap
+dsforcejeclranyuopm186h
+iqebacdispnotsignedfirstm108h[51]
+iqebacdispnotsignedfirstaftcallm108h[11]
+lsdstartdsbm110h[5]
+lsdstartdsbm110h[8]
+lsdstartdsbm110h[18]
+iqebacdispnotsignedfirstm108h[54]
+iqebacdispnotsignedfirstaftcallm108h[9]
+iqebacdispnotsignedfirstm108h[41]
+iqebacdispnotsignedfirstm108h[42]
+dspfpreappbrtypefullprem111h[3]
+dspfpreappciscorlilocm111h_1_[4]
+dspfpreappciscorlilocm111h_0_[0]
+dspfpreappciscorlilocm111h_0_[1]
+dspfpreappciscorlilocm111h_2_[0]
+dspfpreappciscorlilocm111h_2_[2]
+dspfpreappciscorlilocm111h_2_[3]
+lsdstartdsbm110h[4]
+dspfpreappciscorlilocm111h_0_[2]
+li_xidm169h[7]
+li_xidm169h[5]
+dspfpreappciscorlilocm111h_3_[4]
+lvpinvalidationsetmnn2h[0]
+dspfpreappciscorlilocm111h_0_[3]
+li_xidm169h[9]
+dspfpreappciscorlilocm111h_1_[2]
+dsforcejeclrsetm186h[0]
+dsforcejeclrsetm186h[2]
+iqebacdispnotsignedfirstaftcallm108h[34]
+iqebacdispnotsignedfirstaftcallm108h[32]
+lsdstartmitem110h[1]
+lsdstartmitem110h[4]
+lvpinvalidationsetmnn2h[1]
+lvpinvalidationsetmnn2h[4]
+iqebacdispnotsignedfirstaftcallm108h[0]
+iqebacdispnotsignedfirstm108h[48]
+core_rf_bisr_chain_clk__FEEDTHRU_1
+iqebacdispnotsignedfirstm108h[23]
+iqebacdispnotsignedfirstm108h[19]
+lvpinvalidationenmnn2h
+iqebacdispnotsignedfirstm108h[6]
+iqebacdispnotsignedfirstm108h[16]
+iqebacdispnotsignedfirstaftcallm108h[17]
+iqebacdispnotsignedfirstaftcallm108h[16]
+feemptybefull4pmonmnn1h
+lsdstartmitem110h[6]
+lsdstartmitem110h[8]
+iqclearfem107h
+ifwrapdatavalidm107h[0]
+lsdstartdsbm110h[11]
+dspfpreappbroffsetfullm111h_0_[5]
+dspfpreappbroffsetfullm111h_0_[4]
+flbrlocvecm110h_1_[0]
+flbrlocvecm110h_0_[4]
+iqebacdispnotsignedfirstm108h[7]
+iqebacdispnotsignedfirstm108h[3]
+flbrlocvecm110h_4_[0]
+flbrlocvecm110h_4_[1]
+dspfpreappbroffsetfullm111h_4_[5]
+dspfpreappbroffsetfullm111h_4_[2]
+iqebacdispnotsignedfirstaftcallm108h[38]
+iqebacdispnotsignedfirstaftcallm108h[36]
+lsdstartdsbm110h[15]
+lsdstartdsbm110h[16]
+iqebacdispnotsignedfirstaftcallm108h[6]
+iqebacdispnotsignedfirstaftcallm108h[3]
+dspfpreappbroffsetfullm111h_1_[2]
+iqebacdispnotsignedfirstaftcallm108h[48]
+iqebacdispnotsignedfirstaftcallm108h[47]
+dspfpreappbroffsetfullm111h_1_[0]
+iqebacdispnotsignedfirstm108h[29]
+lvpclkenparfem167h
+iqebacdispnotsignedfirstm108h[28]
+dsfbfetchlineendm110h
+iqebacdispnotsignedfirstm108h[45]
+iqebacdispnotsignedfirstm108h[43]
+li_xidm169h[6]
+idfstackctlm200h_11_[1]
+dspfpreappciscorlilocm111h_3_[1]
+lsdstartdsbm110h[6]
+lsdenddsbm110h[11]
+idfstackctlm200h_5_[0]
+li_xidm169h[1]
+li_xidm169h[3]
+flbrlocvecm110h_3_[3]
+dspfpreappciscorlilocm111h_0_[4]
+dsforcejeclrsetm186h[1]
+dspfpreappbroffsetfullm111h_5_[2]
+iqebacdispnotsignedfirstaftcallm108h[33]
+lsdstartmitem110h[2]
+dspfpreappbroffsetfullm111h_2_[3]
+idqarrayinitdonepulse4femnnnh
+flbrlocvecm110h_0_[1]
+idfstackctlm200h_10_[0]
+idfstackctlm200h_10_[1]
+idfstackctlm200h_5_[1]
+idfstackctlm200h_11_[0]
+lsdstartmitem110h[9]
+lsdstartmitem110h[10]
+lsdendmitem110h[9]
+lsdendmitem110h[11]
+idfstackctlm200h_8_[1]
+idfstackctlm200h_7_[0]
+lsdenddsbm110h[13]
+lsdstartmitem110h[7]
+iqebacdispnotsignedfirstaftcallm108h[4]
+flbrlocvecm110h_0_[2]
+idfstackctlm200h_4_[1]
+lsdstartdsbm110h[9]
+lsdstartdsbm110h[12]
+idfstackctlm200h_8_[0]
+idfstackctlm200h_9_[1]
+idfstackctlm200h_6_[0]
+lsdenddsbm110h[2]
+lsdenddsbm110h[10]
+idfstackctlm200h_7_[1]
+dspfpreappbrtypefullprem111h[15]
+dspfpreappbroffsetfullm111h_5_[3]
+lvpinvalidationwaymnn2h[2]
+dspfpreappbroffsetfullm111h_2_[4]
+dspfpreappbroffsetfullm111h_1_[1]
+msid_tfb_tfb_out[0]
+dspfpreappbroffsetfullm111h_4_[3]
+dspfpreappbroffsetfullm111h_3_[1]
+dspfpreappbroffsetfullm111h_2_[0]
+ilginclusionerrorm107h
+dsforcejeclrsetm186h[3]
+lvpinvalidationsetmnn2h[5]
+lsdenddsbm110h[12]
+lsdenddsbm110h[19]
+lsdstartdsbm110h[14]
+lsdenddsbm110h[0]
+dspfpreappbroffsetfullm111h_0_[3]
+dspfpreappbroffsetfullm111h_0_[2]
+lsdendmitem110h[5]
+flbrlocvecm110h_1_[4]
+flbrlocvecm110h_0_[0]
+dspfpreappbroffsetfullm111h_3_[3]
+dspfpreappbroffsetfullm111h_3_[0]
+dspfpreappbroffsetfullm111h_4_[0]
+flbrlocvecm110h_5_[0]
+flbrlocvecm110h_5_[1]
+dspfpreappbroffsetfullm111h_5_[5]
+dspfpreappbroffsetfullm111h_5_[0]
+dspfpreappbroffsetfullm111h_1_[4]
+dspfpreappbroffsetfullm111h_1_[3]
+dspfpreappbroffsetfullm111h_2_[2]
+dspfpreappbroffsetfullm111h_2_[1]
+lsdendmitem110h[3]
+li_xidm169h[8]
+li_xidm169h[4]
+ilgbpqoffset0m107h[1]
+msid2robsmcsnprspmnn3h_0__0__robid_wrap
+flbrlocvecm110h_2_[4]
+idfstackctlm200h_4_[0]
+lsdstartdsbm110h[10]
+iqebacdispnotsignedfirstm108h[24]
+dspfpreappbrtypefullprem111h[17]
+lsdendmitem110h[8]
+idfstackctlm200h_6_[1]
+flbrlocvecm110h_5_[3]
+lsdenddsbm110h[7]
+dspfpreappbrtypefullprem111h[16]
+li_waym169h[2]
+dspfpreappbroffsetfullm111h_4_[1]
+lsdenddsbm110h[16]
+lsdendmitem110h[0]
+dspfpreappbroffsetfullm111h_2_[5]
+idfstackctlm200h_9_[0]
+dspfpreappbroffsetfullm111h_3_[2]
+li_waym169h[1]
+lvpinvalidationwaymnn2h[1]
+lsdstartmitem110h[11]
+lsdendmitem110h[2]
+lsdstartmitem110h[5]
+iqebacdispnotsignedfirstm108h[12]
+iqebacdispnotsignedfirstm108h[14]
+iqebacdispnotsignedfirstaftcallm108h[51]
+msid2robsmcsnprspmnn3h_1__0__robid_wrap
+iqebacdispnotsignedfirstaftcallm108h[12]
+iqebacdispnotsignedfirstaftcallm108h[25]
+iqebacdispnotsignedfirstaftcallm108h[50]
+lsdenddsbm110h[17]
+lsdenddsbm110h[18]
+ilgbpqoffset0m107h[0]
+iqebacdispnotsignedfirstaftcallm108h[19]
+iqebacdispnotsignedfirstaftcallm108h[23]
+iqebacdispnotsignedfirstm108h[1]
+iqebacdispnotsignedfirstm108h[13]
+dspfpreappbrtypefullprem111h[7]
+dspfpreappbrtypefullprem111h[11]
+dspfpreappciscorlilocm111h_1_[1]
+dspfpreappciscorlilocm111h_1_[3]
+dspfpreappciscorlilocm111h_2_[4]
+dspfpreappciscorlilocm111h_1_[0]
+lsdstartdsbm110h[0]
+dspfpreappbrtypefullprem111h[14]
+li_xidm169h[11]
+flbrlocvecm110h_3_[0]
+flbrlocvecm110h_0_[3]
+iqcallzerodisp2brqm108h
+bacyclevalidm106h
+msid2robsmcsnprspmnn3h_1__1__robid_wrap
+dspfpreappciscorlilocm111h_3_[2]
+dsforcejeclrsetm186h[4]
+par_msid_dft/usc_msid/i_ult_parctl/i_fscan_byprst_b/i_ctech_byprst_mux_i_core_ctech_lib_clk_mux_2to1_ctech_lib_clk_mux_2to1_dcszo/S
+iqebacdispnotsignedfirstaftcallm108h[26]
+lsdendmitem110h[7]
+lvpinvalidationwaymnn2h[0]
+dspfpreappciscorlilocm111h_3_[0]
+flbrlocvecm110h_3_[1]
+par_msid_dft/usc_msid/i_ult_parctl/i_fscan_byplatrst_b/i_ctech_dynrst_holdmux_i_core_ctech_lib_clk_mux_2to1_ctech_lib_clk_mux_2to1_dcszo/S
+iqebacdispnotsignedfirstaftcallm108h[46]
+iqebacdispnotsignedfirstaftcallm108h[37]
+dsbqt_ismsm107h
+iqebacdispnotsignedfirstaftcallm108h[28]
+iqebacdispnotsignedfirstaftcallm108h[24]
+lsdendmitem110h[1]
+lsdenddsbm110h[6]
+iqebacdispnotsignedfirstm108h[38]
+iqebacdispnotsignedfirstm108h[36]
+iqebacdispnotsignedfirstaftcallm108h[7]
+iqebacdispnotsignedfirstaftcallm108h[5]
+lsdenddsbm110h[8]
+flbrlocvecm110h_4_[2]
+lsdenddsbm110h[5]
+iqebacdispnotsignedfirstm108h[11]
+iqebacdispnotsignedfirstm108h[10]
+flbrlocvecm110h_4_[4]
+lsdenddsbm110h[14]
+lsdenddsbm110h[4]
+dspfpreappbroffsetfullm111h_5_[4]
+dspfpreappbroffsetfullm111h_5_[1]
+iqebacdispnotsignedfirstaftcallm108h[20]
+iqebacdispnotsignedfirstaftcallm108h[14]
+dspfpreappbroffsetfullm111h_0_[1]
+dspfpreappbroffsetfullm111h_0_[0]
+iqebacdispnotsignedfirstaftcallm108h[54]
+dspfpreappbroffsetfullm111h_3_[5]
+dspfpreappbroffsetfullm111h_3_[4]
+iqebacdispnotsignedfirstaftcallm108h[43]
+iqebacdispnotsignedfirstaftcallm108h[42]
+iqebacdispnotsignedfirstm108h[33]
+iqebacdispnotsignedfirstm108h[37]
+li_setm169h[4]
+li_setm169h[0]
+iqebacdispnotsignedfirstm108h[21]
+iqebacdispnotsignedfirstm108h[22]
+lsdstartdsbm110h[1]
+lsdstartdsbm110h[2]
+iqebacdispnotsignedfirstm108h[52]
+iqebacdispnotsignedfirstm108h[50]
+li_waym169h[0]
+li_xidm169h[12]
+flbrlocvecm110h_2_[2]
+iqebacdispnotsignedfirstaftcallm108h[55]
+baendplus1firstuncondaftcallm108h[2]
+iqebacdispnotsignedfirstaftcallm108h[30]
+flbrlocvecm110h_5_[2]
+lsdendmitem110h[6]
+flbrlocvecm110h_2_[0]
+flbrlocvecm110h_1_[3]
+lsdenddsbm110h[1]
+baendplus1firstuncondaftcallm108h[5]
+iqebacdispnotsignedfirstaftcallm108h[41]
+lvpinvalidationsetmnn2h[3]
+iqebacdispnotsignedfirstaftcallm108h[27]
+li_setm169h[5]
+lvpinvalidationsetmnn2h[2]
+dspfpreappbroffsetfullm111h_4_[4]
+
+=== NO INPUT DELAY PORTS (450) ===
+RAWhisperPsvRstrEvM203H_0___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_1___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_2___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_3___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_4___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_5___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_6___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_7___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_8___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_9___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_10___FEEDTHRU_0
+RAWhisperPsvRstrEvM203H_11___FEEDTHRU_0
+badbitnqm106h
+bptakenm124h[0]
+bptakenm124h[1]
+bpurepairbiqm807h_0__biqid_cnt[0]
+bpurepairbiqm807h_0__biqid_cnt[1]
+bpurepairbiqm807h_0__biqid_cnt[2]
+bpurepairbiqm807h_0__biqid_cnt[3]
+bpurepairbiqm807h_0__biqid_cnt[4]
+bpurepairbiqm807h_0__biqid_cnt[5]
+bpurepairbiqm807h_0__biqid_cnt[6]
+bpurepairbiqm807h_0__biqid_cnt[7]
+bpurepairselm807h
+cslimitcm107h[0]
+cslimitcm107h[1]
+cslimitcm107h[2]
+cslimitcm107h[3]
+cslimitcm107h[4]
+cslimitcm107h[5]
+cslimitcm107h[6]
+cslimitcm107h[7]
+cslimitcm107h[8]
+cslimitcm107h[9]
+cslimitcm107h[10]
+cslimitcm107h[11]
+cslimitcm107h[12]
+cslimitcm107h[13]
+cslimitcm107h[14]
+cslimitcm107h[15]
+cslimitcm107h[16]
+cslimitcm107h[17]
+cslimitcm107h[18]
+cslimitcm107h[19]
+cslimitcm107h[20]
+cslimitcm107h[21]
+cslimitcm107h[22]
+cslimitcm107h[23]
+cslimitcm107h[24]
+cslimitcm107h[25]
+cslimitcm107h[26]
+cslimitcm107h[27]
+cslimitcm107h[28]
+cslimitcm107h[29]
+cslimitcm107h[30]
+cslimitcm107h[31]
+cslimitm105h[0]
+cslimitm105h[1]
+cslimitm105h[2]
+cslimitm105h[3]
+cslimitm105h[4]
+dfx_sfe_vsense_ooo_vec__FEEDTHRU_0
+disfaketakenmnnnh
+disindirbaclearcrsforiqm307h
+dsbentrypointmaskm124h_0_[0]
+dsbentrypointmaskm124h_0_[1]
+dsbentrypointmaskm124h_0_[2]
+dsbentrypointmaskm124h_0_[3]
+dsbentrypointmaskm124h_0_[4]
+dsbentrypointmaskm124h_0_[5]
+dsbentrypointmaskm124h_0_[6]
+dsbentrypointmaskm124h_0_[7]
+dsbentrypointmaskm124h_0_[8]
+dsbentrypointmaskm124h_0_[9]
+dsbentrypointmaskm124h_0_[10]
+dsbentrypointmaskm124h_0_[11]
+dsbentrypointmaskm124h_0_[12]
+dsbentrypointmaskm124h_0_[13]
+dsbentrypointmaskm124h_0_[14]
+dsbentrypointmaskm124h_0_[15]
+dsbentrypointmaskm124h_0_[16]
+dsbentrypointmaskm124h_0_[17]
+dsbentrypointmaskm124h_0_[18]
+dsbentrypointmaskm124h_0_[19]
+dsbentrypointmaskm124h_0_[20]
+dsbentrypointmaskm124h_0_[21]
+dsbentrypointmaskm124h_1_[0]
+dsbentrypointmaskm124h_1_[1]
+dsbentrypointmaskm124h_1_[2]
+dsbentrypointmaskm124h_1_[3]
+dsbentrypointmaskm124h_1_[4]
+dsbentrypointmaskm124h_1_[5]
+dsbentrypointmaskm124h_1_[6]
+dsbentrypointmaskm124h_1_[7]
+dsbentrypointmaskm124h_1_[8]
+dsbentrypointmaskm124h_1_[9]
+dsbentrypointmaskm124h_1_[10]
+dsbentrypointmaskm124h_1_[11]
+dsbentrypointmaskm124h_1_[12]
+dsbentrypointmaskm124h_1_[13]
+dsbentrypointmaskm124h_1_[14]
+dsbentrypointmaskm124h_1_[15]
+dsbentrypointmaskm124h_1_[16]
+dsbentrypointmaskm124h_1_[17]
+dsbentrypointmaskm124h_1_[18]
+dsbentrypointmaskm124h_1_[19]
+dsbentrypointmaskm124h_1_[20]
+dsbentrypointmaskm124h_1_[21]
+dsbexitpointmaskm124h_0_[0]
+dsbexitpointmaskm124h_0_[1]
+dsbexitpointmaskm124h_0_[2]
+dsbexitpointmaskm124h_0_[3]
+dsbexitpointmaskm124h_0_[4]
+dsbexitpointmaskm124h_0_[5]
+dsbexitpointmaskm124h_0_[6]
+dsbexitpointmaskm124h_0_[7]
+dsbexitpointmaskm124h_0_[8]
+dsbexitpointmaskm124h_0_[9]
+dsbexitpointmaskm124h_0_[10]
+dsbexitpointmaskm124h_0_[11]
+dsbexitpointmaskm124h_0_[12]
+dsbexitpointmaskm124h_0_[13]
+dsbexitpointmaskm124h_0_[14]
+dsbexitpointmaskm124h_0_[15]
+dsbexitpointmaskm124h_0_[16]
+dsbexitpointmaskm124h_0_[17]
+dsbexitpointmaskm124h_0_[18]
+dsbexitpointmaskm124h_0_[19]
+dsbexitpointmaskm124h_0_[20]
+dsbexitpointmaskm124h_0_[21]
+dsbexitpointmaskm124h_1_[0]
+dsbexitpointmaskm124h_1_[1]
+dsbexitpointmaskm124h_1_[2]
+dsbexitpointmaskm124h_1_[3]
+dsbexitpointmaskm124h_1_[4]
+dsbexitpointmaskm124h_1_[5]
+dsbexitpointmaskm124h_1_[6]
+dsbexitpointmaskm124h_1_[7]
+dsbexitpointmaskm124h_1_[8]
+dsbexitpointmaskm124h_1_[9]
+dsbexitpointmaskm124h_1_[10]
+dsbexitpointmaskm124h_1_[11]
+dsbexitpointmaskm124h_1_[12]
+dsbexitpointmaskm124h_1_[13]
+dsbexitpointmaskm124h_1_[14]
+dsbexitpointmaskm124h_1_[15]
+dsbexitpointmaskm124h_1_[16]
+dsbexitpointmaskm124h_1_[17]
+dsbexitpointmaskm124h_1_[18]
+dsbexitpointmaskm124h_1_[19]
+dsbexitpointmaskm124h_1_[20]
+dsbexitpointmaskm124h_1_[21]
+dsbfespec123bypenm123h
+dsbfespec124bypenm123h[0]
+dsbfespec124bypenm123h[1]
+dsbsortslowdatafaketakenqm124h[0]
+dsbsortslowdatafaketakenqm124h[1]
+dsbsortslowdatanofaketakenqm125h_0__ftlastbrinline
+dsbsortslowdatanofaketakenqm125h_0__lastinline
+dsbsortslowdatanofaketakenqm125h_1__ftlastbrinline
+dsbsortslowdatanofaketakenqm125h_1__lastinline
+dsclkspechitm123h[0]
+dsclkspechitm123h[1]
+dscyclevalidqforhitm124h[0]
+dscyclevalidqforhitm124h[1]
+dsdishamoldm307h
+dsdishamyngm307h
+dseomuopvecm124h_0_[0]
+dseomuopvecm124h_0_[1]
+dseomuopvecm124h_0_[2]
+dseomuopvecm124h_0_[3]
+dseomuopvecm124h_0_[4]
+dseomuopvecm124h_0_[5]
+dseomuopvecm124h_0_[6]
+dseomuopvecm124h_0_[7]
+dseomuopvecm124h_0_[8]
+dseomuopvecm124h_0_[9]
+dseomuopvecm124h_0_[10]
+dseomuopvecm124h_0_[11]
+dseomuopvecm124h_0_[12]
+dseomuopvecm124h_0_[13]
+dseomuopvecm124h_0_[14]
+dseomuopvecm124h_0_[15]
+dseomuopvecm124h_0_[16]
+dseomuopvecm124h_0_[17]
+dseomuopvecm124h_0_[18]
+dseomuopvecm124h_0_[19]
+dseomuopvecm124h_0_[20]
+dseomuopvecm124h_0_[21]
+dseomuopvecm124h_1_[0]
+dseomuopvecm124h_1_[1]
+dseomuopvecm124h_1_[2]
+dseomuopvecm124h_1_[3]
+dseomuopvecm124h_1_[4]
+dseomuopvecm124h_1_[5]
+dseomuopvecm124h_1_[6]
+dseomuopvecm124h_1_[7]
+dseomuopvecm124h_1_[8]
+dseomuopvecm124h_1_[9]
+dseomuopvecm124h_1_[10]
+dseomuopvecm124h_1_[11]
+dseomuopvecm124h_1_[12]
+dseomuopvecm124h_1_[13]
+dseomuopvecm124h_1_[14]
+dseomuopvecm124h_1_[15]
+dseomuopvecm124h_1_[16]
+dseomuopvecm124h_1_[17]
+dseomuopvecm124h_1_[18]
+dseomuopvecm124h_1_[19]
+dseomuopvecm124h_1_[20]
+dseomuopvecm124h_1_[21]
+dsupredbitm125h_0_[0]
+dsupredbitm125h_0_[1]
+dsupredbitm125h_1_[0]
+dsupredbitm125h_1_[1]
+ifbliphighorsm106h[0]
+ifbliphighorsm106h[1]
+ifbliptoiqsm106h_0_[0]
+ifbliptoiqsm106h_0_[1]
+ifbliptoiqsm106h_0_[2]
+ifbliptoiqsm106h_0_[3]
+ifbliptoiqsm106h_0_[4]
+ifbliptoiqsm106h_0_[5]
+ifbliptoiqsm106h_0_[6]
+ifbliptoiqsm106h_0_[7]
+ifbliptoiqsm106h_0_[8]
+ifbliptoiqsm106h_0_[9]
+ifbliptoiqsm106h_0_[10]
+ifbliptoiqsm106h_0_[11]
+ifbliptoiqsm106h_0_[12]
+ifbliptoiqsm106h_0_[13]
+ifbliptoiqsm106h_0_[14]
+ifbliptoiqsm106h_0_[15]
+ifbliptoiqsm106h_0_[16]
+ifbliptoiqsm106h_0_[17]
+ifbliptoiqsm106h_0_[18]
+ifbliptoiqsm106h_0_[19]
+ifbliptoiqsm106h_0_[20]
+ifbliptoiqsm106h_0_[21]
+ifbliptoiqsm106h_0_[22]
+ifbliptoiqsm106h_0_[23]
+ifbliptoiqsm106h_0_[24]
+ifbliptoiqsm106h_0_[25]
+ifbliptoiqsm106h_0_[26]
+ifbliptoiqsm106h_0_[27]
+ifbliptoiqsm106h_0_[28]
+ifbliptoiqsm106h_0_[29]
+ifbliptoiqsm106h_0_[30]
+ifbliptoiqsm106h_0_[31]
+ifbliptoiqsm106h_0_[32]
+ifbliptoiqsm106h_0_[33]
+ifbliptoiqsm106h_0_[34]
+ifbliptoiqsm106h_0_[35]
+ifbliptoiqsm106h_0_[36]
+ifbliptoiqsm106h_0_[37]
+ifbliptoiqsm106h_0_[38]
+ifbliptoiqsm106h_0_[39]
+ifbliptoiqsm106h_0_[40]
+ifbliptoiqsm106h_0_[41]
+ifbliptoiqsm106h_0_[42]
+ifbliptoiqsm106h_0_[43]
+ifbliptoiqsm106h_0_[44]
+ifbliptoiqsm106h_0_[45]
+ifbliptoiqsm106h_0_[46]
+ifbliptoiqsm106h_0_[47]
+ifbliptoiqsm106h_0_[48]
+ifbliptoiqsm106h_0_[49]
+ifbliptoiqsm106h_0_[50]
+ifbliptoiqsm106h_0_[51]
+ifbliptoiqsm106h_0_[52]
+ifbliptoiqsm106h_0_[53]
+ifbliptoiqsm106h_0_[54]
+ifbliptoiqsm106h_0_[55]
+ifbliptoiqsm106h_0_[56]
+ifbliptoiqsm106h_1_[0]
+ifbliptoiqsm106h_1_[1]
+ifbliptoiqsm106h_1_[2]
+ifbliptoiqsm106h_1_[3]
+ifbliptoiqsm106h_1_[4]
+ifbliptoiqsm106h_1_[5]
+ifbliptoiqsm106h_1_[6]
+ifbliptoiqsm106h_1_[7]
+ifbliptoiqsm106h_1_[8]
+ifbliptoiqsm106h_1_[9]
+ifbliptoiqsm106h_1_[10]
+ifbliptoiqsm106h_1_[11]
+ifbliptoiqsm106h_1_[12]
+ifbliptoiqsm106h_1_[13]
+ifbliptoiqsm106h_1_[14]
+ifbliptoiqsm106h_1_[15]
+ifbliptoiqsm106h_1_[16]
+ifbliptoiqsm106h_1_[17]
+ifbliptoiqsm106h_1_[18]
+ifbliptoiqsm106h_1_[19]
+ifbliptoiqsm106h_1_[20]
+ifbliptoiqsm106h_1_[21]
+ifbliptoiqsm106h_1_[22]
+ifbliptoiqsm106h_1_[23]
+ifbliptoiqsm106h_1_[24]
+ifbliptoiqsm106h_1_[25]
+ifbliptoiqsm106h_1_[26]
+ifbliptoiqsm106h_1_[27]
+ifbliptoiqsm106h_1_[28]
+ifbliptoiqsm106h_1_[29]
+ifbliptoiqsm106h_1_[30]
+ifbliptoiqsm106h_1_[31]
+ifbliptoiqsm106h_1_[32]
+ifbliptoiqsm106h_1_[33]
+ifbliptoiqsm106h_1_[34]
+ifbliptoiqsm106h_1_[35]
+ifbliptoiqsm106h_1_[36]
+ifbliptoiqsm106h_1_[37]
+ifbliptoiqsm106h_1_[38]
+ifbliptoiqsm106h_1_[39]
+ifbliptoiqsm106h_1_[40]
+ifbliptoiqsm106h_1_[41]
+ifbliptoiqsm106h_1_[42]
+ifbliptoiqsm106h_1_[43]
+ifbliptoiqsm106h_1_[44]
+ifbliptoiqsm106h_1_[45]
+ifbliptoiqsm106h_1_[46]
+ifbliptoiqsm106h_1_[47]
+ifbliptoiqsm106h_1_[48]
+ifbliptoiqsm106h_1_[49]
+ifbliptoiqsm106h_1_[50]
+ifbliptoiqsm106h_1_[51]
+ifbliptoiqsm106h_1_[52]
+ifbliptoiqsm106h_1_[53]
+ifbliptoiqsm106h_1_[54]
+ifbliptoiqsm106h_1_[55]
+ifbliptoiqsm106h_1_[56]
+ifclipm105h_0_[5]
+ifclipm105h_0_[6]
+ifclipm105h_0_[7]
+ifclipm105h_0_[8]
+ifclipm105h_0_[9]
+ifclipm105h_0_[10]
+ifclipm105h_0_[11]
+ifclipm105h_0_[12]
+ifclipm105h_0_[13]
+ifclipm105h_0_[14]
+ifclipm105h_0_[15]
+ifclipm105h_0_[16]
+ifclipm105h_0_[17]
+ifclipm105h_0_[18]
+ifclipm105h_0_[19]
+ifclipm105h_0_[20]
+ifclipm105h_0_[21]
+ifclipm105h_0_[22]
+ifclipm105h_0_[23]
+ifclipm105h_0_[24]
+ifclipm105h_0_[25]
+ifclipm105h_0_[26]
+ifclipm105h_0_[27]
+ifclipm105h_0_[28]
+ifclipm105h_0_[29]
+ifclipm105h_0_[30]
+ifclipm105h_0_[31]
+ifclipm105h_0_[32]
+ifclipm105h_0_[33]
+ifclipm105h_0_[34]
+ifclipm105h_0_[35]
+ifclipm105h_0_[36]
+ifclipm105h_0_[37]
+ifclipm105h_0_[38]
+ifclipm105h_0_[39]
+ifclipm105h_0_[40]
+ifclipm105h_0_[41]
+ifclipm105h_0_[42]
+ifclipm105h_0_[43]
+ifclipm105h_0_[44]
+ifclipm105h_0_[45]
+ifclipm105h_0_[46]
+ifclipm105h_0_[47]
+ifclipm105h_0_[48]
+ifclipm105h_0_[49]
+ifclipm105h_0_[50]
+ifclipm105h_0_[51]
+ifclipm105h_0_[52]
+ifclipm105h_0_[53]
+ifclipm105h_0_[54]
+ifclipm105h_0_[55]
+ifclipm105h_0_[56]
+ifclipm105h_1_[5]
+ifclipm105h_1_[6]
+ifclipm105h_1_[7]
+ifclipm105h_1_[8]
+ifclipm105h_1_[9]
+ifclipm105h_1_[10]
+ifclipm105h_1_[11]
+ifclipm105h_1_[12]
+ifclipm105h_1_[13]
+ifclipm105h_1_[14]
+ifclipm105h_1_[15]
+ifclipm105h_1_[16]
+ifclipm105h_1_[17]
+ifclipm105h_1_[18]
+ifclipm105h_1_[19]
+ifclipm105h_1_[20]
+ifclipm105h_1_[21]
+ifclipm105h_1_[22]
+ifclipm105h_1_[23]
+ifclipm105h_1_[24]
+ifclipm105h_1_[25]
+ifclipm105h_1_[26]
+ifclipm105h_1_[27]
+ifclipm105h_1_[28]
+ifclipm105h_1_[29]
+ifclipm105h_1_[30]
+ifclipm105h_1_[31]
+ifclipm105h_1_[32]
+ifclipm105h_1_[33]
+ifclipm105h_1_[34]
+ifclipm105h_1_[35]
+ifclipm105h_1_[36]
+ifclipm105h_1_[37]
+ifclipm105h_1_[38]
+ifclipm105h_1_[39]
+ifclipm105h_1_[40]
+ifclipm105h_1_[41]
+ifclipm105h_1_[42]
+ifclipm105h_1_[43]
+ifclipm105h_1_[44]
+ifclipm105h_1_[45]
+ifclipm105h_1_[46]
+ifclipm105h_1_[47]
+ifclipm105h_1_[48]
+ifclipm105h_1_[49]
+ifclipm105h_1_[50]
+ifclipm105h_1_[51]
+ifclipm105h_1_[52]
+ifclipm105h_1_[53]
+ifclipm105h_1_[54]
+ifclipm105h_1_[55]
+ifclipm105h_1_[56]
+ififuwaym106h
+ifmcachesteerselm102h
+ifqhassmthtoreadm102h
+ilglsdstartm103h[1]
+modemnn1h[0]
+modemnn1h[1]
+newcycm102h[1]
+newcycwithmcacheqm102h[0]
+newcycwithmcacheqm102h[1]
+probemodem101h
+scan_channel_repeater_msid_via_fe_uscan_edt_update
+scan_channel_repeater_msid_via_fe_uscan_mode
+scan_channel_repeater_msid_via_fe_uscan_state
+startstg1stallperbufm102h[0]
+ucmemtypsm103h[1]
+
+================================================================================
+Generated: 2026-02-18
+================================================================================

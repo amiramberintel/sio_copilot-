@@ -1,0 +1,52 @@
+DFX (Design For Testability/Debug/Reliability) - Overview
+=========================================================
+Last updated: 2026-03-30
+
+WHAT IS DFX?
+  DFX = Design For X (testability, debug, reliability)
+  Non-functional logic added to the chip for post-manufacturing testing and debug.
+  Every partition has DFX logic (BIST engines, scan chains, JTAG access, etc.)
+  DFX paths are separate from functional (mclk) timing -- reported in *only_dfx.xml.filtered files.
+
+DFX vs FUNCTIONAL TIMING:
+  - Functional paths:  *timing_summary.xml  (mclk domain, what the chip does normally)
+  - DFX paths:         *only_dfx.xml.filtered  (test/debug clocks, manufacturing test)
+  - IFC paths:         par_<name>_ifc.rpt  (inter-partition functional paths)
+  - DFX paths are usually slower clocks but have LONG logic chains (scan, JTAG, etc.)
+
+WHO OWNS DFX?
+  - DFX team (Maha) owns the DFX status report and AR tracking
+  - BE (backend) owns fixing internal DFX paths
+  - Partition owners fix external DFX paths crossing their boundaries
+  - DFX2PO tickets track open issues (flop bounds, bisr mux insertion, etc.)
+
+DFX REPORT STRUCTURE (from Maha's weekly status):
+  For each corner (func.max_high, func.min_low, func.max_low+CT):
+    1. External paths table (TST vs REF, per partition, bucket counts + WNS/TNS)
+    2. Internal paths table (same format)
+    3. Domain breakdown table (WNS/TNS per clock domain per partition)
+    4. Comments and action items
+
+  Models used:
+    TST = new model (test), e.g. FCT26WW14A
+    REF = previous model (reference), e.g. FCT26WW13A
+    These are dcm_RELEASE models (not dcm_daily)
+
+KEY CORNERS FOR DFX:
+  func.max_high  = Setup timing (fast process, high voltage, 85C)
+  func.min_low   = Hold timing  (slow process, low voltage, 85C)
+  func.max_low+CT = Setup with common-timing OCV (pessimistic)
+
+COMMANDS TO VIEW DFX PATHS:
+  # All external DFX paths:
+  m $MODEL/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/reports/*only_dfx.x* | grep -v ifc_ | grep external | m
+
+  # All internal DFX paths:
+  m $MODEL/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/reports/*only_dfx.x* | grep -v ifc_ | grep internal | m
+
+  # Filter by domain:
+  ... | grep "bisr.*ijtag" | m
+  ... | grep "scanclk" | m
+
+  # DFX XML files location:
+  $MODEL/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/reports/*only_dfx.xml.filtered

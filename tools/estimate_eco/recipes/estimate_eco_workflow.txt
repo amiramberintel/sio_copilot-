@@ -1,0 +1,48 @@
+================================================================================
+  RECIPE: estimate_eco Full Path Analysis Workflow
+================================================================================
+
+GOAL: Determine real ECO potential for a failing path.
+
+STEP 1: GET THE WORST PATH
+  sg soc -c "pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_meu/<signal> -max_paths 1 -pba_mode path'"
+
+STEP 2: IDENTIFY CELLS ON THE PATH
+  Look at the timing path report. Note each cell instance.
+  Focus on: combinational logic cells (not FFs).
+
+STEP 3: ESTIMATE SIZE_CELL FOR EACH CELL
+  For each cell on the path:
+    estimate_eco -type size_cell -sort_by slack -nosplit [get_cells <cell>]
+
+  Record:
+    Cell           Current_Ref    Best_Alternative    Delta
+    <inst>         <ref_name>     <alt or *current*>  <ps>
+
+STEP 4: ESTIMATE INSERT_BUFFER ON LONG NETS
+  Look for high-delay nets in the path report.
+  For each long net pin:
+    estimate_eco -type insert_buffer -sort_by slack -nosplit \
+      -lib_cells {BUFFD4BWP156HNPPN3P48CPDULVT BUFFD8BWP156HNPPN3P48CPDULVT} \
+      [get_pins <pin>]
+
+STEP 5: CHECK DONT_USE
+  Cross-check suggested cells against illegal_cells_dont_use.txt:
+    - No ELVT cells
+    - No LVTLL cells
+    - No PNNP OD flavor cells
+
+STEP 6: SUM VERIFIED DELTAS
+  Total ECO potential = sum of individual cell deltas.
+  Be conservative: use 70% of estimated total for planning.
+
+STEP 7: REPORT
+  Use skills/reporting/templates/eco_impact.txt template.
+  Include: which cells to change, estimated gain, risk.
+
+DECISION:
+  Total potential > 10ps  -> worth pursuing ECO
+  Total potential 5-10ps  -> marginal, discuss with PO
+  Total potential < 5ps   -> ECO not viable, try clock push/spec
+================================================================================

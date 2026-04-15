@@ -1,0 +1,165 @@
+=======================================================================================================================================================
+  PTECO RUN ANALYSIS — core_client_260322_ww12
+  Database: FCT26WW13A  |  External only  |  Physical aware
+  Source: /nfs/site/disks/ayarokh_wa/pteco/runs/GFC/core_client_260322_ww12
+  Date: 2026-03-24
+=======================================================================================================================================================
+
+  ┌──────────────────────────────────────────────────────────────────────────────┐
+  │  PTECO CONFIGURATION                                                        │
+  │                                                                             │
+  │  Scenarios:                                                                 │
+  │    MAX: func.max_high  func.max_nom  func.max_med  func.max_low  (T_85)    │
+  │    MIN: func.min_low  func.min_nom  fresh.min_fast  fresh.min_hi_lo_hi      │
+  │         fresh.min_fast_cold                                                 │
+  │                                                                             │
+  │  Margins:  Hold +5ps (fix to +5)  |  Setup +5ps (no degrade below +5)      │
+  │  Mode:     External only  |  Physical aware  |  Per clock status            │
+  └──────────────────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────────────────────────────────────────────────────────────┐
+  │  OVERALL RESULTS                                                            │
+  │                                                                             │
+  │  Buffers inserted: 40,014   Cells touched: 16,598                           │
+  │  Duration: 19h 41min                                                        │
+  │                                                                             │
+  │                   Baseline         Post-ECO          Improvement             │
+  │  Min TNS:    -1,977,596 ps      -46,121 ps          97.7%                   │
+  │  Min WNS:      -3,184 ps        -3,154 ps           0.9% (unfixable)        │
+  │  Min Paths:      43,914             885              98.0%                   │
+  │  Max TNS:    -9,172,256 ps    -7,593,705 ps         17.2%                   │
+  │  Max WNS:      -1,530 ps        -1,530 ps           0.0% (untouched)        │
+  └──────────────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  1. PER CLOCK DOMAIN — UNFIXED HOLD PATHS
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  StartClock        EndClock         Count   HoldWNS      TNS
+  ───────────────── ──────────────── ────── ──────── ──────────
+  mclk_fe           mclk_msid          338    -25.6    -2,467
+  mclk_pmh          mclk_meu           257    -12.5      -695
+  ijtag_tck         ijtag_tck          101  -3,154.5   -24,345
+  mclk_pmh          mclk_mlc            76    -48.9      -764
+  mclk_exe          mclk_meu            52    -51.1    -1,286
+  ssh_ijtag         ssh_ijtag           31  -2,973.4   -12,048
+  mclk_meu          mclk_pmh            12     -6.1       -30
+  mclk_ooo_int      mclk_meu            12     -6.8       -38
+  mclk_msid         mclk_ooo_int         2     -9.9       -20
+  mclk_meu          mclk_exe             2    -18.9       -38
+  TOTAL                                883
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  2. mclk_pmh → mclk_meu BREAKDOWN (257 unfixed)
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Category                  Count   HoldWNS     TNS
+  ────────────────────────  ─────  ────────  ────────
+  dcl1data → dcibbankd       191    -12.5     -497     ← DCU L1 databank (OUR FOCUS)
+  dcu_l1 → dcu_l0            52    -10.9     -159     ← dc2mlrpt paths
+  dcl1control → dcu_l0       12     -6.2      -35
+  pmh → dtlb                  2     -1.1       -4
+  TOTAL                      257    -12.5     -695
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  3. DCU L1 DATABANK — PER DATABANK DETAIL (191 unfixed)
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Databank       Count  HoldWNS    TNS     SetupWNS  Setup<+5  Setup<0
+  ────────────── ────── ──────── ──────── ──────── ──────── ────────
+  dcibbankd00       36    -5.4     -91.3     -6.4       ←        ←
+  dcibbankd01       20    -5.0     -51.0      4.5
+  dcibbankd10       18    -5.4     -42.8      6.9
+  dcibbankd11       17    -5.2     -41.5      3.6
+  dcibbankd20       12    -5.5     -28.0      6.1
+  dcibbankd21       52   -12.5    -139.6      1.5
+  dcibbankd30       18    -5.5     -47.3     -8.4       ←        ←
+  dcibbankd31       18    -6.5     -55.4      3.7
+  TOTAL            191   -12.5    -496.8     -8.4
+
+  Setup status: 47/191 paths have setup < +5ps (PTECO no-degrade constraint)
+                22/191 paths have setup < 0ps (already failing setup)
+
+  ⚠ This confirms our WW13_3 finding: these are TRUE min/max window violations
+    PTECO cannot fix them because:
+    - T (tight margin): data path ECO would break setup
+    - S (sizing can't fix): upsizing doesn't help min/max window
+    - L (area limit): physical density prevents buffer insertion
+    - O (no open site): no room for new cells
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  4. UNFIXABLE REASONS BREAKDOWN (1060 entries for dcl1data paths)
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Reason Combo                    Count   Meaning
+  ─────────────────────────────── ────── ──────────────────────────────────────────
+  L,O,S,T,W                        269   Area+NoSite+Size+Tight+DRC (fully blocked)
+  L,T,W                            156   Area+Tight+DRC
+  L,S,T,W                           93   Area+Size+Tight+DRC
+  L,S,T                             92   Area+Size+Tight
+  L,O,S,T                           92   Area+NoSite+Size+Tight
+  L,T                                87   Area+Tight
+  L,O,T,W                           76   Area+NoSite+Tight+DRC
+  T                                  60   Tight margin only
+  T,W                                60   Tight+DRC
+  L,O,T                             35   Area+NoSite+Tight
+  (empty)                            32   Unknown/other
+  S,T,W                              8   Size+Tight+DRC
+
+  Key: "T" (timing margin too tight) appears in 93% of entries
+       "S" (sizing can't fix) appears in 52% → min/max window confirmed
+       "L" (area limit) appears in 85% → PMH density blocker
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  5. COMPARISON: PTECO (WW13A) vs DAILY STA (WW13B)
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+                          Daily STA (WW13B)          PTECO (WW13A)
+  ─────────────────────── ───────────────────── ─────────────────────
+  Database                FCT26WW13B daily      FCT26WW13A release
+  Scenario                func.min_low only     9 MIN scenarios
+  Analysis                PBA report_timing     PBA ECO (physical)
+  Hold margin             none                  +5ps fix target
+  DCU L1 paths            403                   191 (unfixed)
+  Hold WNS                -84.4ps               -12.5ps
+  Hold TNS                (large)               -497ps
+
+  ⚠ CRITICAL: WNS difference (-84 vs -12.5) explained by:
+    1. Different database version (WW13B daily vs WW13A release)
+    2. PTECO may have partially fixed some paths (229→191 across iterations)
+    3. Different clock latencies between versions
+    4. PTECO uses multi-scenario — worst may come from different corner
+
+  ⚠ COMMON FINDING: Both confirm min/max window — clock fix required
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  6. OTHER CLOCK DOMAINS OF INTEREST
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  mclk_fe → mclk_msid:    338 unfixed, WNS=-25.6ps  (largest count)
+  mclk_pmh → mclk_mlc:     76 unfixed, WNS=-48.9ps  (significant WNS)
+  mclk_exe → mclk_meu:     52 unfixed, WNS=-51.1ps  (significant WNS)
+  mclk_meu → mclk_pmh:     12 unfixed, WNS=-6.1ps   (reverse direction)
+  mclk_ooo_int → mclk_meu: 12 unfixed, WNS=-6.8ps
+
+  ijtag_tck and ssh_ijtag: Very large WNS (-3154, -2973) but DFT paths (scan)
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  7. KEY TAKEAWAYS
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1. PTECO fixed 97.7% of hold TNS, 98% of failing paths — but 885 remain unfixed
+  2. mclk_pmh→mclk_meu has 257 unfixed (191 = DCU L1 databank, our focus)
+  3. DCU L1 databank: hold WNS=-12.5ps, 22 paths also fail setup (min/max window)
+  4. Unfixable reasons dominated by T(tight)+L(area)+S(size) → clock fix needed
+  5. PTECO CONFIRMS our daily STA conclusion: data ECO cannot fix these paths
+  6. mclk_fe→mclk_msid (338) and mclk_pmh→mclk_mlc (76) also need attention
+  7. mclk_exe→mclk_meu (52) has WNS=-51ps — another cross-partition issue
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+  SOURCE FILES
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+  Unfixed report: core_client.path_margin_hold.eco.rpt (38,357 lines)
+  Unfixable CSV:  core_client.unfixable_hold_eco_tim.csv (8,336 lines)
+  XMLs:           /nfs/site/disks/ayarokh_wa/pteco/runs/GFC/core_client_260322_ww12/.../reports/
+  Extracted TSVs: pteco_pmh_meu_unfixed.tsv (257), pteco_meu_pmh_unfixed.tsv (12)

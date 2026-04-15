@@ -1,0 +1,122 @@
+#!/usr/bin/tcsh -f
+
+unset clock
+unset pin 
+unset value
+unset direction
+
+set line = "$argv"
+set clock_fall = ""
+set level_sensitive = ""
+set add_delay = "-add_delay"
+set ci = "n"
+
+while ($#argv > 0)
+    set var = "$1"
+    switch ($var)
+    case -pin:
+        shift
+        set pin="$1"
+        shift
+    breaksw
+    case -clock:
+        shift
+        set clock="$1"
+        shift
+    breaksw
+    case -value:
+        shift
+        set value="$1"
+        shift
+    breaksw
+    case -direction:
+        shift
+	if ($1 == "I") then
+    		set direction = "set_input_delay"
+	else 
+     	     if ($1 == "O" ) then
+		set direction = "set_output_delay"
+	     else 
+		echo "[E] Unknown Direction I/O - at ....Add_IO_delay $line"
+		exit 1
+	     endif
+	endif
+        shift
+    breaksw
+    case -file:
+    	shift
+    	set outfile = "$1"
+	shift
+    breaksw
+    case -force:
+    	set ci = y 
+	shift
+    breaksw 
+    case -clock_fall:
+        set clock_fall="-clock_fall"
+        shift
+    breaksw
+    case -remove_add_delay:
+        set add_delay = ""
+        shift
+    breaksw
+    case -level_sensitive:
+        set level_sensitive="-level_sensitive"
+        shift
+    breaksw
+    case -help:
+    echo "  \
+Flags :    \
+    case -pin:  <Pin name> \
+    case -clock: <clock>\
+    case -value: <Input / output delay value>\
+    case -direction: <I/O>\
+    case -file: <the IO File> \
+    case -force: <to apply changes to the file>\
+    case -clock_fall: <add clock fall flag > \
+    case -remove_add_delay: <remove the add delay flag>\
+    case -level_sensitive: <add level sensitive flag>\
+Usage :  \
+    	source ~/LNC_script/IO_manip/Add_IO_delay -pin <pin_name> -clock <clk> -value <value> -direction <I\/O> -file <file> -clock_fall -level_sensitive -remove_add_delay \
+    	if the port name have [] pls add \\ before "
+
+        exit 1
+        break
+    default:
+        echo "unknown switch - at .... Add_IO_delay $line"
+        exit 1
+        break
+    endsw
+end
+
+if ( $?clock && $?pin && $?value && $?outfile && $?direction ) then
+    if ( ! -e $outfile) then 
+    	echo "[E] File $outfile does not Exists"
+	exit 1
+    endif
+
+    set file_base_name = `basename $outfile`_${USER}_`date +%H_%M_%S_%N`
+
+    echo "#Manually IO edit" > /tmp/${file_base_name}_temp_IO 
+    echo "if {[sizeof_collection [get_ports -quiet ${pin} ]] && [sizeof_collection [get_clocks -quiet ${clock} ] ] } {" >> /tmp/${file_base_name}_temp_IO
+    echo "    ${direction} $clock_fall $level_sensitive -network_latency_included -source_latency_included ${add_delay} -clock ${clock} ${value} [get_ports  -quiet {$pin} ]" >> /tmp/${file_base_name}_temp_IO
+    if ( $direction == "set_output_delay") then 
+	echo "    set_load -max 10 [get_ports -quiet {${pin}} ]"  >> /tmp/${file_base_name}_temp_IO
+	echo "    set_load -min 10 [get_ports -quiet {${pin}} ]"  >> /tmp/${file_base_name}_temp_IO 
+    endif
+    echo "}" >> /tmp/${file_base_name}_temp_IO
+    echo "\[I] .....Add_IO_delay $line \nNew lines:" 
+    cat  /tmp/${file_base_name}_temp_IO
+    if ( $ci != "y" ) then
+	echo "OverRide The File? y/n" 
+	set ans = "$<"
+	if ($ans == "y" ) then
+		cat /tmp/${file_base_name}_temp_IO >> $outfile  
+    	endif
+    else
+    cat /tmp/${file_base_name}_temp_IO >> $outfile
+    endif
+    rm -f /tmp/${file_base_name}_temp_IO
+else 
+    echo "[E] Something went Wrong - at ...Add_IO_delay $line"
+endif

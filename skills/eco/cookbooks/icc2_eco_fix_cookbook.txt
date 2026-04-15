@@ -1,0 +1,454 @@
+================================================================================
+  ICC2 ECO FIX COOKBOOK — From PT Analysis to Partition Owner TCL
+  Create validated fix scripts for partition owners to run in ICC2
+  Author: sunger | Date: 2026-03-12 (WW11.4)
+  Companion to: cross_partition_debug_with_pt_client_cookbook.txt
+                path_analysis_procedure.txt
+================================================================================
+
+  *** THIS COOKBOOK COVERS ***
+  Taking a pt_client timing analysis and turning it into a validated
+  ICC2 ECO TCL script that a partition owner (PO) can source and run
+  stage by stage.
+
+  PREREQUISITES:
+    - You already ran the pt_client analysis (see pt_client_cookbook.txt)
+    - You have the worst path report saved (report_timing output)
+    - You identified cells to size and nets to buffer
+    - You know the PO's $USER (for file exchange)
+
+================================================================================
+  THE FLOW — 5 STAGES
+================================================================================
+
+    ┌──────────────────────────────────────────────────────────────┐
+    │  1. ANALYZE     (you + pt_client)                           │
+    │     └→ Identify fixes: sizing, buffering, clock             │
+    │                                                             │
+    │  2. CREATE TCL  (you)                                       │
+    │     └→ Write fix script with verify step + staged fixes     │
+    │                                                             │
+    │  3. VERIFY      (PO runs stage0_verify.tcl in ICC2)         │
+    │     └→ Results saved to $USER_wa/ — you read and adjust     │
+    │                                                             │
+    │  4. APPLY       (PO runs fixes stage by stage)              │
+    │     └→ Check timing after EACH fix, hold check after clk    │
+    │                                                             │
+    │  5. CLOSE       (PO runs route_eco, check_legality)         │
+    │     └→ Save block, report results                           │
+    └──────────────────────────────────────────────────────────────┘
+
+================================================================================
+  STAGE 1: ANALYZE WITH pt_client
+================================================================================
+
+  Reference cookbooks for deep detail:
+    pt_client_cookbook.txt                          — pt_client setup & basics
+    cross_partition_debug_with_pt_client_cookbook.txt — full debug flow
+    path_analysis_procedure.txt                     — step-by-step analysis
+
+  MODEL shorthand (always use latest):
+    set MODEL latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical
+    set PREFIX "sg soc -c"
+
+  ────────────────────────────────────────────────────────────────
+  1A) GET WORST PATH REPORT
+  ────────────────────────────────────────────────────────────────
+
+  $PREFIX "pt_client.pl -m $MODEL \
+    -c 'report_timing -through icore0/*<signal>* \
+      -max_paths 1 -nosplit -input_pins -nets -transition_time \
+      -capacitance -physical -include_hierarchical_pins \
+      -significant_digits 1 \
+      -attributes points.object.max_slack' \
+    -o <signal>_worst_path.rpt"
+
+  FROM THE REPORT, NOTE FOR EACH CELL:
+    - Full hierarchical name (after icore0/par_xxx/)
+    - Lib cell (in parentheses, e.g., INR2D1BWP156HPNPN3P48CPDULVT)
+    - Cell delay (Incr column)
+    - Output cap and fanout
+    - Input transition time
+    - Location coordinates (DBU — divide by 1000 for μm)
+
+  ────────────────────────────────────────────────────────────────
+  1B) CHECK FANOUT — how many paths does this signal affect?
+  ────────────────────────────────────────────────────────────────
+
+  # Count ports matching the signal pattern (bus width):
+  $PREFIX "pt_client.pl -m $MODEL \
+    -c 'sizeof_collection [get_pins icore0/<partition>/<signal>* -hierarchical]'"
+
+  # Check source FF fanout (how many sinks from startpoint):
+  $PREFIX "pt_client.pl -m $MODEL \
+    -c 'sizeof_collection [all_fanout -from icore0/<partition>/<source_FF>/Q -flat -endpoints_only]'"
+
+  # Check endpoint FF fanin:
+  $PREFIX "pt_client.pl -m $MODEL \
+    -c 'sizeof_collection [all_fanin -to icore0/<partition>/<endpoint_FF>/D -flat -startpoints_only]'"
+
+  ────────────────────────────────────────────────────────────────
+  1C) BUS SCAN — get timing for all bits at once
+  ────────────────────────────────────────────────────────────────
+
+  $PREFIX "pt_client.pl -m $MODEL \
+    -c 'report_timing -through icore0/<partition>/<signal>* \
+      -max_paths 50 -nosplit -significant_digits 1' \
+    -o <signal>_bus_timing.rpt"
+
+  → Extract WNS per bit to find distribution (worst/median/best)
+
+  ────────────────────────────────────────────────────────────────
+  1D) NEIGHBOR STAGE SLACK — retiming opportunity check
+  ────────────────────────────────────────────────────────────────
+
+  # Stage BEFORE (what feeds the source FF):
+  $PREFIX "pt_client.pl -m $MODEL \
+    -c 'report_timing -to icore0/<partition>/<source_FF>/D \
+      -max_paths 5 -nosplit -significant_digits 1 \
+      -attributes points.object.max_slack'"
+
+  # Stage AFTER (where endpoint FF drives):
+  $PREFIX "pt_client.pl -m $MODEL \
+    -c 'report_timing -from icore0/<partition>/<endpoint_FF>/CP \
+      -max_paths 5 -nosplit -significant_digits 1 \
+      -attributes points.object.max_slack'"
+
+  → POSITIVE slack = margin exists → retiming candidate
+  → NEGATIVE slack = no margin → retiming NOT possible
+
+  # For MBIT FFs, also check other D-pin inputs:
+  $PREFIX "pt_client.pl -m $MODEL \
+    -c 'report_timing -to icore0/<partition>/<MBIT_FF>/D2 \
+      -max_paths 1 -nosplit -significant_digits 1 \
+      -include_hierarchical_pins -nets -physical -input_pins \
+      -capacitance -transition_time'"
+
+  ────────────────────────────────────────────────────────────────
+  1E) HSD & ILLEGAL CELLS CHECK (offline, no pt_client needed)
+  ────────────────────────────────────────────────────────────────
+
+  # Search HSD databases for existing fixes:
+  HSD_RTL4BE=/nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be
+  HSD_SIO2PO=/nfs/site/disks/baselibr_wa/tmp/gfc.sio2po.rtl4be
+
+  grep -i "<signal_base>" $HSD_RTL4BE $HSD_SIO2PO
+
+  # Check if shorter name matches (fuzzy):
+  grep -i "<signal_short>" $HSD_RTL4BE $HSD_SIO2PO
+
+  # Check illegal cells — verify ALL target cells before fixing:
+  ILLEGAL=$WA/project/GFCN2CLIENTA0/illegal.txt
+  grep "<target_lib_cell>" $ILLEGAL
+  # No output = LEGAL ✓  |  Output = ILLEGAL ❌ pick different cell
+
+  ────────────────────────────────────────────────────────────────
+  1F) IDENTIFY FIX CANDIDATES
+  ────────────────────────────────────────────────────────────────
+
+  From the worst path report, flag these:
+    - Cells with D1 or D2 drive strength      → size up (D4/D6/D8)
+    - Wires > 10ps delay                       → insert buffer at midpoint
+    - High fanout (>4) nets                    → size driver or add buffer
+    - High input transition (>15ps)            → upstream driver too weak
+    - ALL cells already ULVT?                  → no Vt swap, focus on sizing
+    - Clock cells (ZCTSINV, CKND, CKBUF)      → size up for launch latency
+    - SR2BFY buffers in data path              → intentionally slow, flag
+
+  FOR EACH FIX, RECORD:
+    - Cell full path (without icore0/par_xxx/ — PO is inside block)
+    - Current lib cell → target lib cell
+    - For buffers: net name, driver/sink coords, midpoint for placement
+    - Expected gain estimate
+    - Risk level (LOW/MED/HIGH)
+    - Unique suffix number (last digits, e.g., *4757944)
+    - ⚠ Verify target cell NOT on illegal list!
+
+================================================================================
+  STAGE 2: CREATE THE TCL — TEMPLATE
+================================================================================
+
+  File naming convention — ALWAYS CREATE ALL 4 OUTPUT FILES:
+
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  OUTPUT FILES (all with baked-in ANSI colors, no yellow→use magenta):  │
+    │                                                                        │
+    │  1. <signal>_eco_report.txt       FULL analysis report with colors     │
+    │     Contains ALL of:                                                   │
+    │     - Path summary (start/end FF, locations in μm, distance)           │
+    │     - Physical distance breakdown (per-segment table)                  │
+    │     - Timing breakdown (clock skew, data delay, budget, gap)           │
+    │     - Fanout analysis (source/endpoint, bus width, WNS distribution)   │
+    │     - HSD history (RTL4BE, SIO2PO, TIP status, wont_do reasons)       │
+    │     - Risk category (NO SOLUTION / HIGH RISK / MEDIUM RISK / NO RISK) │
+    │     - Fix candidates table (all fixes with gain, risk, cell names)     │
+    │     - WHY section (explain each fix — what's wrong with current cell)  │
+    │     - Illegal cells check (verify all targets are legal)               │
+    │     - Closure analysis (combined gain vs gap, % bits that close)       │
+    │     - Recommended action plan (priorities, what to file)               │
+    │     - Reference files list                                             │
+    │                                                                        │
+    │  2. <signal>_eco_report_short.txt SHORT summary with colors            │
+    │     Contains ONLY:                                                     │
+    │     - One-line signal info (crossing, WNS, paths)                      │
+    │     - Fix table (fix ID, cell, change, gain, risk)                     │
+    │     - Total estimated gain                                             │
+    │     - Closure verdict (closes? needs more?)                            │
+    │     - File list for POs                                                │
+    │                                                                        │
+    │  3. <signal>_<src_partition>_fixes.tcl   TCL for source partition PO   │
+    │  4. <signal>_<dst_partition>_fixes.tcl   TCL for dest partition PO     │
+    │     (if fixes exist on both sides of crossing)                         │
+    │                                                                        │
+    │  Color scheme (baked-in ANSI, viewable with cat):                      │
+    │     RED    — worst delays, violations, gaps                            │
+    │     MAGENTA — warnings, MSID-side fixes, MED risk                      │
+    │     CYAN   — info headers, FE-side fixes, section titles               │
+    │     GREEN  — legal checks ✓, LOW risk, improvements                   │
+    │     DIM    — separators, metadata, workflow steps                      │
+    │     WHITE BOLD — section headers, table headers, totals               │
+    └─────────────────────────────────────────────────────────────────────────┘
+
+  ────────────────────────────────────────────────────────────────
+  TCL STRUCTURE (always follow this order):
+  ────────────────────────────────────────────────────────────────
+
+  SECTION 1: HEADER COMMENT
+    - Signal name, partition, WNS, path count
+    - Model tag (FCT26WWxxY)
+    - Date generated
+    - Table of all fixes with expected gain and risk
+    - Total expected WNS improvement
+
+  SECTION 2: STEP 0 — VERIFY (non-destructive)
+    - Search each cell by unique suffix: get_cells -hier *<suffix>
+    - Print full_name and ref_name for each found cell
+    - Print MISS for not found
+    - Search each net: get_nets -hier *<net_name>
+    - Count errors — warn if any missing
+    - ⚠️ CHECK ILLEGAL CELLS — verify target cell is NOT on banned list
+
+  SECTION 3: DATA PATH FIXES (ordered by risk: LOW first)
+    - Fix 1: Cell sizing (size_cell) — always safest
+      ⚠️ Before size_cell: check target cell against illegal list!
+    - Fix 2: Wire buffering (insert_buffer + move_objects)
+    - Fix 3: Port/fanout fixes — higher risk, do last
+
+  SECTION 4: CLOCK TREE FIXES
+    - CTS inverter/buffer sizing
+    - Always check hold after clock changes!
+
+  SECTION 5: POST-FIX VERIFICATION
+    - report_timing setup (max) on the fixed path
+    - report_timing hold (min) — MUST stay positive
+    - Check all bits (reg_*/Q)
+    - Check fanout impact (if sizing a shared driver)
+
+  ────────────────────────────────────────────────────────────────
+  KEY ICC2 COMMANDS REFERENCE:
+  ────────────────────────────────────────────────────────────────
+
+  CELL SIZING:
+    size_cell <cell_path> <target_lib_cell>
+    # Example:
+    size_cell exe_vec/shuf/shufp7v0c/sishufld/compile_initial_opto_ctmTdsLR_1_4757944 \
+              INR2D4BWP156HPNPN3P48CPDULVT
+    # Notes:
+    #   - Same footprint, just different drive strength
+    #   - No net changes, no placement changes
+    #   - LOWEST risk — do these first
+
+  BUFFER INSERTION:
+    set buf [insert_buffer <sink_pin> <buffer_lib_cell>]
+    move_objects $buf -to {x y}
+    # Example:
+    set buf [insert_buffer \
+        [get_pins exe_vec/shuf/.../some_cell/A1] \
+        BUFFD12BWP156HNPPN3P48CPDULVT]
+    move_objects $buf -to {480000 1171500}
+    # Notes:
+    #   - insert_buffer on a SINK PIN — buffer goes between wire and sink
+    #   - Original net stays on driver side
+    #   - New net auto-created from buffer output to sink
+    #   - YOU DO NOT NEED TO RENAME NETS — ICC2 handles it
+    #   - Place at midpoint of the long wire
+    #   - After insert: route_eco to route the new connections
+
+  TIMING CHECK (inside ICC2, requires update_timing first):
+    report_timing -through [get_pins <cell>/Q] -max_paths 1
+    report_timing -through [get_pins <cell>/Q] -delay_type min  ;# hold check
+
+  LEGALITY & ROUTING:
+    check_legality    ;# verify placement is legal after moves
+    route_eco         ;# route new buffer connections
+
+  ────────────────────────────────────────────────────────────────
+  LIB CELL NAMING CONVENTION (BWP156 family):
+  ────────────────────────────────────────────────────────────────
+
+    <function><drive>BWP156<track><process><Vt>
+    
+    Function: INR2, BUFFD, INVD, CKND, AN2D, MUXAO4...
+    Drive:    D1, D2, D4, D6, D8, D10, D12, D16, D20
+    Track:    HPNPN3P48, HNPPN3P48  (HP = high perf, HN = high density)
+    Process:  CPD
+    Vt:       ULVT, ULVTLL, LVT, SVT (fast → slow)
+
+    To size up: change only the D<number>
+    Example:   INR2D1BWP156HPNPN3P48CPDULVT
+                    ^^
+               INR2D4BWP156HPNPN3P48CPDULVT  ← just D1 → D4
+
+    To check available sizes in ICC2:
+      get_lib_cells */INR2*BWP156HPNPN3P48CPDULVT
+
+  ────────────────────────────────────────────────────────────────
+  ⚠️ ILLEGAL CELLS — MUST CHECK BEFORE ANY size_cell OR insert_buffer
+  ────────────────────────────────────────────────────────────────
+
+  The project has ~15,746 banned cells listed in:
+    $wa/project/GFCN2CLIENTA0/illegal.txt
+
+  Before swapping or inserting a cell, verify the TARGET cell is legal:
+    grep "<target_cell_name>" $wa/project/GFCN2CLIENTA0/illegal.txt
+
+  Main banned categories:
+    CPDELVT    → elvt_svt_cells_are_not_allowed
+    CPDLVTLL   → lvtll_cells_are_not_allowed
+    PNNP OD    → pnnp_OD_flavor_is_not_allowed (check HNPPN vs HPNPN)
+    ECO cells  → eco_cells_are_not_allowed
+
+  Safe choices:  CPDULVT with HPNPN track (e.g., BUFFD4BWP156HPNPN3P48CPDULVT)
+  Risky:         Anything with ELVT, LVTLL, or HNPPN track — always verify first
+
+================================================================================
+  STAGE 3: stage0_verify.tcl — THE REUSABLE VERIFIER
+================================================================================
+
+  Location: ww11_4/stage0_verify.tcl (or copy to any week's dir)
+
+  WHAT IT DOES:
+    - Searches for cells by unique numeric suffix (works regardless
+      of hierarchy prefix differences between PT and ICC2)
+    - Reports full_name and ref_name for each found cell
+    - Reports MISS for anything not found
+    - Saves results to /nfs/site/disks/$USER_wa/stage0_verify_results/
+
+  HOW TO ADD CELLS FOR A NEW SIGNAL:
+    Just add lines to the cell list in the script:
+      "MyTag_description"    "*<unique_suffix>"
+    The suffix is the last number in the cell name — always unique.
+
+  FILE EXCHANGE FLOW:
+    1. PO runs:  source <path>/stage0_verify.tcl
+    2. Results → /nfs/site/disks/<PO_user>_wa/stage0_verify_results/
+    3. You copy: cp /nfs/site/disks/<PO_user>_wa/stage0_verify_results/*.txt .
+    4. Tell copilot: "read the verify results"
+    5. Copilot updates the fix TCL with correct paths
+
+  WHAT TO DO WITH MISS RESULTS:
+    If a cell shows MISS:
+    a) Cell renamed → PO searches manually: get_cells -hier *<partial_name>*
+    b) Cell optimized away → that fix is void, skip it
+    c) Hierarchy changed → PO gives correct prefix, update TCL
+    d) Wrong model → PO confirms which model they're on
+
+================================================================================
+  STAGE 4: APPLY FIXES — PO WORKFLOW
+================================================================================
+
+  *** GOLDEN RULE: ONE FIX AT A TIME, CHECK TIMING AFTER EACH ***
+
+  The PO should NOT source the entire TCL at once. Instead:
+
+  RECOMMENDED ORDER:
+    1. Cell sizing (size_cell)    — safest, do all of these first
+    2. Wire buffering             — low risk but changes topology
+    3. Port/fanout fixes          — medium risk, affects other paths
+    4. Clock tree sizing          — low risk but MUST check hold
+
+  AFTER EACH FIX:
+    update_timing
+    report_timing -through <fixed_path_pin> -max_paths 1
+
+  AFTER CLOCK FIXES:
+    report_timing -through <clock_pin> -delay_type min -max_paths 5
+    # Hold slack MUST stay positive!
+    # If hold violated → revert: size_cell <cell> <original_lib_cell>
+
+  IF A FIX MAKES THINGS WORSE:
+    # Revert sizing:
+    size_cell <cell> <original_lib_cell>
+    # Revert buffer (remove it):
+    remove_buffer <buffer_cell_name>
+
+================================================================================
+  STAGE 5: CLOSE — FINALIZE ECO
+================================================================================
+
+  After all fixes applied and timing verified:
+
+    1. check_legality              ;# placement legal?
+    2. route_eco                   ;# route new connections
+    3. update_timing               ;# re-check with routing
+    4. report_timing -max_paths 10 ;# final timing snapshot
+    5. save_block                  ;# save the work!
+
+  REPORT BACK:
+    PO should save final timing report:
+      report_timing -through *<signal>* -max_paths 5 \
+        > /nfs/site/disks/$USER_wa/stage0_verify_results/<signal>_post_fix.rpt
+
+================================================================================
+  EXAMPLE: FULL WORKFLOW (shuf2vfpp7v0wbm804h)
+================================================================================
+
+  FILES CREATED:
+    ww12_2/brdispnotsigned_eco_report.txt       ← FULL analysis (colored)
+    ww12_2/brdispnotsigned_eco_report_short.txt  ← SHORT summary (colored)
+    ww12_2/brdispnotsigned_msid_fixes.tcl        ← ICC2 ECO for par_msid PO
+    ww12_2/brdispnotsigned_fe_fixes.tcl          ← ICC2 ECO for par_fe PO
+    ww12_2/brdispnotsigned_worst_path.rpt        ← pt_client raw output
+
+  SIGNAL DETAILS:
+    Signal:   brdispnotsignedm107h  |  par_msid → par_fe
+    WNS:      -66ps (worst bit [40])  |  130,240 paths
+    Category: HIGH RISK (SIO2PO wont_do, 130K paths, no active fix)
+
+  FIX SUMMARY:
+    par_msid (4 fixes): 3× size_cell + 1× insert_buffer  → 10-16ps
+    par_fe   (2 fixes): 1× size_cell + 1× insert_buffer  →  8-12ps
+    Total ECO:                                            → 18-28ps
+    + push_clock SIO2PO:                                  → 15-25ps
+    Combined:                                             → 33-53ps vs -66ps gap
+
+  TIMELINE:
+    1. Analyzed path with pt_client          → identified 6 fix candidates
+    2. Verified all target cells against illegal.txt → all LEGAL
+    3. Created _msid_fixes.tcl + _fe_fixes.tcl (staged, with verify + revert)
+    4. Created _eco_report.txt (full) + _eco_report_short.txt (summary)
+    5. PO runs STEP 0 verify in each TCL    → confirms cell paths
+    6. PO applies fixes one at a time       → check timing after each
+    7. PO reports final WNS
+
+================================================================================
+  CHECKLIST — BEFORE SENDING TCL TO PO
+================================================================================
+
+    □ Signal name and partition correct in header?
+    □ Model tag matches what PO is working on?
+    □ All cell paths use PARTITION-RELATIVE paths (no icore0/par_xxx/)?
+    □ Lib cell names have correct track (HPNPN vs HNPPN) and Vt?
+    □ All target cells verified against illegal.txt? (grep target illegal.txt)
+    □ Buffer insertion uses SINK PIN (not net)?
+    □ Buffer placement coordinates are between driver and sink?
+    □ Coordinates shown in μm (DBU / 1000)?
+    □ Hold check included after clock fixes?
+    □ Revert instructions included for each fix?
+    □ _eco_report.txt has FULL analysis (path + timing + fanout + HSD + fixes)?
+    □ _eco_report_short.txt has fix table + closure verdict?
+    □ Both reports have baked-in ANSI colors (no yellow, magenta instead)?
+    □ TCL files split per partition (_msid_fixes.tcl, _fe_fixes.tcl)?
+    □ stage0_verify.tcl updated with all cells for this signal?
+
+================================================================================

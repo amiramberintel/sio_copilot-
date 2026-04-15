@@ -1,0 +1,172 @@
+================================================================================
+  TIP + TIMING FIX ANALYSIS — DsbqWrDataBundleValidsM124H
+  Cross-Partition Timing Path (par_fe → par_msid)
+================================================================================
+  Design    : core_client (GFC Client A0)
+  Daily WA  : FCT26WW10A_dcm_daily-CLK039.bu_postcts
+  Config    : n2p_htall_conf4
+  Corner    : func.max_high.T_85.typical
+  Date      : Mar 2, 2026
+  Author    : sunger
+================================================================================
+
+
+EXECUTIVE SUMMARY
+=================
+  Signal: DsbqWrDataBundleValidsM124H[0][0:4] + [1][0:4] — 10-bit bus
+  Path:   par_fe (driver) → par_msid (receiver)
+  Slack:  -38 to -83 ps (ALL 10 bits failing)
+  Status: No TIP, No RTLFP plan
+
+  TIP alone saves ~26ps (fixes par_msid side only).
+  Full closure requires TIP + clock balance + par_fe fixes.
+
+
+PATH ANALYSIS — WORST BIT [0][0] (slack = -82.7ps)
+===================================================
+
+CLOCK SUMMARY:
+  Launch mclk_fe:    105.1 ps
+  Capture mclk_msid:  63.7 ps
+  Skew: 63.7 - 105.1 = -41.4 ps (UNFAVORABLE)
+  Uncertainty:        -12.0 ps
+  Setup time:           1.2 ps
+  Period:             186.0 ps
+  Data required:      238.9 ps
+  Data arrival:       324.6 ps
+  Slack:              -82.7 ps (VIOLATED, stat adj 3.0)
+
+
+PAR_FE SIDE: 160.6 ps  (105.1 → 265.7)
+────────────────────────────────────────
+
+  Cell                        Wire   Cell   Total  Location
+  ─────────────────────────── ─────  ─────  ─────  ────────────────
+  FF CK→Q (SDFK D2)            —    14.5   14.5   (1547,486)
+  BUFFD12                      0.1    6.7    6.8   (1548,485)
+  AOI21 D12                    4.7    4.6    9.3   (1545,432) ← 54um wire!
+  INVREPM12                    1.7    4.9    6.6   (1543,432)
+  XOR2D2                      11.7    7.5   19.2   (1492,374) ← 109um wire!
+  INR2D4                       0.0    4.5    4.5   (1492,375)
+  NDMUX21D3                    0.1    3.1    3.2   (1492,375)
+  NR2D6                        0.0    2.8    2.8   (1492,375)
+  AN2SR2D16                    2.0    6.6    8.6   (1489,376)
+  BUFFSR2BFYDHD16 ⚠SR2        3.0    5.9    8.9   (1462,372)
+  INVREPM6                    14.3    5.1   19.4   (1461,300) ← 72um wire!
+  BUFFREPM6                    1.4    6.6    8.0   (1455,301)
+  MAOI22D2                     4.7   10.3   15.0   (1456,307)
+  ND2SKRD3                     1.4    7.0    8.4   (1454,307)
+  AOAI211D2                    0.1    4.1    4.2   (1454,307)
+  ND3D3                        0.8    8.8    9.6   (1453,308)
+  OA21D8                       3.6    8.3   11.9   (1449,315)
+  → boundary pin                                   (1441,297)
+  ─────────────────────────── ─────  ─────  ─────
+  TOTAL par_fe:               49.6  111.3  160.6
+  16 gates, 294um Manhattan
+  Spec: 130ps → OVER by 30.6ps
+
+
+PAR_MSID SIDE: 58.9 ps  (265.7 → 324.6)  ← TIP TARGET
+────────────────────────────────────────────────────────
+
+  Cell                        Wire   Cell   Total  Location     Distance
+  ─────────────────────────── ─────  ─────  ─────  ──────────── ────────
+  par_msid pin                                      (1441,297)
+  BUFFSR2SKRD6 ⚠SR2          15.0    8.3   23.3   (1381,290)   60um
+  BUFFSR2BFYD10 ⚠SR2          1.4    5.0    6.4   (1375,289)    6um
+  BUFFSR2SKRD14 ⚠SR2         12.4    9.9   22.3   (1319,283)   56um
+  → FF endpoint                6.9    —      6.9   (1263,284)   56um
+  ─────────────────────────── ─────  ─────  ─────
+  TOTAL par_msid:             35.7   23.2   58.9
+  3 SR2 buffers, 178um Manhattan
+  Spec: 36ps → OVER by 22.9ps
+
+
+TIP GAIN ESTIMATION ON PAR_MSID
+===============================
+
+  CURRENT (auto-routed, lower metals, SR2 buffers):
+    Wire: 15.0 + 1.4 + 12.4 + 6.9 = 35.7ps
+    Cell:  8.3 + 5.0 +  9.9       = 23.2ps
+    TOTAL:                          58.9ps
+
+  WITH TIP (M17/M18 routing, BUF D18, pin constraint, shielding):
+    Wire: ~7  + ~5  + ~5   + ~4   = ~21ps  (upper metal 2x lower R)
+    Cell: ~6  +      + ~6         = ~12ps  (2 BUF D18, better spacing)
+    TOTAL:                         ~33ps
+
+  TIP GAIN: 58.9 - 33 = ~26ps
+  par_msid after TIP: ~33ps (within 36ps spec ✅)
+
+
+PER-BIT SLACK WITH TIP (+26ps)
+==============================
+
+  Bit      Current    With TIP    Gap remaining
+  [0][0]    -83ps      -57ps       57ps
+  [0][1]    -57ps      -31ps       31ps
+  [0][2]    -59ps      -33ps       33ps
+  [0][3]    -65ps      -39ps       39ps
+  [0][4]    -69ps      -43ps       43ps
+  [1][0]    -69ps      -43ps       43ps
+  [1][1]    -38ps      -12ps       12ps
+  [1][2]    -59ps      -33ps       33ps
+  [1][3]    -65ps      -39ps       39ps
+  [1][4]    -57ps      -31ps       31ps
+
+  TIP fixes par_msid but ALL bits still fail (par_fe is the bottleneck).
+
+
+CLOCK SKEW FINDING
+==================
+
+  Endpoint FF clock latency:   63.8ps
+  mclk_msid average latency:  91.0ps
+  Delta from average:         -27.2ps (clock PENALIZING this path)
+
+  If clock team balances to average → ~20ps gain (realistic)
+
+
+ADDITIONAL FIX TECHNIQUES NEEDED
+=================================
+
+  #  Fix                 Gain     Owner         Status
+  1. TIP on par_msid     ~26ps    TIP team      Ready to create .tp
+  2. Clock balance       ~20ps    Clock team     Escalate (FF latency 27ps below avg)
+  3. par_fe cell sizing  ~10ps    par_fe PnR     Request upsizing weak cells
+  4. FF duplication      ~15ps    RTL team       Source FF has 28+ fanout ports
+  5. Spec rebalance       ~5ps    FCT owner      Minor shift if TIP overachieves
+
+  COMBINED PROJECTION (worst bit [0][0]):
+    -83 +26(TIP) +20(clk) +10(size) +15(FFdup) +5(spec) = -7ps
+
+  COMBINED PROJECTION (best bit [1][1]):
+    -38 +26(TIP) +20(clk) = +8ps ✅ (closes with just 2 techniques)
+
+
+KEY OBSERVATIONS
+================
+
+  1. par_msid has 3 SR2 buffers (slow slew-rate) — TIP replaces them
+     with BUF D18 on M17/M18 upper metals → ~26ps gain
+
+  2. par_fe has 16 gates, 160.6ps (30ps over 130ps spec), including
+     two long wires (109um, 72um) and one SR2BFY buffer — needs PnR work
+
+  3. Clock skew is a major hidden contributor (-27ps vs average)
+
+  4. Source FF (BpPrTakenOfsetL01M124H_reg_5_DUP_30) drives 28+
+     boundary ports — already duplicated once, needs further split
+
+  5. Stage BEFORE source FF has -11ps slack (tight, no retiming backward)
+     Stage AFTER endpoint FF has margin (retiming possible but risky on MBIT)
+
+
+ACTION ITEMS
+============
+  [ ] 1. Create .tp file for TIP on par_msid side
+  [ ] 2. Escalate clock skew to clock team (endpoint FF latency 63.8 vs avg 91)
+  [ ] 3. File request to par_fe PnR for cell upsizing on critical path
+  [ ] 4. Discuss FF duplication proposal with RTL team
+  [ ] 5. Review spec rebalance with FCT spec owner
+================================================================================

@@ -1,0 +1,88 @@
+================================================================================
+                    eouMGR Command - Explanation Summary
+================================================================================
+
+COMMAND
+-------
+eouMGR --block $block --bundle fe_collateral --tag $ctag --populate --force
+
+WHAT IS eouMGR?
+---------------
+EOU Manager (End-Of-Unit Manager) - Intel's collateral management tool for 
+archiving and retrieving design collateral between local work areas and the 
+shared archive.
+
+COMMAND BREAKDOWN
+-----------------
+  Flag        Value           Description
+  ----------  --------------  ------------------------------------------------
+  --block     $block          Partition name (e.g., par_msid, par_exe, par_fe)
+  --bundle    fe_collateral   Collateral type to populate
+  --tag       $ctag           Target contour tag 
+                              (e.g., GFCN2CLIENTA0P10_CONTOUR_26WW06E)
+  --populate  -               UPLOAD local collateral to the archive
+  --force     -               Overwrite if version already exists
+
+WHAT HAPPENS WHEN EXECUTED
+--------------------------
+Step 1: Reads local collateral from:
+        $WA/runs/$block/.../release/latest/fe_collateral/
+
+Step 2: Creates new version in archive:
+        /arc/$block/fe_collateral/GFCN2CLIENTA0_SC8_VER_027/  (new version)
+
+Step 3: Updates contour symlink:
+        /arc/$block/fe_collateral/$ctag  →  GFCN2CLIENTA0_SC8_VER_027
+
+ARCHIVE LOCATION
+----------------
+/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<block>/<bundle>/<tag>/
+
+Example:
+/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_msid/fe_collateral/
+  GFCN2CLIENTA0P10_CONTOUR_26WW06E/
+
+OPPOSITE OPERATION (RETRIEVE)
+-----------------------------
+eouMGR --block $block --bundle fe_collateral --tag $ctag --get
+
+This DOWNLOADS collateral from archive to local work area.
+
+COMMON BUNDLES
+--------------
+  Bundle                  Contents
+  ----------------------  ------------------------------------------------
+  fe_collateral           RTL Verilog (.v), filelists (.f), UPF, HIP tags
+  clock_collateral        Clock definitions, periods, constraints
+  timing_collateral       Specs, FDR exceptions, timing constraints
+  td_collateral           Top-down constraints, interface timing
+  dft_collateral          Scan/DFT files
+  power_collateral        Power intent, voltage domains
+  sio_timing_collateral   SerDes/IO timing
+
+FULL POPULATE EXAMPLE
+---------------------
+set ctag = GFCN2CLIENTA0P10_CONTOUR_26WW06E
+set block = par_msid
+
+eouMGR --block $block --bundle fe_collateral --tag $ctag --populate --force
+eouMGR --block $block --bundle clock_collateral --tag $ctag --populate --force
+eouMGR --block $block --bundle td_collateral --tag $ctag --populate --force
+eouMGR --block $block --bundle timing_collateral --tag $ctag --populate --force
+eouMGR --block $block --bundle dft_collateral --tag $ctag --populate --force
+eouMGR --block $block --bundle power_collateral --tag $ctag --populate --force
+eouMGR --block $block --bundle sio_timing_collateral --tag $ctag --populate --force
+
+VERSION MANAGEMENT
+------------------
+- Each --populate creates a NEW version (VER_001, VER_002, etc.)
+- Contour tag is a SYMLINK pointing to the actual version
+- Old versions are preserved for rollback capability
+- --force overwrites existing symlink target
+
+Example symlink structure:
+  GFCN2CLIENTA0P10_CONTOUR_26WW06E  →  GFCN2CLIENTA0_SC8_VER_095
+
+================================================================================
+Generated: 2026-02-17
+================================================================================

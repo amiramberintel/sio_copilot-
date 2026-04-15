@@ -1,0 +1,277 @@
+================================================================================
+  PTECO PAR_MEU STATUS REPORT
+  Source: Alex's PTECO run — core_client_260322_ww12
+  Path:   /nfs/site/disks/ayarokh_wa/pteco/runs/GFC/core_client_260322_ww12/
+  Run date: 2026-03-23/24
+  Report date: 2026-03-29
+================================================================================
+
+
+1. EXECUTIVE SUMMARY
+====================
+
+Alex's PTECO ww12 run covers 9 STA corners (5 setup, 1 hold+setup, 3 hold).
+The ECO inserted 40,014 buffers and sized/swapped 16,598 cells.
+
+par_meu is the MOST IMPACTED partition with 39,445 failing paths at the
+worst-case setup corner (func.max_high.T_85.typical), of which:
+  - 21,734 external (cross-partition)
+  - 17,711 internal (within MEU)
+
+Post-ECO MEU cell count grew by ~6,822 cells (5,132,512 -> 5,139,334).
+
+KEY METRICS (func.max_high.T_85.typical — primary setup corner):
+  MEU external WNS:  -143ps  (SIMulDisableBugFixM3nnH, meu->fmav1)
+  MEU internal WNS:  -101ps  (MCLBAryRdM402H -> SABTSBAryRdOnlyInfoM401H)
+  MEU external paths with slack > 0 (met): 532 of 21,734 (2.4%)
+  MEU internal paths with slack > 0 (met): 678 of 17,711 (3.8%)
+
+
+2. MULTI-CORNER OVERVIEW
+=========================
+
+Corner                                   Total     MEU    MEU WNS   MEU int  int WNS
+---------------------------------------  ------  ------  --------   -------  --------
+func.max_high.T_85.typical (setup WC)    153391   39445   -143ps     17711   -101ps
+func.max_med.T_85.typical                227224   56475   -168ps     25422   -114ps
+func.max_nom.T_85.typical                106624   33467   -197ps     13959   -493ps
+func.max_low.T_85.typical                 90813   40118   -581ps     28223   -981ps
+func.min_low.T_85.typical                   437     155  -2222ps         0      0ps
+func.min_nom.T_85.typical                   794     310  -1834ps         0      0ps
+fresh.min_fast.F_125.rcworst (hold WC)      204      90  -1176ps         0      0ps
+fresh.min_fast_cold.F_M40.rcworst           179      92   -994ps         0      0ps
+fresh.min_hi_lo_hi.T_85.typical             185      64  -1100ps         0      0ps
+
+Notes:
+  - func.max_high is the primary setup corner — 39,445 MEU paths
+  - func.max_low has much worse WNS (-581ps) due to lower voltage
+  - Hold corners (fresh.min_*) have huge WNS (-1176ps) but very few
+    paths — these are DFT/JTAG clock domain crossings, not functional
+  - func.min_* corners also show large WNS from clock domain crossings
+
+
+3. SETUP: EXTERNAL PATHS (cross-partition)
+===========================================
+Corner: func.max_high.T_85.typical
+
+Total external MEU paths: 21,734
+Unique external signals:  958
+
+3a. CLOCK DOMAIN BREAKDOWN
+---------------------------
+  mclk_pmh -> mclk_meu:       6,149 paths (28%)  *** LARGEST ***
+  mclk_meu -> mclk_pmh:       5,781 paths (27%)
+  mclk_meu -> mclk_ooo_int:   4,040 paths (19%)
+  mclk_ooo_int -> mclk_meu:   3,250 paths (15%)
+  mclk_exe -> mclk_meu:         856 paths (4%)
+  mclk_meu -> mclk_fe:          572 paths (3%)
+  mclk_meu -> mclk_fmav1:       360 paths (2%)
+  mclk_meu -> mclk_exe:         360 paths (2%)
+  mclk_meu -> mclk_ooo_vec:     146 paths
+  mclk_mlc -> mclk_meu:         114 paths
+  mclk_ooo_vec -> mclk_meu:      66 paths
+  mclk_meu -> mclk_msid:         30 paths
+  mclk_meu -> mclk_mlc:           6 paths
+  mclk_meu -> mclk_fmav0:         4 paths
+
+Note: PMH<->MEU interface dominates (55% of all external paths).
+
+3b. SLACK DISTRIBUTION (external)
+----------------------------------
+         < -100ps:     22  ( 0.1%)  Critical — needs arch/RTL fix
+    -100 to -80ps:     36  ( 0.2%)  Critical
+     -80 to -50ps:    152  ( 0.7%)  Hard
+     -50 to -20ps:  4,212  (19.4%)  Moderate — clock/routing fixes
+      -20 to  0ps: 16,780  (77.2%)  Near-closure — ECO should fix
+          > 0 met:    532  ( 2.4%)  Already met
+
+3c. TOP 50 WORST EXTERNAL SIGNALS
+-----------------------------------
+(unique, worst slack per signal group)
+
+  Slack  Norm  #paths  Direction  Clocks                       Signal (startpoint -> endpoint)
+  -----  ----  ------  ---------  ---------------------------  -----------------------------------------------
+  -143ps -0.77      2  OUT        meu->fmav1                   SIMulDisableBugFixM3nnH -> SIMulDisableBugFixM3n1H
+  -121ps -0.65    120  OUT        meu->ooo_int                 MOWBCheckRobIdM803H -> ROWBCheckRobIdLdM804H
+  -107ps -0.57      2  IN         ooo_vec->meu                 RoRtPwrEnM902H -> RoRtPwrEnM903H
+   -87ps -0.47     20  OUT        meu->ooo_vec                 IntWbRsdErrM807H -> IntWbRsdErrM808H
+   -77ps -0.41   1370  OUT        meu->exe                     MOWBDataVLdRSM805H -> RSIntRealDispM305H
+   -73ps -0.39     20  OUT        meu->ooo_int                 LineMatchAnyM403H -> RSEarlyCancelWBLdDupM804H
+   -72ps -0.39     36  OUT        meu->ooo_int                 MoB2BSplitValidM403H -> MOLVPChkWBLdM804H
+   -70ps -0.38     44  OUT        meu->ooo_int                 LocIntRsdErrM305H -> RSIntImmBpcParityErrOrM306H
+   -70ps -0.37      2  OUT        meu->ooo_int                 CRPwrUpOutMH (config ring power-up)
+   -68ps -0.37    440  IN         exe->meu                     miStDataM3n6H -> StDataM307H
+   -67ps -0.36      4  OUT        meu->ooo_int                 Meu2OOOXbarPwrUpMnn3H (crossbar power-up)
+   -67ps -0.36     10  IN         ooo_int->meu                 RSMOClearVM802H -> JEBranchConflictM303H
+   -65ps -0.35     20  OUT        meu->ooo_int                 SABLnetRealHitLdM403H -> RSEarlyCancelWBLdM804H
+   -65ps -0.35      8  IN         ooo_int->meu                 MemSchedDispM301H -> RSLdGthr1stElmntM302H
+   -64ps -0.34    356  IN         ooo_int->meu                 MemSchedDispM301H -> RSUopCodM302H
+   -63ps -0.34      4  OUT        meu->ooo_int                 (config ring)
+   -62ps -0.33      2  OUT        meu->ooo_int                 UopCodeM303H -> TmulGatherSpecCompWbM801H
+   -61ps -0.33      2  IN         ooo_int->meu                 RobNukeAllM907H -> SBValidAnyMnn1H
+   -61ps -0.33     48  IN         ooo_vec->meu                 RSRobIdDataM301H -> RSVecSBIDM302H
+   -58ps -0.31     12  OUT        meu->ooo_vec                 RSSlowRobIdVPM803H -> ROWbEnM804H
+   -58ps -0.31     10  OUT        meu->ooo_int                 MCLBAryRdM402H -> ROWBCheckVLdM803H
+   -57ps -0.31      8  OUT        meu->exe                     RSVecLdPRFWrCancelM805H -> M806H
+   -57ps -0.31     28  IN         exe->meu                     DepOnLdTmpM303H -> V2IM304H
+   -57ps -0.31     66  OUT        meu->ooo_int                 UopFilterNQMnnnH (power gating)
+   -57ps -0.31     16  OUT        meu->ooo_vec                 agrsderrM307H -> RepM308H
+   -57ps -0.30      8  OUT        meu->ooo_int                 DcSdbChktagFaultpqM805H -> M806H
+   -55ps -0.30      6  IN         ooo_int->meu                 RSStdDoublePumpM302H -> STDIs512FirstVecM303H
+   -55ps -0.30     44  OUT        meu->ooo_int                 LVPTrainInfoMnn1H -> LVPTrainInfoMnn2H
+   -53ps -0.29      6  IN         pmh->meu                     MADHitM406H -> MadTrainStClkEnMnnnH
+   -52ps -0.28      4  OUT        meu->ooo_int                 MRNWDTrippedMnn1H -> VecMRNWDTrippedMnn2H
+   -52ps -0.28     64  OUT        meu->ooo_int                 iewbfaultinfoM805H -> RSIntWbFaultInfoM806H
+   -52ps -0.28      2  OUT        meu->ooo_int                 MoMeuTxMisspecM4nnH -> MoMeuTxMisspecMnnnH
+   -52ps -0.28     14  OUT        meu->ooo_int                 jetakenbrM305H -> JeTakenBrCLateFeM806H
+   -52ps -0.28     16  OUT        meu->exe                     RSVecLdPortWriteMuxCtlM805H -> M806H
+   -52ps -0.28      2  IN         ooo_int->meu                 RobNukeAllM907H -> AlTxNukeEnMnnnH
+   -51ps -0.28     32  OUT        meu->exe                     GatherElmIdM805H -> GatherElmIdM806H
+   -51ps -0.27      2  OUT        meu->ooo_int                 MEFastLockRetBypM899H -> FastLockRetBypM900H
+   -49ps -0.27      2  IN         ooo_int->meu                 PerfMonPmiMnn1H
+   -49ps -0.26      2  OUT        meu->ooo_int                 MOSBNoSeniorM405H -> MOSBNoSeniorM406H
+   -49ps -0.26     60  OUT        meu->ooo_int                 CRDataOutIntMH (config ring data)
+   -48ps -0.26      2  IN         ooo_int->meu                 ALTmulPwrGoodMnnnH -> MtmaxeClkEnMnnnH
+   -47ps -0.25      2  IN         ooo_int->meu                 RobNukeAllM907H -> MOSABHasAnyPAVClkEnPreMnnnH
+   -47ps -0.25     82  OUT        meu->ooo_int                 MLNoTmulPGFuseMnn4H -> ALTmulPwrGood4IccpMnnnH
+   -46ps -0.25     48  OUT        meu->ooo_int                 IEPortedJeClearM805H -> RSJeRobIdM806H
+   -46ps -0.25      4  OUT        meu->ooo_int                 MLUncorePmiM5n1H -> OOUncorePmiM5n2H
+   -46ps -0.25      8  OUT        meu->exe                     MOWBDataVLdROBM805H -> MOWBDataVLdRobM806H
+   -46ps -0.25      4  IN         pmh->meu                     DcL1RdDataIntM408H -> DcL1ErrorInSliceM409H
+   -46ps -0.25    184  IN         pmh->meu                     DcL1TagHitPortM405H -> FbMlcReqAdrM402H
+   -45ps -0.24    130  IN         pmh->meu                     DcL1TagHitPortM405H -> MOWBVLdM800H
+   -45ps -0.24     48  IN         pmh->meu                     DcL1TagHitPortM405H -> DTLinAdrMDM405H
+
+
+4. SETUP: INTERNAL PATHS (within MEU)
+=======================================
+Corner: func.max_high.T_85.typical
+
+Total internal MEU paths: 17,711
+
+4a. SLACK DISTRIBUTION (internal)
+----------------------------------
+         < -100ps:      2  ( 0.0%)
+    -100 to -80ps:     48  ( 0.3%)
+     -80 to -50ps:    160  ( 0.9%)
+     -50 to -20ps:  3,703  (20.9%)
+      -20 to  0ps: 13,120  (74.1%)
+          > 0 met:    678  ( 3.8%)
+
+4b. WORST INTERNAL PATHS
+--------------------------
+  -101ps  MCLBAryRdM402H -> SABTSBAryRdOnlyInfoM401H
+  -100ps  MCLBAryRdM402H -> STATSBDispPP2StAloneM401H
+   -81ps  STATSBDispPP2StAloneM401H -> MCLBPtrSBIDToSABM401H
+
+  These are all in the MOB/DCU L1 pipeline: the MCLB (Memory CLB) array
+  read at M402H feeds the SAB/TSB (Store Address Buffer / Transaction
+  Store Buffer) at M401H. This is a same-cycle feedback path — the array
+  output must be consumed in the same or adjacent stage.
+
+
+5. HOLD ANALYSIS
+=================
+
+5a. HOLD ECO SUMMARY
+---------------------
+Total hold violations post-ECO: 885 paths across all partitions.
+MEU-specific unfixable hold violations: 3,347 entries in unfixable CSV.
+
+The worst hold paths are DFT/JTAG clock crossings:
+  -3154ps  ijtag_tck domain (pmh -> ooo_int, through MEU)
+  -2222ps  scanclk_notdiv_phyex -> scanclk_notdiv (MEU -> exe)
+
+These are NOT functional timing issues — they are test mode paths
+with intentionally mismatched clock domains.
+
+5b. HOLD CORNER STATUS (fresh.min_fast — hold WC)
+---------------------------------------------------
+  MEU paths: 90 (all external)
+  MEU WNS: -1176ps (DFT clock crossing)
+  
+  The functional hold paths are much better — the large violations
+  are all in DFT/JTAG/scan domains that have separate waivers.
+
+
+6. ECO IMPACT
+==============
+
+6a. CELL CHANGES
+-----------------
+  Total cells pre-ECO:    36,075,180
+  Total cells post-ECO:   36,115,146
+  Net cells added:        39,966 (0.11% increase)
+
+  MEU cells pre-ECO:      5,132,512
+  MEU cells post-ECO:     5,139,334
+  MEU cells added:        6,822 (0.13% increase)
+
+  MEU is 14.2% of total design cells.
+
+6b. ECO OPERATIONS
+-------------------
+  Buffers inserted (total): 40,014
+  Cells sized/swapped:      16,598
+  Total ECO runtime:        19h 41m
+
+6c. Vt DISTRIBUTION
+---------------------
+  CPDLVT:    40.1%
+  CPDULVT:   41.5%
+  CPDULVTLL: 18.3%
+  CPDSVT:     0.0%
+  CPDLVTLL:   0.0%
+  CPDELVT:    0.0%
+
+
+7. COMPARISON VS CARPETDB (data_meu.csv)
+==========================================
+
+Signal                        carpetdb WNS    PTECO WNS    Delta
+-----------------------------  -----------    ---------    ------
+SIMulDisableBugFixM3nnH        -144.2ps       -143ps       +1ps
+MOWBCheckRobIdM803H            -123.1ps       -121ps       +2ps
+RoRtPwrEnM902H                 -108.5ps       -107ps       +2ps
+IntWbRsdErrM807H                -87.5ps        -87ps       +1ps
+MOWBDataVLdRSM805H              -84.7ps*       -77ps       +8ps
+RSEarlyCancelWBLdM803H          -77.4ps        -73ps       +4ps
+LocIntRsdErrM305H               -71.1ps        -70ps       +1ps
+miStDataM3n6H                   -69.3ps        -68ps       +1ps
+MemSchedDispM301H(RSUopCod)     -70.6ps        -64ps       +7ps
+RSSlowRobIdVPM803H              -59.0ps        -58ps       +1ps
+
+  * MOWBDataVLdRSM805H: carpetdb tracks via feedthrough (meu->exe),
+    PTECO has it as a direct path — 8ps improvement.
+
+Assessment: PTECO results are very close to carpetdb daily values
+(within 1-8ps). The ECO did NOT significantly move these critical
+paths — they need manual clock/routing/RTL fixes as documented
+in the Uarch CP spreadsheet.
+
+
+8. KEY FINDINGS
+================
+
+  1. The #1 worst MEU path remains SIMulDisableBugFixM3nnH (-143ps,
+     meu->fmav1). This is an FMA path, not a core MEU function.
+
+  2. MOWBCheckRobIdM803H (-121ps) is the worst FUNCTIONAL MEU path.
+     This is the 803 family (Basel) — still needs CI from Michel.
+
+  3. PMH<->MEU interface has the most paths (55%) but NOT the worst
+     slacks. The worst PMH->MEU path is DcL1TagHitPortM405H at -46ps.
+
+  4. Internal MEU paths are close to closure: 74% are within -20ps,
+     only 2 paths exceed -100ps.
+
+  5. ECO impact was modest: 6,822 cells added in MEU. The tool couldn't
+     fix the deep violations (> -50ps) which need manual intervention.
+
+  6. Hold is dominated by DFT clock crossings — functional hold is clean.
+
+================================================================================
+  Source data:
+    /nfs/site/disks/ayarokh_wa/pteco/runs/GFC/core_client_260322_ww12/
+      runs/core_client/n2p_htall_conf4/pt_eco/reports/
+================================================================================

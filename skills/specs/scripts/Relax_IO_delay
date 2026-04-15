@@ -1,0 +1,92 @@
+#!/usr/bin/tcsh -f
+
+# default Variables
+unset relax_by 
+unset clock 
+unset outfile 
+unset pin 
+unset delay
+set ci = "n" 
+set line = "$argv"
+
+while ($#argv > 0)
+    set var = "$1"
+    switch ($var)
+    case -pin:
+        shift
+        set pin = "$1"
+        shift
+    breaksw
+    case -clock:
+        shift
+        set clock = "$1"
+        shift
+    breaksw
+    case -relax:
+        shift
+        set relax_by = "$1"
+        shift
+    breaksw
+    case -file:
+    	shift
+    	set outfile = "$1"
+	shift
+    breaksw
+    case -force:
+    	set ci = y 
+	shift
+    breaksw 
+    case -help:
+    echo "  \
+Flags :    \
+    case -pin:  <Pin name> \
+    case -clock: <clock>\
+    case -relax: <Relax the input / output by> \
+    case -file: <the IO Constraint File> \
+    case -force: <force the Change to File without y/n question>\
+Usage :  \
+    	~baselibr/LNC_script/IO_manip/Relax_IO_delay -pin <pin_name> -clock <clk> -relax <value> -file <file> \
+    	if the port name have [] or * pls add \\ before "
+
+        exit 1
+        break
+    default:
+    	echo "[E] Unkown Switch - at ...Relax_IO_delay $line"
+            exit 1
+        break
+    endsw
+end
+
+if ( $?relax_by && $?clock && $?pin && $?outfile  ) then
+    if ( ! -e $outfile) then 
+    	echo "[E] File $outfile does not Exists"
+	exit 1
+    endif
+    set cmd="echo "'"'"$pin"'"'" | sed 's/\[/./g ; s/\]/./g;s/\*/\.\*/g '"
+    set pin_new="`$cmd`"
+    set cmd="echo "'"'"$clock"'"'" | sed 's/\*/\.\*/g' "
+    set clock_new="`$cmd`"
+    set file_base_name = `basename $outfile`_${USER}_`date +%H_%M_%S_%N`
+
+    sed -r "/\-clock.*${clock_new}.*get_ports[ ]*\-quiet.*${pin_new}/ s/(.*set_.*_delay.*\-clock.*${clock_new}.*)[ ]+([^ ]+)[ ]*(\[get_ports[ ]*\-quiet.*${pin_new}.*)/\1 \[expr_io_manip \2 - ${relax_by} \] \3/g" $outfile > /tmp/${file_base_name}_temp_IO
+    perl -pi -e 's|\[expr_io_manip ([^\]]*)\]|$1|gee' /tmp/${file_base_name}_temp_IO 
+
+
+    echo "[I] ...Relax_IO_delay $line"
+    diff ${outfile} /tmp/${file_base_name}_temp_IO | grep -e "<" -e ">" | sed 's/</Old Line:/g' | sed 's/>/New Line:/g'
+
+    if ( $ci != "y" ) then
+	echo "OverRide The File? y/n" 
+	set ans = "$<"
+	if ($ans == "y" ) then
+		cp /tmp/${file_base_name}_temp_IO $outfile  
+    	endif
+    else
+   	cp /tmp/${file_base_name}_temp_IO $outfile 
+    endif
+    rm -f /tmp/${file_base_name}_temp_IO
+else 
+    echo "[E] Something went Wrong - at ...Relax_IO_delay $line"
+endif
+
+

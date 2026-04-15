@@ -1,0 +1,20 @@
+================================================================
+ECO IMPACT REPORT: <eco_description>
+Date: <YYYY-MM-DD>  Partition: <par_name>
+================================================================
+SUMMARY: <improved/degraded> [IMPROVED|DEGRADED]
+ECO TYPE: <PT-ECO|PC-ECO|Manual>
+----------------------------------------------------------------
+TIMING IMPACT:
+| Corner          | WNS_pre | WNS_post | Delta  |
+|-----------------|---------|----------|--------|
+|                 |         |          |        |
+----------------------------------------------------------------
+CELLS MODIFIED:
+  Inserted: <count> (<types>)
+  Resized:  <count>
+  Removed:  <count>
+AREA IMPACT: <delta_area>
+DRC STATUS: <clean/violations_count>
+HOLD IMPACT: <new_hold_violations_count>
+================================================================

@@ -1,0 +1,138 @@
+================================================================================
+  PAR_STATUS COOKBOOK
+  Partition Interface Health Status — Cross-Reference Tool
+================================================================================
+
+WHAT THIS TOOL DOES:
+  Cross-references 4 data sources to give you instant visibility into which
+  failing partition interfaces are tracked, pending fix, already fixed (but
+  still failing), or completely untracked — so you know where to focus.
+
+DATA SOURCES:
+  1. IFC reports     (par_*_ifc.rpt)      — what's failing at partition interfaces
+  2. RTL4BE HSDs     (gfc.rtl4be)          — RTL fix requests filed to designers
+  3. SIO2PO HSDs     (gfc.sio2po.rtl4be)   — physical SIO fix requests
+  4. TIP cells       (tip_status.rpt)       — which fixes are IN this build
+
+CATEGORIES EXPLAINED:
+  UNTRACKED        — failing interface with NO HSD filed at all. Action: file HSD!
+  FIX PENDING      — HSD exists but fix not yet complete (open, not_done, sign_off)
+  FIX LANDED       — HSD marked complete/repo_modified but STILL failing. Why?
+                     Check TIP column: if "---" = fix not picked up in this build yet
+                     If "TIP(N)" = fix is in build but wasn't enough, need more work
+  CLEAN            — interface meeting timing, no issues
+
+HSD STATUS VALUES:
+  RTL4BE:  new → open → repo_modified → complete     (also: rejected, closed)
+  SIO2PO:  new → open → not_done → sign_off → complete   (also: closed)
+  
+  repo_modified = RTL code committed to repo, not yet validated
+  sign_off      = SIO designer finished, awaiting final approval
+  complete      = fix fully done and merged
+
+TIP COLUMN:
+  ---        = no TIP cell for this signal in current build
+  TIP(N)     = N TIP cells exist for this signal in current build
+  TIP(N)ok   = TIP cells exist and all have positive slack (fixed!)
+
+  Key insight: if HSD is "complete" but TIP shows "---", the fix has NOT
+  been picked up into this daily build's RTL model yet.
+
+================================================================================
+  HOW TO RUN
+================================================================================
+
+SINGLE PARTITION:
+  sg gfcn2_pcore_ex -c "python3 par_status.py -p par_ooo_int"
+
+  With colorized output (recommended):
+  sg gfcn2_pcore_ex -c "python3 par_status.py -p par_ooo_int" | par_status_cookbook.sh
+
+TOP N WORST ONLY:
+  sg gfcn2_pcore_ex -c "python3 par_status.py -p par_ooo_int --top 20"
+
+ALL PARTITIONS SUMMARY:
+  sg gfcn2_pcore_ex -c "python3 par_status.py -p all"
+
+SAVE TO FILE:
+  sg gfcn2_pcore_ex -c "python3 par_status.py -p par_ooo_int" > par_ooo_int_status.txt
+
+CUSTOM WORK AREA:
+  sg gfcn2_pcore_ex -c "python3 par_status.py -p par_ooo_int --wa /path/to/WA"
+
+================================================================================
+  HOW TO READ THE REPORT
+================================================================================
+
+  The report is organized in priority order:
+
+  1. SUMMARY BAR — quick count of families in each category
+  2. UNTRACKED   — these need immediate attention (file HSDs!)
+  3. LANDED      — fixes done but still failing (need follow-up)
+  4. PENDING     — fixes in progress (monitor)
+  5. ACTION SUMMARY — top 5 worst in each urgent category
+
+  Each line shows:
+    #  Signal_name                     Crossing_chain        WNS  Norm   TNS  Paths  TIP
+    1. rsintearlycancelwbldm803h[*]    par_meu → par_ooo_int  -98 -0.53  -47096 1376  TIP(4)
+
+  Under LANDED and PENDING sections, matching HSDs are listed:
+    RTL4BE  13014127604  complete  [RTL4BE] rsintearlycancelwbldm803h - duplicate flop
+    SIO2PO  13014455352  sign_off  [SIO2PO] rsintearlycancelwbldm803h - flop duplication
+
+================================================================================
+  ICORE0 / ICORE1 — DUAL-CORE DEDUPLICATION
+================================================================================
+
+  KEY RULE: icore0 and icore1 are the SAME template (identical design).
+  We only need to analyze one core — analyzing both wastes time and
+  doubles the report with duplicate lines.
+
+  What happens in the IFC report:
+    - Newer daily builds (e.g. WW11G+) report BOTH icore0 and icore1
+    - Each signal appears TWICE with nearly identical WNS/TNS:
+        {icore0/par_meu/signalm803h}  {icore0/par_ooo_int/signalm803h}
+        {icore1/par_meu/signalm803h}  {icore1/par_ooo_int/signalm803h}
+    - Older builds (WW11E, WW11F) only reported icore0
+
+  How par_status.py handles it:
+    1. Strips icore0/ and icore1/ prefixes from port names
+    2. Deduplicates by signal_key — keeps the WORST WNS if they differ
+    3. Report shows one clean entry per signal family
+
+  IFC file naming also changed:
+    - Old: par_*_ifc.rpt
+    - New: test_par_*_ifc.rpt  (par_status.py tries both automatically)
+
+  IMPORTANT: If icore0 and icore1 ever diverge (different timing), the
+  tool keeps the worst WNS. But in practice they are always identical.
+
+================================================================================
+  SIGNAL MATCHING LOGIC
+================================================================================
+
+  The tool extracts signal base names from IFC ports and HSD titles,
+  then matches by overlap. Signal names are normalized by:
+    - Stripping hierarchy prefix (icore0/par_xxx/)
+    - Removing bus indices ([N], [*])
+    - Removing wildcards and FEEDTHRU suffixes
+    - Case-insensitive comparison
+
+  Example: IFC port "icore0/par_ooo_int/rsmoclearvm803h"
+           matches HSD title "[SIO2PO] par_ooo_int/rsmoclearvm803h - bound the flop"
+
+================================================================================
+  FILES
+================================================================================
+
+  par_status.py                  — the Python engine (latest copy in ww12_1/)
+  par_status_cookbook.txt         — this file (in cookbooks/)
+  par_status_cookbook.sh          — colorizer script (in cookbooks/)
+
+  Data source locations:
+  <WA>/par_*_ifc.rpt  or  <WA>/test_par_*_ifc.rpt             — IFC reports
+  <WA>/partition_reports/func.max_high.T_85.typical/*/tip_status.rpt  — TIP cells
+  /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be                  — RTL4BE HSDs
+  /nfs/site/disks/baselibr_wa/tmp/gfc.sio2po.rtl4be           — SIO2PO HSDs
+
+================================================================================

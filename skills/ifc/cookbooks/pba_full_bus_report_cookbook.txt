@@ -1,0 +1,271 @@
+================================================================================
+  PBA FULL BUS REPORT — COOKBOOK & SKILL
+  Generate per-bit bus analysis for any IFC signal family
+  Author: sunger (with copilot) | Date: 2026-04-09 (WW15.3)
+  Reference: dcl1rddatam408h analysis in ww15_5/
+================================================================================
+
+================================================================================
+  PURPOSE
+================================================================================
+
+  When you have a bus signal crossing partitions (e.g. par_pmh -> par_meu),
+  and you need to decide how much to PUSH the end-FF clock or PULL the
+  start-FF clock, you need per-bit visibility into:
+
+    1. SFF incoming setup margin  (how much can I pull the start clock?)
+    2. EFF setup violation         (how much total fix do I need?)
+    3. EFF hold slack per corner   (what hold cost does a push create?)
+
+  This skill queries the PT server in PBA mode for all 4 data sets,
+  then generates a single readable report with:
+    - Summary (WNS, violations count)
+    - Push/Pull impact table
+    - Setup slack histogram
+    - Per-path table grouped by EFF cell
+
+================================================================================
+  *** CRITICAL: ALWAYS USE PBA MODE ***
+================================================================================
+
+  DEFAULT report_timing = GBA (Graph-Based Analysis) = PESSIMISTIC
+  PBA (Path-Based Analysis) = ACCURATE, matches IFC report numbers
+
+  GBA vs PBA difference can be 8-15ps on these paths!
+  Example: dcl1rddatam408h setup WNS was -44.3ps GBA vs -36.4ps PBA
+
+  ALWAYS add:  -pba_mode path
+  to every report_timing command.
+
+  PBA warning is normal:
+    "AOCVM path-based analysis can take a long time..." (UITE-487)
+
+================================================================================
+  STEP 0: IDENTIFY THE BUS
+================================================================================
+
+  You need to know:
+    a) Boundary pin pattern:  e.g. dcl1rddatam408h*
+    b) Source partition:       e.g. par_pmh
+    c) Dest partition:         e.g. par_meu
+    d) Start FF (SFF) cell pattern:
+       e.g. icore0/par_pmh/dcu_l1/dcl1data/auto_vector_MBIT_DcL1RdDataIntM408H*
+    e) End FF (EFF) cell pattern:
+       e.g. icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd*/auto_vector_MBIT_DcL1RdDataM409H*
+    f) How many bits:  e.g. 1024 (128 MB8 cells x 8 bits)
+
+  To discover (b)-(e), start from the IFC report:
+    grep dcl1rddatam408h <daily_wa>/par_pmh_ifc.rpt
+  Then use PT to trace:
+    pt_client.pl -m <model> -c 'report_timing -through [get_pins icore0/par_pmh/dcl1rddatam408h*] -max_paths 3 -pba_mode path -nosplit'
+
+================================================================================
+  STEP 1: RUN 4 PT QUERIES (PBA MODE)
+================================================================================
+
+  PT client path:
+    /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl
+
+  Model name format:  latest_gfcn2clienta0_bu_prp_<corner>
+    MH = func.max_high.T_85.typical      (setup corner)
+    ML = func.min_low.T_85.typical        (hold corner - aged)
+    MF = fresh.min_fast.F_125.rcworst_CCworst  (hold corner - fresh)
+
+  NOTE: "latest_" resolves to the LATEST RELEASE (not daily!).
+        Always verify with -debug or check the -I- MODEL: line in output.
+        As of WW15, latest = WW15A release, NOT WW15D daily.
+
+  --- Query 1: EFF setup (max_high) ---
+
+    sg soc -c "pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c 'report_timing \
+        -through [get_pins icore0/par_pmh/dcl1rddatam408h*] \
+        -to [get_cells icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd*/auto_vector_MBIT_DcL1RdDataM409H*] \
+        -max_paths 1100 -nworst 1 \
+        -pba_mode path \
+        -slack_lesser_than inf \
+        -nosplit'" > /tmp/pba_setup_max_high.txt 2>&1
+
+  --- Query 2: EFF hold min_low ---
+
+    sg soc -c "pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.min_low.T_85.typical \
+      -c 'report_timing \
+        -through [get_pins icore0/par_pmh/dcl1rddatam408h*] \
+        -to [get_cells icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd*/auto_vector_MBIT_DcL1RdDataM409H*] \
+        -delay min \
+        -max_paths 1100 -nworst 1 \
+        -pba_mode path \
+        -slack_lesser_than inf \
+        -nosplit'" > /tmp/pba_hold_min_low.txt 2>&1
+
+  --- Query 3: EFF hold fresh.min_fast ---
+
+    sg soc -c "pt_client.pl -m latest_gfcn2clienta0_bu_prp_fresh.min_fast.F_125.rcworst_CCworst \
+      -c 'report_timing \
+        -through [get_pins icore0/par_pmh/dcl1rddatam408h*] \
+        -to [get_cells icore0/par_meu/dcu_l0/dcdatabufd/dcibbankd*/auto_vector_MBIT_DcL1RdDataM409H*] \
+        -delay min \
+        -max_paths 1100 -nworst 1 \
+        -pba_mode path \
+        -slack_lesser_than inf \
+        -nosplit'" > /tmp/pba_hold_min_fast.txt 2>&1
+
+  --- Query 4: SFF incoming setup ---
+
+    sg soc -c "pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c 'report_timing \
+        -to [get_cells icore0/par_pmh/dcu_l1/dcl1data/auto_vector_MBIT_DcL1RdDataIntM408H*] \
+        -max_paths 1100 -nworst 1 \
+        -pba_mode path \
+        -slack_lesser_than inf \
+        -nosplit'" > /tmp/pba_sff_setup.txt 2>&1
+
+  KEY FLAGS EXPLAINED:
+    -pba_mode path       PBA mode (MANDATORY!)
+    -slack_lesser_than inf   Get ALL paths, not just violations
+    -nosplit             Show full hierarchy (needed for boundary pin extraction)
+    -max_paths 1100      Must exceed actual path count (1024 for dcl1rddatam408h)
+    -nworst 1            One path per endpoint
+    -delay min           Hold analysis (omit for setup)
+
+  VERIFY each output:
+    grep -c Startpoint: /tmp/pba_setup_max_high.txt    # should be ~1024
+    grep "^-I- MODEL:" /tmp/pba_setup_max_high.txt     # verify daily/release tag
+
+================================================================================
+  STEP 2: RUN THE PARSER SCRIPT
+================================================================================
+
+  Script: /nfs/site/disks/sunger_wa/skills_for_sio_copilot/scripts/pba_full_bus_report.py
+
+  Usage:
+    python3 /nfs/site/disks/sunger_wa/skills_for_sio_copilot/scripts/pba_full_bus_report.py \
+      --setup   /tmp/pba_setup_max_high.txt \
+      --hold-lo /tmp/pba_hold_min_low.txt \
+      --hold-fr /tmp/pba_hold_min_fast.txt \
+      --sff     /tmp/pba_sff_setup.txt \
+      --bus     dcl1rddatam408h \
+      --daily   "FCT26WW15D_dcm_daily / CLK050" \
+      --outdir  /nfs/site/disks/sunger_wa/fc_data/my_learns/ww15_5/
+
+  Output: <outdir>/dcl1rddatam408h_full_bus_report.txt
+
+================================================================================
+  STEP 3: READ THE REPORT
+================================================================================
+
+  Report sections:
+    1. HEADER:       Daily tag, PBA mode, total paths
+    2. HOW TO READ:  What each column means, decision formula
+    3. SUMMARY:      Worst slack per corner, violation counts
+    4. PUSH/PULL:    What-if table for various push/pull amounts
+    5. HISTOGRAM:    ASCII histogram of setup slack distribution
+    6. PER-PATH:     Every bit, grouped by EFF cell, sorted worst-first
+
+  Per-path columns (left to right = data flow):
+    SFF.mar  = SFF incoming setup margin (pull budget)
+    Start FF = SFF cell name (par_pmh side)
+    Port     = boundary pin name (dcl1rddatam408h_X__Y__Z__W_[bit])
+    End FF   = EFF cell name (par_meu side)
+    EFF.set  = EFF setup slack (the violation to fix)
+    EFF.h.lo = EFF hold in min_low (aged)
+    EFF.h.fr = EFF hold in fresh.min_fast
+
+  Decision formula per path:
+    push(EFF) + pull(SFF) >= |EFF.setup|
+    pull(SFF) <= SFF.margin
+    new_hold = EFF.hold - push(EFF)
+
+================================================================================
+  ADAPTING FOR OTHER BUSES
+================================================================================
+
+  To run for a DIFFERENT bus (e.g. dcl1taghitportm405h):
+
+  1. Find the SFF and EFF cell patterns:
+     pt_client.pl -m <model> -c 'report_timing -through [get_pins icore0/par_pmh/<new_bus>*] -max_paths 3 -pba_mode path -nosplit'
+     -> Read Startpoint (SFF) and Endpoint (EFF) patterns
+
+  2. Update the -through, -to, and SFF -to patterns in the 4 queries
+
+  3. Update the parser's boundary pin regex if needed:
+     The parser looks for: (icore0/par_pmh/<bus>_*[digit]) (par_pmh) <-
+     and for SFF/EFF regex patterns in short_sff() / short_eff()
+
+  4. Adjust -max_paths to exceed the bus width
+
+================================================================================
+  GOTCHAS & LESSONS LEARNED
+================================================================================
+
+  1. GBA vs PBA: ALWAYS use -pba_mode path. GBA was 8ps more pessimistic
+     on dcl1rddatam408h (WNS -44.3 GBA vs -36.4 PBA)
+
+  2. Model mismatch: "latest_" prefix resolves to RELEASE, not DAILY.
+     Always check -I- MODEL: line. WW15A release != WW15D daily.
+     Cannot load arbitrary daily paths on PT server.
+
+  3. -through vs -to: Using only -through captures unintended endpoints
+     (e.g. WSBDataArray FFs). Always add -to with the correct EFF pattern.
+
+  4. Hold PBA large output: With 1100 paths + -nosplit, hold output can
+     be ~37k lines. The pt_client may silently truncate. Always verify
+     path count with: grep -c Startpoint: <file>
+
+  5. SFF setup query: Don't use -through for SFF setup — use -to directly
+     to the SFF cells. The SFF paths come from OUTSIDE the bus.
+
+  6. "1152 invalid end points" warning: Normal. MB8 CP pins are clock pins,
+     not data pins. PT ignores them correctly.
+
+  7. Terminal: sunger's terminal doesn't support Unicode — ASCII only!
+
+================================================================================
+  EXAMPLE OUTPUT (dcl1rddatam408h, WW15D daily, PBA)
+================================================================================
+
+  SUMMARY:
+    SFF margin (worst):  3.0 ps   (limits total SFF pull)
+    EFF setup  (WNS):   -36.4 ps  (need 36ps total fix)
+    EFF hold.lo (WNS):  -26.0 ps  (pre-PTECO, 54 violations)
+    EFF hold.fr (WNS):   8.7 ps  (CLEAN, 0 violations)
+
+  HISTOGRAM peak: [-15 to -10) with 169 paths
+  Median slack: -8.5ps
+  713/1024 paths violating setup
+
+  Recommendation: Push EFF ~34ps + Pull SFF ~2ps to close setup.
+  Fresh hold margin 8.7ps absorbs the push; aged hold needs PTECO.
+
+================================================================================
+  STEP 6: VERIFY ECO POTENTIAL WITH estimate_eco (PBA mode)
+================================================================================
+
+  BEFORE claiming data-path ECO can fix paths, VERIFY with estimate_eco.
+  See pt_client_cookbook.txt section 10 for full details.
+
+  Quick check — for each small cell on worst path:
+
+    pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c 'estimate_eco -type size_cell -sort_by slack -nosplit \
+          [get_cells icore0/par_pmh/.../<cell_instance>]'
+
+  If * (current cell) is first in output = NO ECO helps that cell.
+  Only claim gains where alternative beats current.
+
+  Also try buffer insertion on long nets (>20ps net delay):
+
+    pt_client.pl -m <corner> -c 'estimate_eco -type insert_buffer \
+      -sort_by slack -nosplit \
+      -lib_cells {BUFFD4BWP156HNPPN3P48CPDULVT BUFFD8BWP156HNPPN3P48CPDULVT} \
+      [get_pins icore0/par_pmh/.../<pin>]'
+
+  LESSON LEARNED (dcl1rddatam408h WW15):
+    All 18 SFFs on critical ECC paths were fully optimized by P&R.
+    estimate_eco confirmed: *current = BEST for every cell.
+    Assumed ~10-17ps ECO gain was WRONG. Actual: ~0ps.
+    Useful skew push was the only fix.
+
+================================================================================
+  END OF COOKBOOK
+================================================================================

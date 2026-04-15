@@ -1,0 +1,185 @@
+================================================================================
+  PTECO PAR_MEU — IFC HOLD PATHS REPORT
+  Source: Alex's PTECO ww12 (core_client_260322_ww12)
+  Hold corners: fresh.min_fast, fresh.min_fast_cold, fresh.min_hi_lo_hi,
+                func.min_low, func.min_nom
+  Report date: 2026-03-29
+================================================================================
+
+
+SUMMARY
+-------
+521 functional IFC hold violations in par_meu across 5 hold/min corners.
+36 unique signal groups. 190 additional DFT/JTAG paths (ignored below).
+
+Worst: -51ps (SpecIsValid512ForLDBundleCancelM801H -> VecLdPortWriteMuxCtlM802H)
+Most of the violations are on 3 interfaces:
+  - par_exe -> par_meu  (vector load cancel, 132 paths, worst -51ps)
+  - par_pmh -> par_meu  (DCU L1 data/tag, 337 paths, worst -13ps)
+  - par_meu -> par_pmh  (snoop/GLB array, 12 paths, worst -6ps)
+
+
+DETAILED IFC HOLD VIOLATIONS
+=============================
+Grouped by interface, sorted worst-first within each group.
+Paths shown are per icore (x2 for icore0+icore1).
+
+===============================================================================
+INTERFACE 1: par_exe -> par_meu  (mclk_exe -> mclk_meu)
+  132 paths | Worst: -51ps | ALL 3 hold corners
+===============================================================================
+
+This is the WORST IFC hold interface. All paths are vector load cancel/PRF
+operations where EXE sends speculative cancel signals to MEU.
+
+  #  Slack  Signal (SP -> EP)                                        #paths  Corners
+  -  -----  -------------------------------------------------------  ------  -------
+  1  -51ps  SpecIsValid512ForLDBundleCancelM801H                       30    all 3
+            -> VecLdPortWriteMuxCtlM802H
+            WHAT: 512-bit vector load bundle cancel valid signal.
+                  EXE decides if a speculative 512-bit vector load
+                  should be cancelled. MEU captures the cancel to
+                  update the port write mux control.
+            WHY HOLD FAIL: Short data path (M801->M802 = 1 stage)
+                  + clock skew mclk_exe arrives early vs mclk_meu.
+
+  2  -47ps  SpecPDstForLDBundleCancelM801H                            18    all 3 + func.min_nom
+            -> VecLdPortWriteMuxCtlM802H
+            WHAT: Physical destination for the cancelled load bundle.
+                  Tells MEU which PRF destination to cancel.
+
+  3  -30ps  SpecIsValid512ForLDBundleCancelM801H                       10    fast, fast_cold
+            -> RSVecLdPRFWrCancelM802H
+            WHAT: Same cancel valid, different endpoint — cancels the
+                  PRF write for the vector load.
+
+  4  -29ps  SpecPDstForLDBundleCancelM801H                            10    all 3
+            -> RSVecLdPRFWrCancelM802H
+            WHAT: Physical destination for PRF write cancel.
+
+  5  -28ps  PtPwrUpM303H                                              36    all 3
+            -> RSVecUopDepOnLoadM303H
+            WHAT: Power-up signal from EXE at stage M303H tells MEU
+                  RS that the vector uop depends on a load. Same-stage
+                  transfer (303->303) — very tight hold timing.
+
+  6  -25ps  PtPwrUpM302H                                              16    all 3
+            -> RSVecUopDepOnLoadM303H
+            WHAT: Earlier power-up (M302) to same endpoint.
+
+  7  -22ps  BypEnL0TmpM302H                                           12    all 3
+            -> RSVecUopDepOnLoadM303H
+            WHAT: Bypass enable from L0 temp at M302H feeds into
+                  the load dependency check at M303H.
+
+  ROOT CAUSE: The exe->meu clock skew on hold corners causes mclk_exe
+  to fire early relative to mclk_meu. Combined with short data paths
+  (1-stage transfers), the data arrives too early and violates hold.
+  
+  FIX OPTIONS:
+  a) Add delay cells on the cross-partition data path (PTECO should do)
+  b) Adjust IFC hold spec to add margin
+  c) Clock skew adjustment between mclk_exe and mclk_meu
+
+
+===============================================================================
+INTERFACE 2: par_pmh -> par_meu  (mclk_pmh -> mclk_meu)
+  337 paths | Worst: -13ps | func.min_low + func.min_nom only
+===============================================================================
+
+These are DCU L1 cache data/tag paths. Violations are moderate (-13ps max)
+and only appear in func.min corners (not the primary hold corners).
+
+  #  Slack  Signal (SP -> EP)                                        #paths  Corners
+  -  -----  -------------------------------------------------------  ------  -------
+  1  -13ps  DcL1RdDataIntM408H                                        51    min_low, min_nom
+            -> SnpBufDataArrayMnnnH
+            WHAT: L1 cache read data at M408H feeds into the snoop
+                  buffer data array. This is a long multi-stage path.
+
+  2  -11ps  DcReqVNoStallM404H                                         4    min_low, min_nom
+            -> ResetFbDcArbAckMnn1H
+            WHAT: DC request valid (no stall) resets the fill buffer
+                  DC arbitration acknowledge.
+
+  3   -9ps  DcReqVNoStallM404H                                        10    min_low, min_nom
+            -> FBDCArbAckM402H
+            WHAT: Same request valid -> FB arbitration ack, different reg.
+
+  4   -7ps  DcL1RdDataIntM408H                                       130    min_low, min_nom
+            -> WSBDataArrayMnnnH (two groups)
+            WHAT: L1 read data -> Write Store Buffer data array.
+                  Largest single group (130 paths = data bus width).
+
+  5   -7ps  DcReqVNoStallM404H                                         6    min_low, min_nom
+            -> DcReqPartRAOM405H
+            WHAT: Request valid -> partition RAO (Read-After-Observe).
+
+  6   -5ps  DcReqVNoStallM404H                                        14    min_low, min_nom
+            -> FBReqSchedVecM402H
+            WHAT: Request valid -> FB request scheduler vector.
+
+  7   -4ps  DcL1HitFBAllocCancelM405H                                 12    min_low, min_nom
+            -> FbWbClearM404H
+            WHAT: L1 hit cancels FB allocation -> clear WB.
+
+  8  -1..0  DcL1HitFBAllocCancelM405H, DcReqVNoStallM404H,            ~20   min_nom
+            PMPgAttrFromPgWkMpm6H
+            -> Various (FbYoungestSt, CycRFOPref, RstRplVec...)
+
+  NOTE: All PMH->MEU hold violations are -13ps or better. These are
+  borderline and likely fixable by PTECO buffer insertion.
+
+
+===============================================================================
+INTERFACE 3: par_meu -> par_pmh  (mclk_meu -> mclk_pmh)
+  12 paths | Worst: -6ps | func.min_nom only
+===============================================================================
+
+  1   -6ps  SnpQMnnnH PhyAdr -> DcL1TagWrM405H                        4    min_nom
+            WHAT: Snoop queue physical address -> L1 tag write.
+
+  2  -3..0  RSLdInfoM306H -> GLBAryMnnnH (various bits)                8    min_nom
+            WHAT: RS load info -> GLB (Global Load Buffer) array.
+
+  NOTE: Very mild violations, only in func.min_nom corner.
+
+
+===============================================================================
+INTERFACE 4: par_ooo_int -> par_meu  (mclk_ooo_int -> mclk_meu)
+  16 paths | Worst: -7ps | func.min_low + func.min_nom
+===============================================================================
+
+  1   -7ps  rsmeubanktop -> RSPtPwrUpIntM300L                         14    min_low, min_nom
+            WHAT: RS MEU bank top signal -> RS power-up internal.
+
+  2    0ps  RSEuSchedM301H -> RSCancelM302H                            2    fast_cold
+            WHAT: EU schedule -> RS cancel. Borderline (0ps slack).
+
+
+===============================================================================
+INTERFACE 5: par_meu -> par_exe  (mclk_meu -> mclk_exe)
+  4 paths | Worst: -19ps | func.min_low + func.min_nom
+===============================================================================
+
+  1  -19ps  miEXECTCAddressMnn1H -> miEXECTCAddressMnn1H               4    min_low, min_nom
+            WHAT: MEU sends EXE CTC address back to EXE. Same signal
+                  name at both ends (feedthrough/repeater path).
+            NOTE: This path exists only in func.min corners.
+
+
+PRIORITY RANKING
+================
+  Priority  Interface         Slack   #paths  Action needed
+  --------  ----------------  ------  ------  ----------------------------
+  P1        exe->meu cancel   -51ps     132   Hold fix: delay cells or IFC
+                                              spec change on LdBundleCancel
+  P2        meu->exe CTC      -19ps       4   Hold fix: buffer insertion
+  P3        pmh->meu L1 data  -13ps     337   PTECO should handle (mild)
+  P4        ooo_int->meu RS    -7ps      16   PTECO should handle
+  P5        meu->pmh snoop     -6ps      12   PTECO should handle
+
+Total fixable by PTECO (< -20ps): ~369 paths (71%)
+Needs manual attention (> -20ps): ~152 paths (29%) — all on exe->meu cancel
+
+================================================================================

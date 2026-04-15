@@ -1,0 +1,123 @@
+================================================================================
+  FCN TROUBLESHOOTING — Common Errors, Fixes & RTL Patching
+================================================================================
+
+=== PRE-COMMIT ERROR CHECKING ===
+
+  Always check these before commit:
+
+  1. grep -- "-E-" fcn_promote.log
+     -> Must be CLEAN. Fatal errors stop the flow.
+
+  2. grep -- "-W-" fcn_promote.log
+     -> Warnings not fatal but should be clean by end of project.
+
+  3. grep -- "-E-" fcn_reports/run_check_latest/*
+  4. grep -- "-W-" fcn_reports/run_check_latest/*
+  5. grep -- "-E-" fcn_reports/csv_latest/*
+
+=== COMMON ERRORS & FIXES ===
+
+  --- ERROR: "does not exist" in prepare.log ---
+  Cause: Missing collateral file (RTL, clock tag, HIP, ctech)
+  Fix: Check fcn_user_vars.tcl paths. Verify files exist:
+    ls -la <ivar(fcn,fe_model)>
+    ls -la <ivar(fcn,hip_wa)>
+    ls -la <ivar(fcn,ctech_exp_root)>
+
+  --- ERROR: UPF diffs (-E- in upf_diffs.log) ---
+  Cause: Power intent changed between TST and REF
+  Fix: Review each -E- line. If RTL changed power domains, this is
+  expected. If not, check clock tag or HIP tag changes.
+  Files: $WA/fcn_reports/run_check_latest/upf_diffs.log
+
+  --- ERROR: HIP count mismatch (xml_only or rtl_only > 0) ---
+  Cause: hip_tags.xml doesn't match RTL model
+  Fix: Run comparison:
+    fcn_xml_hips_vs_rtl_diff <HIP_TAG> <RTL_MODEL>
+  Update hip_tags.xml or add to BB list.
+
+  --- ERROR: Attribute XML warnings ---
+  Cause: Ports in attribute XML don't match RTL ports
+  Fix: Check if using custom attribute_xml:
+    ivar(fcn,top_attribute_xml) in fcn_user_vars.tcl
+  Power ports (vcccore, vss, etc.) being "only in XML" is normal.
+
+  --- ERROR: Genus/FC job failed ---
+  Check logs: fcn_logs/job.<par>.<cdns/snps>.log
+  Common causes:
+    - Memory exceeded (increase nbclass memory)
+    - License unavailable (retry)
+    - Syntax error in RTL (see RTL patching below)
+
+  --- ERROR: FDR count large delta between TST and REF ---
+  Cause: Usually clock tag change affecting ijtag/ssh paths
+  Debug: Compare fdr.rpt files:
+    diff runs/<par>/.../setup_timing2/<par>.fdr.rpt \
+         ref/runs/<par>/.../setup_timing2/<par>.fdr.rpt
+
+=== FIXING BUGGY RTL FILES ===
+
+  When RTL model has non-synthesizable code or syntax errors:
+
+  Option A: Black Box the unit
+  ----------------------------
+  Simple case (non-parametric):
+    Add to BB list in fcn_user_vars.tcl
+
+  Parametric unit (won't work in BB list):
+    Each instance must be blackboxed separately.
+    Steps:
+    1. Copy .vs file from RTL to local dir:
+       mkdir -p $WA/../rtl_fixes/rtl26ww12b/
+       cp /nfs/site/proj/gfc/.../core/mlc/rtl/mleccred.vs \
+          $WA/../rtl_fixes/rtl26ww12b/mleccred.vs
+
+    2. Edit local copy — keep interface only, remove content:
+       (keep module declaration, ports, endmodule — delete everything else)
+
+    3. Edit release/latest/fe_collateral/<par>.f:
+       - Search for the file path (e.g., core/mlc/rtl/mleccred.vs)
+       - If not found, search parent dir (e.g., core/mlc/rtl)
+       - Add local fixed file path BEFORE the original line
+       - Synthesis reads first match, so local file wins
+
+  Option B: Light fix
+  -------------------
+  If the issue is minor (e.g., syntax error):
+    1. Copy file locally
+    2. Fix the syntax
+    3. Add to <par>.f as above
+
+=== CHANGING REF WORK AREA ===
+
+  rm ref
+  ln -s <new_ref_wa> ref
+
+  Then re-run checks to get correct TST vs REF comparison.
+
+=== MID-RUN CHECKERS ===
+
+  If jobs seem stuck, run these mid-checkers:
+
+  CDNS (Cadence Genus):
+    fcn_cdns_check_genus_map
+    -> Checks all partitions finished genus_map stage
+
+  SNPS (Synopsys FC):
+    fcn_snps_check_init_floorplan
+    -> Checks all partitions finished init_floorplan stage
+
+  Job monitoring:
+    fcn_status -wait
+    -> Polls job status until all complete
+
+=== ERRORS LOG LOCATIONS ===
+
+  fcn_check_runs.ERRORS.txt      — Collected errors from check phase
+  fcn_check_runs.WARNINGS.txt    — Collected warnings from check phase
+  fcn_promote.ERRORS_TOTAL.txt   — All promote errors
+  fcn_promote.WARNINGS_TOTAL.txt — All promote warnings
+  fcn_logs/job.<par>.<tool>.log  — Per-partition per-tool logs
+
+================================================================================

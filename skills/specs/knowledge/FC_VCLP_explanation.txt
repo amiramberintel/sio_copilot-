@@ -1,0 +1,144 @@
+================================================================================
+              FC VCLP - Voltage Corner Limit Point Explanation
+================================================================================
+
+WHAT IS FC VCLP?
+----------------
+FC VCLP = Fabric Client Voltage Corner Limit Point
+
+A timing comparison/validation flow that compares timing results between two
+builds (TST vs REF) to identify regressions or improvements and validate that
+new collateral doesn't break timing closure.
+
+================================================================================
+BREAKING DOWN THE NAME
+================================================================================
+
+  Term          Meaning
+  ----------    ----------------------------------------------------------------
+  Voltage       Different voltage operating points 
+                (max_low=0.55V, max_nom=0.65V, max_high=1.1V, etc.)
+  
+  Corner        PVT corner combinations (Process, Voltage, Temperature)
+  
+  Limit         The timing boundary/margin at each corner
+  
+  Point         Specific operating point where timing is evaluated
+
+================================================================================
+WHAT VCLP MEASURES
+================================================================================
+
+                    Voltage
+                      ^
+         1.27V  -----+------  max_turbo (fastest)
+                     |    
+         1.10V  -----+------  max_high
+                     |
+         0.65V  -----+------  max_nom    <-- "Limit Points"
+                     |                       (where timing must pass)
+         0.55V  -----+------  max_low (slowest)
+                     |
+                     +------------------------> Frequency/Performance
+
+================================================================================
+THE CONCEPT
+================================================================================
+
+VCLP finds the "limit point" - the voltage/corner combination where:
+  - Timing JUST BARELY passes (or fails)
+  - The design hits its PERFORMANCE LIMIT
+  - Further voltage reduction would cause timing failure
+
+================================================================================
+TST vs REF COMPARISON
+================================================================================
+
+Example Setup:
+  
+  Type    Contour                           Work Area
+  ------  --------------------------------  -----------------------------------------
+  TST     GFCN2CLIENTA0P10_CONTOUR_26WW07E  /nfs/.../FC_VCLP_GFC_CONTOUR_26WW07E
+  REF     GFCN2CLIENTA0P10_CONTOUR_26WW05A  /nfs/.../FC_VCLP_GFC_CONTOUR_26WW05A
+
+Why Compare?
+
+  REF (WW05A):                    TST (WW07E):
+  +-------------------+           +-------------------+
+  | max_high: PASS    |           | max_high: PASS    |
+  | max_nom:  PASS    |    vs     | max_nom:  PASS    |
+  | max_low:  PASS    |           | max_low:  FAIL <--| Regression!
+  +-------------------+           +-------------------+
+
+================================================================================
+QUESTIONS VCLP ANSWERS
+================================================================================
+
+1. At which voltage corner does timing fail?
+   - If max_low fails but max_nom passes -> limit is between them
+
+2. Did new collateral change the limit point?
+   - REF passed at 0.55V, TST fails at 0.55V -> regression
+
+3. What's the timing margin at each corner?
+   - WNS at max_low = -50ps (fail) vs WNS at max_nom = +100ps (pass)
+
+================================================================================
+PRACTICAL EXAMPLE
+================================================================================
+
+Path: clk_msid -> data_reg
+
+               REF (WW05A)     TST (WW07E)     Delta
+  -----------  -------------   -------------   --------------------------
+  max_high:    +150ps          +145ps          -5ps  (minor degradation)
+  max_nom:     +80ps           +75ps           -5ps  (minor degradation)
+  max_low:     +10ps           -15ps           -25ps (REGRESSION!)
+               ^                ^
+               |                |
+               Limit Point      Limit Point moved!
+               (barely pass)    (now fails)
+
+================================================================================
+TYPICAL VCLP REPORTS SHOW
+================================================================================
+
+  - WNS/TNS delta between TST and REF
+  - New violations introduced
+  - Fixed violations  
+  - Slack changes per path group
+  - Per-partition comparison
+
+================================================================================
+SUMMARY
+================================================================================
+
+VCLP = "At what voltage/corner does my design stop working?"
+
+It's a way to:
+  - Validate timing across all operating points
+  - Catch regressions when collateral changes
+  - Ensure the chip works across its full voltage range
+
+Key Workflow:
+  1. Run STA on REF contour (baseline)
+  2. Run STA on TST contour (new version)
+  3. Compare results at each voltage corner
+  4. Identify regressions (paths that got worse)
+  5. Report to partition owners for investigation
+
+================================================================================
+RELATED TERMS
+================================================================================
+
+  Term          Meaning
+  ----------    ----------------------------------------------------------------
+  WNS           Worst Negative Slack - most critical failing path
+  TNS           Total Negative Slack - sum of all negative slacks
+  Contour       Versioned snapshot of all collateral
+  PVT           Process, Voltage, Temperature corners
+  Regression    Timing that got worse between REF and TST
+
+================================================================================
+Generated: 2026-02-18
+================================================================================

@@ -1,0 +1,159 @@
+================================================================================
+  CORNER-TO-SPEF MAPPING -- GFC Client A0
+================================================================================
+
+HOW IT WORKS
+------------
+StarRC runs extraction under 8 different process/temperature conditions,
+producing 8 SPEF files per partition. Each of the 34 timing corners maps
+to one of these 8 SPEF files based on the RC extraction condition in the
+corner name (the last part after the temperature).
+
+The corner name format is:
+  <mode>.<check>_<voltage>.<process>_<temp>.<rc_extraction>
+
+Example:
+  func.max_low.T_85.typical
+  ^    ^       ^     ^
+  |    |       |     +-- RC extraction corner --> typical_85.spef.gz
+  |    |       +-- Process=T(typical), Temp=85C
+  |    +-- Voltage condition (low/med/high/nom/turbo)
+  +-- Functional mode, max (setup) check
+
+================================================================================
+  THE 8 SPEF FILES (per partition)
+================================================================================
+
+  SPEF File                        Temp   RC Condition       Used For
+  -------------------------------  -----  ----------------   ----------------
+  typical_85.spef.gz               85C    Nominal RC         Setup (main)
+  cworst_CCworst_125.spef.gz      125C   Worst cap          Setup (slow)
+  cworst_CCworst_M40.spef.gz      -40C   Worst cap, cold    Setup (slow cold)
+  cworst_CCworst_T_125.spef.gz    125C   Worst cap+trans    Setup (pessimistic)
+  cworst_CCworst_T_M40.spef.gz    -40C   Worst cap+trans    Setup (pessimistic cold)
+  rcworst_CCworst_125.spef.gz     125C   Worst RC           Hold
+  rcworst_CCworst_M40.spef.gz     -40C   Worst RC, cold     Hold (cold)
+  rcworst_CCworst_T_125.spef.gz   125C   Worst RC+trans     Hold/setup cross
+
+What the RC conditions mean:
+  typical         -- Nominal process, nominal R and C
+  cworst_CCworst  -- Worst-case capacitance (max C = max delay for setup)
+  rcworst_CCworst -- Worst-case RC product (max R*C = worst hold)
+  _T_             -- Transistor-level extraction (more accurate, slower)
+
+Temperature effect on parasitics:
+  125C  -- Higher temperature = higher metal resistance
+  85C   -- Nominal operating temperature
+  -40C  -- Cold = lower resistance but different cap behavior
+
+================================================================================
+  FULL CORNER-TO-SPEF MAPPING (34 corners)
+================================================================================
+
+--- SETUP CORNERS (func.max_*) -- 17 corners ---
+
+  Corner                                          SPEF Used
+  ----------------------------------------------  ----------------------------
+  func.max_low.T_85.typical                       typical_85
+  func.max_med.T_85.typical                       typical_85
+  func.max_high.T_85.typical                      typical_85
+  func.max_nom.T_85.typical                       typical_85
+  func.max_turbo.T_85.typical                     typical_85
+  func.max_low_stressed.T_85.typical              typical_85
+  func.max_med_stressed.T_85.typical              typical_85
+  func.max_high_stressed.T_85.typical             typical_85
+  func.max_nom_stressed.T_85.typical              typical_85
+  func.max_turbo_stressed.T_85.typical            typical_85
+  func.max_hi_hi_lo.T_85.typical                  typical_85
+  func.max_hi_lo_hi.T_85.typical                  typical_85
+  func.max_lo_hi_hi.T_85.typical                  typical_85
+  func.max_slow_low.S_125.cworst_CCworst_T        cworst_CCworst_T_125
+  func.max_slow_low_cold.S_M40.cworst_CCworst_T   cworst_CCworst_T_M40
+  func.max_slow_mid.S_125.cworst_CCworst_T         cworst_CCworst_T_125
+  func.max_fast.F_125.rcworst_CCworst_T            rcworst_CCworst_T_125
+
+--- HOLD CORNERS (func.min_* + fresh.min_*) -- 13 corners ---
+
+  Corner                                          SPEF Used
+  ----------------------------------------------  ----------------------------
+  func.min_low.T_85.typical                       typical_85
+  func.min_high.T_85.typical                      typical_85
+  func.min_nom.T_85.typical                       typical_85
+  func.min_turbo.T_85.typical                     typical_85
+  fresh.min_fast.F_125.rcworst_CCworst            rcworst_CCworst_125
+  fresh.min_fast_cold.F_M40.rcworst_CCworst       rcworst_CCworst_M40
+  fresh.min_hvqk.F_125.rcworst_CCworst            rcworst_CCworst_125
+  fresh.min_slow.S_125.cworst_CCworst             cworst_CCworst_125
+  fresh.min_slow_cold.S_M40.cworst_CCworst        cworst_CCworst_M40
+  fresh.min_hi_hi_lo.T_85.typical                 typical_85
+  fresh.min_hi_lo_hi.T_85.typical                 typical_85
+  fresh.min_lo_hi_hi.T_85.typical                 typical_85
+
+--- NOISE CORNERS -- 2 corners ---
+
+  Corner                                          SPEF Used
+  ----------------------------------------------  ----------------------------
+  fresh.noise_high.F_125.rcworst_CCworst          rcworst_CCworst_125
+  fresh.noise_low.S_M40.cworst_CCworst            cworst_CCworst_M40
+
+--- EM / POWER CORNERS -- 2 corners ---
+
+  Corner                                          SPEF Used
+  ----------------------------------------------  ----------------------------
+  func.rv_em_core.F_125.rcworst_CCworst           rcworst_CCworst_125
+  func.power_mid_warm_client.T_85.typical         typical_85
+
+================================================================================
+  WHICH SPEF FOR WHICH ANALYSIS?
+================================================================================
+
+  Analysis Type          Best SPEF to Use            Why
+  ---------------------  --------------------------  -------------------------
+  Setup debug            typical_85                  Most setup corners use it
+  Hold debug             rcworst_CCworst_125         Worst RC = worst hold
+  Setup slow corners     cworst_CCworst_T_125        Pessimistic cap for slow
+  Cold hold debug        rcworst_CCworst_M40         Cold hold corners
+  Coupling/crosstalk     cworst_CCworst_125          Worst coupling cap
+  Nominal analysis       typical_85                  Realistic conditions
+  EM analysis            rcworst_CCworst_125         Worst current density
+
+  RULE OF THUMB:
+  - For setup failures: use typical_85 (that's what most setup corners see)
+  - For hold failures:  use rcworst_CCworst_125 (worst RC product)
+  - For slow-corner:    use cworst_CCworst_T_125 (worst cap)
+
+================================================================================
+  SPEF USAGE COUNT (how many corners share each SPEF)
+================================================================================
+
+  SPEF                       Corners Using It
+  -------------------------  ----------------
+  typical_85                 18 corners (most setup + some hold)
+  rcworst_CCworst_125        4 corners (main hold + noise + EM)
+  rcworst_CCworst_M40        2 corners (cold hold + noise)
+  rcworst_CCworst_T_125      2 corners (fast setup + slow RC)
+  cworst_CCworst_125         1 corner  (slow hold)
+  cworst_CCworst_M40         2 corners (slow cold hold + noise)
+  cworst_CCworst_T_125       3 corners (slow setup)
+  cworst_CCworst_T_M40       1 corner  (slow cold setup)
+
+================================================================================
+  HOW TO DECODE A CORNER NAME
+================================================================================
+
+  func.max_slow_low.S_125.cworst_CCworst_T
+  |    |   |    |   | |   |
+  |    |   |    |   | |   +-- RC extraction: worst cap + transistor
+  |    |   |    |   | +-- Temperature: 125C
+  |    |   |    |   +-- Process: S=Slow
+  |    |   |    +-- Voltage: low
+  |    |   +-- OCV: slow (derating)
+  |    +-- Check: max = setup
+  +-- Mode: func = functional
+
+  Process letters: T=Typical, S=Slow, F=Fast
+  Temp: 85=85C, 125=125C, M40=-40C
+  Mode: func=functional, fresh=fresh (aging-aware)
+
+SOURCE: GFC Client A0 WW16B build, 34 timing corners, 8 SPEF files
+================================================================================

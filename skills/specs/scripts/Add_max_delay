@@ -1,0 +1,90 @@
+#!/usr/bin/tcsh -f
+
+unset in_pin
+unset out_pin
+unset value
+
+set line = "$argv"
+set ci = "n"
+set add_delay = "-add_delay"
+while ($#argv > 0)
+    set var = "$1"
+    switch ($var)
+    case -in_pin:
+        shift
+        set in_pin="$1"
+        shift
+    breaksw
+    case -out_pin:
+        shift
+        set out_pin="$1"
+        shift
+    breaksw
+    case -value:
+        shift
+        set value="$1"
+        shift
+    breaksw
+    case -file:
+    	shift
+    	set outfile = "$1"
+	shift
+    breaksw
+    case -force:
+    	set ci = y 
+	shift
+    breaksw 
+    case -remove_add_delay:
+        set add_delay = ""
+        shift
+    breaksw
+    case -help:
+    echo "  \
+Flags :    \
+    case -in_pin:  <In Pin name> \
+    case -out_pin: <Out Pin name>\
+    case -value: <Max delay value>\
+    case -file: <the IO File> \
+    case -force: <to apply changes to the file>\
+Usage :  \
+    	source ~/LNC_script/IO_manip/Add_max_delay -in_pin <pin_name> -out_pin <pin_name> -value <value> -file <file> -remove_add_delay \
+    	if the port name have [] pls add \\ before "
+
+        exit 1
+        break
+    default:
+        echo "unknown switch - at .... Add_max_delay $line"
+        exit 1
+        break
+    endsw
+end
+
+if ( $?in_pin && $?out_pin && $?value && $?outfile  ) then
+    if ( ! -e $outfile) then 
+    	echo "[E] File $outfile does not Exists"
+	exit 1
+    endif
+
+    set file_base_name = `basename $outfile`_${USER}_`date +%H_%M_%S_%N`
+
+    echo "#Manually IO edit" > /tmp/${file_base_name}_temp_IO 
+    echo "if {[sizeof_collection [get_ports -quiet ${in_pin} ]] && [sizeof_collection [get_ports -quiet ${out_pin} ]]  && [sizeof_collection [get_clocks -quiet feedthrough_virtual_clock ] ] } {" >> /tmp/${file_base_name}_temp_IO
+    echo "     set_max_delay ${add_delay} -from [get_clocks -quiet { feedthrough_virtual_clock }] -through [get_ports -quiet { ${in_pin} } ] -through [get_ports -quiet { ${out_pin} }] -to [get_clocks -quiet { feedthrough_virtual_clock }] ${value}" >> /tmp/${file_base_name}_temp_IO
+    echo "     set_input_delay  -network_latency_included -source_latency_included -add_delay -clock feedthrough_virtual_clock 0 [get_ports -quiet { ${in_pin} } ]" >> /tmp/${file_base_name}_temp_IO
+    echo "     set_output_delay -network_latency_included -source_latency_included -add_delay -clock feedthrough_virtual_clock 0 [get_ports -quiet { ${out_pin} } ]" >> /tmp/${file_base_name}_temp_IO 
+    echo "}" >> /tmp/${file_base_name}_temp_IO
+    echo "\[I] .....Add_max_delay $line \nNew lines:" 
+    cat  /tmp/${file_base_name}_temp_IO
+    if ( $ci != "y" ) then
+	echo "OverRide The File? y/n" 
+	set ans = "$<"
+	if ($ans == "y" ) then
+		cat /tmp/${file_base_name}_temp_IO >> $outfile  
+    	endif
+    else
+    cat /tmp/${file_base_name}_temp_IO >> $outfile
+    endif
+    rm -f /tmp/${file_base_name}_temp_IO
+else 
+    echo "[E] Something went Wrong - at ...Add_max_delay $line"
+endif

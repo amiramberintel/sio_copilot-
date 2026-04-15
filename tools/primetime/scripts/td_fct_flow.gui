@@ -1,0 +1,36 @@
+#!/usr/bin/tcsh -f
+
+if ( -f "gui_done.log" ||  -f "gui_run_command.csh" || -f "gui_running.log" ) then
+        echo "\nAlready Running on this Area"
+        echo "Please close the gui "
+        echo "if did not worked : "
+        echo "          1) check that there are no running Jobs in the backgroud : jobs " 
+        echo "          2) try to remove:    rm -f gui_run_command.csh gui_done.log gui_running.log"
+        exit 1 
+endif
+
+# destray old running gui
+touch gui_done.log
+rm -f gui_run_command.csh
+rm -f gui_done.log
+
+touch gui_running.log
+python3.7.4 ~baselibr/GFC_script/td_fct_tool/td_fct_flow.py &
+
+mkdir -p $ward/td_fct_flow_gui/
+while (1)
+        if ( -f "gui_run_command.csh" ) then
+            set log_file = "gui_temp.log"
+            if (`grep "^#step" gui_run_command.csh | wc -l ` ) then
+            set log_file = `grep "^#step" gui_run_command.csh | awk '{print $2}'`
+        endif
+        cat gui_run_command.csh >  $ward/td_fct_flow_gui/$log_file
+        source gui_run_command.csh >> $ward/td_fct_flow_gui/$log_file
+        rm gui_run_command.csh
+        endif 
+        if ( -f "gui_done.log" ) then
+        rm gui_done.log
+        rm gui_running.log
+        exit 0
+        endif 
+end

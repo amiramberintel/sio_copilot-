@@ -1,0 +1,12 @@
+set clock_new = mclk_
+set stress_by = $2
+set outfile = `rp $1`
+set file_base_name = `basename $outfile`_${USER}_`date +%H_%M_%S_%N`
+
+sed -r "/\-clock.*${clock_new}.*get_ports[ ]*\-quiet.*/ s/(.*set_output_delay.*\-clock.*${clock_new}.*)[ ]+([^ ]+)[ ]*(\[get_ports[ ]*\-quiet.*)/\1 \[expr_io_manip \2 + ${stress_by} \] \3/g" $outfile > /tmp/${file_base_name}_temp_IO 
+perl -pi -e 's|\[expr_io_manip ([^\]]*)\]|$1|gee' /tmp/${file_base_name}_temp_IO
+
+
+echo "result file at /tmp/${file_base_name}_temp_IO" 
+echo "use command below to review the diff"
+echo "diff ${outfile} /tmp/${file_base_name}_temp_IO | grep -e "<" -e ">" | sed 's/</Old Line:/g' | sed 's/>/New Line:/g'"

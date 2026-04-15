@@ -1,0 +1,72 @@
+FEV Status - GFC-A0 (core-gfc-a0-master-26ww10b)
+===================================================
+Last updated: 2026-03-30
+FEV WA: /nfs/site/disks/idc_bei_fev/gpavanku/GFC_FEV_RUN/FEV_RUN/
+
+PARTITION STATUS SUMMARY:
+  PASS: par_fmav0, par_fmav1, par_msid, par_ooo_int, par_tmul_stub (5/12)
+  FAIL: par_exe, par_fe, par_meu, par_mlc, par_ooo_vec, par_pm, par_pmh (7/12)
+
+GREENSTONE VIOLATIONS (from actual reports):
+  Partition       NonEq  NotMap  Abort  Undriven  NonBBox  Status   Root Cause
+  par_exe             4      72  8,911        0        2   FAIL     4 noneq: mclk connection change RTL vs netlist
+  par_fe              8      16      0        8        5   FAIL     8 noneq: dangling net connection at RTL, AR on RTL team
+  par_fmav0           0       0      0        0        7   PASS     LCP dumped locally using scripts
+  par_fmav1           0       0      0        0        7   PASS     LCP dumped locally using scripts
+  par_meu           194     263      4      243        4   FAIL     243 dangling connections at RTL side, AR on RTL team
+  par_mlc             6       3    752        0        6   FAIL     3 FDR ctech buffer not black boxed at netlist
+  par_msid            0       0      0        0        1   PASS
+  par_ooo_int         0       0      0        0        4   PASS
+  par_ooo_vec    16,434   1,166      9        0        2   FAIL     LCP file not dumped properly, need correct LCP from PO
+  par_pm            168       3      0        0        2   FAIL     Unwanted isolation strategy on scan_chain, PO looking
+  par_pmh         1,447       3    574        0        5   FAIL     3 bbox ctech buffer -> convert to normal clk buffer, AR on PO
+  par_tmul_stub       0       0      0        0        0   PASS
+
+AUDIT REVIEW STATUS:
+  Partition       ING3.2  BBox_Bal  Gold_LP  Rev_LP  PwrGrid  PwrCons
+  par_exe         FAIL    FAIL      PASS     FAIL    FAIL     FAIL
+  par_fe          PASS    FAIL      PASS     PASS    PASS     PASS
+  par_fmav0       PASS    FAIL      PASS     PASS    FAIL     FAIL
+  par_fmav1       PASS    FAIL      PASS     PASS    PASS     PASS
+  par_meu         FAIL    FAIL      PASS     FAIL    PASS     PASS
+  par_mlc         FAIL    FAIL      PASS     PASS    PASS     PASS
+  par_msid        FAIL    FAIL      PASS     PASS    PASS     PASS
+  par_ooo_int     FAIL    FAIL      PASS     PASS    PASS     PASS
+  par_ooo_vec     FAIL    FAIL      PASS     PASS    PASS     PASS
+  par_pm          FAIL    FAIL      PASS     PASS    PASS     FAIL
+  par_pmh         FAIL    FAIL      PASS     PASS    PASS     PASS
+  par_tmul_stub   PASS    PASS      PASS     PASS    PASS     PASS
+
+  Black box Balance: FAIL for ALL partitions except par_tmul_stub
+    -- Need to check with PDN team for workaround
+
+par_meu FEV DETAIL:
+  Status: FAIL
+  RTL model: /p/hdk/rtl/models/xhdk74/gfc/meu/meu-gfc-a0-master-26ww10b/
+  STA_PT: LOCAL POINTER
+  
+  Violations:
+    NonEquivalent:    194  -- registers/outputs differ between RTL and netlist
+    NotMapped:        263  -- points not mapped between RTL and netlist
+    Abort:              4  -- comparisons aborted
+    RTLUndrivenNets:  243  -- dangling connections at RTL side (MAIN ISSUE)
+    NonMatchingBBoxes:  4  -- black box mismatch
+    UnmappedPins:       2
+    Total violations: 716
+  
+  Root cause: 243 dangling connections at RTL side
+  Action: AR on RTL team to fix those connections (PFA sent)
+
+ACTION ITEMS:
+  1. par_exe: PFA for 4 noneq due to clock connection change
+  2. par_fe, par_meu: RTL team fix dangling connections (AR sent)
+  3. par_mlc: Convert 3 FDR buffers to blackbox buffers:
+     - mlc/.../cacheloader_inst_0__cacheloader/.../core_ctech_lib_bb_buf
+     - mlc/.../cacheloader_inst_1__cacheloader/.../core_ctech_lib_bb_buf
+     - mlc/.../cacheloader_inst_2__cacheloader/.../core_ctech_lib_bb_buf
+  4. par_ooo_vec: PO needs to provide updated LCP file
+  5. par_pm: PO investigating unwanted isolation on scan_chain
+  6. par_pmh: 3 bbox ctech buffer -> normal clock buffer, AR on PO
+  7. Fusion compiler partitions: work with Yarden Kanner for LCP file + FEV run
+  8. All POs: move to latest RTL model (stop using local RTL)
+  9. Audit review: most partitions have imbalanced bbox, check with PDN team

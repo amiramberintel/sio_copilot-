@@ -1,0 +1,1074 @@
+================================================================================
+  TIP .tp FILE CREATION COOKBOOK
+  ─────────────────────────────
+  A step-by-step guide to create TIP topology plan (.tp) files
+  for cross-partition signals
+  
+  Author: sunger
+  Date:   01-Mar-2026
+  Based on: ILGBPQIdM107H[0:5] par_msid→par_fe debug session
+================================================================================
+
+
+TABLE OF CONTENTS
+─────────────────
+  1. PREREQUISITES — What you need before starting
+  2. STEP 1: IDENTIFY THE SIGNAL — Find failing cross-partition paths
+  3. STEP 2: GET PIN COORDINATES — From port_location CSV
+  4. STEP 3: FIND EXISTING RTLFP PLAN — Check icore_plans.tcl
+  5. STEP 4: UNDERSTAND THE .tp STRUCTURE — Anatomy of a .tp file
+  6. STEP 5: BUILD THE .tp FILE — Section by section
+  7. STEP 6: TRACK BLOCKING (pre.tip_implementation.tcl)
+  8. STEP 7: VALIDATE — Check nodes, edges, repeaters
+  9. KEY RULES & LESSONS LEARNED
+  10. REFERENCE FILES & LOCATIONS
+  11. TEMPLATE — Blank .tp skeleton
+  12. TIP SHAPE TYPES — Graph topologies and edge routing shapes
+  13. PDN POWER GRID & METAL LAYER SELECTION
+
+
+================================================================================
+1. PREREQUISITES — What you need before starting
+================================================================================
+
+  Before creating a .tp file, gather:
+
+  □ Daily WA path with STA reports
+    Example: .../sta_pt/func.max_high.T_85.typical/reports/
+
+  □ Timing report for the failing path (from report_timing or timing_summary.xml)
+    Need: slack, path delays, cell names, coordinates
+
+  □ port_location_outside_bbox.csv from the STA reports
+    Need: pin coordinates for source/destination partitions
+
+  □ Access to RTLFP area for existing plans
+    Location: /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/
+    Key files: icore_plans.tcl, core_client_plans.tcl
+
+  □ Reference .tp files from the TIP files directory
+    Location: /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/<TAG>/
+
+  □ pre.tip_implementation.tcl for track blocking variables
+    Contains: M17_half_shield_1w, M18_half_shield_1w, etc.
+
+
+================================================================================
+2. STEP 1: IDENTIFY THE SIGNAL — Find failing cross-partition paths
+================================================================================
+
+  From the STA reports, identify:
+
+  a) Signal name and bus width
+     Example: ILGBPQIdM107H[0:5] — 6-bit bus
+
+  b) Source and destination partitions
+     Example: par_msid (output/driver) → par_fe (input/receiver)
+
+  c) Slack and how many bits are failing
+     Example: -24.6 to -34.7 ps, ALL 6 bits failing
+
+  d) Check if signal already has TIP data:
+     grep -r "signal_name" /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/<TAG>/*.tp
+
+  e) Check existing RTLFP plan:
+     grep -A 50 "signal_name" <RTLFP_PATH>/icore_plans.tcl
+
+
+================================================================================
+3. STEP 2: GET PIN COORDINATES — From port_location CSV
+================================================================================
+
+  Find pin coordinates in port_location_outside_bbox.csv:
+
+  CSV columns:
+    name, abutted, dist_to_bbox, st_point_x, st_point_y, en_point_x, en_point_y,
+    port_point_x, port_point_y, port_point_x_abutted, port_point_y_abutted,
+    fis_count, fos_count, wns, is_moved, td_x, td_y
+
+  Command:
+    grep "signal_name" .../reports/port_location_outside_bbox.csv
+
+  What to extract:
+    - port_point_x, port_point_y      = source partition pin coordinates
+    - port_point_x_abutted, y_abutted = destination partition pin coordinates
+    - st_point, en_point              = path bounding box
+
+  Example output:
+    icore0/par_msid/ilgbpqidm107h[3],icore0/par_fe/ilgbpqidm107h[3],0.0,
+    1240152.0,100735.0,1553470.0,266148.0,
+    1440672.0,240616.0,1441248.0,240616.0,41,1,-34.72
+
+  This tells us:
+    par_msid pin: (1440672, 240616) nm = (1440.672, 240.616) um
+    par_fe   pin: (1441248, 240616) nm = (1441.248, 240.616) um
+    X gap = 576 nm = 0.576 um
+
+
+================================================================================
+4. STEP 3: FIND EXISTING RTLFP PLAN — Check icore_plans.tcl
+================================================================================
+
+  *** THIS IS THE MOST IMPORTANT STEP ***
+
+  The RTLFP tool generates plans in icore_plans.tcl (or core_client_plans.tcl).
+  These have the CORRECT:
+    - Node structure (4 nodes: 2 bound + 2 pin nodes)
+    - bbox_percentage values
+    - Edge routing and layer assignments
+    - Repeater offsets and types
+    - points_topology_edges (actual routing coordinates)
+
+  Location:
+    <RTLFP_PATH>/icore_plans.tcl
+    Example: /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/GFCCLIENTA0_TS25.12/
+             runs/core_client/n2p_htall_conf4/rtlfp/icore_plans.tcl
+
+  Command:
+    grep -A 60 "signal_name" <RTLFP_PATH>/icore_plans.tcl
+
+  KEY DATA TO EXTRACT:
+    1. points_topology_edges — routing waypoints in um
+    2. bbox_percentage values for bound nodes
+    3. Number of nodes, edges, repeaters
+    4. Repeater offsets and which edge they belong to
+    5. shape_layers and offset values for each edge
+
+  *** DO NOT GUESS bbox_percentage — always use the RTLFP plan values ***
+  *** DO NOT GUESS repeater offsets — always use the RTLFP plan values ***
+
+
+================================================================================
+5. STEP 4: UNDERSTAND THE .tp STRUCTURE — Anatomy of a .tp file
+================================================================================
+
+  A .tp file is a TCL script with these sections IN ORDER:
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │ 1. HEADER COMMENT                                          │
+  │    #| FILENAME, USER, TIMESTAMP, BLOCK, COMMENT            │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 2. NETLIST CHECKS                                          │
+  │    - Check nets exist        (old_rtl_top_nets_list)       │
+  │    - Check pins exist        (old_rtl_pins_list)           │
+  │    - Check ports exist       (old_rtl_ports_list)          │
+  │    - Check units-pins exist  (old_units_pins_list)         │
+  │    Each check: if mismatch → iproc_msg error → return     │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 3. USER ATTRIBUTES                                         │
+  │    define_user_attribute for topology_node, topology_plan, │
+  │    topology_repeater classes                               │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 4. NER (Net Estimation Rule)                               │
+  │    - Layer assignment (M17 vertical, M18 horizontal)       │
+  │    - Buffer cell (e.g. BUFFSR2BFYD18BWP...)                │
+  │    - Buffer spacing (e.g. 170.000 um)                      │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 5. TOPOLOGY GROUP                                          │
+  │    create_topology_group -name tip_repeater                │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 6. SUPERNETS & BUNDLE                                      │
+  │    - Remove old supernets/bundle                           │
+  │    - Create supernet per net (using par_fe pins)           │
+  │    - Create bundle grouping all supernets                  │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 7. TOPOLOGY PLAN                                           │
+  │    - create_topology_plan with bundle, NER, group          │
+  │    - Set attributes: points_topology_edges,                │
+  │      eco_object_count, repeater multipliers,               │
+  │      repeater_group_constraints                            │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 8. TOPOLOGY NODES (2 nodes — one per partition)             │
+  │    NODE0: source partition  (get_cells, bbox + move_objects)│
+  │    NODE1: dest partition    (get_cells, bbox + move_objects)│
+  ├─────────────────────────────────────────────────────────────┤
+  │ 9. TOPOLOGY EDGES (1 edge connecting the 2 nodes)          │
+  │    EDGE0: NODE0→NODE1 (crosses partition boundary)         │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 10. TOPOLOGY REPEATERS                                     │
+  │    All BUF D18 (-type repeater)                            │
+  │    Corner repeaters at partition edges                     │
+  │    Set physical_status = locked                            │
+  │    Set index values                                        │
+  ├─────────────────────────────────────────────────────────────┤
+  │ 11. TRACK BLOCKING (comment only — goes in pre.tip)        │
+  │    Reference to ivar entries for pre.tip_implementation.tcl│
+  ├─────────────────────────────────────────────────────────────┤
+  │ 12. ATTRIBUTES                                             │
+  │    is_td, is_preroute, hierarchy_owner, is_visible         │
+  └─────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+6. STEP 5: BUILD THE .tp FILE — Section by section
+================================================================================
+
+  KEY RULES:
+
+  a) NODES — Use get_cells (BU model standard, 2 nodes)
+     create_topology_node ... -objects [get_cells { par_msid }] \
+       -constrained_objects [get_pins { par_msid/signal[N] }] \
+       -constraint_type bbox -bbox_percentage {50 50}
+
+     Use default bbox_percentage {50 50} and then move_objects to
+     position nodes at the source/endpoint FF locations.
+     See Section 14 for full details.
+
+  b) EDGES — Typically 3 edges, not 1
+     EDGE0: destination pins → destination bound (within destination partition)
+     EDGE1: source pins → destination pins (partition crossing, short)
+     EDGE3: source bound → source pins (within source partition)
+
+     Each edge has shape_layers with layer percentage and offset:
+       -shape_layers { {M18 100% 2.0920} }
+       -shape_layers { {M17 100% 2.0920} {M18 100% 2.0920} }
+
+  c) REPEATERS — Always use -type repeater (BUF D18)
+     *** ALL repeaters should be BUF D18 — never use -type inverter ***
+     
+     Corner repeaters: closest to partition boundary
+       set_attribute ... -name corner_repeater -value true
+     
+     All repeaters:
+       set_attribute ... -name physical_status -value locked
+       set_attribute ... -name index -value {0 N}
+
+  d) SUPERNETS — Created using destination partition pins
+     create_supernet -name NET_NAME [get_pins par_fe/signal\[N\]]
+
+  e) TRACK BLOCKING — Do NOT put ivar lines in the .tp file
+     The $M17_half_shield_1w variables are defined in pre.tip_implementation.tcl.
+     The .tp file runs in a different context where those variables don't exist.
+     → Add ivar entries to pre.tip_implementation.tcl instead.
+
+  f) SPREAD VALUE for track blocking
+     The last number in the ivar is the spread in microns.
+     For a 6-bit bus: use 3 (3 microns, enough tracks for 6 bits in power gutter)
+     For a 1-bit signal: use 1
+     Rule: ~0.5 um per bit, rounded up
+
+
+================================================================================
+7. STEP 6: TRACK BLOCKING (pre.tip_implementation.tcl)
+================================================================================
+
+  Track blocking ivars must be added to pre.tip_implementation.tcl, NOT the .tp file.
+
+  Format:
+    set ivar(tip_block_track_for_pin_placment,<LAYER>,<TP_NAME>) "$<TRACK_VAR> <SPREAD>"
+    set ivar(tip_block_track_for_route,<LAYER>,<TP_NAME>) "$<TRACK_VAR> <SPREAD>"
+
+  Common track variables:
+    $M17_half_shield_1w = "{1.140 3.420} {0.200 0.200}"
+    $M18_half_shield_1w = "{1.235 3.705} {0.450 0.450}"
+
+  Example for 6-bit bus (spread=3):
+    set ivar(tip_block_track_for_pin_placment,M17,signal_tp) "$M17_half_shield_1w 3"
+    set ivar(tip_block_track_for_pin_placment,M18,signal_tp) "$M18_half_shield_1w 3"
+    set ivar(tip_block_track_for_route,M17,signal_tp) "$M17_half_shield_1w 3"
+    set ivar(tip_block_track_for_route,M18,signal_tp) "$M18_half_shield_1w 3"
+
+  Example for 1-bit signal (spread=1):
+    set ivar(tip_block_track_for_pin_placment,M17,signal_tp) "$M17_half_shield_1w 1"
+    ...
+
+
+================================================================================
+8. STEP 7: VALIDATE — Check nodes, edges, repeaters
+================================================================================
+
+  After creating the .tp file, verify:
+
+  □ 1. Pin coordinates match port_location CSV
+     Compare NODE2/NODE3 pin positions with CSV data.
+
+  □ 2. Node-to-coordinate mapping makes sense
+     NODE0 (dest bound)   should be at/near destination partition far edge
+     NODE1 (source bound)  should be at/near source partition far edge
+     NODE2 (dest pins)     should be at destination boundary pin locations
+     NODE3 (source pins)   should be at source boundary pin locations
+
+  □ 3. Edge distances are reasonable
+     EDGE0 (within dest partition): tens to hundreds of um
+     EDGE1 (crossing): ~0.5-1 um (just the partition gap)
+     EDGE3 (within source partition): tens to hundreds of um
+
+  □ 4. Repeater count and offsets match RTLFP plan
+     Offsets must match exactly from icore_plans.tcl
+
+  □ 5. All repeaters are -type repeater (BUF D18)
+     No inverters! grep for "type inverter" should return nothing.
+
+  □ 6. No ivar lines referencing $M17_half_shield_1w in the .tp file
+     These must be in pre.tip_implementation.tcl only.
+
+  □ 7. Netlist check lists are correct
+     - old_rtl_top_nets_list: all net names (e.g. SignalName_0_ SignalName_1_)
+     - old_rtl_pins_list: all partition pins with escaped brackets
+     - old_units_pins_list: unit-level pins (par/unit/Signal format)
+
+  □ 8. Try sourcing in fc_shell
+     source icore.signal.tp
+     If error → check variable references, pin names, net names
+
+
+================================================================================
+9. KEY RULES & LESSONS LEARNED
+================================================================================
+
+  RULE 1: ALWAYS check icore_plans.tcl FIRST
+    The RTLFP tool already computed the correct node structure, bbox_percentage,
+    edge routing, and repeater placement. Use those values — don't guess.
+
+  RULE 2: Use get_bounds, NOT get_cells for bound nodes
+    WRONG: -objects [get_cells { par_msid }]
+    RIGHT: -objects [get_bounds { par_msid/TOPOLOGY_NODE1_master_bound_0 }]
+    Pin nodes use get_pins directly.
+
+  RULE 3: ALL repeaters are BUF D18 (-type repeater)
+    Never use -type inverter. The NER defines the buffer cell as BUFFSR2BFYD18.
+
+  RULE 4: Typically 4 nodes + 3 edges, NOT 2 nodes + 1 edge
+    The real topology has bound nodes AND pin nodes for each partition,
+    with separate edges for each segment of the route.
+
+  RULE 5: Track blocking goes in pre.tip_implementation.tcl, NOT .tp
+    The $M17_half_shield_1w variables are only defined in pre.tip.
+    Putting ivar lines in .tp will cause "can't read variable" errors.
+
+  RULE 6: Spread value = ~0.5 um per bit
+    6-bit bus → spread=3, 1-bit → spread=1, 57-bit → spread=~28
+
+  RULE 7: bbox_percentage comes from RTLFP, don't calculate manually
+    The values depend on partition geometry and bound objects.
+    Always copy from icore_plans.tcl.
+
+  RULE 8: points_topology_edges defines the actual routing path
+    These are the waypoint coordinates in um that define how the
+    TIP wire routes through the design. Copy from icore_plans.tcl.
+
+  RULE 9: Repeaters have physical_status = locked
+    This prevents the tool from moving them during optimization.
+
+  RULE 10: Supernets use destination partition pins
+    create_supernet -name NET [get_pins par_fe/signal\[N\]]
+    (the receiving/input side)
+
+
+================================================================================
+10. REFERENCE FILES & LOCATIONS
+================================================================================
+
+  RTLFP plans:
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/GFCCLIENTA0_TS25.12/
+    runs/core_client/n2p_htall_conf4/rtlfp/icore_plans.tcl
+
+  TIP files per tag:
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/<TAG>/
+
+  Track blocking:
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/<TAG>/pre.tip_implementation.tcl
+
+  Daily WA STA reports:
+    .../sta_pt/<corner>/reports/port_location_outside_bbox.csv
+    .../sta_pt/<corner>/reports/*timing_summary.xml
+
+  Example completed .tp files:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/TIP/icore.ilgbpqidm107h.tp
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/GFCA0_26WW09_5_fp_change/icore.ifhitextsnoopm105h.tp
+
+
+================================================================================
+11. TEMPLATE — Blank .tp skeleton
+================================================================================
+
+  Copy and fill in the <PLACEHOLDERS>:
+
+  ─── START OF TEMPLATE ───
+
+#|-------------------------------------------------------------------
+#| FILENAME          : icore.<signal_lower>.tp
+#| USER              : <username>
+#| TIMESTAMP         : <date>
+#| BLOCK             : icore.design
+#| COMMENT           : TIP topology plan for <SIGNAL>[0:<N-1>] bus (<N> bits)
+#|                   : Cross-partition: <src_par> → <dst_par>
+#|                   : Based on RTLFP plan from icore_plans.tcl
+#|-------------------------------------------------------------------
+
+
+#------------------------------------------------------------
+# Check TIP Planning Versus Netlist
+#------------------------------------------------------------
+###Check Nets matching###
+set old_rtl_top_nets_list "<NET_0_> <NET_1_> ... <NET_N-1_>"
+set found_rtl_top_nets_collection [get_nets -quiet $old_rtl_top_nets_list]
+if { [llength $old_rtl_top_nets_list] != [sizeof_collection $found_rtl_top_nets_collection] } {
+    iproc_msg -error "-E- TIP nets planning are not matched to Netlist -  Mismatch old nets Versus Netlist, skip Reading the TP file"
+    return
+}
+
+###Check Pins matching###
+set old_rtl_pins_list "<dst_par>/signal\[0\] ... <src_par>/signal\[0\] ..."
+set found_rtl_pins_collection [get_pins -quiet $old_rtl_pins_list]
+if { [llength $old_rtl_pins_list] != [sizeof_collection $found_rtl_pins_collection] } {
+    iproc_msg -error "-E- TIP Pins planning are not matched to Netlist - Mismatch old pins Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set nets_segments_collection [rtlfp_get_nets_segments $found_rtl_top_nets_collection]
+set rtl_pins_collection [get_pins -quiet -of_objects $nets_segments_collection -filter "is_hierarchical==true&&cell.is_soft_macro==true&&port.is_shadow==false"]
+if { [compare_collection $rtl_pins_collection $found_rtl_pins_collection] != 0 } {
+    iproc_msg -error "-E- TIP Pins planning are not matched to Netlist - pins connectivity has changed, skip Reading the TP file"
+    return
+}
+
+###Check Ports matching###
+set old_rtl_ports_list ""
+set found_rtl_ports_collection [get_ports -quiet $old_rtl_ports_list]
+if { [llength $old_rtl_ports_list] != [sizeof_collection $found_rtl_ports_collection] } {
+    iproc_msg -error "-E- TIP Ports planning are not matched to Netlist - Mismatch old ports Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set rtl_ports_collection [get_ports -quiet -of_objects $nets_segments_collection -filter "is_shadow==false"]
+if { [compare_collection $rtl_ports_collection $found_rtl_ports_collection] != 0 } {
+    iproc_msg -error "-E- TIP Ports planning are not matched to Netlist - ports connectivity has changed, skip Reading the TP file"
+    return
+}
+
+###Check Units-Pins matching###
+set old_units_pins_list "<dst_par>/<unit>/<SIGNAL>\[0\] ... <src_par>/<unit>/<SIGNAL>\[0\] ..."
+set found_units_pins_collection [get_pins -quiet $old_units_pins_list]
+if { [llength $old_units_pins_list] != [sizeof_collection $found_units_pins_collection] } {
+    iproc_msg -error "-E- TIP Units-Pins planning are not matched to Netlist - Mismatch old units-pins Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set rtl_units_pins_collection [get_pins -quiet -of_objects $nets_segments_collection -filter "cell.is_soft_macro==false&&cell.is_physical==false"]
+if { [compare_collection $rtl_units_pins_collection $found_units_pins_collection] != 0 } {
+    iproc_msg -error "-E- TIP Units-Pins planning are not matched to Netlist - Units-Pins connectivity has changed, skip Reading the TP file"
+    return
+}
+
+#------------------------------------------------------------
+# Define topology plans.
+#------------------------------------------------------------
+# fc V-2023.12-SP5-6
+# design: icore
+
+### user attributes (per block)
+define_user_attribute -type string -classes {topology_node} -name master_topology_node -quiet
+define_user_attribute -type string -classes {topology_node} -name unit_cell_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name new_split_node -quiet
+define_user_attribute -type string -classes {topology_node} -name split_constrained_objects_full_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name corner_repeater -quiet
+define_user_attribute -type string -classes {topology_node} -name split_constrained_objects_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name split_multi_units -quiet
+define_user_attribute -type int -classes {topology_plan} -name eco_object_count -quiet
+define_user_attribute -type string -classes {topology_plan} -name points_topology_edges -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_height_multiplier -quiet
+define_user_attribute -type boolean -classes {topology_plan} -name tip_routing_blockage -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_width_multiplier -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_group_constraints -quiet
+define_user_attribute -type boolean -classes {topology_plan} -name disable_enable_virtual_connection -quiet
+define_user_attribute -type boolean -classes {topology_repeater} -name split_multi_units -quiet
+define_user_attribute -type boolean -classes {topology_repeater} -name corner_repeater -quiet
+
+### NER (per block)
+remove_net_estimation_rules -reset default -quiet
+remove_net_estimation_rules -reset <signal>_ner -quiet
+set_net_estimation_rule <signal>_ner -parameter "layer" -horizontal_value "M18" -vertical_value "M17"
+set_net_estimation_rule <signal>_ner -parameter "buffer" -value "tcbn02p_bwph156nppnl3p48cpd_base_ulvt_c240429/BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT"
+set_net_estimation_rule <signal>_ner -parameter "buffer_spacing" -value "170.000"
+
+### Topology Groups (per block)
+if {[sizeof_collection [get_topology_groups tip_repeater -quiet]] == 0} { create_topology_group -name tip_repeater }
+
+### plan name: <signal>_tp
+if {[sizeof_collection [get_topology_plans <signal>_tp -quiet]] != 0} { remove_topology_plans <signal>_tp }
+
+if {[sizeof_collection [get_bundles -quiet <signal>_boundle]] != 0} { remove_bundles <signal>_boundle }
+# Remove old supernets (one per bit)
+if {[sizeof_collection [get_supernets -quiet <NET_0_>]] != 0} { remove_supernets <NET_0_> }
+# ... repeat for each bit ...
+
+# Create supernets (using DESTINATION partition pins)
+create_supernet -name <NET_0_> [get_pins <dst_par>/signal\[0\]]
+# ... repeat for each bit ...
+
+create_bundle -name <signal>_boundle [get_supernets { <NET_0_> <NET_1_> ... }]
+
+set _objLst_ [get_bundles { <signal>_boundle }]
+create_topology_plan -name <signal>_tp -group tip_repeater -objects $_objLst_ -net_estimation_rule <signal>_ner -allow_feedthrough all
+set_attribute [get_topology_plans <signal>_tp] -name points_topology_edges -value {<FROM_RTLFP>}
+set_attribute [get_topology_plans <signal>_tp] -name eco_object_count -value <N_BITS>
+set_attribute [get_topology_plans <signal>_tp] -name repeater_height_multiplier -value {1.5}
+set_attribute [get_topology_plans <signal>_tp] -name repeater_width_multiplier -value {1.5}
+set_attribute [get_topology_plans <signal>_tp] -name repeater_group_constraints -value {set_repeater_group_constraints -type insertion -layer_cutting_distance {{M18 0.5 0.5} {M17 0.5 0.5}}}
+
+# 2 topology nodes: source + destination (using get_cells + bbox {50 50} + move_objects)
+# *** RECOMMENDED approach — see Section 14 for full details ***
+create_topology_node -plan <signal>_tp -name TOPOLOGY_NODE0 -objects [get_cells { <src_par> }] -constrained_objects [get_pins { <src_par>/signal\[0\] ... }] -constraint_type bbox -bbox_percentage {50 50}
+create_topology_node -plan <signal>_tp -name TOPOLOGY_NODE1 -objects [get_cells { <dst_par> }] -constrained_objects [get_pins { <dst_par>/signal\[0\] ... }] -constraint_type bbox -bbox_percentage {50 50}
+
+# Move nodes to actual FF locations (microns — divide PT design units by 1000)
+move_objects [get_topology_nodes <signal>_tp/TOPOLOGY_NODE0] -to {<X_src_FF> <Y_src_FF>}
+move_objects [get_topology_nodes <signal>_tp/TOPOLOGY_NODE1] -to {<X_dst_FF> <Y_dst_FF>}
+
+# 1 topology edge connecting the 2 nodes (recalculate repeater offsets after move_objects!)
+create_topology_edge -plan <signal>_tp -name TOPOLOGY_EDGE0 -nodes {<signal>_tp/TOPOLOGY_NODE0 <signal>_tp/TOPOLOGY_NODE1} -shape_layers { {M18 100% <WIDTH>} {M17 100% <WIDTH>} }
+
+# Repeaters — ALL BUF D18 (-type repeater), recalculate offsets after move_objects!
+# See Section 14.6 note 3 for offset recalculation formula
+# EDGE0 repeaters (source → destination)
+create_topology_repeater -edge <signal>_tp/TOPOLOGY_EDGE0 -name TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0 -type repeater -offset 1.000
+set_attribute -objects [get_topology_repeaters <signal>_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0] -name physical_status -value locked
+set_attribute -objects [get_topology_repeaters <signal>_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0] -name index -value {0 1}
+set_attribute [get_topology_repeaters <signal>_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0] -name corner_repeater -value true
+
+create_topology_repeater -edge <signal>_tp/TOPOLOGY_EDGE0 -name TOPOLOGY_REPEATER0 -type repeater -offset <SEGMENT_LENGTH>
+set_attribute -objects [get_topology_repeaters <signal>_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER0] -name physical_status -value locked
+set_attribute -objects [get_topology_repeaters <signal>_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER0] -name index -value {0 2}
+
+# ... add more mid-repeaters if edge > 2x buffer_spacing ...
+
+create_topology_repeater -edge <signal>_tp/TOPOLOGY_EDGE0 -name TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1 -type repeater -offset <EDGE_LENGTH_MINUS_1>
+set_attribute -objects [get_topology_repeaters <signal>_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1] -name physical_status -value locked
+set_attribute -objects [get_topology_repeaters <signal>_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1] -name index -value {0 <LAST_INDEX>}
+set_attribute [get_topology_repeaters <signal>_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1] -name corner_repeater -value true
+
+#------------------------------------------------------------
+# Track blocking — ADD THESE TO pre.tip_implementation.tcl
+# Spread = <SPREAD> (based on bus width: ~0.5um per bit)
+#------------------------------------------------------------
+# set ivar(tip_block_track_for_pin_placment,M17,<signal>_tp) "$M17_half_shield_1w <SPREAD>"
+# set ivar(tip_block_track_for_pin_placment,M18,<signal>_tp) "$M18_half_shield_1w <SPREAD>"
+# set ivar(tip_block_track_for_route,M17,<signal>_tp) "$M17_half_shield_1w <SPREAD>"
+# set ivar(tip_block_track_for_route,M18,<signal>_tp) "$M18_half_shield_1w <SPREAD>"
+
+#------------------------------------------------------------
+# Attributes
+#------------------------------------------------------------
+define_user_attribute -quiet -classes topology_plan -type boolean -name is_td
+define_user_attribute -quiet -classes topology_plan -type boolean -name is_preroute
+define_user_attribute -quiet -classes topology_plan -type string -name hierarchy_owner
+set_attribute -quiet [get_topology_plans -quiet <signal>_tp] is_visible true
+
+  ─── END OF TEMPLATE ───
+
+
+================================================================================
+12. TIP SHAPE TYPES — Graph topologies and edge routing shapes
+================================================================================
+
+  The TIP shape is determined by TWO things:
+    1. The GRAPH TOPOLOGY — how many nodes/edges and how they connect
+    2. The EDGE ROUTING SHAPE — the layer sequence in shape_layers per edge
+
+  There is NO explicit shape attribute — you infer it from the structure.
+  M17 = vertical routing, M18 = horizontal routing.
+
+
+  ── 12A. GRAPH-LEVEL TOPOLOGIES ──────────────────────────────────────────────
+
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ (1) POINT-TO-POINT  (76 of 94 files — most common)                     │
+  │     2 nodes, 1 edge                                                    │
+  │                                                                        │
+  │     [NODE0] ────── EDGE0 ────── [NODE1]                                │
+  │      (dst)                       (src)                                 │
+  │                                                                        │
+  │     Example: icore.jeclearlatem805h.tp                                  │
+  │     Use when: Simple 1-to-1 cross-partition signal                     │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (2) MULTI-NODE POINT-TO-POINT  (like our ILGBPQIdM107H)               │
+  │     4 nodes, 3 edges                                                   │
+  │     Separate BOUND and PIN nodes per partition                         │
+  │                                                                        │
+  │     [NODE0]──EDGE0──[NODE2]──EDGE1──[NODE3]──EDGE3──[NODE1]            │
+  │     dst BOUND       dst PINS        src PINS        src BOUND          │
+  │                                                                        │
+  │     Example: icore.ilgbpqidm107h.tp                                    │
+  │     Use when: Need precise bbox control at each partition boundary     │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (3) Y-FORK (1-to-2)                                                   │
+  │     3 nodes, 2 edges                                                   │
+  │                                                                        │
+  │               ┌── EDGE0 ── [NODE0] (dst_1)                             │
+  │     [NODE2] ──┤                                                        │
+  │      (src)    └── EDGE1 ── [NODE1] (dst_2)                             │
+  │                                                                        │
+  │     Use when: One source fans out to 2 destination partitions          │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (4) TREE — 1 JUNCTION, 3 LEAVES  (12 files)                           │
+  │     4 nodes, 3 edges                                                   │
+  │                                                                        │
+  │               ┌── EDGE0 ── [NODE0] (leaf_1)                            │
+  │     [NODE3] ──┼── EDGE1 ── [NODE1] (leaf_2)                            │
+  │    (junction) └── EDGE2 ── [NODE2] (leaf_3)                            │
+  │                                                                        │
+  │     Example: icore.jemustbranchm305h.tp                                │
+  │     Use when: Signal branches to 3 destination partitions              │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (5) TREE — 2 JUNCTIONS, 4 LEAVES  (4 files)                           │
+  │     6 nodes, 5 edges                                                   │
+  │                                                                        │
+  │               ┌── EDGE ── [NODE0]                                      │
+  │     [NODE4] ──┤                            ┌── EDGE ── [NODE2]         │
+  │   (junct_1)   ├── EDGE ── [NODE1]  [NODE5]─┤                          │
+  │               └── EDGE ───────────(junct_2)└── EDGE ── [NODE3]         │
+  │                                                                        │
+  │     Example: icore.rsvecclkpreenmnnn2h.tp                              │
+  │     Use when: Cascaded branching (H-tree style)                        │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (6) TREE — 2 JUNCTIONS, 5 LEAVES  (1 file — most complex)             │
+  │     7 nodes, 6 edges                                                   │
+  │                                                                        │
+  │               ┌── EDGE ── [NODE0]                                      │
+  │     [NODE6] ──┼── EDGE ── [NODE1]          ┌── EDGE ── [NODE_rs]      │
+  │   (junct_1)   ├── EDGE ── [NODE_rat] [NODE7]                          │
+  │               └── EDGE ──────────── (junct_2)── EDGE ── [NODE2]       │
+  │                                                                        │
+  │     Example: icore.roearlynukelm905h.tp                                │
+  │     Use when: Complex multi-destination fanout                         │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+  ── 12B. EDGE ROUTING SHAPES (per-edge, via shape_layers) ───────────────────
+
+  The shape_layers on each edge define how the wire routes between two nodes.
+  The layer sequence determines the routing geometry:
+
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ (A) I-SHAPE — STRAIGHT  (24 edges)                                     │
+  │     Single layer, single direction                                     │
+  │                                                                        │
+  │     Horizontal:  ══════════════════                                    │
+  │       shape_layers { {M18 100% 0.0} }                                  │
+  │                                                                        │
+  │     Vertical:    ║                                                     │
+  │                  ║                                                     │
+  │                  ║                                                     │
+  │       shape_layers { {M17 100% 0.0} }                                  │
+  │                                                                        │
+  │     Use when: Source and destination are aligned in one axis            │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (B) L-SHAPE — 90° TURN  (75 edges — most common)                      │
+  │     Two layers, one turn                                               │
+  │                                                                        │
+  │     ══════════╗          or         ║                                   │
+  │               ║                     ║                                   │
+  │               ║                     ╚══════════                         │
+  │                                                                        │
+  │       shape_layers { {M18 100% 0.0} {M17 100% 0.0} }                  │
+  │       shape_layers { {M17 100% 0.0} {M18 100% 0.0} }                  │
+  │                                                                        │
+  │     The order determines direction: first layer is near source node.   │
+  │     Use when: Source and destination are offset in both X and Y        │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (C) Z-SHAPE — H-V-H or V-H-V  (17 edges)                             │
+  │     Three segments, two turns                                          │
+  │                                                                        │
+  │     ═══════╗                                                           │
+  │            ║                                                           │
+  │            ╚═══════════                                                │
+  │                                                                        │
+  │       shape_layers { {M18 52.27%} {M17 100%} {M18 47.73%} }           │
+  │                                                                        │
+  │     The percentages split the horizontal distance between first and    │
+  │     last segment. They must add to ~100% of horizontal distance.       │
+  │     Use when: Need to dodge obstacles or reach offset destinations     │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (D) S-SHAPE — 4 SEGMENTS  (14 edges)                                  │
+  │     Four alternating layer segments                                    │
+  │                                                                        │
+  │     ═══════╗                                                           │
+  │            ║                                                           │
+  │            ╚═══════╗                                                   │
+  │                    ║                                                   │
+  │                                                                        │
+  │       shape_layers { {M18 a%} {M17 b%} {M18 c%} {M17 d%} }           │
+  │                                                                        │
+  │     Use when: Route must navigate around multiple blockages            │
+  ├──────────────────────────────────────────────────────────────────────────┤
+  │ (E) SERPENTINE — 5 to 7 SEGMENTS  (9 edges)                           │
+  │     Multi-bend snaking path                                            │
+  │                                                                        │
+  │     ═══╗   ╔═══╗                                                       │
+  │        ║   ║   ║                                                       │
+  │        ╚═══╝   ╚═══                                                    │
+  │                                                                        │
+  │       shape_layers { {M18 a%} {M17 b%} {M18 c%} {M17 d%} {M18 e%} }  │
+  │       ... up to 7 segments                                             │
+  │                                                                        │
+  │     Use when: Very complex routing with many obstacles                 │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+  ── 12C. SHAPE_LAYERS SYNTAX GUIDE ──────────────────────────────────────────
+
+  Format:
+    -shape_layers { {<LAYER> <PERCENTAGE>% <OFFSET>} {<LAYER> ...} ... }
+
+  Fields:
+    LAYER      = M17 (vertical) or M18 (horizontal), rarely M15/M16/M14
+    PERCENTAGE = portion of that direction's total distance (for Z/S shapes)
+                 For I and L shapes, always 100%
+    OFFSET     = spacing offset from center in um (e.g. 2.0920)
+
+  Layer usage across 94 files:
+    M17/M18 — 95% of all segments (standard top-metal routing)
+    M15/M16 — 5% of segments (lower tier, used in ~11 files)
+    M14     — 1 file only (rare, lowest tier)
+
+  When to use lower metals (M15/M16):
+    - When M17/M18 are congested in the routing area
+    - For shorter distance routes where top metal is overkill
+    - Check existing plans for the partition to see what layers are used
+
+
+  ── 12D. HOW TO DETERMINE THE SHAPE FOR A NEW SIGNAL ───────────────────────
+
+  1. CHECK RTLFP PLAN FIRST
+     The RTLFP tool already computed the optimal shape.
+     grep "signal_name" icore_plans.tcl → look at shape_layers per edge.
+
+  2. IF NO RTLFP PLAN EXISTS, determine shape from geometry:
+
+     a) Get source and destination coordinates from port_location CSV
+
+     b) If aligned in X (same X, different Y):
+        → I-shape on M17 (vertical)
+
+     c) If aligned in Y (same Y, different X):
+        → I-shape on M18 (horizontal)
+
+     d) If offset in both X and Y:
+        → L-shape (most common choice)
+        → Use M18 for horizontal run, M17 for vertical run
+
+     e) If obstacles in the way:
+        → Z-shape or S-shape to route around them
+        → Percentages control where the turns happen
+
+  3. IF MULTI-DESTINATION:
+     → Determine junction node placement
+     → Use tree topology (Y-fork or cascaded tree)
+     → Each edge gets its own shape independently
+
+  4. LOOK AT NEIGHBORING SIGNALS
+     Similar signals in the same partition pair often use the same shape.
+     Check existing .tp files for similar bus crossings.
+
+
+  ── 12E. SHAPE DISTRIBUTION SUMMARY ────────────────────────────────────────
+
+    Shape Type        │ Graph           │ Edge Shape      │ Files
+    ──────────────────┼─────────────────┼─────────────────┼──────
+    Simple L          │ Point-to-Point  │ L-shape         │  43
+    Simple I          │ Point-to-Point  │ I-shape         │  12
+    Simple Z          │ Point-to-Point  │ Z-shape         │  11
+    Simple S          │ Point-to-Point  │ S-shape         │   7
+    Serpentine        │ Point-to-Point  │ 5-7 segments    │   3
+    Multi-node P2P    │ 4 nodes/3 edges │ Mixed           │  varies
+    Tree branch       │ 4 nodes/3 edges │ Mixed per edge  │  12
+    Cascaded tree     │ 6 nodes/5 edges │ Mixed per edge  │   4
+    Complex tree      │ 7 nodes/6 edges │ Mixed per edge  │   1
+
+
+================================================================================
+13. PDN POWER GRID & METAL LAYER SELECTION
+================================================================================
+
+  TIP signals route on upper metals (M17/M18 primarily). These metals are
+  shared with the PDN (Power Distribution Network). Understanding the power
+  grid structure is critical to know how many tracks are available for TIP.
+
+
+  ── 13A. POWER GRID STRUCTURE PER METAL LAYER ───────────────────────────────
+
+  The power grid has periodic VDD/VSS stripes. Between them are data tracks
+  available for signal routing (including TIP).
+
+  P = Power stripe (VDD/VSS)    D = Data track (available for TIP)
+
+  M18 (horizontal) — Power gutter pitch ~4.94 um, 7 data tracks per gutter:
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ P   D     D     D     D     D     D     D     P     P    D    ...  P │
+  │0.16 0.48  0.73  0.98  1.24  1.49  1.74  1.99  2.31  2.63 2.95    4.78│
+  │ |                                              |     |             | │
+  │ └──── 7 data tracks ──────────────────────────►├─PWR─┤             │ │
+  │         (left half)                            GUTTER (right half)  │ │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  M17 (vertical) — Power gutter pitch ~4.56 um, 5 data tracks per gutter:
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ P     P     D     D     D     D     D     P     P     P     P   ...  │
+  │0.13  0.38  0.64  0.89  1.14  1.39  1.64  1.90  2.15  2.41  2.66     │
+  │ |     |                                  |     |     |     |         │
+  │ └─PWR─┘     5 data tracks               └─────PWR GUTTER──┘         │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  M16 (horizontal) — Finer pitch, more tracks per gutter:
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ P  P  P  D  D  D  D  D  D  D  D  D  D  D  D  D  P  P  P  P  ...    │
+  │ 3 power stripes     13 data tracks          4 power stripes          │
+  │ More tracks available but higher wire resistance                      │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  M15 (vertical) — 8 data tracks per gutter, higher resistance than M17
+
+
+  ── 13B. AVAILABLE METAL LAYERS FOR TIP ─────────────────────────────────────
+
+  ┌─────────┬───────────┬────────────┬──────────────┬─────────────────────┐
+  │ Layer   │ Direction │ Data Trks  │ Wire R       │ When to use         │
+  │         │           │ per gutter │ (relative)   │                     │
+  ├─────────┼───────────┼────────────┼──────────────┼─────────────────────┤
+  │ M18     │ Horiz     │ 7          │ Lowest       │ PRIMARY — always    │
+  │ M17     │ Vertical  │ 5          │ Low          │ PRIMARY — always    │
+  │ M16     │ Horiz     │ ~13        │ Medium       │ FALLBACK — wide bus │
+  │ M15     │ Vertical  │ 8          │ Medium-High  │ FALLBACK — wide bus │
+  │ M14     │ Horiz     │ varies     │ High         │ RARE — last resort  │
+  └─────────┴───────────┴────────────┴──────────────┴─────────────────────┘
+
+  Decision guide:
+    - Small bus (1-8 bits):   M17 + M18 (fits within 1-2 gutters)
+    - Medium bus (8-32 bits): M17 + M18 if tracks available, else add M16
+    - Wide bus (32-256 bits): M18 + M16 (not enough M17/M18 tracks)
+      Example: ifmacrinstrbytsm102h (256 bits) uses M18 + M16
+
+  Our signal: 6-bit bus → M17 + M18 is sufficient
+    6 wires × 2.092 um = 10.5 um ≈ 2 power gutters worth of tracks ✓
+
+
+  ── 13C. TRACK BLOCKING & SHIELDING ────────────────────────────────────────
+
+  Track blocking reserves specific data tracks for TIP use, preventing
+  other signals from routing on them. This provides shielding.
+
+  Track alias variables (defined in pre.tip_implementation.tcl):
+
+    M18_half_shield_1w = "{1.235 3.705} {0.450 0.450}"
+    │                      │             │
+    │                      │             └─ Blockage width per track (um)
+    │                      └─ Track offsets within the gutter (um)
+    └─ Shield type: half_shield = block tracks adjacent to power stripes
+                    1w = 1 wire width blockage
+
+    Meaning: Block the data track closest to the power stripe on each side.
+    Positions 1.235 and 3.705 are the MIDDLE tracks of each half-gutter.
+    These become shield/guard tracks separating TIP wires from other signals.
+
+  Cross-section view with half_shield_1w:
+  ┌────────────────────────────────────────────────────────┐
+  │ P   D     D     D    [S]    D     D     D     P       │
+  │         other   other SHIELD  TIP   TIP   other       │
+  │                       (blocked)                        │
+  │ The shield track reduces crosstalk coupling between    │
+  │ TIP wires and neighboring signal wires                 │
+  └────────────────────────────────────────────────────────┘
+
+  Shield aliases available:
+    half_shield_1w      — block 1 track, wide blockage (0.450 um)
+    half_shield_2w      — block 1 track, narrow blockage (0.252 um)
+    2w_middle_track_only — block ALL middle tracks (maximum shielding)
+    1w3s                — block multiple tracks with spacing
+
+
+  ── 13D. SPREAD VALUE — HOW MANY GUTTERS TO RESERVE ────────────────────────
+
+  The spread value in ivar is how many microns of power gutters to reserve
+  for the TIP signal routing:
+
+    set ivar(tip_block_track_for_route,M18,signal_tp) "$M18_half_shield_1w <SPREAD>"
+
+  SPREAD tells the tool to apply the track blocking pattern repeatedly
+  across <SPREAD> microns of the design, centered on the TIP route.
+
+  Guidelines:
+    1 bit  → spread = 1 um  (1 gutter)
+    6 bits → spread = 3 um  (enough for 6 wires + margins)
+    32 bits → spread = ~16 um
+    64 bits → spread = 23 um (see ifmacrinstrbytsm102h examples)
+    Rule of thumb: ~0.5 um per bit, rounded up
+
+
+  ── 13E. WHY LOWER METALS HAVE MORE TRACKS ────────────────────────────────
+
+  Lower metals (M16, M15) have FINER track pitch than M17/M18:
+    M18 track pitch: ~0.252 um → 7 tracks in ~4.9 um gutter
+    M16 track pitch: ~0.126 um → 13 tracks in ~4.9 um gutter
+
+  So M16 has roughly 2x more tracks per gutter — that's why wide buses
+  (128-256 bits) drop to M16. The trade-off is higher wire resistance
+  → more delay per unit length → need more repeaters.
+
+  When choosing layers, always check:
+    1. How many tracks does your bus need?
+    2. Are M17/M18 tracks already used by other TIP signals in the area?
+    3. Is the timing budget tight? (if yes, prefer M17/M18 for lower RC)
+    4. Check existing .tp files for neighboring signals to avoid conflicts
+
+
+================================================================================
+14. NODE PLACEMENT — Setting start/end nodes with move_objects
+================================================================================
+
+  The topology nodes define WHERE TIP places its constraint regions and repeaters.
+  Getting the node positions right is the MOST IMPORTANT part of the .tp file —
+  without correct start/end nodes, the TIP plan is useless.
+
+  ──────────────────────────────────────────────────────────────────────────────
+  14.1  TWO APPROACHES FOR NODE POSITIONING
+  ──────────────────────────────────────────────────────────────────────────────
+
+  A) bbox_percentage {X% Y%}   — positions node as % of partition bounding box
+     - Used by ALL 99 released BU model .tp files (standard approach)
+     - Requires knowing partition bounding box dimensions (from FC session)
+     - Values can be <0% or >100% (node extends outside partition boundary)
+     - Formula: pct = (node_position - partition_origin) / partition_size * 100
+
+  B) move_objects               — positions node at absolute coordinates (microns)
+     - Simple: use coordinates directly from the timing path
+     - No need to know partition bounding box
+     - Works alongside bbox_percentage (move overrides the initial position)
+     - Best for manual .tp creation when you don't have FC access
+
+  *** RECOMMENDED: Use default bbox_percentage {50 50} + move_objects ***
+  This is the easiest approach when creating .tp files manually.
+
+  ──────────────────────────────────────────────────────────────────────────────
+  14.2  HOW TO GET THE COORDINATES FROM THE TIMING PATH
+  ──────────────────────────────────────────────────────────────────────────────
+
+  The coordinates come from the timing path report. Two sources:
+
+  Source 1: port_location_outside_bbox.csv (has boundary pin + path bbox)
+    grep "signal_name" .../reports/port_location_outside_bbox.csv
+    Columns: st_point_x, st_point_y = path start (source FF location)
+             en_point_x, en_point_y = path end (endpoint FF location)
+    *** Coordinates are in DESIGN UNITS — divide by 1000 to get microns ***
+
+  Source 2: report_timing -physical (in PT/FC session)
+    Each cell in the path shows coordinates like (1368792.0, 109844.0)
+    Divide by 1000 → (1368.792, 109.844) microns
+
+  What you need:
+    - Source FF coordinates      → NODE on the source partition side
+    - Endpoint FF coordinates    → NODE on the destination partition side
+
+  ──────────────────────────────────────────────────────────────────────────────
+  14.3  THE RECIPE: DEFAULT bbox + move_objects
+  ──────────────────────────────────────────────────────────────────────────────
+
+  Step 1: Create topology nodes with default {50 50}
+
+    create_topology_node -plan PLAN_NAME -name TOPOLOGY_NODE0 \
+      -objects [get_cells { par_SOURCE }] \
+      -constrained_objects [get_pins { par_SOURCE/signal[0] ... }] \
+      -constraint_type bbox -bbox_percentage {50 50}
+
+    create_topology_node -plan PLAN_NAME -name TOPOLOGY_NODE1 \
+      -objects [get_cells { par_DEST }] \
+      -constrained_objects [get_pins { par_DEST/signal[0] ... }] \
+      -constraint_type bbox -bbox_percentage {50 50}
+
+  Step 2: Move nodes to the actual FF locations from the timing path
+
+    # Source FF coordinates (from path start)
+    move_objects [get_topology_nodes PLAN_NAME/TOPOLOGY_NODE0] -to {X_src Y_src}
+
+    # Endpoint FF coordinates (from path end)
+    move_objects [get_topology_nodes PLAN_NAME/TOPOLOGY_NODE1] -to {X_dst Y_dst}
+
+  ──────────────────────────────────────────────────────────────────────────────
+  14.4  REAL EXAMPLE: ILGBPQIdM107H (par_msid → par_fe, 6-bit bus)
+  ──────────────────────────────────────────────────────────────────────────────
+
+  From the timing path for ILGBPQIdM107H[3]:
+    Source FF (par_msid):   (1368792, 109844)  → (1368.792, 109.844) um
+    Endpoint FF (par_fe):   (1552104, 265939)  → (1552.104, 265.939) um
+
+  All 6 bits share the SAME source FF and SAME endpoint multi-bit register,
+  so one move_objects per node covers the entire bus.
+
+  In the .tp file:
+
+    create_topology_node -plan ilgbpqidm107h_tp -name TOPOLOGY_NODE0 \
+      -objects [get_cells { par_msid }] \
+      -constrained_objects [get_pins { par_msid/ilgbpqidm107h[0] ... }] \
+      -constraint_type bbox -bbox_percentage {50 50}
+
+    create_topology_node -plan ilgbpqidm107h_tp -name TOPOLOGY_NODE1 \
+      -objects [get_cells { par_fe }] \
+      -constrained_objects [get_pins { par_fe/ilgbpqidm107h[0] ... }] \
+      -constraint_type bbox -bbox_percentage {50 50}
+
+    # Move to source/endpoint FF locations (microns, from timing path)
+    move_objects [get_topology_nodes ilgbpqidm107h_tp/TOPOLOGY_NODE0] -to {1368.792 109.844}
+    move_objects [get_topology_nodes ilgbpqidm107h_tp/TOPOLOGY_NODE1] -to {1552.104 265.939}
+
+  ──────────────────────────────────────────────────────────────────────────────
+  14.5  MULTI-BIT BUS: DO ALL BITS NEED SEPARATE COORDINATES?
+  ──────────────────────────────────────────────────────────────────────────────
+
+  Usually NO. Check if all bits share the same source/endpoint FFs:
+
+    grep "signal_name" .../timing_summary.nworst.xml | grep "startpoint="
+
+  If all bits show the same startpoint and endpoint cell names
+  (or a multi-bit register like auto_vector_MBIT_...), then ONE move_objects
+  per node covers all bits.
+
+  If bits have DIFFERENT source/endpoint FFs at different locations,
+  use the WORST-CASE bit (most negative slack) for the coordinates,
+  or use a centroid of all the FF locations.
+
+  ──────────────────────────────────────────────────────────────────────────────
+  14.6  IMPORTANT NOTES
+  ──────────────────────────────────────────────────────────────────────────────
+
+  1. COORDINATE UNITS: Always microns in move_objects.
+     Timing reports use design units (nm) — divide by 1000.
+
+  2. NODE vs BOUNDARY PIN: The node goes at the FF location, NOT at the
+     boundary pin. The topology edge connects the two nodes, and repeaters
+     are placed along the edge. The boundary pin falls somewhere along
+     the edge between the two nodes.
+
+  3. EDGE LENGTH & REPEATER RECALCULATION:
+     After move_objects, the edge length equals the manhattan distance
+     between NODE0 and NODE1. This is usually SHORTER than the original
+     bbox_percentage edge because move_objects targets the actual FFs.
+
+     *** YOU MUST RECALCULATE REPEATER OFFSETS — do NOT copy from original .tp ***
+
+     Steps:
+       a) Calculate manhattan: |X1-X0| + |Y1-Y0| = edge_length
+       b) Number of mid-repeaters = ceil(edge_length / buffer_spacing) - 1
+          (buffer_spacing is in the NER, e.g. 220 um)
+       c) Segment length = edge_length / (num_mid_repeaters + 1)
+          Verify: segment_length < buffer_spacing
+       d) Set offsets:
+            corner_node0:  offset = 1.0
+            mid_repeater1: offset = segment_length
+            mid_repeater2: offset = 2 * segment_length  (if needed)
+            corner_node1:  offset = edge_length - 1.0
+
+     Example (ILGBPQIdM107H):
+       FFs: (1368.792, 109.844) → (1552.104, 265.939)
+       Manhattan: 183.3 + 156.1 = 339.4 um
+       buffer_spacing = 220 um → ceil(339/220)-1 = 1 mid-repeater
+       Segment = 339.4/2 = 169.7 um (< 220 ✓)
+       Offsets: 1.0, 169.7, 338.4
+
+  4. VERIFICATION: After loading the .tp in FC, check:
+       report_topology_plans -verbose  → shows node coordinates
+       gui_show_objects [get_topology_nodes ...]  → visual check
+
+
+================================================================================
+  END OF COOKBOOK
+================================================================================

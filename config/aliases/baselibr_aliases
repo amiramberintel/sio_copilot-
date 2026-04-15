@@ -1,0 +1,473 @@
+#!/usr/intel/bin/tcsh -f
+# EC Standard Login Environment -*- sh -*-
+# user .aliases file
+# $Source: /usr/cvs/cvsrep/ec_environ-1.0/release/user/aliases,v $
+# $Revision: 1.1 $
+
+# You may place your personal aliases here or in .cshrc.$USER
+#
+# examples:
+# alias . exit
+# alias e emacs
+# alias telnet ssh2
+alias da_help '/nfs/site/disks/hdk_sd_utilities/sd_user_utils/cheetah_utils/common_proj/bin/da_help.tcl'
+
+alias clean_home_dir '/usr/intel/bin/ncdu --exclude ~/.snapshot ~/'
+alias clean_stod_dir '/usr/intel/bin/ncdu --exclude /nfs/site/disks/baselibr_wa/.snapshot /nfs/site/disks/baselibr_wa/'
+
+alias find_hsd '~baselibr/PNC_script/find_hsd'
+alias find_hsd_gfc '~baselibr/GFC_script/find_hsd'
+alias find_sio2po_gfc 'grep \!* ~baselibr/STOD/tmp/gfc.sio2po.rtl4be'
+
+
+alias open_hsd 'firefox https://hsdes.intel.com/appstore/article/#/\!:1 &'
+alias calc 'echo "" | awk "{print \!:*}"'
+
+alias path2windows 'realpath \!* | perl -pe "s|^|\\\\sc8-samba.sc.intel.com|" | perl -pe "s|/|\\|g" | tee /dev/tty | xclip'
+
+alias legend 'setenv LEGEND /nfs/site/proj/mpg/motec/motec/tools/legend/latest ; setenv LEGEND_CENTRAL_DIR /nfs/site/proj/mpg/motecdb000/legend; $LEGEND/scripts/legend &'
+#=======================================================================================================================#   
+    #---------------------------------------
+    #        Commands and Short cuts       #
+    #---------------------------------------
+
+#  source /nfs/iil/proj/gsr/common/da_utils/fct_gsr/bin/fct_aliases
+
+    alias geany '~baselibr/bin/geany'
+    alias most '~baselibr/bin/most -R'
+    alias item '~baselibr/bin/item'
+    alias ct 'date +%H:%M:%S'  #current time stump  
+
+    alias h  'history | m'
+    alias list 'll \!:1 | l'
+    alias m most
+    alias g grep
+    alias gv 'grep -v'
+    alias zg 'zgrep '
+    alias zgv 'zgrep -v'	
+    alias ll 'ls -Slrt --color'
+    alias rp "realpath \!*"
+    alias l "less \!*"
+    alias c clear
+    alias xl 'setenv TERM_CONF `~/bin/rand_color.bash`; xterm -fn fixed -bg $TERM_CONF -ls -sb -geometry 295x40+100+80 -T "less xl" -e less -S \!* &'
+    alias xl2 "less > /tmp/results ; xl /tmp/results"
+    alias xm 'setenv TERM_CONF `~/bin/rand_color.bash`; xterm -fn fixed -bg $TERM_CONF -ls -sb -geometry 295x40+100+80 -T "most xl" -e most \!* &'
+    alias xm2 "less >  /tmp/results ; xm /tmp/results"
+    alias stkdiff 'sort \!:1 > /tmp/left; sort \!:2 > /tmp/right;tkdiff /tmp/left /tmp/right;' 
+    alias grtkdiff 'grep \!:1 \!:2 | sort > /tmp/left ; grep \!:1 \!:3 | sort >  /tmp/right; tkdiff /tmp/left /tmp/right;'
+    alias change_title 'echo -n "\033]0;\!:1\007"; set title = \!:1 ;set prompt="%{\033[1;34m%}${title}: %{\033[1;31m%}%c ~>%{\033[0m%} \n>>> "' 
+    alias remove_double_space "sed 's/  \+/ /g'"
+    alias replace_line_with_space "perl -pe 's/\n/ /g' " 
+    alias replace_space_with_line "perl -pe 's/[ ]+/\n/g' "
+    alias compress '~baselibr/PNC_script/compress_ports.py '
+    alias align '~baselibr/bin/align.pl'
+    alias align_csv 'align -id "," -od "|" '
+    alias xsv '/nfs/site/disks/ayarokh_wa/git/release/xsv'
+    alias awkvrf awk -F '\"' 
+    alias awkcsv awk -F ","
+    alias awksum "awk '{s+="'$1'"}END{print s}'"
+    alias awkbin_smaller  'awk -v bins="$bin" '"'"'BEGIN{print bins}{split(bins,a,",") ; for (i=1; i<=length(a);i++) {if ($0<=a[i]) { b[i] =b[i] +1 }}} END {for (i=1; i<=length(a);i++) {if (b[i]=="") {b[i]=0} ;printf b[i]","};print "" }'"'"' | column -t -s "," '
+    alias awkbin_larger 'awk -v bins="$bin" '"'"'BEGIN{print bins}{split(bins,a,",") ; for (i=1; i<=length(a);i++) {if ($0>=a[i]) { b[i] =b[i] +1 }}} END {for (i=1; i<=length(a);i++) {printf b[i]","};print "" }'"'"' | column -t -s "," '
+    alias awkbin_between 'awk -v bins="$bin" '"'"'BEGIN{split(bins,a,",") ; for (i=2; i<=length(a);i++) {printf a[i-1]"-"a[i]","} ; print "" }{split(bins,a,",") ; for (i=2; i<=length(a);i++) {if (a[i-1]<=$0 && $0<a[i]) { b[i] =b[i] +1 }}} END {for (i=2; i<=length(a);i++) {if (b[i]=="") {b[i]=0} ; printf b[i]","};print "" }'"'"'' 
+    alias awktranspose 'awk '"'"'{for (i=1; i<=NF; i++) a[i,NR]=$i ;max=(max<NF?NF:max)}  END {for (i=1; i<=max; i++) {for (j=1; j<=NR; j++) printf "%s%s", a[i,j], (j==NR?RS:FS)}}'"'"' '
+#=======================================================================================================================#   
+    #---------------------------------------
+    #                Xterm 	           #
+    #---------------------------------------
+    alias xlaunch_sless12 '~/bin/xlaunch &' 
+    alias xterm_size 'xtermset -geom  \!* '
+#alias xterm_size_pt exec xtermset -geom 295x30
+    alias move_left 'xtermset -geometry +100+0 '
+    alias move_right 'xtermset -geometry +1950+0 '	
+    
+    alias change_size_y 'set change = \!:1 ; set old_size_y = `tput lines` ; set old_size_x = `tput cols` ; set new_size = `expr $old_size_y + $change ` ; xtermset -geometry ${old_size_x}x${new_size} '
+    alias change_size_x 'set change = \!:1 ; set old_size_y = `tput lines` ; set old_size_x = `tput cols` ; set new_size = `expr $old_size_x + $change ` ; xtermset -geometry ${new_size}x${old_size_y} '
+    
+    alias change_desktop 'xdotool set_desktop_for_window `xdotool getactivewindow` `expr \!:1 - 1 ` '
+    
+    #Color
+    alias xwhite 'xtermset -bg "white" -fg black -hc red'
+    alias xblue 'xtermset -bg "navy" -fg white -hc black'
+    alias xblack 'xtermset -bg "black" -fg white -hc red'
+    alias xblackg 'xtermset -bg "black" -fg green -hc red'
+    alias xblacky 'xtermset -bg "black" -fg yellow -hc red'
+    alias xred 'xtermset -bg "dark red" -fg white -hc black'
+    alias xgreen 'xtermset -bg "dark green" -fg white -hc black'
+    alias xbrown 'xtermset -bg "saddle brown" -fg white -hc black'
+    alias xyellow 'xtermset -bg yellow -fg black -hc white'
+    alias xpink 'xtermset -bg "deeppink" -fg white'
+    alias xpurple 'xtermset -bg "darkorchid" -fg white'
+    alias xgrey 'xtermset -bg "darkslategrey" -fg white'
+    alias send_message 'xmessage -font "-adobe-*-*-r-*--0-300-*-*-p-*-*-*" -geometry 1780x50+100+0 -buttons "" \!* & '
+
+#=======================================================================================================================#   
+    #---------------------------------------
+    #              Colored Grep            #
+    #---------------------------------------
+    alias cgrep_red "grep --color=always \!* | sed 's/01;31m/01;31m/g'"
+    alias cgrep_green  "grep --color=always \!* | sed 's/01;31m/01;32m/g'"
+    alias cgrep_yellow  "grep --color=always \!* | sed 's/01;31m/01;33m/g'"
+    alias cgrep_blue "grep --color=always \!* | sed 's/01;31m/01;34m/g'"
+    alias cgrep_purple "grep --color=always \!* | sed 's/01;31m/01;35m/g'" 
+    alias cgrep_cyan "grep --color=always \!* | sed 's/01;31m/01;36m/g'"
+    alias cgrep_white "grep --color=always \!* | sed 's/01;31m/01;37m/g'"
+    alias cgrep_black "grep --color=always \!* | sed 's/01;31m/01;30m/g'"	
+    
+    #---------------------------------------
+    #              Colored Marker            #
+    #---------------------------------------
+    alias mark_red "grep --color=always -e '' -e \!* | sed 's/01;31m/01;31m/g'"
+    alias mark_green  "grep --color=always -e '' -e \!* | sed 's/01;31m/01;32m/g'"
+    alias mark_yellow  "grep --color=always -e '' -e \!* | sed 's/01;31m/01;33m/g'"
+    alias mark_blue "grep --color=always -e '' -e \!* | sed 's/01;31m/01;34m/g'"
+    alias mark_purple "grep --color=always -e '' -e \!* | sed 's/01;31m/01;35m/g'" 
+    alias mark_cyan "grep --color=always -e '' -e \!* | sed 's/01;31m/01;36m/g'"
+    alias mark_white "grep --color=always -e '' -e \!* | sed 's/01;31m/01;37m/g'"
+    alias mark_black "grep --color=always -e '' -e \!* | sed 's/01;31m/01;30m/g'"
+     
+    #---------------------------------------
+    #              Colored Echo            #
+    #---------------------------------------
+    alias font_reset ' printf "\e[0m" '
+    alias font_Black ' printf "\e[0;30m" ' 
+    alias font_Red ' printf "\e[0;31m" ' 
+    alias font_Green ' printf "\e[0;32m" ' 
+    alias font_Yellow ' printf "\e[0;33m" ' 
+    alias font_Blue ' printf "\e[0;34m" ' 
+    alias font_Purple ' printf "\e[0;35m" ' 
+    alias font_Cyan ' printf "\e[0;36m" ' 
+    alias font_White ' printf "\e[0;37m" '
+    
+    alias font_Bold_Black ' printf "\e[1;30m" ' 
+    alias font_Bold_Red ' printf "\e[1;31m" ' 
+    alias font_Bold_Green ' printf "\e[1;32m" ' 
+    alias font_Bold_Yellow ' printf "\e[1;33m" ' 
+    alias font_Bold_Blue ' printf "\e[1;34m" ' 
+    alias font_Bold_Purple ' printf "\e[1;35m" ' 
+    alias font_Bold_Cyan ' printf "\e[1;36m" ' 
+    alias font_Bold_White ' printf "\e[1;37m" ' 
+    
+    alias font_Underline_Black ' printf "\e[4;30m" ' 
+    alias font_Underline_Red ' printf "\e[4;31m" ' 
+    alias font_Underline_Green ' printf "\e[4;32m" ' 
+    alias font_Underline_Yellow ' printf "\e[4;33m" ' 
+    alias font_Underline_Blue ' printf "\e[4;34m" ' 
+    alias font_Underline_Purple ' printf "\e[4;35m" ' 
+    alias font_Underline_Cyan ' printf "\e[4;36m" ' 
+    alias font_Underline_White ' printf "\e[4;37m" ' 
+    
+    alias font_Background_Black ' printf "\e[40m" ' 
+    alias font_Background_Red ' printf "\e[41m" ' 
+    alias font_Background_Green ' printf "\e[42m" ' 
+    alias font_Background_Yellow ' printf "\e[43m" ' 
+    alias font_Background_Blue ' printf "\e[44m" ' 
+    alias font_Background_Purple ' printf "\e[45m" ' 
+    alias font_Background_Cyan ' printf "\e[46m" ' 
+    alias font_Background_White ' printf "\e[47m" '
+
+    alias remove_color "sed 's/[^m]*m//g'"
+
+#=======================================================================================================================#   
+
+    #---------------------------------------
+    #             LNC SIO  	           #
+    #---------------------------------------
+
+    alias g_par 'grep -e "par_exe_int/" -e "par_pmhglb/"'
+    	
+    alias cg_par 'mark_blue "par_exe_int" | mark_green "par_pmhglb" | grep -e "par_exe_int" -e "par_pmhglb"'
+    alias Iinnovus_Exe 'Iinnovus -F apr_innovus -stylus -I -N -B par_exe_int -P -BG gold -FG black &'
+    alias Iinnovus_Pmhglb 'Iinnovus -F apr_innovus -stylus -BG OrangeRed4 -FG white -I -N -B par_pmhglb -P &'
+    alias Iinnovus_Meu 'Iinnovus -F apr_innovus -stylus -BG green4 -FG white -I -N -B par_meu -P &'
+    alias Igenus_Exe   'Igenus    -F syn_genus -P -I -N -B par_exe_int -BG gold -FG black &'
+    alias Igenus_Pmhglb  'Igenus    -F syn_genus -P -I -N -B par_pmhglb -BG OrangeRed4 -FG white  &'
+
+    alias logic_count_grep_path 'set path_i = {\!:2} ; cat {\!:1} | sed -n "/Path id ${path_i} /,/Report timing status: Completed/p"'
+    alias logic_count_draw_path 'source ~baselibr/PNC_script/logic_count_draw_path.csh {\!:1} {\!:2}' 
+
+    alias fctxml_no_cmpress ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"' | m '
+    alias fctxml ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2" "$3]==0) {b[$2" "$3]=$1} ; a[$2" "$3] += $1 ; c[$2" "$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths from startpoint to endpoint"} {print $1,$2,$3" -from "$4" -to "$5}'"'"' | column -t | m'
+    alias fctxml_start ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2]==0) {b[$2]=$1} ; a[$2] += $1 ; c[$2] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint"} {print $1,$2,$3,$4}'"'"' | column -t | m'
+    alias fctxml_end ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1} ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths endpoint"} {print $1,$2,$3,$4}'"'"' | column -t | m' 
+    alias fctxml_port ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $34}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1 ; d[$3] = $4","$5","$6 ; } ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i,d[i]}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths Ports"} {print $1,$2,$3,$4,$5}'"'"' | column -t | m'
+
+    alias check_spec_2_anottate_port 'awk -v bu=$bu_slack '"'"'$2<bu && $4>0'"'"' | sort -nk2 |  awk -v tar=$target_slack -v min_ovr=$min_override '"'"'$5-tar<min_ovr {print "annotet_port "$3" [expr ${factor}* "$5-tar" ] ; #The distance from the spec is "$5" and the BU margin is "$2" , so adding a override to reflect "tar" to the spec"}'"'"' '
+    alias port_tns_2_anottate_port 'awk -v bu=$bu_slack '"'"'$3<bu '"'"' | sort -nk3 |  awk -v comment="\!:1" -v tar=$target_slack -v min_ovr=$min_override '"'"'$3-tar<min_ovr {print "annotet_port "$1" [expr ${factor}* "$3-tar" ] ; #"comment}'"'"' '
+
+
+    alias awksctbl 'awk -F "," '"'"'{a[$1","$2] += $3 ; v[$2]=1 ;c[$1]=1; Total_v[$2] +=$3 ; Total_c[$1] +=$3 } END{printf "Claster,"; for (i in v) {printf "%s,",i}; printf "Total";   for (j in c) {printf "\n%s,",j ; for (i in v) { if (a[j","i]=="") a[j","i]=0 ;  printf "%s,",a[j","i]}  printf "%s,",Total_c[j] ;}  printf "\nTotal," ; for (i in v) {printf "%s,",Total_v[i] } } '"'"' | align_csv'
+    
+
+    alias lvrfint0 'm vrf_split/func.max_turbo.T_85.typical/\!:1/\!:1.int.0.rpt | awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2" "$3]==0) {b[$2" "$3]=$1} ; a[$2" "$3] += $1 ; c[$2" "$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths from startpoint to endpoint"} {print $1,$2,$3" -from "$4" -to "$5}'"'"' | column -t | m'
+
+    alias lvrfint0_startpoint 'm vrf_split/func.max_turbo.T_85.typical/\!:1/\!:1.int.0.rpt | awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2]==0) {b[$2]=$1} ; a[$2] += $1 ; c[$2] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint"} {print $1,$2,$3,$4}'"'"' | column -t | m'
+    alias lvrfint0_endpoint 'm vrf_split/func.max_turbo.T_85.typical/\!:1/\!:1.int.0.rpt | awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1} ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths endpoint"} {print $1,$2,$3,$4}'"'"' | column -t | m'
+
+    alias lvrf_endpoint 'm vrf_split/func.\!:2_\!:3.T_85.typical/\!:1/\!:1.\!:4.0.rpt | awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1} ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths endpoint"} {print $1,$2,$3,$4}'"'"' | column -t | m'
+    alias lvrf_startpoint 'm vrf_split/func.\!:2_\!:3.T_85.typical/\!:1/\!:1.\!:4.0.rpt | awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2]==0) {b[$2]=$1} ; a[$2] += $1 ; c[$2] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint"} {print $1,$2,$3,$4}'"'"' | column -t | m'
+
+
+    alias lvrf0 'cat vrf_split/func.max_turbo.T_85.typical/*/*.ext.0.rpt |grep "\!:1" | awk -F '"'"'"'"'"' '"'"'{print  $4,$34}'"'"' | bus_compress_Full | awk '"'"'{if (a[$2]==0) {b[$2]=$1} ; a[$2] += $1 ; c[$2] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths port "} {print $1,$2,$3,$4}'"'"' | column -t | m'
+
+alias lvrf_degredation 'grep "\!:1" runs/lnc_client/h169p45_80nm_tsmc_m18/sta_pt/func.\!:2_\!:3.T_85.typical/reports/lnc_client.func.\!:2_\!:3.T_85.typical_timing_summary.xml ref/runs/lnc_client/h169p45_80nm_tsmc_m18/sta_pt/func.\!:2_\!:3.T_85.typical/reports/lnc_client.func.\!:2_\!:3.T_85.typical_timing_summary.xml | sed "s/.*\.bu_post//g" | awk -F '"'"'"'"'"' '"'"'{split($1,a,"/") ;print $4 " " $14 " " $16 " " a[1]}'"'"' | bus_compress_Full | awk '"'"'{if ($4=="ref") {if (refa[$2" "$3]==0) {refb[$2" "$3]=$1} ; refa[$2" "$3] += $1 ; refc[$2" "$3] += 1 } else {if (tsta[$2" "$3]==0) {tstb[$2" "$3]=$1} ; tsta[$2" "$3] += $1 ; tstc[$2" "$3] += 1 }} END{for (i in tsta) {split(i,i_split," "); print tstb[i]","tsta[i]","tstc[i]","refb[i]","refa[i]","refc[i]","i_split[1]","i_split[2]}}'"'"' | sort -n | awk -F "," '"'"'BEGIN {print "-WNS_t,TNS_t,Paths_t,WNS_r,TNS_r,Paths_r,startpoint,endpoint"} {print $1","$2","$3","$4","$5","$6","$7","$8}'"'"' | column -t -s "," | m ' 							    
+alias lvrf_degredation_endpoint 'grep "\!:1" runs/lnc_client/h169p45_80nm_tsmc_m18/sta_pt/func.\!:2_\!:3.T_85.typical/reports/lnc_client.func.\!:2_\!:3.T_85.typical_timing_summary.xml ref/runs/lnc_client/h169p45_80nm_tsmc_m18/sta_pt/func.\!:2_\!:3.T_85.typical/reports/lnc_client.func.\!:2_\!:3.T_85.typical_timing_summary.xml | sed "s/.*\.bu_post//g" | awk -F '"'"'"'"'"' '"'"'{split($1,a,"/") ;print $4 " " $16 " " a[1]}'"'"' | bus_compress_Full | awk '"'"'{if ($3=="ref") {if (refa[$2]==0) {refb[$2]=$1} ; refa[$2] += $1 ; refc[$2] += 1 } else {if (tsta[$2]==0) {tstb[$2]=$1} ; tsta[$2] += $1 ; tstc[$2] += 1 }} END{for (i in tsta) {split(i,i_split," "); print tstb[i]","tsta[i]","tstc[i]","refb[i]","refa[i]","refc[i]","i_split[1]}}'"'"' | sort -n | awk -F "," '"'"'BEGIN {print "-WNS_t,TNS_t,Paths_t,WNS_r,TNS_r,Paths_r,endpoint"} {print $1","$2","$3","$4","$5","$6","$7}'"'"' | column -t -s "," | m ' 	
+
+alias lvrf_degredation_startpoint 'grep "\!:1" runs/lnc_client/h169p45_80nm_tsmc_m18/sta_pt/func.\!:2_\!:3.T_85.typical/reports/lnc_client.func.\!:2_\!:3.T_85.typical_timing_summary.xml ref/runs/lnc_client/h169p45_80nm_tsmc_m18/sta_pt/func.\!:2_\!:3.T_85.typical/reports/lnc_client.func.\!:2_\!:3.T_85.typical_timing_summary.xml | sed "s/.*\.bu_post//g" | awk -F '"'"'"'"'"' '"'"'{split($1,a,"/") ;print $4 " " $14 " " a[1]}'"'"' | bus_compress_Full | awk '"'"'{if ($3=="ref") {if (refa[$2]==0) {refb[$2]=$1} ; refa[$2] += $1 ; refc[$2] += 1 } else {if (tsta[$2]==0) {tstb[$2]=$1} ; tsta[$2] += $1 ; tstc[$2] += 1 }} END{for (i in tsta) {split(i,i_split," "); print tstb[i]","tsta[i]","tstc[i]","refb[i]","refa[i]","refc[i]","i_split[1]}}'"'"' | sort -n | awk -F "," '"'"'BEGIN {print "-WNS_t,TNS_t,Paths_t,WNS_r,TNS_r,Paths_r,startpoint"} {print $1","$2","$3","$4","$5","$6","$7}'"'"' | column -t -s "," | m ' 
+#=======================================================================================================================#   
+
+    #---------------------------------------
+    #             LNC FCT TD	           #
+    #---------------------------------------
+    alias load_server 'source /nfs/iil/proj/lnl/pt_server/cth2_ptserver/cth2_ptserver_root/aliases_for_pt_client; set prompt="%{\033[1;31m%}pt_server_shell> %{\033[0m%} " '
+    alias draw_path 'source ~baselibr/LNC_script/Server/draw_path.tcsh "\!*" '
+    alias spec_calc 'source ~baselibr/LNC_script/Server/Spec_calc.tcsh "\!*" ' 
+    alias bu_max_tur lnca0bmturt085_a
+    alias fcl_max_tur lnca0lmturt085_a
+    alias max_slack 'source ~/LNC_script/Server/get_max_margin.rpt'
+    alias min_slack 'source ~/LNC_script/Server/get_min_margin.rpt'
+    alias buffer_delay 'source ~/LNC_script/Server/get_buffer_delay.rpt'	
+    alias hvlog 'most $ward/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/logs/$block.func.max_high.T_85.typical.pt.log'
+    alias hvreport 'ls $ward/runs/$block/$tech/sta_pt/func.max_high.*/reports/*.rpt $ward/runs/$block/$tech/sta_pt/func.max_high.*/reports/*.csv $ward/runs/$block/$tech/sta_pt/func.max_high.*/reports/*.xml > /tmp/temp_report; xl /tmp/temp_report '
+    alias hvunstamp 'most $ward/runs/$block/$tech/sta_pt/func.max_high.*/reports/$block.func.max_high.*_unstamped.rpt'
+    alias hvmargin 'most $ward/runs/$block/$tech/sta_pt/func.max_high.*/reports/$block.func.max_high.*_margins.rpt'
+    alias hvlinking_hist 'cat $ward/runs/lnc_*/h169p45_80nm_tsmc_m18/sta_pt/func.max_high.T_85.typical/reports/lnc_*.func.max_high.T_85.typical.link_issues.rpt | tr "/" " " | item -1 | sort | uniq -c | sort -nr | head'
+    alias hvlinking 'most $ward/runs/lnc_*/h169p45_80nm_tsmc_m18/sta_pt/func.max_high.T_85.typical/reports/lnc_*.func.max_high.T_85.typical.link_issues.rpt '
+    alias hvcsv '~baselibr/LNC_script/lnc_table.pl $ward/runs/$block/$tech/sta_pt/func.max_high.*/reports/${block}.summary_mail.csv; soffice $ward/runs/$block/$tech/sta_pt/func.max_high.*/reports/${block}.summary_mail.xlsx '
+    alias hvunconstrained 'grep -w "Unconstrained" $ward/runs/$block/$tech/sta_pt/func.max_high.*/reports/$block.func.max_high.*_margins.rpt | most'
+
+    alias turlog 'most $ward/runs/$block/$tech/sta_pt/func.max_turbo.T_85.typical/logs/$block.func.max_turbo.T_85.typical.pt.log'
+    alias turreport 'ls $ward/runs/$block/$tech/sta_pt/func.max_turbo.*/reports/*.rpt $ward/runs/$block/$tech/sta_pt/func.max_turbo.*/reports/*.csv $ward/runs/$block/$tech/sta_pt/func.max_turbo.*/reports/*.xml > /tmp/temp_report; xl /tmp/temp_report '
+    alias turunstamp 'most $ward/runs/$block/$tech/sta_pt/func.max_turbo.*/reports/$block.func.max_turbo.*_unstamped.rpt'
+    alias turmargin 'most $ward/runs/$block/$tech/sta_pt/func.max_turbo.*/reports/$block.func.max_turbo.*_margins.rpt'
+    alias turlinking_hist 'cat $ward/runs/lnc_*/h169p45_80nm_tsmc_m18/sta_pt/func.max_turbo.T_85.typical/reports/lnc_*.func.max_turbo.T_85.typical.link_issues.rpt | tr "/" " " | item -1 | sort | uniq -c | sort -nr | head'
+    alias turlinking 'most $ward/runs/lnc_*/h169p45_80nm_tsmc_m18/sta_pt/func.max_turbo.T_85.typical/reports/lnc_*.func.max_turbo.T_85.typical.link_issues.rpt '
+    alias turcsv 'm $ward/runs/$block/$tech/sta_pt/func.max_turbo.*/reports/\${block}.summary_mail.csv'
+    alias turunconstrained 'grep -w "Unconstrained" $ward/runs/$block/$tech/sta_pt/func.max_turbo.*/reports/$block.func.max_turbo.*_margins.rpt | most'
+
+    alias nomlog 'less ${ward}/runs/$block/$tech/sta_pt/func.max_nom.T_85.typical/logs/$block.func.max_nom.T_85.typical.pt.log'
+    alias nomreport 'll ${ward}/runs/$block/$tech/sta_pt/func.max_high.*/reports/'
+    alias nomunstamp 'less ${ward}/runs/$block/$tech/sta_pt/func.max_nom.*.tttt/reports/$block.func.max_nom.*.tttt_unstamped.rpt'
+    alias nommargin 'less ${ward}/runs/$block/$tech/sta_pt/func.max_nom.*.tttt/reports/$block.func.max_nom.*.tttt_margins.rpt'
+    alias nomlinking 'less ${ward}/runs/$block/$tech/sta_pt/func.max_nom.*.tttt/reports/$block.func.max_nom.*.tttt.link_issues.rpt'
+    alias nomcsv 'less ${ward}/runs/$block/$tech/sta_pt/func.max_nom.*.tttt/reports/${block}.summary_mail.csv'
+    alias nomunconstrained 'grep -w "Unconstrained" ${ward}/runs/$block/$tech/sta_pt/func.max_nom.*.tttt/reports/$block.func.max_nom.*.tttt_margins.rpt | less'
+
+    alias lvlog 'most runs/$block/$tech/sta_pt/func.max_low.T_85.typical/logs/$block.func.max_low.T_85.typical.pt.log'
+
+
+    alias hvLNK05 'grep LNK-005 runs/${block}/${tech}/sta_pt/*high*/logs/${block}*high*pt.log | cut -d : -f2 | sort | uniq -c | sort -n'
+    alias hvLNK47 'grep LNK-047 runs/${block}/${tech}/sta_pt/*high*/logs/${block}*high*pt.log | g Information | sed "s/and/\nInformation: There are/g" | sed "s/Information: //g"  '
+    alias hvLNK38 'grep "(LNK-038)" runs/${block}/${tech}/sta_pt/*max_high*/logs/${block}*high*.pt.log | item 6-12 | sort | uniq -c | sort -nr '
+    alias hvLNK67 'grep "(LNK-067)" runs/${block}/${tech}/sta_pt/*max_high*/logs/${block}*high*.pt.log | item -1 2 3 4 5 6 7 | tr "/," " " | item 1 2 3 4 -1 | sort | align '
+
+
+
+    alias turLNK05 'grep LNK-005 runs/\${block}/\${tech}/sta_pt/func.*turbo.*.typical/logs/lnc_*.*turbo*.typical.pt.log | cut -d : -f2 | sort | uniq -c | sort -n'
+    alias turLNK47 "grep LNK-047 runs/lnc_*/*/sta_pt/*tur*/logs/lnc_*.*tur*pt.log | g Information | sed 's/and/\nInformation: There are/g' | sed 's/Information: //g'  "
+    alias turLNK38 'grep "(LNK-038)" runs/\${block}/\${tech}/sta_pt/func.*max_turbo.*.typical/logs/lnc_*.*turbo*.typical.pt.log | item 6-12 | sort | uniq -c | sort -nr '
+    alias turLNK67 'grep "(LNK-067)" runs/\${block}/\${tech}/sta_pt/func.*max_turbo.*.typical/logs/lnc_*.*turbo*.typical.pt.log | item -1 2 3 4 5 6 7 | tr "/," " " | item 1 2 3 4 -1 | sort | align '
+
+    alias get_tags_FCT 'echo "fe_collateral $FE_TAG"; echo "td_collateral $TD_COLLATERAL_TAG\nself_collateral $SELF_COLLATERAL_TAG\nclock_collateral $CLOCK_COLLATERAL_TAG\nsio_timing_collateral \!:1\ntiming_collateral \!:1\ndft_collateral \!:2\npower_collateral \!:3\ncontour \!:4\n\nhip_list: $hip_list\nRTL_Model: $rtl"'
+    
+    alias v_grep_top 'v_grep {\!:1} runs/${block}/${tech}/release/latest/self_collateral/standard/${block}_td.v '
+    alias v_grep_par 'v_grep {\!:2} runs/{\!:1}/${tech}/release/latest/td_collateral/standard/{\!:1}_td.v '
+    alias v_grep_block 'v_grep {\!:2} runs/${block}/${tech}/release/latest/fe_collateral/netlist/{\!:1}.v '	
+
+    alias get_lib "grep {\!:1} runs/lnc_*/h169p45_80nm_tsmc_m18/sta_pt/func.max_high.T_85.typical/scripts/design.library_link_scaling.func.max_high.T_85.typical.tcl | sed 's/... \\/lib/g' "
+
+    alias gHow 'xterm -e "grep --color {\!:1} ~/HowTo/*  | less -S " &'
+
+#    alias nb_cmd 'nbq -C "SLES12&&128G&&8C" -Q lnc12_sd -P iil_express '
+    alias nb_cmd '/usr/intel/bin/nbjob run --target "sc8_express" --qslot "/c2dg/BE_BigCore/pnc/sd/sles12_sd" --class "SLES12SP5&&128G&&4C"'
+    alias nb_cmd_high_mem '/usr/intel/bin/nbjob run --target "sc8_express" --qslot "/c2dg/BE_BigCore/pnc/sd/sles12_sd" --class "SLES12SP5&&512G&&4C"'
+    
+    alias nb_cmd_gfc '/usr/intel/bin/nbjob run --target "sc8_express" --qslot bc15_gfc_fct --class "SLES12SP5&&128G&&4C"'
+    alias nb_cmd_gfc_high_mem '/usr/intel/bin/nbjob run --target "sc8_express" --qslot bc15_gfc_fct --class "SLES12SP5&&512G&&4C"'
+
+    alias loadptnb_cth 'nb_cmd /p/hdk/pu_tu/prd/fct_alias/$FCT_ALIAS_VER/utils/load_session_cth.csh \!:1 -title \!:2'
+    alias loadptnb_cth_high 'nb_cmd /p/hdk/pu_tu/prd/fct_alias/$FCT_ALIAS_VER/utils/load_session_cth.csh runs/${block}/${tech}/sta_pt/func.max_high.*.tttt/outputs/${block}.pt_session.func.max_high.*.tttt/ -title `/usr/intel/bin/workweek -f FCT%IyWW%02IW_%w`'
+ 
+    alias pncb0_daily_bu 'nb_cmd_high_mem /p/hdk/pu_tu/prd/fct_alias/$FCT_ALIAS_VER/utils/load_session_cth.csh ~baselibr/pnc_links/daily_pnc0b_1278_core_client_bu_postcts/runs/core_client/${tech}/sta_pt/\!:1/outputs/${block}.pt_session.\!:1/ -title `/usr/intel/bin/workweek -f PNC_Daily_BU_\!:1_FCT%IyWW%02IW_%w`'
+
+    alias gfca0_daily_fcl '/usr/intel/bin/nbjob run --target "sc8_express" --qslot bc15_gfc_fct --class "SLES12SP5&&512G&&4C" /p/hdk/pu_tu/prd/fct_alias/$FCT_ALIAS_VER/utils/load_session_cth.csh ~baselibr/gfc_links/daily_gfc0a_n2_core_client_fcl/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/outputs/core_client.pt_session.func.max_high.T_85.typical/ -title `/usr/intel/bin/workweek -f GFC_Daily_FCL%IyWW%02IW_%w`'
+    alias gfca0_latest_bu '/usr/intel/bin/nbjob run --target "sc8_express" --qslot bc15_gfc_fct --class "SLES12SP5&&512G&&4C" /p/hdk/pu_tu/prd/fct_alias/$FCT_ALIAS_VER/utils/load_session_cth.csh ~baselibr/gfc_links/latest_gfc0a_n2_core_client_bu_postcts/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/outputs/core_client.pt_session.func.max_high.T_85.typical/ -title `/usr/intel/bin/workweek -f GFC_Latest_BU%IyWW%02IW_%w`'
+    alias gfca0_daily_bu '/usr/intel/bin/nbjob run --target "sc8_express" --qslot bc15_gfc_fct --class "SLES12SP5&&512G&&4C" /p/hdk/pu_tu/prd/fct_alias/$FCT_ALIAS_VER/utils/load_session_cth.csh ~baselibr/gfc_links/daily_gfc0a_n2_core_client_bu_postcts/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/outputs/core_client.pt_session.func.max_high.T_85.typical/ -title `/usr/intel/bin/workweek -f GFC_Daily_BU%IyWW%02IW_%w`'
+
+
+
+#=======================================================================================================================#   
+    #---------------------------------------
+    #             Group Wash               #
+    #---------------------------------------
+    alias wash_fct_gfc 'wash -n -g user sklall soc intelall mpgall c2dgusers i1278proc i1278 n2 gfcn2_pcore_ex pncn2_pcore_ex n2p n2pbe'
+    alias wash_fct_pnc 'wash -n -g user  mpgall sklall soc skl_rtl hdk10nm hdk10nmproc hdk7nm hdk7nmproc adl_rtl adl c2dgusers lionc cpu1274 n3 intelall i1278 i1278proc'
+    alias wash_fct_lnc 'wash -n user mpgall sklall soc skl_rtl hdk10nm hdk10nmproc hdk7nm hdk7nmproc adl_rtl adl c2dgusers lionc cpu1274 adl n3' 
+    alias wash_par     'wash -n -g user mpgall sklall hdk10nm hdk7nm hdk7nmproc soc skl_rtl n3 gsrall c2dgusers lionc i1278 tyc tyc78 tyc78proc'
+    alias wash_fct_glc  'wash -n -g user mpgall sklall lpd soc skl_rtl cpu1274 hdk10nm gsrall gsr_fct gsr_stos n5 n5p mpgdsgn'
+    alias source_fct   'source /p/hdk/pu_tu/prd/fct_alias/latest/utils/fct_run_aliases'
+#=======================================================================================================================#
+    #---------------------------------------
+    #             Site Sync              #
+    #---------------------------------------
+    alias copy_sc8 'rsync -azv --progress sc8-rsync.sc.intel.com:\!*'
+    alias copy_idc 'rsync -azv --progress rsync.iil.intel.com:\!*'
+#=======================================================================================================================#
+ 
+    #---------------------------------------
+    #               RPT                    #
+    #---------------------------------------
+
+    alias Lcp '/p/mpg/proc/common2/utils/tool_utils/archive_ci/latest/client.tcl rcp \!:1 $FCL_DIR/central_db/rpt_area/next_rollup_$PROJECT/'
+    alias Lclean '/p/mpg/proc/common2/utils/tool_utils/archive_ci/latest/client.tcl clean $FCL_DIR/central_db/rpt_area/next_rollup_$PROJECT/\!:1'
+
+#=======================================================================================================================# 
+   
+    #---------------------------------------
+    #               RLS                    #
+    #---------------------------------------
+
+    alias get_net_report_rls 'zgrep "wire  -    ${DBB}:" cornet/${DBB}/highv/tango/analysis/${DBB}.setup.report.gz | sort -nr -k2 | awk '\''{if ( $2 > 0.02 ) print $2" "$15 }'\'' | sort -u -k2 | sort -rn | sed "s/${DBB}://g" | l'
+    alias grep_paths_nominal 'zgrep -iF {\!:1} cornet/${DBB}/nominal/tango/analysis/${DBB}.setup.report.gz | sed "/Start .. End/q" | head -n -1 '
+    alias grep_paths_highv 'zgrep -iF {\!:1} cornet/${DBB}/highv/tango/analysis/${DBB}.setup.report.gz | sed "/Start .. End/q" | head -n -1 '
+    alias grep_path_nominal_id '~baselibr/RLS_scripts/grep_path_id_nominal'
+    alias grep_path_highv_id '~baselibr/RLS_scripts/grep_path_id_highv'
+# alias draw_path 'echo "cs [get_nets {"`grep_path_nominal_id \!* | item 15 | grep "${DBB}\:" | sed "s/${DBB}\://g" | perl -pi -e "s/\n/ /g" ` "}]"'
+    alias gem  '/nfs/iil/disks/home01/iforer/my_perl/gem2.pl -evr tango/evrbvr/$DBB.nominal.evr -sch netlists/snet/$DBB.sch'
+
+    alias evr_editor_mc '$PARADE/utils/rls_mc_evr.pl -cell $DBB -sch $WORK_AREA_ROOT_DIR/netlists/snet/$DBB.sch &'
+    alias evr_editor '$PARADE/utils/rls_evr.pl -cell $DBB -sch $WORK_AREA_ROOT_DIR/netlists/snet/$DBB.sch &'
+    
+
+	# setup reports 
+    alias snom 'most cornet/${DBB}/nominal/tango/analysis/${DBB}.setup.report.gz'
+    alias shigh 'most cornet/${DBB}/highv/tango/analysis/${DBB}.setup.report.gz'
+	# Hold reports 
+    alias hnom 'most cornet/${DBB}/nominal/tango/analysis/${DBB}.hold.report.gz '
+    alias hhigh  'most cornet/${DBB}/highv/tango/analysis/${DBB}.hold.report.gz '
+    alias hlow 'most cornet/${DBB}/lowv/tango/analysis/${DBB}.hold.report.gz '
+
+    alias get_margin_net 'zg {\!:1} cornet/${DBB}/*/tango/analysis/${DBB}.valid_report.gz | g "MAX" | tr "/" " " | item 3 -1 | sort -u '
+
+#=======================================================================================================================#   
+
+    #---------------------------------------
+    #               FCT                    #
+    #---------------------------------------
+    alias create_local 'source ~gilkeren/scripts/create_local \!*'
+    alias copy_local_apv_cfg 'cp {\!:1}/apv/cfg/local.apvcfg.pl $WARD/apv/cfg/; cp {\!:1}/cornet/highv/apv/cfg/local.apvcfg.pl $WARD/cornet/highv/apv/cfg/; cp {\!:1}/cornet/lowv/apv/cfg/local.apvcfg.pl $WARD/cornet/lowv/apv/cfg/; cp {\!:1}/cornet/lowv_eol/apv/cfg/local.apvcfg.pl $WARD/cornet/lowv_eol/apv/cfg/; cp {\!:1}/cornet/highv_eol/apv/cfg/local.apvcfg.pl $WARD/cornet/highv_eol/apv/cfg/;  '
+
+    alias missing 'cat indicators/details/*/*.missing_timing.EventMiss.ind.details | grep % | awk -F "|" '\''{print $1" "$2" "$4}'\'' | column -t | m'
+        
+##  can be replace by sig_gr 
+    alias bvr_nom_review 'zcat tango/bvr/{\!:1}.bvr.gz | perl -pi -e "s/\n/~~/g"  | perl -pi -e "s/~~\)/\)\n/g"  | grep -iF {\!:2} | perl -pi -e "s/~~/\n/g" ' 
+    alias bvr_highv_review 'zcat cornet/highv/tango/bvr/{\!:1}.bvr.gz | perl -pi -e "s/\n/~~/g"  | perl -pi -e "s/~~\)/\)\n/g"  | grep -iF {\!:2} | perl -pi -e "s/~~/\n/g" '
+    alias bvr_lowv_review 'zcat cornet/lowv/tango/bvr/{\!:1}.bvr.gz | perl -pi -e "s/\n/~~/g"  | perl -pi -e "s/~~\)/\)\n/g"  | grep -iF {\!:2} | perl -pi -e "s/~~/\n/g" '
+    
+    alias fct_table '~/FCT_Script/indcmp.pl -next $WORK -prev $FCT_MODEL/latest_lprclnt/ $FCT_MODEL/prev_lprclnt/ -max_bins "Tot<=-0.100" "Tot<=-0.050" "Tot<=-0.020" "Tot<=-0.010" "Tot<=-0.005" "Tot<=0.000" -min_bin "Tot<=-0.100" "Tot<=-0.050" "Tot<=-0.020" "Tot<=-0.010" "Tot<=-0.005" "Tot<=0.000" -out_dir xls_dir -ignore lprclnt -ignore tmul'
+
+    alias fct_table_glc 'soffice `~/FCT_Script/indcmp.pl_glc0r -next $WORK -prev $FCT_MODEL/latest_${PROJECT}/ $FCT_MODEL/prev_${PROJECT}/ -max_bins "Tot<=-0.100" "Tot<=-0.050" "Tot<=-0.020" "Tot<=-0.010" "Tot<=-0.005" "Tot<=0.000" -min_bin "Tot<=-0.100" "Tot<=-0.050" "Tot<=-0.020" "Tot<=-0.010" "Tot<=-0.005" "Tot<=0.000" -out_dir xls_dir | grep "Done writing excel file" | item -1` ; cp `ls -ltr $WARD/xls_dir/*.xlsx | tail -1 | item -1` ~/Indicator_FCT_tables/`pwd | sed "s|.*/||g"`.xlsx'
+
+ #=======================================================================================================================#   
+    #---------------------------------------
+    #               FCN                    #
+    #---------------------------------------  
+    
+    alias sch_gr 'source /nfs/site/disks/home17/baselibr/Netlist_Scrip/sch_gr_diff \!*'
+    alias grep_fub '~baselibr/FCT_Script/grep_fub -fub {\!:1} -file {\!:2}'
+    alias grep_fub_col '~baselibr/FCT_Script/grep_fub -fub {\!:1} -file {\!:2} -col'
+
+    alias sch_col '/nfs/iil/disks/home01/gilkeren/bin/sch_collapse.pl'
+    alias sch_gr_col 'sch_gr \!* | sch_col '
+    alias bus_compress  "perl -p -e 's/\[[0-9]+\]/[*]/g' "
+    alias bus_compress_Full "sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*\//_*\//g' | sed -e 's/\[[0-9]*\]/\[*\]/g' | sed -e 's/\/d[0-9]/\/d*/g' | sed -e 's/\/D[0-9]/\/D*/g' "
+
+#=======================================================================================================================#   
+    #---------------------------------------
+    #               LINKs                  #
+    #---------------------------------------  
+    
+#    setenv MYSTOD  `realpath  /nfs/iil/stod/areas/b/w.baselibr.100`
+#    setenv FCN_srvr0p `realpath /nfs/iil/proj/mpg/proc/data/fct/mrm/latest_glcsrvr0p_netlist/`
+#    setenv FCN_clnt0p  `realpath /nfs/iil/proj/mpg/proc/data/fct/mrm/latest_glcclnt0p_netlist/`
+
+#    setenv FCT_GLC_MODEL `realpath /nfs/site/proj/mpg/proc/projects/glcclnt/central_data/fct/fctiming/MODEL_POINTERS/`
+#    setenv FCT_GLC_GOLDEN `realpath /p/mpg/proc/projects/glcclnt/central_data/fct/fctiming/glc/GOLDEN_AREA/`
+
+#=======================================================================================================================#   
+    #---------------------------------------
+    #               To do list             #
+    #---------------------------------------
+    
+    alias todo_add 'echo "ww"`date +%U_%w` `date +%X` "         "  \!* >> ~/todo_list/list.txt'
+    alias todo_view 'echo "\n==============    To Do list   =================\n"; cat -n ~/todo_list/list.txt; echo "\n================================================"'
+    alias todo_view_window 'xmessage -nearmouse -title Todo\list -buttons Close: -file ~/todo_list/list.txt -geometry 600x300+50+10 -fg blue &'
+    alias todo_remove 'echo -n "ww`date +%U_%w`   " >> ~/todo_list/done.txt; grep "\!*" ~/todo_list/list.txt  >> ~/todo_list/done.txt; sed -i "/\!*/d" ~/todo_list/list.txt'
+    alias todo_desktop "sed -i '\!:1s/          / desktop \!:2/' ~/todo_list/list.txt"
+    alias todo_done 'echo "\n==============    Done list   =================\n"; cat ~/todo_list/done.txt | grep "`date +%U`" ; echo "\n================================================"'	
+    alias what_in_desk 'echo "\n==============    Desktop list   =================\n"; cat ~/todo_list/what_in_desktop.txt; echo "\n================================================"'
+    alias add_to_desk "sed -i '\!:1s/.*/\!:*/' ~/todo_list/what_in_desktop.txt"
+#=======================================================================================================================#   
+
+    #---------------------------------------
+    #               RPT                    #
+    #---------------------------------------
+       
+#-----------drops aliases
+    alias setSNC "source /p/cnl/rtl/proj_bin_a/setSNC.csh \!:*" 
+    alias setSNC 'source /p/cnl/rtl/proj_bin_a/setSNC.csh \!:*'
+
+#-----------setup aliases
+    alias prompt "set prompt = set prompt = chdk_SETUP\(\!\)\%\ "
+
+   #alias to_golden2 "source $FCT_DB_AREA/model_release/apvGolden.csh | tee apv/netlist_flow/log/to_golden.out ; banner ci done; echo OPUS: `head -1 NET_comparison_final/comp_model2opus//netlist_diff.report`; echo GOLDEN: `head -1 NET_comparison_final/comp_model2golden_sub_dir//netlist_diff.report`; snooze"
+  
+    #$DA_UTILS/utilities/get_library_permission.tcl <DBB>_<PROJECT>_<LIB>
+    
+#    alias permission_dbb_proj_lib '$DA_UTILS/utilities/get_library_permission.tcl \!:1'
+    
+
+    #FALCON
+#    alias falcon_rpt_glc    'src_falcon; /p/mpg/proc/data/falcon/bin/falcon -run repeaters -p glc &'
+#    alias falcon_rpt_lpr    'src_falcon; /p/mpg/proc/data/falcon/bin/falcon -run repeaters -p lpr &'
+    #alias falcon_rpt_snc0c  'src_falcon; /p/mpg/proc/data/falcon/bin/falcon -run repeaters -p snc0c &'
+    #alias falcon_rpt_snc0d  'src_falcon; /p/mpg/proc/data/falcon/bin/falcon -run repeaters -p snc0d &'
+#    alias src_falcon    'source ~/rpt/falcon_src'
+    
+    #XML
+    
+#    alias xml           'gvim /p/mpg/proc/data/falcon/flows/repeaters/rpt_${MILESTONE}/repeaters.xml'
+#    alias pxml          'gvim -O /nfs/site/disks/falcon.hs/hs/repeaters/overrides/enaveh/${PROJECT}.rpt_${MILESTONE}.repeaters.*'
+#    alias envs          'gvim /nfs/site/disks/falcon.hs/hs/repeaters/flow/rpt_${MILESTONE}/repeaters.env'
+#    alias envs_nodfm    'gvim /nfs/site/disks/falcon.hs/hs/repeaters/flow/rpt_${MILESTONE}_no_dfm/repeaters.env'
+#    alias penvs         'gvim /nfs/site/disks/falcon.hs/hs/repeaters/overrides/enaveh/${PROJECT}.rpt_${MILESTONE}.repeaters.env'
+#    alias penvs_nodf    'gvim /nfs/site/disks/falcon.hs/hs/repeaters/overrides/enaveh/${PROJECT}.rpt_${MILESTONE}_no_dfm.repeaters.env'
+#    alias rv_dir        'll $DRIVE_DB/fubs'
+
+    #SHORTSCUT
+#    alias duet_rpt_global_waivers   'n /nfs/iil/disks/home01/baselibr/rpt/rpt_duet_waivers.txt'
+#    alias rpt_duet_global_waivers   'n /nfs/iil/disks/home01/baselibr/rpt/rpt_duet_waivers.txt'
+#alias my_stod '/nfs/iil/stod/areas/e/w.baselibr.102'
+#   alias ship_stod '/nfs/iil/stod/areas/e/w.baselibr.101'
+##    alias glc_fcn 'octopus -flowtype netlist -cfg ~/baselibr_aliases/fcn/single_netlist_octopusControl_glc_multi_die.pl'
+##    alias pdgui '/nfs/site/home/ebarnett/pdgui \!*'  
+ 
+    alias mpgstod '/p/mpg/proc/common2/da_utils/utilities/MPGStod/mpgstod '
+    alias nbqstate 'nbqstat -P iil_short user=baselibr ; nbqstat -P iil_critical user=baselibr ; nbqstat -P iil_normal user=baselibr ; nbqstat -P iil_express user=baselibr'
+
+    alias nb_gui '/nfs/site/disks/hdk_sd_utilities/sd_user_utils/uc_utils/apps/nbgui.py &'
+    alias status 'nbstatus jobs --target sc8_express --format table --fi status,jobid,Qslot::40,class::25,Cmdline::200'
+    alias status_rm  'nbjob remove --target sc8_express \!*'
+
+
+
+    alias draw_icore_pnc '/usr/intel/pkgs//gnuplot/5.0.6/bin/gnuplot  ~baselibr/pnc/Core_plot/icore/Draw_block.gnuplot'
+    alias draw_core_server_pnc '/usr/intel/pkgs//gnuplot/5.0.6/bin/gnuplot  ~/pnc/Core_plot/core_server/Draw_block.gnuplot'
+    alias draw_core_client_pnc '/usr/intel/pkgs//gnuplot/5.0.6/bin/gnuplot  ~/pnc/Core_plot/core_client/Draw_block.gnuplot'
+    alias draw_port_pnc 'source /nfs/site/disks/home_user/baselibr/PNC_script/draw_ports_from_def.tcsh \!:1 \!:2 \!:3 > temp.rpt '
+  
+    alias draw_icore_gfc '/usr/intel/pkgs//gnuplot/5.0.6/bin/gnuplot  ~baselibr/gfc/Core_plot/icore/Draw_block.gnuplot'
+    alias draw_core_client_gfc '/usr/intel/pkgs//gnuplot/5.0.6/bin/gnuplot  ~/gfc/Core_plot/core_client/Draw_block.gnuplot'
+    alias draw_core_server_gfc '/usr/intel/pkgs//gnuplot/5.0.6/bin/gnuplot  ~/gfc/Core_plot/core_server/Draw_block.gnuplot'
+    alias draw_port_gfc 'source /nfs/site/disks/home_user/baselibr/GFC_script/draw_ports_from_def.tcsh \!:1 \!:2 \!:3 > temp.rpt '
+
+    alias compare_logs 'cat \!:1 | ~/bin/clog.pl > /tmp/left; cat \!:2 | ~/bin/clog.pl > /tmp/right;tkdiff /tmp/left /tmp/right;'

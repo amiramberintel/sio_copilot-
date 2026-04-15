@@ -1,0 +1,250 @@
+#|-------------------------------------------------------------------
+#| FILENAME          : icore.dsbexitpointmaskm124h_with_move.tp
+#| USER              : sunger
+#| TIMESTAMP         : Thu Mar 05 00:11:33 2026
+#| BLOCK             : icore.design
+#|                   : TIP topology plan for DsbExitPointMaskM124H (44 bits, 2 groups)
+#|                   : Cross-partition: par_fe → par_msid (ABUTTED ports)
+#|                   : OPTION B: WITH CELL MOVEMENT — dsbpriomux cells moved closer to port
+#|                   : Assumes PnR owner moved cells from (1274,370) to (1370,370)
+#|                   : Wire: 47um (port→moved cells), buffer at midpoint ~(1393, 370)
+#|                   : Expected savings: ~30ps from move + ~3ps from TIP buffer
+#|                   : ⚠️  WARNING: Cell movement affects clock tree — see fix summary
+#|                   : ⚠️  Apply useful skew AFTER placement is final
+#|                   : 44 bits = [0][0:21] + [1][0:21], all same location band
+#|                   : NOTE: _1_ group net names (indices 22-43) need verification
+#|                   : Based on worst path: DsbExitPointMaskM124H_0_[3], slack -80.4ps
+#|-------------------------------------------------------------------
+
+#------------------------------------------------------------
+# Check TIP Planning Versus Netlist
+#------------------------------------------------------------
+###Check Nets matching###
+set old_rtl_top_nets_list "DsbExitPointMaskM124H_0_ DsbExitPointMaskM124H_1_ DsbExitPointMaskM124H_2_ DsbExitPointMaskM124H_3_ DsbExitPointMaskM124H_4_ DsbExitPointMaskM124H_5_ DsbExitPointMaskM124H_6_ DsbExitPointMaskM124H_7_ DsbExitPointMaskM124H_8_ DsbExitPointMaskM124H_9_ DsbExitPointMaskM124H_10_ DsbExitPointMaskM124H_11_ DsbExitPointMaskM124H_12_ DsbExitPointMaskM124H_13_ DsbExitPointMaskM124H_14_ DsbExitPointMaskM124H_15_ DsbExitPointMaskM124H_16_ DsbExitPointMaskM124H_17_ DsbExitPointMaskM124H_18_ DsbExitPointMaskM124H_19_ DsbExitPointMaskM124H_20_ DsbExitPointMaskM124H_21_ DsbExitPointMaskM124H_22_ DsbExitPointMaskM124H_23_ DsbExitPointMaskM124H_24_ DsbExitPointMaskM124H_25_ DsbExitPointMaskM124H_26_ DsbExitPointMaskM124H_27_ DsbExitPointMaskM124H_28_ DsbExitPointMaskM124H_29_ DsbExitPointMaskM124H_30_ DsbExitPointMaskM124H_31_ DsbExitPointMaskM124H_32_ DsbExitPointMaskM124H_33_ DsbExitPointMaskM124H_34_ DsbExitPointMaskM124H_35_ DsbExitPointMaskM124H_36_ DsbExitPointMaskM124H_37_ DsbExitPointMaskM124H_38_ DsbExitPointMaskM124H_39_ DsbExitPointMaskM124H_40_ DsbExitPointMaskM124H_41_ DsbExitPointMaskM124H_42_ DsbExitPointMaskM124H_43_"
+set found_rtl_top_nets_collection [get_nets -quiet $old_rtl_top_nets_list]
+if { [llength $old_rtl_top_nets_list] != [sizeof_collection $found_rtl_top_nets_collection] } {
+    iproc_msg -error "-E- TIP nets planning are not matched to Netlist -  Mismatch old nets Versus Netlist, skip Reading the TP file"
+    return
+}
+
+###Check Pins matching###
+set old_rtl_pins_list "{par_fe/dsbexitpointmaskm124h_0_[0]} {par_msid/dsbexitpointmaskm124h_0_[0]} {par_fe/dsbexitpointmaskm124h_0_[1]} {par_msid/dsbexitpointmaskm124h_0_[1]} {par_fe/dsbexitpointmaskm124h_0_[2]} {par_msid/dsbexitpointmaskm124h_0_[2]} {par_fe/dsbexitpointmaskm124h_0_[3]} {par_msid/dsbexitpointmaskm124h_0_[3]} {par_fe/dsbexitpointmaskm124h_0_[4]} {par_msid/dsbexitpointmaskm124h_0_[4]} {par_fe/dsbexitpointmaskm124h_0_[5]} {par_msid/dsbexitpointmaskm124h_0_[5]} {par_fe/dsbexitpointmaskm124h_0_[6]} {par_msid/dsbexitpointmaskm124h_0_[6]} {par_fe/dsbexitpointmaskm124h_0_[7]} {par_msid/dsbexitpointmaskm124h_0_[7]} {par_fe/dsbexitpointmaskm124h_0_[8]} {par_msid/dsbexitpointmaskm124h_0_[8]} {par_fe/dsbexitpointmaskm124h_0_[9]} {par_msid/dsbexitpointmaskm124h_0_[9]} {par_fe/dsbexitpointmaskm124h_0_[10]} {par_msid/dsbexitpointmaskm124h_0_[10]} {par_fe/dsbexitpointmaskm124h_0_[11]} {par_msid/dsbexitpointmaskm124h_0_[11]} {par_fe/dsbexitpointmaskm124h_0_[12]} {par_msid/dsbexitpointmaskm124h_0_[12]} {par_fe/dsbexitpointmaskm124h_0_[13]} {par_msid/dsbexitpointmaskm124h_0_[13]} {par_fe/dsbexitpointmaskm124h_0_[14]} {par_msid/dsbexitpointmaskm124h_0_[14]} {par_fe/dsbexitpointmaskm124h_0_[15]} {par_msid/dsbexitpointmaskm124h_0_[15]} {par_fe/dsbexitpointmaskm124h_0_[16]} {par_msid/dsbexitpointmaskm124h_0_[16]} {par_fe/dsbexitpointmaskm124h_0_[17]} {par_msid/dsbexitpointmaskm124h_0_[17]} {par_fe/dsbexitpointmaskm124h_0_[18]} {par_msid/dsbexitpointmaskm124h_0_[18]} {par_fe/dsbexitpointmaskm124h_0_[19]} {par_msid/dsbexitpointmaskm124h_0_[19]} {par_fe/dsbexitpointmaskm124h_0_[20]} {par_msid/dsbexitpointmaskm124h_0_[20]} {par_fe/dsbexitpointmaskm124h_0_[21]} {par_msid/dsbexitpointmaskm124h_0_[21]} {par_fe/dsbexitpointmaskm124h_1_[0]} {par_msid/dsbexitpointmaskm124h_1_[0]} {par_fe/dsbexitpointmaskm124h_1_[1]} {par_msid/dsbexitpointmaskm124h_1_[1]} {par_fe/dsbexitpointmaskm124h_1_[2]} {par_msid/dsbexitpointmaskm124h_1_[2]} {par_fe/dsbexitpointmaskm124h_1_[3]} {par_msid/dsbexitpointmaskm124h_1_[3]} {par_fe/dsbexitpointmaskm124h_1_[4]} {par_msid/dsbexitpointmaskm124h_1_[4]} {par_fe/dsbexitpointmaskm124h_1_[5]} {par_msid/dsbexitpointmaskm124h_1_[5]} {par_fe/dsbexitpointmaskm124h_1_[6]} {par_msid/dsbexitpointmaskm124h_1_[6]} {par_fe/dsbexitpointmaskm124h_1_[7]} {par_msid/dsbexitpointmaskm124h_1_[7]} {par_fe/dsbexitpointmaskm124h_1_[8]} {par_msid/dsbexitpointmaskm124h_1_[8]} {par_fe/dsbexitpointmaskm124h_1_[9]} {par_msid/dsbexitpointmaskm124h_1_[9]} {par_fe/dsbexitpointmaskm124h_1_[10]} {par_msid/dsbexitpointmaskm124h_1_[10]} {par_fe/dsbexitpointmaskm124h_1_[11]} {par_msid/dsbexitpointmaskm124h_1_[11]} {par_fe/dsbexitpointmaskm124h_1_[12]} {par_msid/dsbexitpointmaskm124h_1_[12]} {par_fe/dsbexitpointmaskm124h_1_[13]} {par_msid/dsbexitpointmaskm124h_1_[13]} {par_fe/dsbexitpointmaskm124h_1_[14]} {par_msid/dsbexitpointmaskm124h_1_[14]} {par_fe/dsbexitpointmaskm124h_1_[15]} {par_msid/dsbexitpointmaskm124h_1_[15]} {par_fe/dsbexitpointmaskm124h_1_[16]} {par_msid/dsbexitpointmaskm124h_1_[16]} {par_fe/dsbexitpointmaskm124h_1_[17]} {par_msid/dsbexitpointmaskm124h_1_[17]} {par_fe/dsbexitpointmaskm124h_1_[18]} {par_msid/dsbexitpointmaskm124h_1_[18]} {par_fe/dsbexitpointmaskm124h_1_[19]} {par_msid/dsbexitpointmaskm124h_1_[19]} {par_fe/dsbexitpointmaskm124h_1_[20]} {par_msid/dsbexitpointmaskm124h_1_[20]} {par_fe/dsbexitpointmaskm124h_1_[21]} {par_msid/dsbexitpointmaskm124h_1_[21]}"
+set found_rtl_pins_collection [get_pins -quiet $old_rtl_pins_list]
+if { [llength $old_rtl_pins_list] != [sizeof_collection $found_rtl_pins_collection] } {
+    iproc_msg -error "-E- TIP Pins planning are not matched to Netlist - Mismatch old pins Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set nets_segments_collection [rtlfp_get_nets_segments $found_rtl_top_nets_collection]
+set rtl_pins_collection [get_pins -quiet -of_objects $nets_segments_collection -filter "is_hierarchical==true&&cell.is_soft_macro==true&&port.is_shadow==false"]
+if { [compare_collection $rtl_pins_collection $found_rtl_pins_collection] != 0 } {
+    iproc_msg -error "-E- TIP Pins planning are not matched to Netlist - pins connectivity has changed, skip Reading the TP file"
+    return
+}
+
+###Check Ports matching###
+set old_rtl_ports_list ""
+set found_rtl_ports_collection [get_ports -quiet $old_rtl_ports_list]
+if { [llength $old_rtl_ports_list] != [sizeof_collection $found_rtl_ports_collection] } {
+    iproc_msg -error "-E- TIP Ports planning are not matched to Netlist - Mismatch old ports Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set rtl_ports_collection [get_ports -quiet -of_objects $nets_segments_collection -filter "is_shadow==false"]
+if { [compare_collection $rtl_ports_collection $found_rtl_ports_collection] != 0 } {
+    iproc_msg -error "-E- TIP Ports planning are not matched to Netlist - ports connectivity has changed, skip Reading the TP file"
+    return
+}
+
+###Check Units-Pins matching###
+set old_units_pins_list "{par_fe/fe/DsbExitPointMaskM124H[0][0]} {par_msid/msid/DsbExitPointMaskM124H[0][0]} {par_fe/fe/DsbExitPointMaskM124H[0][1]} {par_msid/msid/DsbExitPointMaskM124H[0][1]} {par_fe/fe/DsbExitPointMaskM124H[0][2]} {par_msid/msid/DsbExitPointMaskM124H[0][2]} {par_fe/fe/DsbExitPointMaskM124H[0][3]} {par_msid/msid/DsbExitPointMaskM124H[0][3]} {par_fe/fe/DsbExitPointMaskM124H[0][4]} {par_msid/msid/DsbExitPointMaskM124H[0][4]} {par_fe/fe/DsbExitPointMaskM124H[0][5]} {par_msid/msid/DsbExitPointMaskM124H[0][5]} {par_fe/fe/DsbExitPointMaskM124H[0][6]} {par_msid/msid/DsbExitPointMaskM124H[0][6]} {par_fe/fe/DsbExitPointMaskM124H[0][7]} {par_msid/msid/DsbExitPointMaskM124H[0][7]} {par_fe/fe/DsbExitPointMaskM124H[0][8]} {par_msid/msid/DsbExitPointMaskM124H[0][8]} {par_fe/fe/DsbExitPointMaskM124H[0][9]} {par_msid/msid/DsbExitPointMaskM124H[0][9]} {par_fe/fe/DsbExitPointMaskM124H[0][10]} {par_msid/msid/DsbExitPointMaskM124H[0][10]} {par_fe/fe/DsbExitPointMaskM124H[0][11]} {par_msid/msid/DsbExitPointMaskM124H[0][11]} {par_fe/fe/DsbExitPointMaskM124H[0][12]} {par_msid/msid/DsbExitPointMaskM124H[0][12]} {par_fe/fe/DsbExitPointMaskM124H[0][13]} {par_msid/msid/DsbExitPointMaskM124H[0][13]} {par_fe/fe/DsbExitPointMaskM124H[0][14]} {par_msid/msid/DsbExitPointMaskM124H[0][14]} {par_fe/fe/DsbExitPointMaskM124H[0][15]} {par_msid/msid/DsbExitPointMaskM124H[0][15]} {par_fe/fe/DsbExitPointMaskM124H[0][16]} {par_msid/msid/DsbExitPointMaskM124H[0][16]} {par_fe/fe/DsbExitPointMaskM124H[0][17]} {par_msid/msid/DsbExitPointMaskM124H[0][17]} {par_fe/fe/DsbExitPointMaskM124H[0][18]} {par_msid/msid/DsbExitPointMaskM124H[0][18]} {par_fe/fe/DsbExitPointMaskM124H[0][19]} {par_msid/msid/DsbExitPointMaskM124H[0][19]} {par_fe/fe/DsbExitPointMaskM124H[0][20]} {par_msid/msid/DsbExitPointMaskM124H[0][20]} {par_fe/fe/DsbExitPointMaskM124H[0][21]} {par_msid/msid/DsbExitPointMaskM124H[0][21]} {par_fe/fe/DsbExitPointMaskM124H[1][0]} {par_msid/msid/DsbExitPointMaskM124H[1][0]} {par_fe/fe/DsbExitPointMaskM124H[1][1]} {par_msid/msid/DsbExitPointMaskM124H[1][1]} {par_fe/fe/DsbExitPointMaskM124H[1][2]} {par_msid/msid/DsbExitPointMaskM124H[1][2]} {par_fe/fe/DsbExitPointMaskM124H[1][3]} {par_msid/msid/DsbExitPointMaskM124H[1][3]} {par_fe/fe/DsbExitPointMaskM124H[1][4]} {par_msid/msid/DsbExitPointMaskM124H[1][4]} {par_fe/fe/DsbExitPointMaskM124H[1][5]} {par_msid/msid/DsbExitPointMaskM124H[1][5]} {par_fe/fe/DsbExitPointMaskM124H[1][6]} {par_msid/msid/DsbExitPointMaskM124H[1][6]} {par_fe/fe/DsbExitPointMaskM124H[1][7]} {par_msid/msid/DsbExitPointMaskM124H[1][7]} {par_fe/fe/DsbExitPointMaskM124H[1][8]} {par_msid/msid/DsbExitPointMaskM124H[1][8]} {par_fe/fe/DsbExitPointMaskM124H[1][9]} {par_msid/msid/DsbExitPointMaskM124H[1][9]} {par_fe/fe/DsbExitPointMaskM124H[1][10]} {par_msid/msid/DsbExitPointMaskM124H[1][10]} {par_fe/fe/DsbExitPointMaskM124H[1][11]} {par_msid/msid/DsbExitPointMaskM124H[1][11]} {par_fe/fe/DsbExitPointMaskM124H[1][12]} {par_msid/msid/DsbExitPointMaskM124H[1][12]} {par_fe/fe/DsbExitPointMaskM124H[1][13]} {par_msid/msid/DsbExitPointMaskM124H[1][13]} {par_fe/fe/DsbExitPointMaskM124H[1][14]} {par_msid/msid/DsbExitPointMaskM124H[1][14]} {par_fe/fe/DsbExitPointMaskM124H[1][15]} {par_msid/msid/DsbExitPointMaskM124H[1][15]} {par_fe/fe/DsbExitPointMaskM124H[1][16]} {par_msid/msid/DsbExitPointMaskM124H[1][16]} {par_fe/fe/DsbExitPointMaskM124H[1][17]} {par_msid/msid/DsbExitPointMaskM124H[1][17]} {par_fe/fe/DsbExitPointMaskM124H[1][18]} {par_msid/msid/DsbExitPointMaskM124H[1][18]} {par_fe/fe/DsbExitPointMaskM124H[1][19]} {par_msid/msid/DsbExitPointMaskM124H[1][19]} {par_fe/fe/DsbExitPointMaskM124H[1][20]} {par_msid/msid/DsbExitPointMaskM124H[1][20]} {par_fe/fe/DsbExitPointMaskM124H[1][21]} {par_msid/msid/DsbExitPointMaskM124H[1][21]}"
+set found_units_pins_collection [get_pins -quiet $old_units_pins_list]
+if { [llength $old_units_pins_list] != [sizeof_collection $found_units_pins_collection] } {
+    iproc_msg -error "-E- TIP Units-Pins planning are not matched to Netlist - Mismatch old units-pins Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set rtl_units_pins_collection [get_pins -quiet -of_objects $nets_segments_collection -filter "cell.is_soft_macro==false&&cell.is_physical==false"]
+if { [compare_collection $rtl_units_pins_collection $found_units_pins_collection] != 0 } {
+    iproc_msg -error "-E- TIP Units-Pins planning are not matched to Netlist - Units-Pins connectivity has changed, skip Reading the TP file"
+    return
+}
+
+#------------------------------------------------------------
+# Define supernet exceptions.
+#------------------------------------------------------------
+#------------------------------------------------------------
+# Define bounds.
+#------------------------------------------------------------
+#------------------------------------------------------------
+# Define topology plans.
+#------------------------------------------------------------
+# fc V-2023.12-SP5-6 Dec 17, 2025
+# design: icore
+# Thu Mar 05 00:11:33 2026
+
+
+### user attributes (per block)
+define_user_attribute -type string -classes {topology_node} -name master_topology_node -quiet
+define_user_attribute -type string -classes {topology_node} -name unit_cell_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name new_split_node -quiet
+define_user_attribute -type string -classes {topology_node} -name split_constrained_objects_full_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name corner_repeater -quiet
+define_user_attribute -type string -classes {topology_node} -name split_constrained_objects_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name split_multi_units -quiet
+define_user_attribute -type int -classes {topology_plan} -name eco_object_count -quiet
+define_user_attribute -type string -classes {topology_plan} -name points_topology_edges -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_height_multiplier -quiet
+define_user_attribute -type boolean -classes {topology_plan} -name tip_routing_blockage -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_width_multiplier -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_group_constraints -quiet
+define_user_attribute -type boolean -classes {topology_plan} -name disable_enable_virtual_connection -quiet
+define_user_attribute -type boolean -classes {topology_repeater} -name split_multi_units -quiet
+define_user_attribute -type boolean -classes {topology_repeater} -name corner_repeater -quiet
+
+### NER (per block)
+
+remove_net_estimation_rules -reset default -quiet
+
+remove_net_estimation_rules -reset dsbexitpointmaskm124h_ner -quiet
+set_net_estimation_rule dsbexitpointmaskm124h_ner -parameter "layer" -horizontal_value "M18" -vertical_value "M17"
+set_net_estimation_rule dsbexitpointmaskm124h_ner -parameter "buffer" -value "tcbn02p_bwph156nppnl3p48cpd_base_ulvt_c240429/BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT"
+set_net_estimation_rule dsbexitpointmaskm124h_ner -parameter "buffer_spacing" -value "220.000"
+
+### Topology Groups (per block)
+if {[sizeof_collection [get_topology_groups tip_repeater -quiet]] == 0} { create_topology_group -name tip_repeater }
+
+### plan name: dsbexitpointmaskm124h_tp
+if {[sizeof_collection [get_topology_plans dsbexitpointmaskm124h_tp -quiet]] != 0} { remove_topology_plans dsbexitpointmaskm124h_tp }
+
+if {[sizeof_collection [get_bundles -quiet dsbexitpointmaskm124h_bundle]] != 0} { remove_bundles dsbexitpointmaskm124h_bundle }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_0_]] != 0} { remove_supernets DsbExitPointMaskM124H_0_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_1_]] != 0} { remove_supernets DsbExitPointMaskM124H_1_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_2_]] != 0} { remove_supernets DsbExitPointMaskM124H_2_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_3_]] != 0} { remove_supernets DsbExitPointMaskM124H_3_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_4_]] != 0} { remove_supernets DsbExitPointMaskM124H_4_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_5_]] != 0} { remove_supernets DsbExitPointMaskM124H_5_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_6_]] != 0} { remove_supernets DsbExitPointMaskM124H_6_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_7_]] != 0} { remove_supernets DsbExitPointMaskM124H_7_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_8_]] != 0} { remove_supernets DsbExitPointMaskM124H_8_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_9_]] != 0} { remove_supernets DsbExitPointMaskM124H_9_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_10_]] != 0} { remove_supernets DsbExitPointMaskM124H_10_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_11_]] != 0} { remove_supernets DsbExitPointMaskM124H_11_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_12_]] != 0} { remove_supernets DsbExitPointMaskM124H_12_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_13_]] != 0} { remove_supernets DsbExitPointMaskM124H_13_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_14_]] != 0} { remove_supernets DsbExitPointMaskM124H_14_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_15_]] != 0} { remove_supernets DsbExitPointMaskM124H_15_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_16_]] != 0} { remove_supernets DsbExitPointMaskM124H_16_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_17_]] != 0} { remove_supernets DsbExitPointMaskM124H_17_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_18_]] != 0} { remove_supernets DsbExitPointMaskM124H_18_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_19_]] != 0} { remove_supernets DsbExitPointMaskM124H_19_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_20_]] != 0} { remove_supernets DsbExitPointMaskM124H_20_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_21_]] != 0} { remove_supernets DsbExitPointMaskM124H_21_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_22_]] != 0} { remove_supernets DsbExitPointMaskM124H_22_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_23_]] != 0} { remove_supernets DsbExitPointMaskM124H_23_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_24_]] != 0} { remove_supernets DsbExitPointMaskM124H_24_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_25_]] != 0} { remove_supernets DsbExitPointMaskM124H_25_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_26_]] != 0} { remove_supernets DsbExitPointMaskM124H_26_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_27_]] != 0} { remove_supernets DsbExitPointMaskM124H_27_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_28_]] != 0} { remove_supernets DsbExitPointMaskM124H_28_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_29_]] != 0} { remove_supernets DsbExitPointMaskM124H_29_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_30_]] != 0} { remove_supernets DsbExitPointMaskM124H_30_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_31_]] != 0} { remove_supernets DsbExitPointMaskM124H_31_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_32_]] != 0} { remove_supernets DsbExitPointMaskM124H_32_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_33_]] != 0} { remove_supernets DsbExitPointMaskM124H_33_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_34_]] != 0} { remove_supernets DsbExitPointMaskM124H_34_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_35_]] != 0} { remove_supernets DsbExitPointMaskM124H_35_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_36_]] != 0} { remove_supernets DsbExitPointMaskM124H_36_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_37_]] != 0} { remove_supernets DsbExitPointMaskM124H_37_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_38_]] != 0} { remove_supernets DsbExitPointMaskM124H_38_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_39_]] != 0} { remove_supernets DsbExitPointMaskM124H_39_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_40_]] != 0} { remove_supernets DsbExitPointMaskM124H_40_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_41_]] != 0} { remove_supernets DsbExitPointMaskM124H_41_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_42_]] != 0} { remove_supernets DsbExitPointMaskM124H_42_ }
+if {[sizeof_collection [get_supernets -quiet DsbExitPointMaskM124H_43_]] != 0} { remove_supernets DsbExitPointMaskM124H_43_ }
+create_supernet -name DsbExitPointMaskM124H_0_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[0]}]
+create_supernet -name DsbExitPointMaskM124H_1_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[1]}]
+create_supernet -name DsbExitPointMaskM124H_2_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[2]}]
+create_supernet -name DsbExitPointMaskM124H_3_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[3]}]
+create_supernet -name DsbExitPointMaskM124H_4_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[4]}]
+create_supernet -name DsbExitPointMaskM124H_5_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[5]}]
+create_supernet -name DsbExitPointMaskM124H_6_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[6]}]
+create_supernet -name DsbExitPointMaskM124H_7_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[7]}]
+create_supernet -name DsbExitPointMaskM124H_8_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[8]}]
+create_supernet -name DsbExitPointMaskM124H_9_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[9]}]
+create_supernet -name DsbExitPointMaskM124H_10_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[10]}]
+create_supernet -name DsbExitPointMaskM124H_11_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[11]}]
+create_supernet -name DsbExitPointMaskM124H_12_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[12]}]
+create_supernet -name DsbExitPointMaskM124H_13_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[13]}]
+create_supernet -name DsbExitPointMaskM124H_14_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[14]}]
+create_supernet -name DsbExitPointMaskM124H_15_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[15]}]
+create_supernet -name DsbExitPointMaskM124H_16_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[16]}]
+create_supernet -name DsbExitPointMaskM124H_17_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[17]}]
+create_supernet -name DsbExitPointMaskM124H_18_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[18]}]
+create_supernet -name DsbExitPointMaskM124H_19_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[19]}]
+create_supernet -name DsbExitPointMaskM124H_20_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[20]}]
+create_supernet -name DsbExitPointMaskM124H_21_ [get_pins {par_fe/dsbexitpointmaskm124h_0_[21]}]
+create_supernet -name DsbExitPointMaskM124H_22_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[0]}]
+create_supernet -name DsbExitPointMaskM124H_23_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[1]}]
+create_supernet -name DsbExitPointMaskM124H_24_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[2]}]
+create_supernet -name DsbExitPointMaskM124H_25_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[3]}]
+create_supernet -name DsbExitPointMaskM124H_26_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[4]}]
+create_supernet -name DsbExitPointMaskM124H_27_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[5]}]
+create_supernet -name DsbExitPointMaskM124H_28_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[6]}]
+create_supernet -name DsbExitPointMaskM124H_29_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[7]}]
+create_supernet -name DsbExitPointMaskM124H_30_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[8]}]
+create_supernet -name DsbExitPointMaskM124H_31_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[9]}]
+create_supernet -name DsbExitPointMaskM124H_32_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[10]}]
+create_supernet -name DsbExitPointMaskM124H_33_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[11]}]
+create_supernet -name DsbExitPointMaskM124H_34_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[12]}]
+create_supernet -name DsbExitPointMaskM124H_35_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[13]}]
+create_supernet -name DsbExitPointMaskM124H_36_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[14]}]
+create_supernet -name DsbExitPointMaskM124H_37_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[15]}]
+create_supernet -name DsbExitPointMaskM124H_38_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[16]}]
+create_supernet -name DsbExitPointMaskM124H_39_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[17]}]
+create_supernet -name DsbExitPointMaskM124H_40_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[18]}]
+create_supernet -name DsbExitPointMaskM124H_41_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[19]}]
+create_supernet -name DsbExitPointMaskM124H_42_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[20]}]
+create_supernet -name DsbExitPointMaskM124H_43_ [get_pins {par_fe/dsbexitpointmaskm124h_1_[21]}]
+create_bundle -name dsbexitpointmaskm124h_bundle [get_supernets { DsbExitPointMaskM124H_0_ DsbExitPointMaskM124H_1_ DsbExitPointMaskM124H_2_ DsbExitPointMaskM124H_3_ DsbExitPointMaskM124H_4_ DsbExitPointMaskM124H_5_ DsbExitPointMaskM124H_6_ DsbExitPointMaskM124H_7_ DsbExitPointMaskM124H_8_ DsbExitPointMaskM124H_9_ DsbExitPointMaskM124H_10_ DsbExitPointMaskM124H_11_ DsbExitPointMaskM124H_12_ DsbExitPointMaskM124H_13_ DsbExitPointMaskM124H_14_ DsbExitPointMaskM124H_15_ DsbExitPointMaskM124H_16_ DsbExitPointMaskM124H_17_ DsbExitPointMaskM124H_18_ DsbExitPointMaskM124H_19_ DsbExitPointMaskM124H_20_ DsbExitPointMaskM124H_21_ DsbExitPointMaskM124H_22_ DsbExitPointMaskM124H_23_ DsbExitPointMaskM124H_24_ DsbExitPointMaskM124H_25_ DsbExitPointMaskM124H_26_ DsbExitPointMaskM124H_27_ DsbExitPointMaskM124H_28_ DsbExitPointMaskM124H_29_ DsbExitPointMaskM124H_30_ DsbExitPointMaskM124H_31_ DsbExitPointMaskM124H_32_ DsbExitPointMaskM124H_33_ DsbExitPointMaskM124H_34_ DsbExitPointMaskM124H_35_ DsbExitPointMaskM124H_36_ DsbExitPointMaskM124H_37_ DsbExitPointMaskM124H_38_ DsbExitPointMaskM124H_39_ DsbExitPointMaskM124H_40_ DsbExitPointMaskM124H_41_ DsbExitPointMaskM124H_42_ DsbExitPointMaskM124H_43_ }]
+
+set _objLst_ [get_bundles { dsbexitpointmaskm124h_bundle }]
+create_topology_plan -name dsbexitpointmaskm124h_tp -group tip_repeater -objects $_objLst_ -net_estimation_rule dsbexitpointmaskm124h_ner -allow_feedthrough all
+set_attribute [get_topology_plans dsbexitpointmaskm124h_tp] -name repeater_height_multiplier -value {1.5}
+set_attribute [get_topology_plans dsbexitpointmaskm124h_tp] -name repeater_width_multiplier -value {1.5}
+set_attribute [get_topology_plans dsbexitpointmaskm124h_tp] -name repeater_group_constraints -value {set_repeater_group_constraints -type insertion -layer_cutting_distance {{M18 0.5 0.5} {M17 0.5 0.5}}}
+
+create_topology_node -plan dsbexitpointmaskm124h_tp -name TOPOLOGY_NODE0 -objects [get_cells { par_fe }] -constrained_objects [get_pins { {par_fe/dsbexitpointmaskm124h_0_[0]} {par_fe/dsbexitpointmaskm124h_0_[1]} {par_fe/dsbexitpointmaskm124h_0_[2]} {par_fe/dsbexitpointmaskm124h_0_[3]} {par_fe/dsbexitpointmaskm124h_0_[4]} {par_fe/dsbexitpointmaskm124h_0_[5]} {par_fe/dsbexitpointmaskm124h_0_[6]} {par_fe/dsbexitpointmaskm124h_0_[7]} {par_fe/dsbexitpointmaskm124h_0_[8]} {par_fe/dsbexitpointmaskm124h_0_[9]} {par_fe/dsbexitpointmaskm124h_0_[10]} {par_fe/dsbexitpointmaskm124h_0_[11]} {par_fe/dsbexitpointmaskm124h_0_[12]} {par_fe/dsbexitpointmaskm124h_0_[13]} {par_fe/dsbexitpointmaskm124h_0_[14]} {par_fe/dsbexitpointmaskm124h_0_[15]} {par_fe/dsbexitpointmaskm124h_0_[16]} {par_fe/dsbexitpointmaskm124h_0_[17]} {par_fe/dsbexitpointmaskm124h_0_[18]} {par_fe/dsbexitpointmaskm124h_0_[19]} {par_fe/dsbexitpointmaskm124h_0_[20]} {par_fe/dsbexitpointmaskm124h_0_[21]} {par_fe/dsbexitpointmaskm124h_1_[0]} {par_fe/dsbexitpointmaskm124h_1_[1]} {par_fe/dsbexitpointmaskm124h_1_[2]} {par_fe/dsbexitpointmaskm124h_1_[3]} {par_fe/dsbexitpointmaskm124h_1_[4]} {par_fe/dsbexitpointmaskm124h_1_[5]} {par_fe/dsbexitpointmaskm124h_1_[6]} {par_fe/dsbexitpointmaskm124h_1_[7]} {par_fe/dsbexitpointmaskm124h_1_[8]} {par_fe/dsbexitpointmaskm124h_1_[9]} {par_fe/dsbexitpointmaskm124h_1_[10]} {par_fe/dsbexitpointmaskm124h_1_[11]} {par_fe/dsbexitpointmaskm124h_1_[12]} {par_fe/dsbexitpointmaskm124h_1_[13]} {par_fe/dsbexitpointmaskm124h_1_[14]} {par_fe/dsbexitpointmaskm124h_1_[15]} {par_fe/dsbexitpointmaskm124h_1_[16]} {par_fe/dsbexitpointmaskm124h_1_[17]} {par_fe/dsbexitpointmaskm124h_1_[18]} {par_fe/dsbexitpointmaskm124h_1_[19]} {par_fe/dsbexitpointmaskm124h_1_[20]} {par_fe/dsbexitpointmaskm124h_1_[21]} }] -constraint_type bbox -bbox_percentage {50 50}
+create_topology_node -plan dsbexitpointmaskm124h_tp -name TOPOLOGY_NODE1 -objects [get_cells { par_msid }] -constrained_objects [get_pins { {par_msid/dsbexitpointmaskm124h_0_[0]} {par_msid/dsbexitpointmaskm124h_0_[1]} {par_msid/dsbexitpointmaskm124h_0_[2]} {par_msid/dsbexitpointmaskm124h_0_[3]} {par_msid/dsbexitpointmaskm124h_0_[4]} {par_msid/dsbexitpointmaskm124h_0_[5]} {par_msid/dsbexitpointmaskm124h_0_[6]} {par_msid/dsbexitpointmaskm124h_0_[7]} {par_msid/dsbexitpointmaskm124h_0_[8]} {par_msid/dsbexitpointmaskm124h_0_[9]} {par_msid/dsbexitpointmaskm124h_0_[10]} {par_msid/dsbexitpointmaskm124h_0_[11]} {par_msid/dsbexitpointmaskm124h_0_[12]} {par_msid/dsbexitpointmaskm124h_0_[13]} {par_msid/dsbexitpointmaskm124h_0_[14]} {par_msid/dsbexitpointmaskm124h_0_[15]} {par_msid/dsbexitpointmaskm124h_0_[16]} {par_msid/dsbexitpointmaskm124h_0_[17]} {par_msid/dsbexitpointmaskm124h_0_[18]} {par_msid/dsbexitpointmaskm124h_0_[19]} {par_msid/dsbexitpointmaskm124h_0_[20]} {par_msid/dsbexitpointmaskm124h_0_[21]} {par_msid/dsbexitpointmaskm124h_1_[0]} {par_msid/dsbexitpointmaskm124h_1_[1]} {par_msid/dsbexitpointmaskm124h_1_[2]} {par_msid/dsbexitpointmaskm124h_1_[3]} {par_msid/dsbexitpointmaskm124h_1_[4]} {par_msid/dsbexitpointmaskm124h_1_[5]} {par_msid/dsbexitpointmaskm124h_1_[6]} {par_msid/dsbexitpointmaskm124h_1_[7]} {par_msid/dsbexitpointmaskm124h_1_[8]} {par_msid/dsbexitpointmaskm124h_1_[9]} {par_msid/dsbexitpointmaskm124h_1_[10]} {par_msid/dsbexitpointmaskm124h_1_[11]} {par_msid/dsbexitpointmaskm124h_1_[12]} {par_msid/dsbexitpointmaskm124h_1_[13]} {par_msid/dsbexitpointmaskm124h_1_[14]} {par_msid/dsbexitpointmaskm124h_1_[15]} {par_msid/dsbexitpointmaskm124h_1_[16]} {par_msid/dsbexitpointmaskm124h_1_[17]} {par_msid/dsbexitpointmaskm124h_1_[18]} {par_msid/dsbexitpointmaskm124h_1_[19]} {par_msid/dsbexitpointmaskm124h_1_[20]} {par_msid/dsbexitpointmaskm124h_1_[21]} }] -constraint_type bbox -bbox_percentage {50 50}
+
+# Move nodes to signal entry/exit points (coordinates in microns)
+# Source (par_fe output port): DsbExitPointMaskM124H at (1417.324, 370.788)
+# Destination (par_msid internal): 1st buffer location at (1370.0, 370.0)
+move_objects [get_topology_nodes dsbexitpointmaskm124h_tp/TOPOLOGY_NODE0] -to {1417.324 370.788}
+move_objects [get_topology_nodes dsbexitpointmaskm124h_tp/TOPOLOGY_NODE1] -to {1370.0 370.0}
+
+create_topology_edge -plan dsbexitpointmaskm124h_tp -name TOPOLOGY_EDGE0 -nodes {dsbexitpointmaskm124h_tp/TOPOLOGY_NODE0 dsbexitpointmaskm124h_tp/TOPOLOGY_NODE1} -shape_layers { {M17 100% 0.0000} {M18 100% 0.0000} }
+
+# Edge distance: 48.1 um, buffer_spacing=220 um
+create_topology_repeater -edge dsbexitpointmaskm124h_tp/TOPOLOGY_EDGE0 -name TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0 -type repeater -offset 1.000
+set_attribute [get_topology_repeaters dsbexitpointmaskm124h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0] -name corner_repeater -value true
+create_topology_repeater -edge dsbexitpointmaskm124h_tp/TOPOLOGY_EDGE0 -name TOPOLOGY_REPEATER_MID -type repeater -offset 24.056
+set_attribute -objects [get_topology_repeaters dsbexitpointmaskm124h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_MID] -name index -value {0 1}
+create_topology_repeater -edge dsbexitpointmaskm124h_tp/TOPOLOGY_EDGE0 -name TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1 -type repeater -offset 48.112
+set_attribute [get_topology_repeaters dsbexitpointmaskm124h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1] -name corner_repeater -value true
+
+
+
+#------------------------------------------------------------
+# Define non-default routing rules.
+#------------------------------------------------------------
+#------------------------------------------------------------
+# Define bundle pin constraints.
+#------------------------------------------------------------
+#------------------------------------------------------------
+# Define bundle and topology plan attributes.
+#------------------------------------------------------------
+define_user_attribute -quiet -classes topology_plan -type boolean -name is_td
+define_user_attribute -quiet -classes topology_plan -type boolean -name is_preroute
+define_user_attribute -quiet -classes topology_plan -type string -name hierarchy_owner
+set_attribute -quiet [get_topology_plans -quiet dsbexitpointmaskm124h_tp] is_visible true

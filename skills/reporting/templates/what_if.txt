@@ -1,0 +1,21 @@
+================================================================
+WHAT-IF REPORT: <action_description>
+Date: <YYYY-MM-DD>  Partition: <par_name>  Corner: <corner>
+================================================================
+SUMMARY: <one_line_conclusion> [IMPROVED|DEGRADED|NO_CHANGE]
+----------------------------------------------------------------
+| Metric     | Before  | After   | Delta   | Status     |
+|------------|---------|---------|---------|------------|
+| WNS        |         |         |         |            |
+| TNS        |         |         |         |            |
+| FEP        |         |         |         |            |
+----------------------------------------------------------------
+ASSUMPTIONS:
+  - <list assumptions about the change>
+AFFECTED PATHS:
+  - <number> paths in <clock_domain>
+RISK:
+  - <hold impact, area impact, DRC impact>
+NEXT STEPS:
+  - <recommended follow-up actions>
+================================================================

@@ -1,0 +1,9 @@
+
+-I- MODE:  func.max_high.T_85.typical
+-I- MODEL: /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW13B_dcm_daily-CLK048.bu_postcts/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/outputs/core_client.pt_session.func.max_high.T_85.typical
+
+Warning: No pin objects matched '*' (SEL-004)
+Error: Nothing matched for pins (SEL-005)
+Error: Nothing matched for from_list (SEL-005)
+0
+

@@ -1,0 +1,154 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║       GFC → JNC TIP .tp File Conversion — Mapping Analysis             ║
+║       Based on PNC (Intel 1278) as reference                           ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+DISCOVERY: Basel already has PNC tp files (Intel 1278 = same process as JNC)
+  PNC path: /nfs/site/disks/baselibr_wa/pnc/tip_tp_files/24ww13_5/
+  PNC has 45 tp files, GFC has 109 tp files
+  17 COMMON signal names exist in both → direct comparison possible
+
+════════════════════════════════════════════════════════════════════════════
+SIDE-BY-SIDE: GFC (TSMC N2P) vs PNC (Intel 1278)
+════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 1. BUFFER CELL (NER)                                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│ GFC : tcbn02p_bwph156nppnl3p48cpd_base_ulvt_c240429/                  │
+│       BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT                             │
+│ PNC : i0mbfn000ab1n36x5                                                │
+│ NOTE: Single buffer cell used across all tp files in both projects      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 2. BUFFER SPACING (NER) — varies per signal!                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│ GFC : 170-200 (170 common, 200 for wider buses)                        │
+│ PNC : 140-180 (140 common, 180 for wider buses)                        │
+│ NOTE: Not 1:1 — same signal can have different spacing                 │
+│       mowbvldm800h: GFC=200 vs PNC=180                                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 3. METAL LAYERS                                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│ GFC primary    : M17 (vert) / M18 (horiz) — UPPERCASE                 │
+│ PNC primary    : m14 (vert) / m13 (horiz) — lowercase                 │
+│                                                                         │
+│ GFC secondary  : M15, M16 (for branch edges)                          │
+│ PNC secondary  : m11, m12 (for branch edges, some signals)            │
+│                                                                         │
+│ Layer mapping: M17→m14, M18→m13, M16→m12, M15→m11                     │
+│ (GFC top2 → PNC top2, both are routing layers just below bumps/RDL)   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 4. LAYER CUTTING DISTANCE (repeater_group_constraints)                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│ GFC : {M18 0.5 0.5} {M17 0.5 0.5}                                     │
+│ PNC : {m13 0.3 0.3} {m14 0.5 0.5}                                     │
+│ NOTE: m13 has tighter cutting (0.3) vs GFC's uniform 0.5              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 5. NDR RULE NAME + DEFINITION                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ GFC rules: 2w2s, 2w2s_M18_only, 2p5w2s_M14_M16_1w3s_M15,            │
+│            2p5w2s_M16, m17_4w3s_m18_4w4s                              │
+│ PNC rules: 2w2s_m13_m14, 1w3s_m13_m14, 1w4s_m13_m14,                 │
+│            1w7s_m13_1w3s_m14, 1w7s_m13_m14,                           │
+│            1w7s_m11_1w3s_m12, 2w6s_m13_m14, 3w3s_m13_m14             │
+│                                                                         │
+│ GFC metal stack: M0-M20, sRDL (21 layers, TSMC N2P)                   │
+│ PNC metal stack: m0-m14, bm0-bm5, bph (20+ layers, Intel 1278)       │
+│                                                                         │
+│ Mapping NDR "2w2s" (GFC) → "2w2s_m13_m14" (PNC): same width×2 intent │
+│ Other NDR rules DON'T have 1:1 mapping → need Basel/Kris guidance      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 6. REPEATER MULTIPLIERS                                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│ GFC : height=1.5, width=1.5                                            │
+│ PNC : height=2.0, width=1.2                                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 7. NLIB PATH (header only — informational)                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│ GFC : /nfs/.../GFC_TIP_WA/lib_data_base/gfc_client_rtl_08b*.nlib      │
+│ PNC : /nfs/.../pnc/tip_lib_data_base/nlib_ww12.1_rtl10a_12_2_post    │
+│ JNC : ??? (need from Basel/Kris)                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════
+WHAT CAN BE AUTO-CONVERTED (mechanical sed/awk):
+════════════════════════════════════════════════════════════════════════════
+
+  ✅ Header comments (NLIB, BUILD_DIR, etc.)
+  ✅ Netlist check section (nets/pins/partitions — IDENTICAL, same RTL)
+  ✅ Buffer cell name in NER
+  ✅ Metal layer names in NER, shape_layers, layer_cutting_distance
+  ✅ NDR rule name replacement (if we have the mapping)
+  ✅ Routing rule definitions (swap GFC metal widths → PNC metal widths)
+
+════════════════════════════════════════════════════════════════════════════
+WHAT CANNOT BE AUTO-CONVERTED (needs JNC-specific data):
+════════════════════════════════════════════════════════════════════════════
+
+  ⚠️  Buffer spacing — varies per signal, might differ for JNC
+  ⚠️  bbox_percentage — completely different floorplan
+  ⚠️  Origin coordinates — different die size
+  ⚠️  Repeater offsets — different wire lengths
+  ⚠️  Number of repeaters per edge — depends on wire length/buffer spacing
+  ⚠️  Repeater height/width multipliers (1.5/1.5 vs 2.0/1.2)
+  ⚠️  NDR rules without clear 1:1 mapping
+  ⚠️  Shape_layer percentages (routing path differs)
+  ⚠️  Shape_layer widths (GFC has 22.68, PNC has 0.96)
+
+════════════════════════════════════════════════════════════════════════════
+COMMON SIGNALS (17 — verified same structure):
+════════════════════════════════════════════════════════════════════════════
+
+  icore.jeclearlatetomsidm805h.tp
+  icore.jeclearlatetoooom805h.tp
+  icore.jeindirectcearlym805h.tp
+  icore.jeneweipclearlatem805h.tp
+  icore.jeo2idatam805h.tp
+  icore.monofirstbpfromldm800h.tp
+  icore.mopdstprftypem800h.tp
+  icore.mowbdatavldrobm805h.tp
+  icore.mowbdatavldrobm806h.tp
+  icore.mowbvldm800h.tp
+  icore.roearlynukelm905h.tp
+  icore.rortatret.tp
+  icore.rortldincm903h.tp
+  icore.rortstincm903h.tp
+  icore.rsmoclearspecstallm901h.tp
+  icore.rsv2ipdstm302h.tp
+  icore.rsvecearlyuopvm302h.tp
+
+════════════════════════════════════════════════════════════════════════════
+RECOMMENDATION:
+════════════════════════════════════════════════════════════════════════════
+
+OPTION A — "Process-swap only" (quick, ~80% correct)
+  • Swap buffer cell, metal layers, NDR names, routing rule widths
+  • Keep GFC topology geometry (bbox, origins, repeaters) as starting point
+  • JNC team refines geometry in Fusion Compiler
+  • ~2 hours of scripting work → 109 files converted
+
+OPTION B — "Full conversion using PNC as template" (better, needs info)
+  • For 17 common signals: USE PNC files directly (they already exist!)
+  • For 92 GFC-only signals: use Option A approach
+  • Need JNC nlib to validate cell/layer compatibility
+  • Need JNC floorplan info for geometry
+
+QUESTIONS FOR BASEL/KRIS:
+  1. Can we use PNC tp files as-is for the 17 common signals?
+  2. Is JNC buffer cell the same as PNC? (i0mbfn000ab1n36x5)
+  3. Is JNC on the same metal stack as PNC? (m0-m14, bm0-bm5, bph)
+  4. Where is the JNC nlib?
+  5. For the 92 GFC-only signals: is process-swap + geometry-as-is acceptable?
+

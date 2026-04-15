@@ -1,0 +1,26 @@
++-----------------------------------------------------------------------------+
+| Logfile        : ##Apr-05-05:42:04#.scce04144910.sc8_tiers2_vp.5240823495164768|
+| Job id         : 5240823495164768           Class: SLES12&&4C&&512G Qslot: /c2dg/sc8_express|
+| User           : tsabek                     Full Id: sc8_tiers2_vp.5240823495164768|
+| Class Reservation : cores=4,general_ramp=1:duration=60s,memory=512          |
+| Executed on    : scce04144910               Pool : sc8_nb2_ppm              |
+| Queueing time  : Sun Apr  5 05:41:59 2026                                   |
+| Starting time  : Sun Apr  5 05:42:04 2026          Qwait:   0h:00m:05s      |
+| Command        : load_session_cth.csh /nfs/site/disks/pnc_fct_bu/work_area/fct_scripts/GFC/links/daily_gfc0a_n2_core_client_bu_postcts/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/outputs/core_client.pt_session.func.max_high.T_85.typical/ -title func.max_high -file /nfs/site/disks/tsabek_wa01/playground/testCSPT/source_func.max_high.tcl -no_exit 0 |
++-----------------------------------------------------------------------------+
+[1] 6751
++-----------------------------------------------------------------------------+
+| Exit Status    : 1                                                          |
+| Finishing time : Sun Apr  5 05:42:16 2026                                   |
+| CPU time       : Usr 0.1s    Sys 0.08s   WC  0h:00m:12s                     |
+| Rusage Stats   : Mem:2      PF:  15392/10  CSv/f:  0/0     Swaps:0          |
+|                :           Msg:    0/0     IOops:  40/24   Sigs :0          |
+| User Groups    : intelall, sklall, hdk7nm, hdk7nmproc, mpgall, gsrall,      |
+|                : gfcn2_pcore_ex, aceuc_rtl, jnc_fe, ace_syn_78, ace_cdn_78, |
+|                : tgl, soc, socenv, adl_rtl, adl, skl_rtl, apd_76, tyc78,    |
+|                : tyc78proc, user, mpgdsgn, apd_78, c2dgusers, glm,          |
+|                : i1278proc, i1278, n2, atom_rtl, p1280, apd_80,             |
+|                : pncn2_pcore_ex, n2p, n2pbe, gfc_fe, dpgtests, cpu1274,     |
+|                : hdk10nm, hdk10nmproc                                       |
+| Actual Class Reservation : cores=4,general_ramp=1:duration=60s,memory=512   |
++-----------------------------------------------------------------------------+

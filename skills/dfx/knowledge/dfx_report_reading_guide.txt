@@ -1,0 +1,82 @@
+How to Read Maha's DFX Status Report
+=====================================
+Last updated: 2026-03-30
+
+REPORT HEADER:
+  DFX Status
+  Based on: GFCN2CLIENTA0 DCM BU FCT model
+  FCT26WW14A  (the weekly model tag)
+
+  TST model: /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_26ww10b_..._dcm_release-CLK050.bu_postcts
+  REF model: /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_26ww08b_..._dcm_release-CLK048.bu_postcts
+
+  NOTE: DFX uses dcm_RELEASE models (not dcm_daily like IFC timing)
+
+READING THE BUCKET TABLE:
+  model  par       ext_0ps  ext_5ps  ext_10ps  ext_20ps  ...  ext_wns  ext_tns
+  TST    par_meu   17       15       2         0              -13      -129
+
+  - ext_0ps = total failing paths (WNS < 0)
+  - ext_5ps = paths with WNS < -5ps (subset of 0ps)
+  - ext_10ps = paths with WNS < -10ps (subset of 5ps)
+  - Buckets are CUMULATIVE: 0ps >= 5ps >= 10ps >= ...
+  - ext_wns = worst negative slack (most negative = worst path)
+  - ext_tns = total negative slack (sum of all failing paths)
+  - Blank = no failing paths (clean)
+
+  External = paths crossing partition boundaries
+  Internal = paths within the partition
+
+READING THE DOMAIN BREAKDOWN:
+  partition  WNS/TNS  mclk  bist  bisr  ...
+  par_meu    WNS      -13   -8    -8
+  par_meu    TNS      -360  -160  -160
+
+  - Each column is a DFX clock domain
+  - WNS row = worst path in that domain for that partition
+  - TNS row = sum of all failing paths in that domain
+  - Blank = no failing paths in that domain
+  - A path can appear in multiple domains (cross-domain paths)
+
+COMPARING TST vs REF:
+  - If TST < REF paths: IMPROVEMENT (fewer violations)
+  - If TST > REF paths: REGRESSION (more violations)
+  - Watch for:
+    * New synthesis bringing new paths (par_fmav0: 0 -> 3104)
+    * Wrong DFT collaterals tag (par_ooo_int regression)
+    * New CIs changing RTL (par_pmh: 1108 -> 1 = massive improvement)
+
+FINDING THE ACTUAL PATHS:
+  # Set model variable:
+  TST_model=/nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_...
+
+  # All DFX external paths for a corner:
+  m $TST_model/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/reports/*only_dfx.x* | grep -v ifc_ | grep external | m
+
+  # All DFX internal paths:
+  m $TST_model/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/reports/*only_dfx.x* | grep -v ifc_ | grep internal | m
+
+  # Filter by domain:
+  ... | grep "bisr.*ijtag" | m
+  ... | grep "scanclk" | m
+  ... | grep mclk | grep -v mclk4saf | m
+
+  # DFX XML files:
+  $TST_model/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/reports/*only_dfx.xml.filtered
+
+NOTES ON THE "COMMENTS" SECTION:
+  - Maha lists action items per issue
+  - "AR sent to XXX" = action required from partition owner
+  - "Fixed at: XXX" = already fixed for that partition
+  - "Will be fixed in FCT PT ECO" = fix coming via post-route ECO
+  - "Need new CI with latest DFT collaterals" = RTL/collateral issue, not timing
+
+DFX2PO TICKETS:
+  DFX2PO = Design For X to Place-and-route Open tickets
+  Tracked separately from HSD
+  Current open: 12 tickets (as of WW14A)
+  Main items: flop bounds, insert bisr mux
+
+RTL4BE HSD:
+  RTL issues found during backend (place & route)
+  GFC currently has no open RTL4be HSDs (as of WW14A)

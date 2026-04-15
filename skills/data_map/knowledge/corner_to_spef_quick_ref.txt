@@ -1,0 +1,16 @@
+CORNER-TO-SPEF QUICK REFERENCE
+===============================
+8 SPEF files serve 34 timing corners. The SPEF is determined by the
+last part of the corner name (after the temperature).
+
+  Corner ends with...          SPEF file
+  ---------------------------  ----------------------------
+  .typical                     typical_85.spef.gz
+  .cworst_CCworst              cworst_CCworst_<temp>.spef.gz
+  .cworst_CCworst_T            cworst_CCworst_T_<temp>.spef.gz
+  .rcworst_CCworst             rcworst_CCworst_<temp>.spef.gz
+  .rcworst_CCworst_T           rcworst_CCworst_T_125.spef.gz
+
+Temperature from corner name:  T_85->85, S_125->125, F_125->125, S_M40->M40, F_M40->M40
+
+Full mapping: see skills/spef_query/knowledge/corner_to_spef_mapping.txt

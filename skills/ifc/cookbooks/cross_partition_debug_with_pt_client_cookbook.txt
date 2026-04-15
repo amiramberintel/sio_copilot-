@@ -1,0 +1,775 @@
+================================================================================
+  CROSS-PARTITION DEBUG WITH pt_client — LIVE QUERY COOKBOOK
+  Accelerate the debug playbook with instant PT server queries
+  Author: sunger | Date: 2026-03-10 (WW11.2)
+  Companion to: cross_partition_debug_playbook.txt
+                pt_client_cookbook.txt
+================================================================================
+
+  *** GOLDEN RULE: ALWAYS VERIFY YOUR DATA SOURCE FIRST ***
+  Before ANY analysis, confirm which model is loaded:
+
+    pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c 'get_designs' -debug
+
+  Look for: -I- MODEL: ...-FCT26WW11B_dcm_daily-...
+                             ^^^^^^^^^^
+                             This is your data tag — document it!
+
+================================================================================
+  WHY THIS CHANGES EVERYTHING
+================================================================================
+
+  THE OLD WAY (cross_partition_debug_playbook.txt workflow):
+    1. Find latest WA on disk                          → 2-5 min
+    2. cd to sta_pt/<corner>                           → 1 min
+    3. Open PT shell, load DBS                         → 15-30 min
+    4. Run report_timing                               → 1 min
+    5. Copy results, close PT                          → 2 min
+    6. Repeat for each stage of the playbook...        → 20+ min each
+    TOTAL for full 7-stage debug: 2-4 HOURS
+
+  THE NEW WAY (with pt_client.pl):
+    1. Run pt_client.pl -c '<command>'                 → 5-10 seconds
+    2. Results appear instantly                         → 0 seconds
+    3. Run next command                                → 5-10 seconds
+    TOTAL for full 7-stage debug: 5-10 MINUTES
+
+  SPEEDUP: 20-50x faster!
+
+  WHAT YOU CAN DO NOW:
+    ✓ Check any path in seconds — no WA navigation needed
+    ✓ Compare latest vs previous model instantly
+    ✓ Check multiple corners without opening multiple PT sessions
+    ✓ Check neighbor stages in one command
+    ✓ Verify fixes in the next daily build immediately
+    ✓ Run analysis from ANY terminal (no PT license needed!)
+    ✗ CANNOT make ECO changes (read-only server)
+    ✗ CANNOT source custom TCL scripts
+    ✗ CANNOT set attributes or create constraints
+
+================================================================================
+  SETUP — ONE-TIME (add to your .cshrc or .aliases)
+================================================================================
+
+  # Option A: Source all aliases
+  source /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/aliases_for_pt_client
+
+  # Option B: Create your own short aliases
+  alias pt  'sg soc -c "/nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical -c \!*"'
+  alias pth 'sg soc -c "/nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.min_low.T_85.typical -c \!*"'
+
+  IMPORTANT: All cell/pin paths need icore0/ prefix:
+    WRONG:  par_ooo_int/rsmoclearvm803h
+    RIGHT:  icore0/par_ooo_int/rsmoclearvm803h
+
+================================================================================
+  STAGE 0: PATH ANALYSIS — NOW INSTANT
+================================================================================
+
+  OLD: Open PT, load DBS (20 min), then run report_timing
+  NEW: One command, 10 seconds
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 0.1: Get full path report with all details                       │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  # Through a port (cross-partition signal)
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/<partition>/<signal_name> \
+      -max_paths 1 -nosplit -include_hierarchical_pins \
+      -significant_digits 1 -nets -physical -input_pins \
+      -capacitance -transition_time \
+      -attributes points.object.max_slack'
+
+  # To a specific endpoint FF
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -to icore0/<partition>/<sub>/<FF_name>/D \
+      -max_paths 1 -nosplit -include_hierarchical_pins \
+      -significant_digits 1 -nets -physical -input_pins \
+      -capacitance -transition_time \
+      -attributes points.object.max_slack'
+
+  # Save to file for detailed analysis
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h \
+      -max_paths 6 -nosplit -include_hierarchical_pins \
+      -significant_digits 1 -nets -physical -input_pins \
+      -capacitance -transition_time \
+      -attributes points.object.max_slack' \
+    -o signal_analysis.rpt
+
+  REAL EXAMPLE (RSMOClearVM803H):
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h \
+      -max_paths 1 -nosplit' \
+    -o rsmoclearvm803h_quick.rpt
+  → Result in 5 seconds: slack = -71.6ps (FCT26WW11B)
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 0.2: Identify partitions — check hierarchical pins               │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  Use -include_hierarchical_pins to see every partition boundary crossing.
+  Look for lines with "unplaced" — these are partition port crossings.
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 0.3-0.5: Extract from report — same analysis as playbook         │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  The report output is IDENTICAL to running PT locally.
+  Use the same analysis steps from the playbook — just got data 50x faster!
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 0.6: CHECK CELL TYPES — ULVT UPGRADE CANDIDATES                  │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  From the timing report, look at EVERY cell name on the data path.
+  Cell name suffix tells you the Vt type:
+
+    CPDLVT   → LVT  (Low Vt)       — CAN be upgraded to ULVT for ~5-15ps gain
+    CPDULVT  → ULVT (Ultra-Low Vt)  — already fastest, no upgrade possible
+    CPDHVT   → HVT  (High Vt)       — upgrade to LVT or ULVT for big gain!
+    CPDSVT   → SVT  (Standard Vt)   — upgrade to LVT for moderate gain
+
+  WHAT TO CHECK:
+    □ Count LVT cells on the path — each is a ULVT upgrade candidate
+    □ Count HVT/SVT cells — these are LOW-HANGING FRUIT (biggest gain per swap)
+    □ Focus on cells with LARGE incremental delay (>10ps)
+    □ Buffers and drivers benefit most from Vt upgrade
+
+  HOW TO CHECK with pt_client:
+    The cell type is visible in the report_timing output — look at the cell
+    name in parentheses at each stage, e.g.:
+      (BUFFD2BWP156HPNPN3P48CPDLVT)     ← LVT buffer, can upgrade to ULVT
+      (BUFFSKFD14BWP156HPNPN3P48CPDULVT) ← already ULVT, no upgrade
+      (BUFFDHDVGLLKGD18BWP156HPNPN3P48CPDULVT) ← already ULVT
+
+  EXPECTED GAIN PER CELL:
+    HVT  → ULVT:  ~10-20ps per cell (big win!)
+    SVT  → ULVT:  ~8-15ps per cell
+    LVT  → ULVT:  ~3-8ps per cell
+    Power cost: ULVT uses more leakage power, but on critical paths it's worth it
+
+  REAL EXAMPLE (RSMOClearVM803H):
+    Path has mix of CPDLVT and CPDULVT cells:
+      invs_route_opt_.../Z (BUFFD2BWP156HPNPN3P48CPDLVT) ← LVT, upgrade candidate
+      invs_place_FE_.../Z  (BUFFSKRD4BWP156HPNPN3P48CPDLVT) ← LVT, upgrade candidate
+    → Upgrading 2 LVT buffers to ULVT could gain ~6-16ps
+    → This alone won't close -71.6ps but helps as part of combined fix
+
+  NOTE: pt_client is READ-ONLY — you cannot run size_cell to swap Vt.
+    To request the swap: create a TIP file or ask SIO for cell swaps.
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 0.6b: CHECK FOR ILLEGAL CELLS                                     │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ⚠️ CRITICAL: Before proposing any cell swap or trusting PT timing, check
+  that NO cell in the path is on the illegal cells list. PT may use banned
+  cells during optimization — the timing looks good but the fix is INVALID.
+
+  Illegal cells list:
+    $wa/project/GFCN2CLIENTA0/illegal.txt
+    (or: <daily_wa>/project/GFCN2CLIENTA0/illegal.txt)
+
+  ~15,746 banned cells. Main categories:
+    CPDELVT  → BANNED — elvt/svt cells not allowed
+    CPDLVTLL → BANNED — lvtll cells not allowed
+    PNNP OD  → BANNED — only PNPN OD flavor allowed
+    M2 pitch → BANNED — illegal default M2 pitch
+    Non-ULVT clock cells → BANNED — only ULVT for clock cells
+
+  Quick cross-check from timing report:
+    # Extract cell ref_names from PT report
+    grep -oP '\w+BWP156H\w+' /tmp/path_report.txt | sort -u > /tmp/path_cells.txt
+
+    # Check against illegal list
+    while read cell; do
+      grep -q "$cell" $wa/project/GFCN2CLIENTA0/illegal.txt && \
+        echo "⚠️  ILLEGAL: $cell"
+    done < /tmp/path_cells.txt
+
+  If illegal cell found on path:
+    → The reported slack is OPTIMISTIC (real slack is worse)
+    → Replace with legal alternative and recalculate
+    → Common: ELVT→LVT loses ~5-10ps, so add that to the gap
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 0.7: CHECK FF LOCATIONS — DOES PLACEMENT MAKE SENSE?             │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  From the timing report, extract Source FF and Endpoint FF coordinates.
+  Look at the (X,Y) location in the Location column of the report.
+
+  WHAT TO CHECK:
+    □ Source FF (X,Y) — is it near the partition port?
+    □ Endpoint FF (X,Y) — is it near the partition port?
+    □ Port location (X,Y) — is it between the two FFs?
+    □ Manhattan distance: |X_sp - X_port| + |Y_sp - Y_port| for source side
+    □ Manhattan distance: |X_port - X_ep| + |Y_port - Y_ep| for dest side
+    □ Total path distance: source FF → port → endpoint FF
+
+  RED FLAGS — placement does NOT make sense:
+    ⚠ FF is >500μm from port → long wire, big delay, PLACEMENT ISSUE
+    ⚠ Source FF and endpoint FF on SAME side of port → detour path
+    ⚠ Port is NOT between the two FFs → port location issue (Technique 3)
+    ⚠ One FF is far but the other is close → move the far FF (Technique 9/TIP)
+
+  HOW TO CHECK with pt_client:
+    Locations are in the -physical column of report_timing output.
+    The (X,Y) coordinates are in DBU (database units). In GFC N2P: 1 DBU = 1nm.
+
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │  COORDINATE CONVERSION: DBU → MICRONS (μm)                          │
+    │                                                                      │
+    │  Formula:  X_μm = X_DBU / 1000                                      │
+    │                                                                      │
+    │  Example:                                                            │
+    │    report_timing shows:  Location = (1363464, 93574)                 │
+    │    In microns:  (1363464/1000, 93574/1000) = (1363.5, 93.6)μm       │
+    │                                                                      │
+    │  Manhattan distance:                                                 │
+    │    dist_μm = (|X1-X2| + |Y1-Y2|) / 1000                            │
+    └───────────────────────────────────────────────────────────────────────┘
+
+    Quick distance calculation:
+      Distance (μm) = (|X1-X2| + |Y1-Y2|) / 1000
+
+  WHAT MAKES SENSE vs WHAT DOESN'T:
+    ✓ GOOD: SP at (700,500), Port at (652,505), EP at (440,357)
+      → SP near port, port between FFs, path flows naturally
+    ✗ BAD:  SP at (1160,783), Port at (652,505), EP at (440,357)
+      → SP is 580μm from port! Too far, needs placement fix
+
+  REAL EXAMPLE (RSMOClearVM803H):
+    Source FF:  (1160, 783) in par_ooo_int/rsrptint
+    Port:       (652, 505)  abutted boundary
+    Endpoint FF: (440, 357) in par_ooo_vec/rob
+    
+    Source → Port:  |1160-652| + |783-505| = 508 + 278 = 786μm  ← TOO FAR!
+    Port → EP:      |652-440| + |505-357| = 212 + 148 = 360μm   ← acceptable
+    Total:          786 + 360 = 1146μm total path distance
+
+    VERDICT: Source FF placement does NOT make sense!
+      → FF at (1160,783) is 786μm from port — this is the main problem
+      → Fix: TIP bound to move FF closer to port, target (1000-1100, 700-780)
+      → But D2 input has only +38.6ps margin — limits how close we can move
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 0.8: CHECK SPEC BUDGET IMPACT — BEFORE MOVING ANY FF             │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  BEFORE proposing to move a FF, check the spec budget using spec_status
+  reports. Moving a FF changes the clock latency on that FF, which changes
+  the available timing budget between partitions.
+
+  See full details: cookbooks/spec_status_cookbook.txt
+
+  THE BUDGET FORMULA:
+    margin = period - uncertainty + skew - FT_delay - spec_driver - spec_receiver
+
+  EXAMPLE (mclk at 186ps period):
+    period       = 186 ps
+    uncertainty  = ~20 ps
+    skew         = clock_EP - clock_SP  (changes when FF moves!)
+    budget       = 186 - 20 + skew = ~166ps + skew
+
+  WHY FF MOVEMENT AFFECTS THE BUDGET:
+    When you move a FF closer to the port:
+      ✓ Data path gets SHORTER (less wire delay) — this is what we want
+      ✗ Clock latency CHANGES — the FF sees a different clock tree tap
+      ✗ Skew between SP and EP changes — shifts the budget balance
+
+    If the new location has WORSE clock latency:
+      → The budget gain from shorter wire may be eaten by clock penalty
+      → You MUST check this BEFORE requesting the TIP!
+
+  HOW TO CHECK (OFFLINE — from WA on disk):
+    Navigate to: <WA>/sta_pt/<corner>/reports/spec_status/
+
+    # 1. Check if signal has a spec (not missing)
+    grep "<signal_name>" missing_spec/all_pin_no_FT.txt
+    → Shows: {delay_value clock_domain spec_type}
+
+    # 2. Check if budget is balanced
+    grep "<signal_name>" unbalanced_spec_dir/unbalanced_spec_summary.csv
+    → Shows: margin | driver_pin | receiver_pin | clocks | specs | formula
+
+    # 3. Check if spec is too generous (room to shift)
+    grep "<signal_name>" high_io_delay/high_io_delay_summary.csv
+
+  HOW TO CHECK (LIVE — via pt_client):
+    # Check clock latency at CURRENT FF location
+    pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c 'report_clock_timing -type latency \
+        -to icore0/<partition>/<sub>/<FF_name>/CP -nosplit'
+
+    → Record the current clock latency
+    → After FF moves, the new clock latency will be different
+    → Run the same command on the NEXT daily build to verify
+
+  REAL EXAMPLE (RSMOClearVM803H):
+    Current SP FF clock latency at (1160, 783):  86.0ps (from path report)
+    Current EP FF clock latency at (440, 357):   68.2ps (from path report)
+    Current skew: 68.2 - 86.0 = -17.8ps (EP sees clock EARLIER)
+
+    If we move SP FF to (1050, 750):
+      → Clock latency will change (different clock tree tap point)
+      → Data path gets ~130μm shorter → saves ~15-25ps wire delay
+      → But clock penalty could eat 5-15ps of that gain
+      → Net gain estimate: +10-20ps (not the full wire savings!)
+
+    ALWAYS check spec_status AFTER the fix lands to verify budget balance.
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 0.9: CHECK PORT LOCATION — CAN MOVING THE PORT HELP?             │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  Cross-partition paths go through PORTS at the partition boundary.
+  If the port is far from the critical FFs, wire delay is wasted on the
+  port-to-FF segment. Moving the port ALONG the boundary might help.
+
+  ⚠️  KEY CONSTRAINT: Ports live ON the partition boundary edge.
+     They can only slide UP/DOWN (Y-axis) along the edge — NOT move in X!
+     The X-distance from boundary to FF is FIXED by the partition shape.
+
+  HOW TO CHECK (OFFLINE — from WA on disk):
+    # Get port location and geometry for crossing signals:
+    <WA>/sta_pt/<corner>/reports/port_location_outside_bbox.csv
+
+    # CSV columns:
+    # name, abutted, dist_to_bbox, st_point_x, st_point_y,
+    # en_point_x, en_point_y, port_point_x, port_point_y,
+    # port_point_x_abutted, port_point_y_abutted,
+    # fis_count, fos_count, wns, is_moved, td_x, td_y
+
+    grep "<signal_name>" port_location_outside_bbox.csv
+
+  WHAT TO LOOK AT:
+    1. port_point (x,y)   — current port location
+    2. st_point (x,y)     — worst-path FF location
+    3. dist_to_bbox       — if >0, port is OUTSIDE partition bbox (bad!)
+    4. fis_count/fos_count — fanin/fanout count (HIGH = risky to move)
+
+  DECISION MATRIX:
+    ┌─────────────────────────────────────────────────────────────────┐
+    │ Condition                      │ Port Move Helps?              │
+    ├─────────────────────────────────────────────────────────────────┤
+    │ Big Y gap, small X gap         │ ✅ YES — slide port in Y     │
+    │ Big X gap, small Y gap         │ ❌ NO  — X is fixed by edge  │
+    │ Big X gap AND big Y gap        │ ⚠️  PARTIAL — Y gain only    │
+    │ Port already close to FF       │ ❌ NO  — nothing to gain     │
+    │ fos_count > 50                 │ ⚠️  DANGEROUS — many paths   │
+    │ dist_to_bbox > 0               │ 🔴 PORT IS OUTSIDE BBOX!     │
+    └─────────────────────────────────────────────────────────────────┘
+
+  GAIN ESTIMATION:
+    • Every ~100μm saved in wire ≈ 5-8ps delay reduction
+    • But ONLY the Y-component can be changed by port sliding
+    • Calculate: Y_saved = |port_y - FF_y|
+    • If Y_saved < 50μm → negligible gain (<3ps), skip
+    • If Y_saved > 200μm → worth investigating (~10-15ps)
+
+  FANOUT CHECK — CRITICAL:
+    Before moving ANY port, check its fanout:
+    • fos_count < 10  → safe to move (few paths affected)
+    • fos_count 10-50  → check carefully (run slack on neighbors)
+    • fos_count > 50  → ⚠️  VERY RISKY — moving helps this path
+                          but could BREAK many others!
+
+  REAL EXAMPLE (PfxErrVecM105H path):
+    Crossing 2 — ifclipm105h_0_[12] (par_fe → par_msid):
+      Port:    (1491, 129) — on partition boundary
+      EP FF:   (1198, 46)
+      X gap:   293μm (FIXED by boundary!)
+      Y gap:   83μm  (slideable)
+      fis=7, fos=6 (low fanout — safe to move)
+      → Moving port from y=129 → y=46 saves only ~83μm in Y
+      → Estimated gain: ~3-5ps (NOT worth it for -69ps deficit)
+      → The REAL problem: 293μm X-distance is structural
+
+    Crossing 1 — ildpipectlforfem100h_enablestage102to103 (par_msid → par_fe):
+      Port:    (1491, 228)
+      SP FF:   (1419, 180)
+      X gap:   72μm, Y gap: 48μm → total ~87μm
+      fis=49, fos=221 ← ⚠️ DO NOT TOUCH — 221 fanout!
+      → Already close, no gain, and too risky
+
+  WHEN PORT MOVE IS THE RIGHT FIX:
+    ✅ Port is far in Y from the critical FF (>200μm Y gap)
+    ✅ Low fanout (fos < 10) — won't break other paths
+    ✅ X gap is small — most of the wire is in Y direction
+    ✅ Combined with TIP (move FF closer to boundary in X)
+
+  WHEN PORT MOVE IS NOT THE RIGHT FIX:
+    ❌ Big X gap (FF far from boundary) — port can't fix this
+    ❌ High fanout (fos > 50) — too many paths affected
+    ❌ Port already close to FF — nothing to gain
+    ❌ Whole bus failing — systemic issue, not port placement
+
+  → If port move won't help, consider: TIP the FF (Step 0.7),
+    spec rebalance (Step 0.8), or cell upsizing (Step 0.6)
+
+================================================================================
+  STAGE 1: CLOCK BALANCE & SKEW — INSTANT CHECK
+================================================================================
+
+  OLD: Need PT session to check clock latencies
+  NEW: Two quick commands
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 1.1-1.2: Clock latencies                                         │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  # Clock timing for source FF
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_clock_timing -type latency \
+      -to icore0/<partition>/<sub>/<source_FF>/CP -nosplit'
+
+  # Clock timing for endpoint FF
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_clock_timing -type latency \
+      -to icore0/<partition>/<sub>/<endpoint_FF>/CP -nosplit'
+
+  # Compare: if endpoint has much more latency → clock helps your path
+  #          if source has much more latency → clock hurts your path
+
+================================================================================
+  STAGE 2: NEIGHBOR STAGES — THE BIGGEST WIN
+================================================================================
+
+  OLD: Open PT, manually check input/output paths (20+ min)
+  NEW: Two commands, 20 seconds total — THIS IS WHERE pt_client SHINES
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 2.1: What feeds the source FF? (stage BEFORE)                    │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -to icore0/<partition>/<sub>/<source_FF>/D \
+      -max_paths 5 -nosplit -significant_digits 1 \
+      -attributes points.object.max_slack'
+
+  → If slack is POSITIVE → margin exists → retiming candidate!
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 2.2: Where does endpoint FF drive? (stage AFTER)                 │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -from icore0/<partition>/<sub>/<endpoint_FF>/CP \
+      -max_paths 5 -nosplit -significant_digits 1 \
+      -attributes points.object.max_slack'
+
+  → If slack is POSITIVE → margin exists → can push logic forward!
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 2.3: Check D-pin input path (critical for multi-bit FFs!)        │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  For multi-bit FFs, check if D2/D3 inputs have margin:
+
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -to icore0/<partition>/<sub>/<MBIT_FF>/D2 \
+      -max_paths 1 -nosplit -include_hierarchical_pins \
+      -significant_digits 1 -nets -physical -input_pins \
+      -capacitance -transition_time \
+      -attributes points.object.max_slack'
+
+  → D-pin slack limits how far you can move the FF!
+  → If D2 has +38ps margin → FF can only move within safe range
+  → MUST check before proposing any placement change
+
+  REAL EXAMPLE (RSMOClearVM803H D2 input):
+    D2 path slack = +38.6ps → limits FF movement to (1000-1100, 700-780)
+    Moving FF outside this range would CREATE new violations!
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ ⚠ RTL FIX RULES — WHAT WE DO AND DON'T DO                            │
+  │                                                                        │
+  │ When retiming/neighbor-stage analysis shows RTL4BE is needed:          │
+  │                                                                        │
+  │ ✅ ALLOWED:                                                            │
+  │   • Retiming — move logic across existing FF boundary (no new FFs)    │
+  │   • Reduce logic depth — simplify combinational cone (fewer gates)    │
+  │   • Pre-compute — shift work to earlier cycle                         │
+  │                                                                        │
+  │ ❌ NEVER propose adding pipeline stages (new FFs to cut path):        │
+  │   → Adds latency to design (e.g., +1 cycle to branch dispatch)       │
+  │   → This is an architecture change, NOT a timing fix                  │
+  │   → We fix timing by MOVING or REDUCING logic, never by ADDING FFs   │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  STAGE 3: BUS / GROUP BEHAVIOR — QUICK SCAN
+================================================================================
+
+  OLD: grep offline reports (still works)
+  NEW: Can also check live through PT server
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 3.1-3.2: Check if signal is a bus                                │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  # Check how many pins match the signal pattern
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'sizeof_collection [get_pins icore0/<partition>/<signal_base>* -hierarchical]'
+
+  # Get timing for all bits at once
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/<partition>/<signal_base>* \
+      -max_paths 20 -nosplit -significant_digits 1' \
+    -o bus_timing.rpt
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 3.3: Check source FF fanout                                      │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'sizeof_collection [all_fanout -from [get_pins icore0/<partition>/<sub>/<FF>/Q] -flat -endpoints_only]'
+
+  → If fanout drives BOTH internal logic AND boundary port → FF dup candidate
+
+================================================================================
+  STAGE 4: PORT SPEC / BUDGET — LIVE CHECK
+================================================================================
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 4.1-4.2: Check both sides of the port                            │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  # Source side: delay from source FF to port
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -to icore0/<partition>/<port_name> -max_paths 5 -nosplit'
+
+  # Dest side: delay from port to endpoint FF
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -from icore0/<partition>/<port_name> -max_paths 5 -nosplit'
+
+  → Compare both sides — if one has margin, spec can be shifted (Technique 8)
+
+================================================================================
+  STAGE 5: MULTI-CORNER ANALYSIS — NEW CAPABILITY!
+================================================================================
+
+  THIS WAS NOT PRACTICAL BEFORE — would need multiple PT sessions!
+  With pt_client, check the same path across ALL corners in minutes:
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 5.1: Check all setup corners                                      │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  # High voltage (primary)
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit'
+
+  # Nominal voltage
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit'
+
+  # Low voltage
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_low.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit'
+
+  # Medium voltage
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_med.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit'
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 5.2: Check hold corners                                           │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  # Hold — min_low
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.min_low.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit -delay_type min'
+
+  # Hold — min_nom
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.min_nom.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit -delay_type min'
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 5.3: Check with crosstalk (SI)                                    │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  # Same corner but with CCworst
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical_CCworst \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit'
+
+  → Compare with/without CCworst — large delta means SI is a concern
+
+  WHY THIS MATTERS:
+    A fix that helps in max_high might hurt in max_low!
+    A path clean in setup might fail in hold!
+    Multi-corner analysis PREVENTS creating new violations.
+
+================================================================================
+  STAGE 6: MODEL COMPARISON — TRACK FIX PROGRESS
+================================================================================
+
+  Another NEW capability — compare latest vs previous build instantly:
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 6.1: Did the latest build improve our path?                       │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  # Latest model (today's build)
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit' \
+    -debug
+
+  # Previous model (yesterday's build)
+  pt_client.pl -m prev_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit' \
+    -debug
+
+  → Compare slack values — did TIP/RCO/clock change help?
+  → The -debug flag shows MODEL path so you know exactly which WA each is
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ STEP 6.2: Track daily slack trend                                      │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  Run this check every morning:
+    1. pt_client -debug → note the model tag (e.g., FCT26WW11B)
+    2. pt_client → get slack
+    3. Log: WW11B = -71.6ps, WW11A = -71.6ps, WW10F = -68ps ...
+
+  This builds a TREND — you can see if the path is getting better or worse
+  as new TIPs, RCOs, and clock changes go in.
+
+================================================================================
+  NEW WORKFLOW: COMPLETE PATH DEBUG IN 5-10 MINUTES
+================================================================================
+
+  Here's the full cross-partition debug flow using pt_client:
+
+  MINUTE 0-1: VERIFY DATA SOURCE
+  ─────────────────────────────────
+    pt_client.pl -m latest_..._func.max_high.T_85.typical \
+      -c 'get_designs' -debug
+    → Note model tag (e.g., FCT26WW11B)
+
+  MINUTE 1-2: GET FULL PATH REPORT (Stage 0)
+  ─────────────────────────────────────────────
+    pt_client.pl -m latest_..._func.max_high.T_85.typical \
+      -c 'report_timing -through icore0/<par>/<signal> \
+        -max_paths 1 -nosplit -include_hierarchical_pins \
+        -significant_digits 1 -nets -physical -input_pins \
+        -capacitance -transition_time \
+        -attributes points.object.max_slack' \
+      -o path_report.rpt
+    → Analyze: partitions, delays, bottlenecks, distances
+
+  MINUTE 2-3: CHECK CLOCK BALANCE (Stage 1)
+  ────────────────────────────────────────────
+    pt_client.pl ... -c 'report_clock_timing -type latency \
+      -to icore0/.../<source_FF>/CP -nosplit'
+    pt_client.pl ... -c 'report_clock_timing -type latency \
+      -to icore0/.../<endpoint_FF>/CP -nosplit'
+
+  MINUTE 3-5: CHECK NEIGHBORS (Stage 2)
+  ───────────────────────────────────────
+    pt_client.pl ... -c 'report_timing -to icore0/.../<source_FF>/D \
+      -max_paths 5 -nosplit'
+    pt_client.pl ... -c 'report_timing -from icore0/.../<endpoint_FF>/CP \
+      -max_paths 5 -nosplit'
+    pt_client.pl ... -c 'report_timing -to icore0/.../<MBIT_FF>/D2 \
+      -max_paths 1 -nosplit'    # D-pin check for multi-bit FFs
+
+  MINUTE 5-7: CHECK BUS + PORT (Stages 3-4)
+  ────────────────────────────────────────────
+    pt_client.pl ... -c 'report_timing -through icore0/<par>/<signal>* \
+      -max_paths 20 -nosplit' -o bus_check.rpt
+    pt_client.pl ... -c 'report_timing -to icore0/<par>/<port>' -nosplit
+    pt_client.pl ... -c 'report_timing -from icore0/<par>/<port>' -nosplit
+
+  MINUTE 7-9: MULTI-CORNER CHECK (Stage 5 — NEW!)
+  ──────────────────────────────────────────────────
+    Run same path through max_nom, max_low, min_low corners
+    Check with/without CCworst
+
+  MINUTE 9-10: COMPARE WITH PREVIOUS (Stage 6 — NEW!)
+  ─────────────────────────────────────────────────────
+    pt_client.pl -m prev_... -c 'report_timing ...' -debug
+    → Compare latest vs previous slack
+
+  DONE! Full analysis in under 10 minutes!
+
+================================================================================
+  REAL EXAMPLE: RSMOClearVM803H DEBUG (WW11.2)
+================================================================================
+
+  # Step 1: Verify data source
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'get_designs' -debug
+  → FCT26WW11B loaded (Mar 10, 2026)
+
+  # Step 2: Get path report
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h \
+      -max_paths 1 -nosplit -include_hierarchical_pins'
+  → Slack = -71.6ps (stat), -64.0ps (mean)
+  → SP at (1160, 783) in par_ooo_int/rsrptint
+  → EP at (440, 357) in par_ooo_vec/rob
+  → Port at (652, 505) — 1200μm total distance
+
+  # Step 3: Check D2 input path (multi-bit FF safety)
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -to icore0/par_ooo_int/rs_int/rsrptint/auto_vector_MBIT_RORtLdIncM904H_reg_4__MBIT_RSMOClearVM803H_reg/D2 \
+      -max_paths 1 -nosplit -include_hierarchical_pins \
+      -significant_digits 1 -nets -physical -input_pins \
+      -capacitance -transition_time \
+      -attributes points.object.max_slack'
+  → D2 slack = +38.6ps → limits FF movement to (1000-1100, 700-780)
+
+  CONCLUSION: All data gathered in ~2 minutes instead of 30+ minutes!
+
+================================================================================
+  LIMITATIONS — WHAT pt_client CANNOT DO
+================================================================================
+
+  pt_client is READ-ONLY. For these tasks, you still need local PT or tools:
+
+  × Cannot run ECO commands (size_cell, insert_buffer)
+  × Cannot source custom TCL scripts
+  × Cannot set attributes or create constraints
+  × Cannot save sessions or export data
+  × Cannot run carpet/SIO locally (but see carpet via pt_server — ask SIO)
+  × Cannot check constraints/exceptions (report_exceptions)
+
+  FOR THESE, use the traditional workflow:
+    1. Navigate to WA sta_pt directory
+    2. Open PT shell: pt_shell -f setup.tcl
+    3. Load DBS: restore_session
+    4. Run your commands
+    5. Close: exit
+
+  OR: Ask SIO to run carpet with pt_server (see ahaimovi's run_local_carpet)
+
+================================================================================
+  SUMMARY — pt_client IN THE DEBUG PLAYBOOK
+================================================================================
+
+  ┌──────────────────────┬────────────────────┬────────────────────────────┐
+  │ Playbook Stage       │ Old Way            │ New Way (pt_client)        │
+  ├──────────────────────┼────────────────────┼────────────────────────────┤
+  │ Stage 0: Path report │ Open PT (20 min)   │ 10 seconds                 │
+  │ Stage 1: Clock check │ PT session         │ 10 seconds                 │
+  │ Stage 2: Neighbors   │ PT or grep offline │ 20 seconds (2 commands)    │
+  │ Stage 3: Bus check   │ grep offline       │ 10 sec (or still grep)     │
+  │ Stage 4: Port spec   │ PT + grep          │ 20 seconds (2 commands)    │
+  │ Stage 5: Multi-corner│ NOT PRACTICAL      │ 1 min (4 corners!)  ← NEW │
+  │ Stage 6: Model comp  │ NOT PRACTICAL      │ 30 sec (2 models)   ← NEW │
+  │ Stage 7: Report      │ Manual write       │ Same (manual write)        │
+  ├──────────────────────┼────────────────────┼────────────────────────────┤
+  │ TOTAL                │ 2-4 hours          │ 5-10 minutes               │
+  └──────────────────────┴────────────────────┴────────────────────────────┘
+
+  Two entirely NEW capabilities that were not practical before:
+    ★ Stage 5: Multi-corner analysis — check setup, hold, SI in one session
+    ★ Stage 6: Model comparison — track daily slack trends
+
+================================================================================
+  END OF CROSS-PARTITION DEBUG WITH pt_client COOKBOOK
+================================================================================

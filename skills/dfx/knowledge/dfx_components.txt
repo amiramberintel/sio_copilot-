@@ -1,0 +1,112 @@
+DFX Components - What They Are and Why They Matter for Timing
+=============================================================
+Last updated: 2026-03-30
+
+1. BIST (Built-In Self-Test)
+   -------------------------
+   What: Hardware engines inside the chip that test MEMORIES (SRAMs, register files, caches).
+   How:  After manufacturing, BIST runs test patterns on every memory to find defects.
+         It writes patterns, reads back, and compares. If mismatch => memory defect.
+   Why timing matters:
+     - BIST engines have their own clock domain (~540 MHz testclk or ~1 GHz mclk4saf)
+     - Paths from BIST controller to memory arrays must meet timing
+     - BIST paths cross partition boundaries when testing shared memories
+   In reports: "bist" domain in Maha's breakdown tables
+   Example: par_meu has BIST paths at WNS=-7ps (max_high internal)
+
+2. BISR (Built-In Self-Repair)
+   ----------------------------
+   What: When BIST finds a bad memory row/column, BISR switches in a SPARE row/column.
+   How:  BISR uses MUX chains to remap addresses. If row 42 is bad, BISR redirects
+         accesses from row 42 to spare row 0. This happens via physical muxes in the data path.
+   Why timing matters:
+     - BISR muxes are IN the data path (they add delay even in functional mode)
+     - Mux chains can be long => timing violations
+     - "Insert bisr mux" is a DFX2PO ticket item (adding muxes post-construction)
+     - BISR is accessed via IJTAG for configuration => bisr_ijtag domain
+   In reports: "bisr" and "bisr_ijtag" domains
+   Fix approach: BE adds muxes post-construction; PT ECO can fix timing
+
+3. JTAG (Joint Test Action Group - IEEE 1149.1)
+   -----------------------------------------------
+   What: External debug/test interface. A tester connects to the chip's TAP pins.
+   How:  4-5 pins: TCK (clock), TMS (mode select), TDI (data in), TDO (data out), TRST (reset)
+         Serial protocol at 160 MHz. Can read/write internal registers, run boundary scan.
+   Components:
+     - TAP (Test Access Port): the physical pins and controller
+     - tapclk: 6266ps (160 MHz) clock
+   Why timing matters:
+     - JTAG shift register chains span the entire chip
+     - Long physical distances => routing delay
+   In reports: "tap" domain
+
+4. IJTAG (Internal JTAG - IEEE 1687)
+   ------------------------------------
+   What: Extension of JTAG to access internal test instruments (not just boundary).
+   How:  Creates a network of instruments inside the chip, each accessible via IJTAG protocol.
+         Used to configure BIST, BISR, scan compression, etc.
+   Components:
+     - ijtag_tck: same 6266ps clock as JTAG
+     - SIB (Segment Insertion Bit): switches to include/exclude instrument segments
+   Why timing matters:
+     - IJTAG chains are even longer than JTAG (access internal instruments)
+     - bisr_ijtag paths: BISR configuration accessed through IJTAG chain
+   In reports: "ijtag_tck" and "bisr_ijtag" domains
+
+5. SSH IJTAG (Secure Scan Host IJTAG)
+   -------------------------------------
+   What: Secure/authenticated version of IJTAG for scan chain access.
+   How:  Adds authentication layer before allowing scan access (security feature).
+         Prevents unauthorized scan dumps that could leak secrets from the chip.
+   Why timing matters:
+     - Authentication logic adds extra stages
+     - ssh_ijtag paths tend to be among the longest DFX paths
+   In reports: "ssh_ijtag" domain
+   Fix: Will be fixed in FCT PT ECO (per Maha's comments)
+
+6. SCAN CHAINS
+   -------------
+   What: All flip-flops in the chip are stitched into long shift registers (scan chains).
+   How:  In test mode, patterns are shifted in through scan chains, one clock pulse captures
+         the combinational logic response, then results are shifted out and checked.
+   Clocks:
+     - scanclk_div: 3704ps (270 MHz) - scan shift clock
+     - scanclk_notdiv: same period, not divided version
+   Why timing matters:
+     - Scan chains span entire partitions => huge fanout and routing
+     - Core wrapper cells (boundary scan) have paths in scanclk domain
+     - New synthesis can introduce new scan paths (e.g., par_fmav0 went 0->3104 paths)
+   In reports: "scanclk" domain (huge path counts in min_low)
+
+7. MISR (Multiple-Input Signature Register)
+   ------------------------------------------
+   What: Compresses scan chain outputs into a signature for comparison.
+   How:  Instead of shifting out ALL bits, MISR compresses to a small signature.
+         If signature matches golden => test passed.
+   In reports: "misr" domain (usually small path count)
+
+8. SLOS (Scan-Logic-On-Scan)
+   ---------------------------
+   What: Test patterns that exercise logic between scan chains.
+   How:  Specific pattern type for testing combinational logic paths.
+   In reports: "slos" domain
+
+9. SSN (Simultaneous Switching Noise) Test
+   -----------------------------------------
+   What: Test that exercises many flip-flops switching at once to test power integrity.
+   How:  Special patterns designed to create maximum switching activity.
+   Clock: ssnclk at 1852ps (540 MHz)
+   In reports: "ssnclk" domain
+
+SUMMARY TABLE:
+  Component    Clock           Period    Path Count (typical)   Fix Owner
+  ----------   -----------     ------    --------------------   ---------
+  BIST         testclk/mclk4saf  1000-1852ps  Medium           BE
+  BISR         bisr_ijtag      6266ps    Medium                BE (mux insertion)
+  JTAG/TAP     tapclk          6266ps    Small                 DFX team
+  IJTAG        ijtag_tck       6266ps    Large                 DFX team
+  SSH IJTAG    ssh_ijtag       6266ps    Large                 PT ECO
+  Scan chains  scanclk_div     3704ps    HUGE (200K+ in hold)  BE + synthesis
+  MISR         testclk         1852ps    Small                 BE
+  SLOS         testclk         1852ps    Medium                BE
+  SSN          ssnclk          1852ps    Medium                Synthesis

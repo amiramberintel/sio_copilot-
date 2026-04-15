@@ -1,0 +1,590 @@
+================================================================================
+   par_msid UNCONSTRAINED ENDPOINTS ANALYSIS REPORT
+================================================================================
+
+SOURCE FILE: par_msid.func.max_high.T_85.typical.unconstrained_endpoints.rpt.gz
+LOCATION:    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_msid/sta_primetime/GOLDEN/
+CORNER:      func.max_high.T_85.typical
+TOTAL COUNT: 370 unconstrained output endpoints
+
+================================================================================
+                         WHAT THIS REPORT MEANS
+================================================================================
+
+Unconstrained endpoints are OUTPUT PORTS where the timing path TO them has
+no max_delay constraint (set_output_delay). This means:
+
+  - PT cannot check if data arrives at this output within timing budget
+  - The path is NOT verified for setup time at the receiving partition
+  - Could cause timing failures at chip level if not constrained elsewhere
+
+================================================================================
+                    SUMMARY BY SIGNAL CATEGORY
+================================================================================
+
+  Signal Category                        Count   Interface        Likely Reason
+  -------------------------------------  -----   ------------     -------------------------
+  iqebacdispnotsignedfirst*              112     IQ→OOO_INT       Missing output spec
+  dspfpreappbroffsetfull*                 36     DSP→Prefetch     Missing output spec
+  flbrlocvec*                             30     Branch→FE        Missing output spec
+  lsdstart/lsdend*                        52     LSD→FE           Missing output spec
+  dspfpreappciscorliloc*                  20     DSP→Prefetch     Missing output spec
+  dspfpreappbrtypefullpre*                18     DSP→Prefetch     Missing output spec
+  idfstackctl*                            16     IDF→Stack        Missing output spec
+  li_*                                    25     LI→Memory        Missing output spec
+  lvp*                                    10     LVP→LI           Missing output spec
+  baendplus1firstuncondaftcall*            6     Branch→FE        Missing output spec
+  dsforcejeclrset*                         6     DS→JEclr         Missing output spec
+  msid2robsmcsnprspmnn3h*                  4     MSID→ROB         Missing output spec
+  DFT/scan signals                         5     DFT              Not func mode critical
+  Other misc                              30     Various          Need investigation
+  -------------------------------------  -----
+  TOTAL                                  370
+
+================================================================================
+                    DETAILED BREAKDOWN BY CATEGORY
+================================================================================
+
+---------------------------------------------------------------------------
+1. IQ DISPATCH SIGNALS (112 endpoints) - Interface to OOO_INT
+---------------------------------------------------------------------------
+Signal Pattern: iqebacdispnotsignedfirst* and iqebacdispnotsignedfirstaftcall*
+
+Full List:
+  iqebacdispnotsignedfirstm108h[0:55]              56 bits
+  iqebacdispnotsignedfirstaftcallm108h[0:55]       56 bits
+
+Interface: MSID → OOO_INT (Out-of-Order Integer) partition
+Function:  Dispatch information from Instruction Queue
+Reason:    No output delay spec defined for this interface
+Action:    Add set_output_delay in SDC or par_msid_spec.csv
+
+---------------------------------------------------------------------------
+2. DSP PREFETCH SIGNALS (74 endpoints) - DSB Prefetch Interface  
+---------------------------------------------------------------------------
+Signal Patterns:
+  dspfpreappbroffsetfullm111h_X_[0:5]              36 bits (6 instances x 6 bits)
+  dspfpreappciscorlilocm111h_X_[0:4]               20 bits (4 instances x 5 bits)
+  dspfpreappbrtypefullprem111h[0:17]               18 bits
+
+Interface: MSID → Prefetch engine
+Function:  Branch prediction and prefetch offset information
+Reason:    Missing interface timing specification
+Action:    Add set_output_delay constraints
+
+---------------------------------------------------------------------------
+3. LSD SIGNALS (52 endpoints) - Loop Stream Detector
+---------------------------------------------------------------------------
+Signal Patterns:
+  lsdstartmitem110h[0:11]                          12 bits
+  lsdendmitem110h[0:11]                            12 bits
+  lsdstartdsbm110h[0:19]                           20 bits (some bits)
+  lsdenddsbm110h[0:19]                             20 bits (some bits)
+
+Interface: MSID → FE (Front End)
+Function:  Loop detection start/end markers for micro-items and DSB
+Reason:    Missing interface spec to FE partition
+Action:    Add output delay specs
+
+---------------------------------------------------------------------------
+4. BRANCH LOCATION SIGNALS (30 endpoints) - Branch Prediction
+---------------------------------------------------------------------------
+Signal Pattern: flbrlocvecm110h_X_[0:4]           30 bits (6 instances x 5 bits)
+
+Interface: MSID → Branch Prediction Unit
+Function:  Branch location vector for prediction
+Reason:    Missing interface specification
+Action:    Add output delay constraints
+
+---------------------------------------------------------------------------
+5. LI SIGNALS (25 endpoints) - Load Interface
+---------------------------------------------------------------------------
+Signal Patterns:
+  li_xidm169h[0:12]                               13 bits
+  li_setm169h[0:5]                                 6 bits
+  li_waym169h[0:2]                                 3 bits
+
+Interface: MSID → Memory/Load-Store unit
+Function:  Load transaction ID, set, and way information
+Reason:    Missing memory interface specs
+Action:    Add output delay constraints for memory interface
+
+---------------------------------------------------------------------------
+6. IDF STACK CONTROL (16 endpoints)
+---------------------------------------------------------------------------
+Signal Pattern: idfstackctlm200h_X_[0:1]          16 bits (8 instances x 2 bits)
+
+Interface: MSID → IDF (Instruction Decode Fifo)
+Function:  Stack control signals
+Reason:    Missing interface spec
+Action:    Add output constraints
+
+---------------------------------------------------------------------------
+7. LVP SIGNALS (10 endpoints) - Load Value Prediction
+---------------------------------------------------------------------------
+Signal Patterns:
+  lvpinvalidationsetmnn2h[0:5]                     6 bits
+  lvpinvalidationwaymnn2h[0:2]                     3 bits
+  lvpinvalidationenmnn2h                           1 bit
+
+Interface: MSID → LVP
+Function:  Load value predictor invalidation controls
+Reason:    Async invalidation interface - may be intentional
+Action:    Add output delay or set_false_path if async
+
+---------------------------------------------------------------------------
+8. DFT/SCAN SIGNALS (5 endpoints) - Not Timing Critical
+---------------------------------------------------------------------------
+Signal Patterns:
+  par_msid_dft/usc_msid/i_ult_parctl/i_fscan_*    4 internal DFT mux selects
+  msid_sib_out_o_ijtag_tck                        1 JTAG output
+
+Interface: DFT infrastructure
+Function:  Scan and JTAG test access
+Reason:    Not constrained in functional mode - different clock domain
+Action:    Constrain in scan mode SDC, or add false_path in func mode
+
+---------------------------------------------------------------------------
+9. FEEDTHROUGH SIGNAL (1 endpoint) - RTL Pass-through
+---------------------------------------------------------------------------
+Signal: core_rf_bisr_chain_clk__FEEDTHRU_1
+
+Interface: BISR chain clock distribution
+Function:  Pass-through for BISR clock, no registers
+Reason:    Intentional feedthrough - no internal delay
+Action:    Add feedthrough constraint or constrain at source partition
+
+---------------------------------------------------------------------------
+10. MISCELLANEOUS SIGNALS (30 endpoints)
+---------------------------------------------------------------------------
+  baendplus1firstuncondaftcallm108h[0:5]           6 bits - Branch offset
+  dsforcejeclrsetm186h[0:5]                        6 bits - DS force clear
+  msid2robsmcsnprspmnn3h_X__Y__robid_wrap          4 bits - ROB response
+  ifwrapdatavalidm107h[0:1]                        2 bits - IF wrap data
+  ilgbpqoffset0m107h[0:1]                          2 bits - ILG offset
+  
+  Single signals:
+  - upredbitm184h, reporprdcycsm105h, dsfbfetchlineendm110h
+  - bacyclevalidm106h, feemptybefull4pmonmnn1h, iqclearfem107h
+  - iqcallzerodisp2brqm108h, idqarrayinitdonepulse4femnnnh
+  - ilginclusionerrom107h, ilgignoreallforfem107h
+  - dspfappfirstuop2m110h, dsforcejeclranyuopm186h
+  - dsbqt_ismsm107h, dsbqsyncpmont_m184h
+  - msid_tfb_tfb_out[0], lvpclkenparfem167h
+
+================================================================================
+                    ACTION ITEMS BY PRIORITY
+================================================================================
+
+HIGH PRIORITY (Large bus interfaces - 274 endpoints):
+  [ ] Add output specs for IQ dispatch interface (112 pins)
+  [ ] Add output specs for DSP prefetch interface (74 pins)
+  [ ] Add output specs for LSD interface (52 pins)
+  [ ] Add output specs for Branch location interface (30 pins)
+
+MEDIUM PRIORITY (Smaller interfaces - 51 endpoints):
+  [ ] Add output specs for LI memory interface (25 pins)
+  [ ] Add output specs for IDF stack control (16 pins)
+  [ ] Add output specs for LVP invalidation (10 pins)
+
+LOW PRIORITY (Misc/DFT - 45 endpoints):
+  [ ] Review misc control signals (30 pins)
+  [ ] Add DFT constraints in scan mode (5 pins)
+  [ ] Add feedthrough constraint (1 pin)
+  [ ] Review ba/ds/ilg signals (9 pins)
+
+================================================================================
+                    SDC CONSTRAINT EXAMPLES
+================================================================================
+
+# Example: Add output delay for IQ dispatch signals
+set_output_delay -clock mclk_msid -max 0.100 [get_ports iqebacdispnotsignedfirst*]
+
+# Example: Add output delay for LSD signals
+set_output_delay -clock mclk_msid -max 0.100 [get_ports lsd*m110h*]
+
+# Example: False path for DFT signals in func mode
+set_false_path -to [get_ports par_msid_dft/*]
+set_false_path -to [get_ports msid_sib_out_o_ijtag_tck]
+
+# Example: Feedthrough constraint
+set_max_delay 0.500 -from [get_ports *FEEDTHRU_0] -to [get_ports *FEEDTHRU_1]
+
+================================================================================
+                    FULL SIGNAL LIST (370 endpoints)
+================================================================================
+
+bacyclevalidm106h
+baendplus1firstuncondaftcallm108h[0]
+baendplus1firstuncondaftcallm108h[1]
+baendplus1firstuncondaftcallm108h[2]
+baendplus1firstuncondaftcallm108h[3]
+baendplus1firstuncondaftcallm108h[4]
+baendplus1firstuncondaftcallm108h[5]
+core_rf_bisr_chain_clk__FEEDTHRU_1
+dsbqsyncpmont_m184h
+dsbqt_ismsm107h
+dsfbfetchlineendm110h
+dsforcejeclranyuopm186h
+dsforcejeclrsetm186h[0]
+dsforcejeclrsetm186h[1]
+dsforcejeclrsetm186h[2]
+dsforcejeclrsetm186h[3]
+dsforcejeclrsetm186h[4]
+dsforcejeclrsetm186h[5]
+dspfappfirstuop2m110h
+dspfpreappbroffsetfullm111h_0_[0]
+dspfpreappbroffsetfullm111h_0_[1]
+dspfpreappbroffsetfullm111h_0_[2]
+dspfpreappbroffsetfullm111h_0_[3]
+dspfpreappbroffsetfullm111h_0_[4]
+dspfpreappbroffsetfullm111h_0_[5]
+dspfpreappbroffsetfullm111h_1_[0]
+dspfpreappbroffsetfullm111h_1_[1]
+dspfpreappbroffsetfullm111h_1_[2]
+dspfpreappbroffsetfullm111h_1_[3]
+dspfpreappbroffsetfullm111h_1_[4]
+dspfpreappbroffsetfullm111h_1_[5]
+dspfpreappbroffsetfullm111h_2_[0]
+dspfpreappbroffsetfullm111h_2_[1]
+dspfpreappbroffsetfullm111h_2_[2]
+dspfpreappbroffsetfullm111h_2_[3]
+dspfpreappbroffsetfullm111h_2_[4]
+dspfpreappbroffsetfullm111h_2_[5]
+dspfpreappbroffsetfullm111h_3_[0]
+dspfpreappbroffsetfullm111h_3_[1]
+dspfpreappbroffsetfullm111h_3_[2]
+dspfpreappbroffsetfullm111h_3_[3]
+dspfpreappbroffsetfullm111h_3_[4]
+dspfpreappbroffsetfullm111h_3_[5]
+dspfpreappbroffsetfullm111h_4_[0]
+dspfpreappbroffsetfullm111h_4_[1]
+dspfpreappbroffsetfullm111h_4_[2]
+dspfpreappbroffsetfullm111h_4_[3]
+dspfpreappbroffsetfullm111h_4_[4]
+dspfpreappbroffsetfullm111h_4_[5]
+dspfpreappbroffsetfullm111h_5_[0]
+dspfpreappbroffsetfullm111h_5_[1]
+dspfpreappbroffsetfullm111h_5_[2]
+dspfpreappbroffsetfullm111h_5_[3]
+dspfpreappbroffsetfullm111h_5_[4]
+dspfpreappbroffsetfullm111h_5_[5]
+dspfpreappbrtypefullprem111h[0]
+dspfpreappbrtypefullprem111h[10]
+dspfpreappbrtypefullprem111h[11]
+dspfpreappbrtypefullprem111h[12]
+dspfpreappbrtypefullprem111h[13]
+dspfpreappbrtypefullprem111h[14]
+dspfpreappbrtypefullprem111h[15]
+dspfpreappbrtypefullprem111h[16]
+dspfpreappbrtypefullprem111h[17]
+dspfpreappbrtypefullprem111h[1]
+dspfpreappbrtypefullprem111h[2]
+dspfpreappbrtypefullprem111h[3]
+dspfpreappbrtypefullprem111h[4]
+dspfpreappbrtypefullprem111h[5]
+dspfpreappbrtypefullprem111h[6]
+dspfpreappbrtypefullprem111h[7]
+dspfpreappbrtypefullprem111h[8]
+dspfpreappbrtypefullprem111h[9]
+dspfpreappciscorlilocm111h_0_[0]
+dspfpreappciscorlilocm111h_0_[1]
+dspfpreappciscorlilocm111h_0_[2]
+dspfpreappciscorlilocm111h_0_[3]
+dspfpreappciscorlilocm111h_0_[4]
+dspfpreappciscorlilocm111h_1_[0]
+dspfpreappciscorlilocm111h_1_[1]
+dspfpreappciscorlilocm111h_1_[2]
+dspfpreappciscorlilocm111h_1_[3]
+dspfpreappciscorlilocm111h_1_[4]
+dspfpreappciscorlilocm111h_2_[0]
+dspfpreappciscorlilocm111h_2_[1]
+dspfpreappciscorlilocm111h_2_[2]
+dspfpreappciscorlilocm111h_2_[3]
+dspfpreappciscorlilocm111h_2_[4]
+dspfpreappciscorlilocm111h_3_[0]
+dspfpreappciscorlilocm111h_3_[1]
+dspfpreappciscorlilocm111h_3_[2]
+dspfpreappciscorlilocm111h_3_[3]
+dspfpreappciscorlilocm111h_3_[4]
+feemptybefull4pmonmnn1h
+flbrlocvecm110h_0_[0]
+flbrlocvecm110h_0_[1]
+flbrlocvecm110h_0_[2]
+flbrlocvecm110h_0_[3]
+flbrlocvecm110h_0_[4]
+flbrlocvecm110h_1_[0]
+flbrlocvecm110h_1_[1]
+flbrlocvecm110h_1_[2]
+flbrlocvecm110h_1_[3]
+flbrlocvecm110h_1_[4]
+flbrlocvecm110h_2_[0]
+flbrlocvecm110h_2_[1]
+flbrlocvecm110h_2_[2]
+flbrlocvecm110h_2_[3]
+flbrlocvecm110h_2_[4]
+flbrlocvecm110h_3_[0]
+flbrlocvecm110h_3_[1]
+flbrlocvecm110h_3_[2]
+flbrlocvecm110h_3_[3]
+flbrlocvecm110h_3_[4]
+flbrlocvecm110h_4_[0]
+flbrlocvecm110h_4_[1]
+flbrlocvecm110h_4_[2]
+flbrlocvecm110h_4_[3]
+flbrlocvecm110h_4_[4]
+flbrlocvecm110h_5_[0]
+flbrlocvecm110h_5_[1]
+flbrlocvecm110h_5_[2]
+flbrlocvecm110h_5_[3]
+flbrlocvecm110h_5_[4]
+idfstackctlm200h_10_[0]
+idfstackctlm200h_10_[1]
+idfstackctlm200h_11_[0]
+idfstackctlm200h_11_[1]
+idfstackctlm200h_4_[0]
+idfstackctlm200h_4_[1]
+idfstackctlm200h_5_[0]
+idfstackctlm200h_5_[1]
+idfstackctlm200h_6_[0]
+idfstackctlm200h_6_[1]
+idfstackctlm200h_7_[0]
+idfstackctlm200h_7_[1]
+idfstackctlm200h_8_[0]
+idfstackctlm200h_8_[1]
+idfstackctlm200h_9_[0]
+idfstackctlm200h_9_[1]
+idqarrayinitdonepulse4femnnnh
+ifwrapdatavalidm107h[0]
+ifwrapdatavalidm107h[1]
+ilgbpqoffset0m107h[0]
+ilgbpqoffset0m107h[1]
+ilgignoreallforfem107h
+ilginclusionerrorm107h
+iqcallzerodisp2brqm108h
+iqclearfem107h
+iqebacdispnotsignedfirstaftcallm108h[0]
+iqebacdispnotsignedfirstaftcallm108h[10]
+iqebacdispnotsignedfirstaftcallm108h[11]
+iqebacdispnotsignedfirstaftcallm108h[12]
+iqebacdispnotsignedfirstaftcallm108h[13]
+iqebacdispnotsignedfirstaftcallm108h[14]
+iqebacdispnotsignedfirstaftcallm108h[15]
+iqebacdispnotsignedfirstaftcallm108h[16]
+iqebacdispnotsignedfirstaftcallm108h[17]
+iqebacdispnotsignedfirstaftcallm108h[18]
+iqebacdispnotsignedfirstaftcallm108h[19]
+iqebacdispnotsignedfirstaftcallm108h[1]
+iqebacdispnotsignedfirstaftcallm108h[20]
+iqebacdispnotsignedfirstaftcallm108h[21]
+iqebacdispnotsignedfirstaftcallm108h[22]
+iqebacdispnotsignedfirstaftcallm108h[23]
+iqebacdispnotsignedfirstaftcallm108h[24]
+iqebacdispnotsignedfirstaftcallm108h[25]
+iqebacdispnotsignedfirstaftcallm108h[26]
+iqebacdispnotsignedfirstaftcallm108h[27]
+iqebacdispnotsignedfirstaftcallm108h[28]
+iqebacdispnotsignedfirstaftcallm108h[29]
+iqebacdispnotsignedfirstaftcallm108h[2]
+iqebacdispnotsignedfirstaftcallm108h[30]
+iqebacdispnotsignedfirstaftcallm108h[31]
+iqebacdispnotsignedfirstaftcallm108h[32]
+iqebacdispnotsignedfirstaftcallm108h[33]
+iqebacdispnotsignedfirstaftcallm108h[34]
+iqebacdispnotsignedfirstaftcallm108h[35]
+iqebacdispnotsignedfirstaftcallm108h[36]
+iqebacdispnotsignedfirstaftcallm108h[37]
+iqebacdispnotsignedfirstaftcallm108h[38]
+iqebacdispnotsignedfirstaftcallm108h[39]
+iqebacdispnotsignedfirstaftcallm108h[3]
+iqebacdispnotsignedfirstaftcallm108h[40]
+iqebacdispnotsignedfirstaftcallm108h[41]
+iqebacdispnotsignedfirstaftcallm108h[42]
+iqebacdispnotsignedfirstaftcallm108h[43]
+iqebacdispnotsignedfirstaftcallm108h[44]
+iqebacdispnotsignedfirstaftcallm108h[45]
+iqebacdispnotsignedfirstaftcallm108h[46]
+iqebacdispnotsignedfirstaftcallm108h[47]
+iqebacdispnotsignedfirstaftcallm108h[48]
+iqebacdispnotsignedfirstaftcallm108h[49]
+iqebacdispnotsignedfirstaftcallm108h[4]
+iqebacdispnotsignedfirstaftcallm108h[50]
+iqebacdispnotsignedfirstaftcallm108h[51]
+iqebacdispnotsignedfirstaftcallm108h[52]
+iqebacdispnotsignedfirstaftcallm108h[53]
+iqebacdispnotsignedfirstaftcallm108h[54]
+iqebacdispnotsignedfirstaftcallm108h[55]
+iqebacdispnotsignedfirstaftcallm108h[5]
+iqebacdispnotsignedfirstaftcallm108h[6]
+iqebacdispnotsignedfirstaftcallm108h[7]
+iqebacdispnotsignedfirstaftcallm108h[8]
+iqebacdispnotsignedfirstaftcallm108h[9]
+iqebacdispnotsignedfirstm108h[0]
+iqebacdispnotsignedfirstm108h[10]
+iqebacdispnotsignedfirstm108h[11]
+iqebacdispnotsignedfirstm108h[12]
+iqebacdispnotsignedfirstm108h[13]
+iqebacdispnotsignedfirstm108h[14]
+iqebacdispnotsignedfirstm108h[15]
+iqebacdispnotsignedfirstm108h[16]
+iqebacdispnotsignedfirstm108h[17]
+iqebacdispnotsignedfirstm108h[18]
+iqebacdispnotsignedfirstm108h[19]
+iqebacdispnotsignedfirstm108h[1]
+iqebacdispnotsignedfirstm108h[20]
+iqebacdispnotsignedfirstm108h[21]
+iqebacdispnotsignedfirstm108h[22]
+iqebacdispnotsignedfirstm108h[23]
+iqebacdispnotsignedfirstm108h[24]
+iqebacdispnotsignedfirstm108h[25]
+iqebacdispnotsignedfirstm108h[26]
+iqebacdispnotsignedfirstm108h[27]
+iqebacdispnotsignedfirstm108h[28]
+iqebacdispnotsignedfirstm108h[29]
+iqebacdispnotsignedfirstm108h[2]
+iqebacdispnotsignedfirstm108h[30]
+iqebacdispnotsignedfirstm108h[31]
+iqebacdispnotsignedfirstm108h[32]
+iqebacdispnotsignedfirstm108h[33]
+iqebacdispnotsignedfirstm108h[34]
+iqebacdispnotsignedfirstm108h[35]
+iqebacdispnotsignedfirstm108h[36]
+iqebacdispnotsignedfirstm108h[37]
+iqebacdispnotsignedfirstm108h[38]
+iqebacdispnotsignedfirstm108h[39]
+iqebacdispnotsignedfirstm108h[3]
+iqebacdispnotsignedfirstm108h[40]
+iqebacdispnotsignedfirstm108h[41]
+iqebacdispnotsignedfirstm108h[42]
+iqebacdispnotsignedfirstm108h[43]
+iqebacdispnotsignedfirstm108h[44]
+iqebacdispnotsignedfirstm108h[45]
+iqebacdispnotsignedfirstm108h[46]
+iqebacdispnotsignedfirstm108h[47]
+iqebacdispnotsignedfirstm108h[48]
+iqebacdispnotsignedfirstm108h[49]
+iqebacdispnotsignedfirstm108h[4]
+iqebacdispnotsignedfirstm108h[50]
+iqebacdispnotsignedfirstm108h[51]
+iqebacdispnotsignedfirstm108h[52]
+iqebacdispnotsignedfirstm108h[53]
+iqebacdispnotsignedfirstm108h[54]
+iqebacdispnotsignedfirstm108h[55]
+iqebacdispnotsignedfirstm108h[5]
+iqebacdispnotsignedfirstm108h[6]
+iqebacdispnotsignedfirstm108h[7]
+iqebacdispnotsignedfirstm108h[8]
+iqebacdispnotsignedfirstm108h[9]
+li_setm169h[0]
+li_setm169h[1]
+li_setm169h[2]
+li_setm169h[3]
+li_setm169h[4]
+li_setm169h[5]
+li_waym169h[0]
+li_waym169h[1]
+li_waym169h[2]
+li_xidm169h[0]
+li_xidm169h[10]
+li_xidm169h[11]
+li_xidm169h[12]
+li_xidm169h[1]
+li_xidm169h[2]
+li_xidm169h[3]
+li_xidm169h[4]
+li_xidm169h[5]
+li_xidm169h[6]
+li_xidm169h[7]
+li_xidm169h[8]
+li_xidm169h[9]
+lsdenddsbm110h[0]
+lsdenddsbm110h[10]
+lsdenddsbm110h[11]
+lsdenddsbm110h[12]
+lsdenddsbm110h[13]
+lsdenddsbm110h[14]
+lsdenddsbm110h[15]
+lsdenddsbm110h[16]
+lsdenddsbm110h[17]
+lsdenddsbm110h[18]
+lsdenddsbm110h[19]
+lsdenddsbm110h[1]
+lsdenddsbm110h[2]
+lsdenddsbm110h[3]
+lsdenddsbm110h[4]
+lsdenddsbm110h[5]
+lsdenddsbm110h[6]
+lsdenddsbm110h[7]
+lsdenddsbm110h[8]
+lsdenddsbm110h[9]
+lsdendmitem110h[0]
+lsdendmitem110h[10]
+lsdendmitem110h[11]
+lsdendmitem110h[1]
+lsdendmitem110h[2]
+lsdendmitem110h[3]
+lsdendmitem110h[4]
+lsdendmitem110h[5]
+lsdendmitem110h[6]
+lsdendmitem110h[7]
+lsdendmitem110h[8]
+lsdendmitem110h[9]
+lsdstartdsbm110h[0]
+lsdstartdsbm110h[10]
+lsdstartdsbm110h[11]
+lsdstartdsbm110h[12]
+lsdstartdsbm110h[13]
+lsdstartdsbm110h[14]
+lsdstartdsbm110h[15]
+lsdstartdsbm110h[16]
+lsdstartdsbm110h[17]
+lsdstartdsbm110h[18]
+lsdstartdsbm110h[19]
+lsdstartdsbm110h[1]
+lsdstartdsbm110h[2]
+lsdstartdsbm110h[3]
+lsdstartdsbm110h[4]
+lsdstartdsbm110h[5]
+lsdstartdsbm110h[6]
+lsdstartdsbm110h[7]
+lsdstartdsbm110h[8]
+lsdstartdsbm110h[9]
+lsdstartmitem110h[0]
+lsdstartmitem110h[10]
+lsdstartmitem110h[11]
+lsdstartmitem110h[1]
+lsdstartmitem110h[2]
+lsdstartmitem110h[3]
+lsdstartmitem110h[4]
+lsdstartmitem110h[5]
+lsdstartmitem110h[6]
+lsdstartmitem110h[7]
+lsdstartmitem110h[8]
+lsdstartmitem110h[9]
+lvpclkenparfem167h
+lvpinvalidationenmnn2h
+lvpinvalidationsetmnn2h[0]
+lvpinvalidationsetmnn2h[1]
+lvpinvalidationsetmnn2h[2]
+lvpinvalidationsetmnn2h[3]
+lvpinvalidationsetmnn2h[4]
+lvpinvalidationsetmnn2h[5]
+lvpinvalidationwaymnn2h[0]
+lvpinvalidationwaymnn2h[1]
+lvpinvalidationwaymnn2h[2]
+msid2robsmcsnprspmnn3h_0__0__robid_wrap
+msid2robsmcsnprspmnn3h_0__1__robid_wrap
+msid2robsmcsnprspmnn3h_1__0__robid_wrap
+msid2robsmcsnprspmnn3h_1__1__robid_wrap
+msid_sib_out_o_ijtag_tck
+msid_tfb_tfb_out[0]
+par_msid_dft/usc_msid/i_ult_parctl/i_fscan_byplatrst_b/i_ctech_byprst_mux_i_core_ctech_lib_clk_mux_2to1_ctech_lib_clk_mux_2to1_dcszo/S
+par_msid_dft/usc_msid/i_ult_parctl/i_fscan_byplatrst_b/i_ctech_dynrst_holdmux_i_core_ctech_lib_clk_mux_2to1_ctech_lib_clk_mux_2to1_dcszo/S
+par_msid_dft/usc_msid/i_ult_parctl/i_fscan_byprst_b/i_ctech_byprst_mux_i_core_ctech_lib_clk_mux_2to1_ctech_lib_clk_mux_2to1_dcszo/S
+par_msid_dft/usc_msid/i_ult_parctl/i_fscan_byprst_b/i_ctech_dynrst_holdmux_i_core_ctech_lib_clk_mux_2to1_ctech_lib_clk_mux_2to1_dcszo/S
+reporprdcycsm105h
+upredbitm184h
+
+================================================================================
+Generated: 2026-02-18 04:49
+================================================================================

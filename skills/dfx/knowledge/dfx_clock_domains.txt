@@ -1,0 +1,56 @@
+DFX Clock Domains - Reference
+==============================
+Last updated: 2026-03-30
+Source: core_client_clock_params.tcl (func.max_high.T_85.typical)
+
+CLOCK PERIOD TABLE:
+====================
+Clock Name                 Period(ps)  Freq       Category    Description
+-------------------------  ----------  ---------  ----------  ------------------------------------
+mclk_pll / mclk_meu       186         5.38 GHz   Functional  Main functional clock (reference)
+uclk                       200         5.00 GHz   Functional  Micro-clock
+npkclk                     626         1.60 GHz   Debug       North Peak debug trace clock
+mclk4saf / mclk4saf_pll   1000        1.00 GHz   DFX-Test    Stuck-at-fault test via mclk
+testclk                    1852        540 MHz    DFX-Test    Generic DFX test clock
+ssnclk                     1852        540 MHz    DFX-Test    Simultaneous switching noise test
+noscan_Saf                 2000        500 MHz    DFX-Test    Non-scan stuck-at-fault
+sbclk                      2232        448 MHz    Sideband    Sideband debug communication
+scanclk_div                3704        270 MHz    DFX-Scan    Scan chain shift clock (divided)
+scanclk_div_phyex          3704        270 MHz    DFX-Scan    Scan chain shift (PHY external)
+scanclk_notdiv             3704        270 MHz    DFX-Scan    Scan chain shift (not divided)
+scanclk_notdiv_phyex       3704        270 MHz    DFX-Scan    Scan chain shift (PHY ext, not div)
+sbclk_div2                 4464        224 MHz    Sideband    Sideband divided by 2
+tapclk                     6266        160 MHz    DFX-JTAG    JTAG Test Access Port clock
+ijtag_tck                  6266        160 MHz    DFX-JTAG    IEEE 1687 IJTAG test clock
+ssh_ijtag                  6266        160 MHz    DFX-JTAG    Secure scan host IJTAG clock
+sbclk_div4 / b_sbclk_div4 8928        112 MHz    Sideband    Sideband divided by 4
+
+NOTE: DFX clocks are much SLOWER than mclk (186ps).
+  - scanclk at 3704ps is 20x slower than mclk
+  - JTAG at 6266ps is 34x slower than mclk
+  - Yet DFX paths still fail because the logic chains are very long
+    (scan chains, JTAG shift registers, BISR mux chains)
+
+CLOCK SOURCE FILE:
+  $MODEL/runs/core_client/n2p_htall_conf4/release/latest/clock_collateral/<corner>/core_client_clock_params.tcl
+
+DOMAIN NAMES IN DFX REPORTS:
+  These appear in Maha's domain breakdown tables:
+  - mclk        = functional clock paths tested in DFX mode
+  - lcp         = low-cost patterns (structural test)
+  - bist        = BIST engine clock domain
+  - bisr        = BISR mux chain domain
+  - misr        = MISR (Multiple-Input Signature Register)
+  - slos        = SLOS (Scan-Logic-On-Scan) test patterns
+  - clkg        = clock gating test domain
+  - pm_clock    = power management clock domain
+  - tap         = TAP (Test Access Port) domain
+  - async       = asynchronous crossings in DFX
+  - m4saf       = mclk4saf stuck-at-fault domain
+  - saf         = stuck-at-fault domain
+  - ijtag_tck   = IJTAG clock domain
+  - bisr_ijtag  = BISR accessed via IJTAG
+  - ssh_ijtag   = Secure Scan Host IJTAG
+  - ssnclk      = SSN test clock domain
+  - scanclk     = scan chain shift domain
+  - ssnclk      = simultaneous switching noise

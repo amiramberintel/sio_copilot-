@@ -1,0 +1,593 @@
+================================================================================
+  SIO COPILOT — MASTER SKILLS & COOKBOOKS LIST
+  Prepared for: Saar (Manager)
+  Prepared by: Shachar Unger (sunger) + Copilot
+  Date: 2026-04-06
+  Purpose: Skills every SIO engineer needs for GFC Client A0 timing closure
+  Source: /nfs/site/disks/sunger_wa/skills_for_sio_copilot/
+================================================================================
+
+  OVERVIEW
+  --------
+  14 skill categories, 26 cookbooks, 10 Python tools, 21 TCL/shell utilities,
+  44 knowledge docs, 48 PT analysis reports, 19 ECO fix scripts.
+
+  Status: READY TO USE — all files live in skills_for_sio_copilot/
+
+================================================================================
+  SKILL #1: DAILY BUILD MONITORING & PARTITION STATUS
+================================================================================
+
+  What: Track partition health across daily builds, detect regressions,
+        compare timing against PO baseline.
+
+  Who needs it: Every SIO — this is the #1 daily task.
+
+  Tools:
+    scripts/par_status.py          — Partition health (IFC + HSD tracking)
+    scripts/par_status_diff.py     — Build-to-build diff (regressions)
+    scripts/ifc_per_corner_report.py — Per-corner setup+hold IFC report
+    scripts/check_daily_vs_po.py   — Daily vs PO timing comparison
+    scripts/model_timing_status.py — Fast WNS/TNS/FEP status (50-70x faster)
+    scripts/run_daily_update.py    — Orchestrate daily refresh pipeline
+
+  Cookbooks:
+    cookbooks/par_status_cookbook.txt + .sh
+    cookbooks/par_status_diff_cookbook.txt + .sh
+    cookbooks/daily_update_cookbook.txt
+    cookbooks/copilot_daily_work_guideline.txt  (master daily guide)
+
+  Knowledge:
+    knowledge/contour_tag_summary.txt      — Contour tag structure
+    knowledge/eouMGR_command_summary.txt   — Archive manager commands
+    knowledge/pvt_tcl_overview.txt         — PVT corner definitions
+
+  Weekly workflow:
+    1. New daily build drops -> run par_status.py for all 11 partitions
+    2. Diff vs previous build -> run par_status_diff.py
+    3. Generate per-corner report -> run ifc_per_corner_report.py
+    4. Analyze regressions, track in HSD
+    5. Results stored in: fc_data/my_learns/ww<NN>_<N>/
+
+================================================================================
+  SKILL #2: CROSS-PARTITION TIMING DEBUG (IFC)
+================================================================================
+
+  What: Debug inter-partition (IFC) timing failures — the core SIO task.
+        Trace failing paths across partition boundaries, identify root cause,
+        propose fixes.
+
+  Who needs it: Every SIO — this is the core competency.
+
+  Cookbooks:
+    cookbooks/cross_partition_debug_playbook.txt
+    cookbooks/cross_partition_debug_with_pt_client_cookbook.txt + .sh
+    cookbooks/cross_partition_debug_with_pt_client_README.txt
+    cookbooks/master_timing_fix_cookbook.txt + README
+    cookbooks/compare_tst_ref_cookbook.txt
+
+  Knowledge:
+    knowledge/cross_partition_debug_playbook.txt    — Master debug flow
+    knowledge/cross_partition_timing_fix_guideline.txt — Fix principles
+    knowledge/path_analysis_procedure.txt           — Step-by-step path debug
+    knowledge/SPEF_explanation.txt                  — SPEF parasitic format
+    knowledge/FC_VCLP_explanation.txt               — VCLP explanation
+
+  Debug flow (8 steps from bootstrap):
+    Step 0.1: Identify partitions involved and crossing direction
+    Step 0.2: Analyze cell types — LVT/HVT upgrade candidates
+    Step 0.3: Find high-cap/high-delay nets (monsters)
+    Step 0.4: Check logic depth (>15 stages = red flag)
+    Step 0.5: Evaluate MCP (multi-cycle path) opportunities
+    Step 0.6: ULVT upgrade candidates (LVT->ULVT gain ~5-8ps per swap)
+    Step 0.7: FF location sanity (distance > 500um = suspicious)
+    Step 0.8: Spec budget impact (moving FF changes clock latency)
+
+================================================================================
+  SKILL #3: PRIMETIME (PT) ANALYSIS & PT CLIENT
+================================================================================
+
+  What: Run live timing queries on PT server, analyze PBA results,
+        investigate individual failing paths with full clock expansion.
+
+  Who needs it: Every SIO — PT is the primary analysis tool.
+
+  Tools:
+    pt_client.pl (team tool, not ours — needs "sg soc" access)
+    tcl/buffer_cell_database.tcl   — Build cell delay database
+    tcl/cell_type_delays.tcl       — Avg delay per cell type
+    tcl/check_partition_inputs.tcl — Constrained vs unconstrained inputs
+    tcl/stage0_verify.tcl          — Stage0 netlist verification
+
+  Cookbooks:
+    cookbooks/pt_client_cookbook.txt + .sh
+
+  Knowledge:
+    knowledge/sta_primetime_GOLDEN_file_reference.txt — Golden file structure
+    knowledge/pt_shell_command.log                    — Command reference
+    knowledge/pt_server_query.md                      — pt_client.pl usage
+
+  Key PT commands:
+    report_timing -through <hier_path> -max_paths 10
+    report_timing -from <start> -to <end> -pba_mode path
+    report_timing -through <signal> -path_type full_clock_expanded
+    get_timing_paths -through <signal> -max_paths 1000
+    get_attribute [get_cells <cell>] ref_name
+    get_attribute [get_cells <cell>] threshold_voltage_group
+
+  PT analysis reports (48 files in pt_analysis/):
+    - RSMOClearVM803H path analysis demo (walkthrough example)
+    - DCU L1 hold PBA endpoint analysis (6 data bank reports)
+    - Max_high per-databank reports (d00-d31)
+    - PBA setup per-databank reports
+    - PTECO unfixable hold/setup analysis
+    - Core_client path margin ECO reports
+
+================================================================================
+  SKILL #4: HOLD TIMING ANALYSIS & CLOSURE
+================================================================================
+
+  What: Analyze hold timing violations across all 12 hold corners,
+        compare daily vs PTECO results, identify unfixable paths.
+
+  Who needs it: Every SIO — hold closure is critical for signoff.
+
+  Tools:
+    scripts/hold_per_port_report.py   — Multi-corner hold per-port detail
+    scripts/hold_daily_vs_pteco.py    — Daily hold vs PTECO comparison
+    tcl/hold_analysis.sh              — Query hold across 8 corners
+    tcl/hold_analysis_with_fixes.sh   — Hold analysis + fix recommendations
+
+  Cookbooks:
+    cookbooks/hold_ifc_debug_cookbook.txt
+
+  Knowledge:
+    knowledge/hold_path_fixability_analysis.md — Hold debug & fix workflow
+    pt_analysis/dcu_l1_databank_hold_analysis.txt
+    pt_analysis/dcu_l1_dual_violated_endpoints.txt
+    pt_analysis/par_meu_pteco_unfixable_hold_analysis.txt
+    pt_analysis/par_meu_pteco_unfixable_hold_detailed.txt
+
+  Hold corners: fresh.min_fast, min_fast_cold, min_slow, min_hi_lo_hi,
+                min_low, min_nom, min_hvqk, min_slow_cold + func.min_*
+
+================================================================================
+  SKILL #5: ECO FIX IMPLEMENTATION
+================================================================================
+
+  What: Create and apply Engineering Change Orders — buffer insertion,
+        cell upsizing, LVT/ULVT swaps, logic restructuring.
+
+  Who needs it: Every SIO doing active timing closure.
+
+  Tools:
+    tcl/par_exe_eco_fixes.tcl       — PAR_EXE ECO bundle
+    tcl/fix_shifter_datapath.tcl    — Shifter datapath fix template
+    tcl/balance_byplevel_clk.tcl    — Clock tree rebalancing
+
+  ECO fix scripts (19 files in eco_fixes/):
+    Signal-specific:
+      RSMOClearVM803H_*            — RSMO clear fix (demo + implementation)
+      DsbExitPointMaskM124H_*      — DSB exit point fix
+      DsbqBypUopsNumDeltaM124H_*   — DSB bypass fix
+      shuf2vfpp7v0wbm804h_*        — Shuffler fix (data path + PO)
+    Cross-partition:
+      brdispnotsigned_fe_fixes.tcl       — BR dispatch FE unit
+      brdispnotsigned_msid_fixes.tcl     — BR dispatch MSID unit
+      dcl1dataeccissec_meu_fixes.tcl     — DCL1 ECC MEU
+      dcl1dataeccissec_pmh_fixes.tcl     — DCL1 ECC PMH
+
+  Cookbooks:
+    cookbooks/icc2_eco_fix_cookbook.txt + .sh
+    cookbooks/master_timing_fix_cookbook.txt
+    cookbooks/lvt_ulvt_ulvtll_analysis_cookbook.txt
+
+  Knowledge:
+    knowledge/shifter_eco_estimated_report.txt — ECO impact estimate
+    knowledge/in_flight_valid_brM112H_ff_duplication_proposal.txt
+
+================================================================================
+  SKILL #6: TIP TOPOLOGY PLANNING
+================================================================================
+
+  What: Create TIP (Top Interconnect Planning) .tp files for cross-partition
+        signal routing — repeater insertion, buffer spacing, layer assignment.
+
+  Who needs it: SIOs working on cross-partition routing optimization.
+
+  Files (tip/):
+    TIP_creation_flow_guide.txt       — Step-by-step creation methodology
+    TIP_tp_creation_cookbook.txt       — Detailed .tp file cookbook (66KB)
+    icore.ilgbpqidm107h.tp           — ILGBPQ example topology
+    icore.dsbexitpointmaskm124h_*.tp — DSB example (no-move + with-move)
+
+  Key parameters:
+    Buffer spacing: 170-200um typical for N2P
+    Metal layers: M17/M18 for long-distance signals
+    Repeater count = ceil(distance / buffer_spacing)
+
+================================================================================
+  SKILL #7: JNC CONVERSION (GFC-to-JNC)
+================================================================================
+
+  What: Convert GFC topology plans to JNC format for cross-project reuse.
+        Map cell names, scale buffer spacing between process nodes.
+
+  Who needs it: SIOs coordinating with JNC partner (Kris/Kristine).
+
+  Tools (jnc_conversion/):
+    convert_gfc_to_jnc.py         — V1 converter
+    convert_gfc_to_jnc_v2.py      — V2 converter (real data)
+    scale_gfc_to_jnc.py           — Scaling converter
+    gen_diff_tables.py             — Diff table generator
+    run_fc_extract.csh             — FC extraction submission
+    run_fc_farm.sh                 — Farm job submission
+
+  TCL helpers:
+    tcl/extract_jnc_pins.tcl      — Extract JNC pin mapping
+    tcl/fc_extract_standalone.tcl  — Standalone FC extraction
+
+  Knowledge:
+    jnc_conversion/gfc_to_jnc_mapping_analysis.txt   — Mapping analysis
+    jnc_conversion/gfc_vs_jnc_diff_report.txt        — Full diff report
+    jnc_conversion/gfc_vs_jnc_per_signal_diff.txt    — Per-signal delta
+
+================================================================================
+  SKILL #8: PVT CORNER SYSTEM & IO CONSTRAINTS
+================================================================================
+
+  What: Understand the PVT corner naming system, voltage ranges,
+        OCV/derate settings, and manage IO constraints per corner.
+
+  Who needs it: Every SIO — corner awareness is fundamental.
+
+  Knowledge:
+    knowledge/pvt_tcl_overview.txt — Full PVT system overview
+
+  IO constraints (29 TCL files in io_constraints/):
+    One file per PVT corner, pattern:
+      <mode>.<timing>.<corner>.<rc>__core_client_io_constraints.tcl
+
+  Corner naming: <mode>.<voltage_corner>.<process_temp>.<rc_corner>
+    Mode:    func (aged BTI), fresh (no aging)
+    Process: T=typical, F=fast, S=slow
+    Temp:    85=85C, 125=125C, M40=-40C
+    RC:      typical, cworst, rcworst, CCworst, CCworst_T
+
+  Key voltages (VCCCORE):
+    max_low=0.550V  max_nom=0.650V  max_med=0.850V  max_high=1.100V
+    max_turbo=1.210V  min_fast=1.271V  min_slow=0.540V
+
+================================================================================
+  SKILL #9: DFX (DESIGN FOR TESTABILITY) TIMING
+================================================================================
+
+  What: Understand DFX test modes, read DFX timing reports,
+        track DFX status per partition.
+
+  Who needs it: SIOs involved in signoff (DFX is a must-pass gate).
+
+  Knowledge (dfx/):
+    dfx_overview.txt              — What DFX is, commands, locations
+    dfx_components.txt            — BIST, BISR, JTAG, IJTAG, scan chains
+    dfx_clock_domains.txt         — All clock periods (mclk=186ps to ijtag=6266ps)
+    dfx_report_reading_guide.txt  — How to read Maha's weekly report
+    dfx_par_meu_status_ww14a.txt  — PAR_MEU DFX per corner + domain
+    dfx_status_ww14a_summary.txt  — Full WW14A status (TST vs REF)
+
+  Key DFX corners: func.max_high (setup), func.min_low (hold), max_low+CT
+  DFX clocks: bist, bisr, misr, scanclk, ijtag_tck, ssnclk, slos, tap...
+
+================================================================================
+  SKILL #10: CALIBER (FC SIGNOFF CHECKER)
+================================================================================
+
+  What: Understand Caliber electrical/physical rule checks — cap, slopes,
+        pulse widths, clock integrity, latch margins.
+
+  Who needs it: SIOs involved in full-chip signoff.
+
+  Knowledge (caliber/):
+    caliber_overview.txt           — What Caliber is, how to run
+    caliber_violation_types.txt    — All rule types (SlowSlope, MaxCap, etc.)
+    caliber_status_ww14a.txt       — WW14A status per partition + rule
+
+  Top rules: SlowSlope, MaxCap, ClockMinPulseWidth, LatchMarginWithRecovery
+  Owner types: PO_PV (physical), PO_SYN (synthesis), PO (partition owner)
+
+================================================================================
+  SKILL #11: FEV (FORMAL EQUIVALENCE VERIFICATION)
+================================================================================
+
+  What: Verify RTL vs netlist logic equivalence (Cadence Conformal LEC).
+        Must-pass signoff — no tapeout without clean FEV.
+
+  Who needs it: SIOs involved in signoff.
+
+  Knowledge (fev/):
+    fev_overview.txt               — What FEV is, tools, directory structure
+    fev_status_ww14a.txt           — WW14A pass/fail per partition
+
+  Checks: NonEquivalent, NotMapped, RTLUndrivenNets, BBox matching, power intent
+
+================================================================================
+  SKILL #12: SPECS MANAGEMENT & GAP ANALYSIS
+================================================================================
+
+  What: Manage cross-partition timing specs — identify missing specs,
+        compare spec budgets vs actual timing.
+
+  Who needs it: SIOs coordinating with partition owners on spec fixes.
+
+  Tools:
+    cookbooks/spec_status_cookbook.txt
+
+  Specs (specs/):
+    icore_missing_specs_fix.csv        — ICORE missing specs
+    par_exe_missing_specs_fix.csv/xml  — PAR_EXE missing specs
+    par_pm_missing_specs_fix.csv       — PAR_PM missing specs
+
+  Knowledge:
+    knowledge/par_exe_unconstrained_reports_explanation.txt
+    knowledge/par_exe_unconstrained_without_waiver_detailed.txt
+    knowledge/par_msid_unconstrained_endpoints_analysis.txt
+    knowledge/par_msid_unconstrained_signals_report.txt
+    knowledge/par_msid_RTL_issues_unconstrained.txt
+    knowledge/external_path_spec_analysis.md
+
+================================================================================
+  SKILL #13: PARTITION-SPECIFIC ANALYSIS
+================================================================================
+
+  What: Deep-dive analysis per partition — microarchitecture understanding,
+        failing path patterns, HSD gap reports.
+
+  Who needs it: SIOs assigned to specific partitions.
+
+  11 partitions: par_exe, par_fe, par_fmav0, par_fmav1, par_meu,
+                 par_mlc, par_msid, par_ooo_int, par_ooo_vec, par_pm, par_pmh
+
+  PAR_MEU (most active):
+    knowledge/par_meu_quick_reference.txt       — Quick lookup
+    knowledge/par_meu_microarchitecture.txt     — Functional unit breakdown
+    knowledge/par_meu_uarch_paths_guide.txt     — Microarch path guide
+    knowledge/par_meu_all_failing_paths.txt     — Complete failing paths
+    knowledge/par_meu_po_status.txt             — PO timing status
+    knowledge/par_meu_signoff_not_implemented.txt — Missing signoff items
+    knowledge/par_meu_ifc_hsd_gap_report.txt    — HSD gap analysis
+
+  PAR_EXE:
+    knowledge/par_exe_*_analysis.txt (7 files)  — Various corner analyses
+    knowledge/par_exe_unconstrained_*            — Unconstrained endpoints
+
+  PAR_MSID:
+    knowledge/par_msid_*                         — Unconstrained analysis + RTL issues
+
+================================================================================
+  SKILL #14: ENVIRONMENT SETUP & TEAM TOOLS
+================================================================================
+
+  What: Shell aliases, environment setup, team conventions, onboarding.
+
+  Who needs it: Every new SIO joining the team.
+
+  Aliases (aliases/):
+    my.aliases            — Master combined aliases
+    sunger_aliases        — Personal aliases
+    ahaimovi_aliases      — Team member aliases
+    hmuhsen_aliases       — Team member aliases
+    mburak_aliases        — Team member aliases (fctxml, etc.)
+    baselibr_aliases      — Base library aliases
+
+  Onboarding:
+    copilot_bootstrap.txt — Complete session bootstrap (team, dirs, tools, workflow)
+    README.txt            — Directory index
+
+  Utilities:
+    update_skills.py             — Refresh skills knowledge base
+    tcl/sta_corner_monitor.sh    — Monitor STA corner run status
+    tcl/comment_out_io_delay.sh  — Disable IO port constraints
+    tcl/run_extraction.csh       — Submit StarRC extraction
+    cookbooks/clean_home_dir_cookbook.txt — Manage home dir space
+
+  Reporting:
+    tcl/csv_split_multi.csh      — Multi-model comparison CSVs
+    tcl/fct_table_multi.pl       — CSVs to color-coded XLSX
+    scripts/compress_timing_rpt.py — Compress timing reports
+    scripts/cell_delay_scaling.py  — Multi-corner cell delay scaling
+
+================================================================================
+  SUMMARY TABLE — SKILLS BY PRIORITY
+================================================================================
+
+  Priority   Skill                              Category
+  --------   -----                              --------
+  P1 (Day 1) #1  Daily Build Monitoring         Daily Operations
+  P1 (Day 1) #2  Cross-Partition Timing Debug   Core SIO Competency
+  P1 (Day 1) #3  PrimeTime Analysis             Core Analysis Tool
+  P1 (Day 1) #8  PVT Corner System              Foundational Knowledge
+  P1 (Day 1) #14 Environment Setup              Onboarding
+
+  P2 (Week 1) #4  Hold Timing Analysis          Timing Closure
+  P2 (Week 1) #5  ECO Fix Implementation        Fix Deployment
+  P2 (Week 1) #15 TCL Fixes for POs (by tool)   PO Enablement *** NEW ***
+  P2 (Week 1) #12 Specs Management              Cross-Partition Coordination
+  P2 (Week 1) #13 Partition-Specific Analysis    Deep-Dive Analysis
+
+  P3 (Month 1) #6  TIP Topology Planning        Physical Optimization
+  P3 (Month 1) #7  JNC Conversion               Cross-Project Coordination
+  P3 (Month 1) #9  DFX Timing                   Signoff Gate
+  P3 (Month 1) #10 Caliber                      Signoff Gate
+  P3 (Month 1) #11 FEV                          Signoff Gate
+
+================================================================================
+  SKILL #15: TCL FIXES FOR PARTITION OWNERS (BY EDA TOOL)
+================================================================================
+
+  What: Ready-to-use TCL fix scripts that POs can apply in their tool
+        of choice — Synopsys ICC2/FC or Cadence Innovus.
+
+  CURRENT COVERAGE:
+  -----------------
+  Tool               Files  Status
+  ----               -----  ------
+  Synopsys ICC2       18    GOOD — P&R ECO (size_cell, insert_buffer, route_eco)
+  Synopsys FC          8    GOOD — Clock tree, extraction, balancing
+  Synopsys PT          7    GOOD — Timing analysis & queries
+  Cadence Innovus      0    *** MISSING *** — No P&R ECO scripts
+  Cadence Conformal    0    *** MISSING *** — No FEV scripts (we use gpavanku's)
+
+  SYNOPSYS ICC2 ECO SCRIPTS (what POs get today):
+  ------------------------------------------------
+  eco_fixes/shuf2vfpp7v0wbm804h_fixes.tcl       — par_exe shifter fix (46+ fixes)
+  eco_fixes/shuf2vfpp7v0wbm804h_po_ww7_fixes.tcl — par_exe PO golden variant
+  eco_fixes/dcl1dataeccissec_meu_fixes.tcl       — par_meu DCL1 ECC (C1 upsize, C4 buffer)
+  eco_fixes/dcl1dataeccissec_pmh_fixes.tcl       — par_pmh DCL1 ECC source-side
+  eco_fixes/brdispnotsigned_fe_fixes.tcl         — par_fe BR dispatch IFC fix
+  eco_fixes/brdispnotsigned_msid_fixes.tcl       — par_msid BR dispatch IFC fix
+  ww15_2/dcl1taghitportm405h_*.tcl (5 variants)  — par_meu/pmh bus timing closure
+  ww15_2/par_meu.ww15_1.dcl1taghitportm405h.tcl — par_meu deployment script
+  ww15_2/par_pmh.ww15_1.dcl1taghitportm405h.tcl — par_pmh deployment script
+
+  SYNOPSYS FC SCRIPTS:
+  --------------------
+  tcl/balance_byplevel_clk.tcl    — Clock balancing (miBypLevelM304H, WNS -102.8ps)
+  tcl/fix_shifter_datapath.tcl    — Multi-strategy: Vt swap, upsize, buffer, cleanup
+  tcl/par_exe_eco_fixes.tcl       — Generic ECO framework with helper procs
+
+  ECO FIX TYPES AVAILABLE:
+  ------------------------
+  C1: Cell upsizing    (D1->D4, D4->D8)        ~1-3ps/cell,  LOW risk
+  C2: Vt swap          (LVT->ULVT)             ~0.5-2ps/cell, LOW risk
+  C3: ULVT contingency (LVT->ULVT aggressive)  ~1.5-4ps/cell, MED risk
+  C4: Buffer insertion  (repeaters)             ~3-15ps/net,   MED risk
+  C5: Buffer removal    (cleanup)               ~0-8ps,        LOW risk
+  C6: Clock rebalancing (ICG, tree opt)         ~5-25ps,       MED risk
+
+  4-STAGE PO FLOW:
+  ----------------
+  Stage 1: ANALYZE  (PrimeTime)     — Identify worst paths, ECO candidates
+  Stage 2: VERIFY   (stage0_verify) — Confirm cells exist, collect data (safe)
+  Stage 3: EXECUTE  (ICC2/FC ECO)   — Apply fixes (C1-C6)
+  Stage 4: VALIDATE (PrimeTime)     — Verify improvement, check hold impact
+
+  Cookbooks for POs:
+    cookbooks/icc2_eco_fix_cookbook.txt           — PT -> ICC2 ECO workflow
+    cookbooks/master_timing_fix_cookbook.txt       — All techniques (Modes 1-8)
+    cookbooks/lvt_ulvt_ulvtll_analysis_cookbook.txt — Vt swap guidance
+    cookbooks/sio_risk_assessment_cookbook.txt     — Risk/power tradeoff
+
+  PARTITION COVERAGE GAPS:
+  ------------------------
+  par_exe      — GOOD  (10 files, shuffler + clock fixes)
+  par_meu      — GOOD  (7 files, DCL1, bus timing, hold)
+  par_pmh      — GOOD  (deployment scripts for DCL1)
+  par_msid     — OK    (4 files, BR dispatch)
+  par_fe       — OK    (BR dispatch FE side)
+  par_ooo_int  — PARTIAL (hold analysis only, no fix TCL)
+  par_ooo_vec  — PARTIAL (hold analysis only, no fix TCL)
+  par_pm       — *** MISSING *** — No ECO scripts
+  par_mlc      — *** MISSING *** — No ECO scripts
+  par_fmav0    — *** MISSING *** — No ECO scripts
+  par_fmav1    — *** MISSING *** — No ECO scripts
+
+================================================================================
+  WHAT'S MISSING — SKILLS WE SHOULD ADD
+================================================================================
+
+  *** CRITICAL: CADENCE TOOL SUPPORT ***
+
+  1. CADENCE INNOVUS ECO SKILL
+     - POs using Innovus have NO ready-to-use TCL scripts
+     - Innovus ECO commands differ from ICC2:
+         ICC2:    size_cell, insert_buffer, route_eco
+         Innovus: ecoChangeCell, ecoAddRepeater, ecoRoute
+     - Suggest: Create Innovus-equivalent TCL for each ICC2 ECO script
+     - Suggest: innovus_eco_fix_cookbook.txt (ICC2-to-Innovus command mapping)
+
+  2. CADENCE CONFORMAL/FEV SKILL
+     - FEV runs are done by gpavanku but POs need to understand results
+     - Suggest: conformal_fev_reading_cookbook.txt
+
+  3. DUAL-TOOL ECO TEMPLATE
+     - Create a template that generates BOTH ICC2 and Innovus TCL
+     - Suggest: dual_tool_eco_template.py (input: fix list, output: both TCLs)
+
+  4. POWER ANALYSIS SKILL
+     - No power impact analysis tools yet
+     - SIO risk assessment mentions power but no dedicated cookbook
+     - Suggest: power_impact_analysis_cookbook.txt
+
+  2. CLOCK DOMAIN CROSSING (CDC) SKILL
+     - DFX touches CDC but no dedicated CDC debug flow
+     - Suggest: cdc_debug_cookbook.txt
+
+  3. SYNTHESIS FEEDBACK SKILL
+     - We interact with synthesis team (Yifat) but no formal cookbook
+     - Suggest: synthesis_feedback_cookbook.txt (scanclk relaxation, etc.)
+
+  4. HSD/BUG TRACKING SKILL
+     - par_status.py references HSD but no cookbook for filing/tracking
+     - Suggest: hsd_tracking_cookbook.txt (RTL4BE, SIO2PO, DFX2PO)
+
+  5. MULTI-PARTITION STATUS ROLLUP
+     - We do per-partition but no automated all-partition dashboard
+     - Suggest: all_partition_dashboard.py
+
+  6. REGRESSION ROOT-CAUSE SKILL
+     - par_status_diff detects regressions but no systematic root-cause flow
+     - Suggest: regression_rootcause_cookbook.txt
+
+  7. PTECO MONITORING SKILL
+     - We compare daily vs PTECO but no automated tracker
+     - Suggest: pteco_monitor_cookbook.txt
+
+  8. NEWCOMER TRAINING PATH
+     - copilot_bootstrap.txt is great but aimed at Copilot, not humans
+     - Suggest: sio_onboarding_training_plan.txt (week 1-4 learning path)
+
+================================================================================
+  FILE COUNTS
+================================================================================
+
+  Directory              Files   Description
+  ----------             -----   -----------
+  scripts/               10      Core Python tools
+  cookbooks/             26      Step-by-step guides + demo scripts
+  knowledge/             44      Reference documentation + analysis
+  tcl/                   21      TCL scripts + shell utilities
+  eco_fixes/             19      Signal-specific ECO fix scripts
+  pt_analysis/           48      PrimeTime path analysis reports
+  tip/                   11      TIP topology files + guides
+  jnc_conversion/        11      GFC-to-JNC conversion tools
+  io_constraints/        29      Per-corner IO constraint TCLs
+  dfx/                    6      DFX knowledge
+  caliber/                3      Caliber knowledge
+  fev/                    2      FEV knowledge
+  specs/                  4      Missing specs fix files
+  aliases/                6      Shell aliases
+  root files/             3      README, bootstrap, update script
+  ----------             -----
+  TOTAL                  243     files in skills_for_sio_copilot/
+
+================================================================================
+  HOW TO USE THIS SKILLS BASE
+================================================================================
+
+  For Copilot sessions:
+    Read copilot_bootstrap.txt at session start — it loads all context.
+
+  For human SIOs:
+    1. Start with copilot_daily_work_guideline.txt (cookbooks/)
+    2. Learn par_status.py workflow (cookbooks/par_status_cookbook.txt)
+    3. Practice cross-partition debug (cookbooks/cross_partition_debug_*)
+    4. Study PT client usage (cookbooks/pt_client_cookbook.txt)
+
+  To update the skills base:
+    python3 update_skills.py --dry-run   # preview
+    python3 update_skills.py             # apply
+    python3 update_skills.py --bootstrap # also update bootstrap timestamp
+
+================================================================================
+  END OF SKILLS LIST
+================================================================================

@@ -1,0 +1,496 @@
+================================================================================
+  SIO RISK ASSESSMENT COOKBOOK
+  How to analyze timing risk across all partitions and categorize signals
+  into NO SOLUTION / HIGH RISK / MEDIUM RISK / NO RISK
+  Author: sunger | Created: Mar 16, 2026
+================================================================================
+
+
+OVERVIEW
+========
+  This cookbook documents the end-to-end procedure for building a risk
+  assessment of all failing interface signals in the project. It produces:
+
+    1. sio_wns40_analysis.txt     — untracked signal deep-dive
+    2. sio_fix_coverage_analysis.txt — fix coverage executive summary
+    3. sio_risk_assessment.txt    — deep-dive on worst signals
+    4. sio_project_summary.txt    — final 4-category risk report for SIO/Gil
+
+  The output answers the key SIO questions:
+    - How many signals can we close with existing fixes?
+    - Which signals need NEW RTL fixes?
+    - What's the overall project risk?
+
+  Prerequisite: par_*_status.txt generated (see daily_update_cookbook.txt)
+
+
+================================================================================
+  STEP 1 — GATHER THE DATA
+================================================================================
+
+  1a. IFC TIMING DATA
+  ────────────────────
+  Source: <WA>/par_*_ifc.rpt (11 files, one per partition)
+
+  Each line has: WNS  WNS_norm  TNS  Paths  Port1  Port2  Port3  Port4
+
+  Extract all families with WNS ≤ -40ps (the analysis threshold):
+    for f in $WA/par_*_ifc.rpt $WA/test2_par_*_ifc.rpt; do
+        [ -f "$f" ] && awk 'NR>1 && $1+0 <= -40' "$f"
+    done | wc -l
+
+  Typical count: 350-600 families across all partitions
+
+  1b. HSD DATABASES
+  ────────────────────
+  RTL4BE:  /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be      (~724 entries)
+  SIO2PO:  /nfs/site/disks/baselibr_wa/tmp/gfc.sio2po.rtl4be  (~1334 entries)
+
+  Each HSD has: id, status, title (contains signal name + partition)
+
+  Key statuses:
+    RTL4BE:  new → open → repo_modified → complete (also: rejected)
+    SIO2PO:  new → open → not_done → sign_off → complete (also: wont_do)
+
+  1c. TIP CELL DATA
+  ────────────────────
+  Source: <WA>/runs/core_client/*/tip_status.rpt
+
+  Shows which RTL fixes are physically present in THIS build.
+
+  1d. ILLEGAL CELLS LIST
+  ────────────────────────
+  Source: <WA>/project/GFCN2CLIENTA0/illegal.txt (15,746 banned cells)
+  Check this when evaluating if a fix path uses banned cells.
+  (See path_analysis_procedure.txt STEP 5 for details)
+
+
+================================================================================
+  STEP 2 — LOAD INTO SQL FOR QUERYING
+================================================================================
+
+  Loading all data into SQL makes querying and cross-referencing much faster.
+
+  CREATE TABLE sio_families (
+      partition   TEXT,
+      section     TEXT,
+      signal      TEXT,
+      crossing    TEXT,
+      wns         REAL,
+      norm        REAL,
+      tns         REAL,
+      paths       INTEGER,
+      tip         TEXT,
+      hsd_summary TEXT,
+      hsd_types   TEXT,
+      hsd_statuses TEXT,
+      analysis    TEXT,
+      solution    TEXT
+  );
+
+  Populate from par_*_status.txt output or directly from IFC + HSD matching.
+  The par_status.py tool already does the cross-referencing — you can parse
+  its output or call its functions directly.
+
+
+================================================================================
+  STEP 3 — CROSS-REFERENCE: IFC × HSD × TIP
+================================================================================
+
+  For each failing IFC family, determine its category:
+
+  3a. SIGNAL NAME MATCHING
+  ────────────────────────
+  Extract the base signal name from IFC port names:
+    - Strip icore0/icore1 prefix
+    - Strip partition prefix (par_meu/, par_ooo_int/)
+    - Strip array indices [*], _*_, FEEDTHRU suffixes
+    - Lowercase everything for matching
+
+  Example: icore0/par_meu/mowbcheckrobidldm803h_*_[*]
+           → base name: mowbcheckrobidldm803h
+
+  Match this against HSD title fields (also lowercased).
+
+  3b. CROSS-PARTITION HSD LOOKUP (IMPORTANT!)
+  ──────────────────────────────────────────────
+  A signal crossing par_meu → par_ooo_int may have its HSD filed under
+  EITHER partition. Always search BOTH sides:
+
+    grep -i "mowbcheckrobidld" $HSD_RTL4BE
+    grep -i "mowbcheckrobidld" $HSD_SIO2PO
+
+  KNOWN ISSUE: par_status.py only searches HSDs tagged to the partition
+  being analyzed. Many signals appear "UNTRACKED" because their HSD is
+  filed against the OTHER partition in the crossing. The risk assessment
+  must check both sides manually.
+
+  3c. CATEGORIZE EACH FAMILY
+  ──────────────────────────
+    UNTRACKED               = no matching HSD found in either database
+    FIX_PENDING             = HSD found, status is open/not_done/sign_off
+    FIX_LANDED              = HSD complete/repo_modified, but still failing
+    FIX_LANDED_STILL_FAILING = fix landed + TIP present, still negative WNS
+    FIXED                   = was tracked, now clean (WNS ≥ 0)
+    CLEAN                   = always clean
+
+
+================================================================================
+  STEP 4 — UNTRACKED SIGNAL DEEP-DIVE
+================================================================================
+
+  Goal: determine if "UNTRACKED" signals truly have no fix, or if they're
+  covered by HSDs filed under a different partition/name.
+
+  For each UNTRACKED signal:
+
+  4a. BROADER HSD SEARCH
+  ────────────────────────
+  Search with partial/fuzzy names:
+    # Try shorter base name
+    grep -i "mowbcheck" $HSD_RTL4BE $HSD_SIO2PO
+
+    # Try related signal names (same family/cluster)
+    grep -i "mowb" $HSD_RTL4BE $HSD_SIO2PO
+
+    # Search by partition crossing
+    grep -i "par_meu.*par_ooo_int" $HSD_SIO2PO
+
+  4b. CATEGORIZE UNTRACKED SIGNALS
+  ──────────────────────────────────
+  After broader search, categorize each into:
+
+    ✓ Has related HSD       — found matching HSD, just missing cross-ref
+    ⏳ SIO2PO in progress    — SIO2PO exists but not_done
+    📌 FEEDTHRU path         — needs TIP/SIO2PO for feedthrough improvement
+    📎 Small fanout (≤10)    — easy SIO2PO fix (bound flop)
+    📎 High fanout (>1K)     — harder, may need RTL split/duplication
+    🔴 Needs NEW SIO2PO      — truly no coverage, must file new HSD
+    ⚠️ Needs review           — unclear, needs architect input
+
+  Output: sio_wns40_analysis.txt
+
+
+================================================================================
+  STEP 5 — FIX COVERAGE ANALYSIS
+================================================================================
+
+  Goal: answer "are existing fixes enough?"
+
+  5a. CHECK FIX_LANDED SIGNALS STILL FAILING
+  ────────────────────────────────────────────
+  These are the most concerning — fix was applied but timing still fails.
+
+  Query:
+    SELECT partition, signal, wns, paths, hsd_summary
+    FROM sio_families
+    WHERE analysis = 'FIX_LANDED' AND wns <= -60
+    ORDER BY wns;
+
+  For each, determine:
+    - Is TIP cell present? (check TIP column — "---" means fix not in build)
+    - If TIP present and still failing: fix is NOT ENOUGH
+    - What's the residual gap after fix? How many logic levels remain?
+
+  5b. CHECK FIX_PENDING WITH not_done SIO2PO
+  ──────────────────────────────────────────────
+  These are blocking — fix designed but not implemented.
+
+    grep "not_done" in SIO2PO database
+    Cross-ref with worst WNS families
+
+  Who owns the not_done SIO2PO? Push the partition owner.
+
+  5c. CHECK TRULY UNTRACKED
+  ──────────────────────────
+  From Step 4, identify signals that truly need new HSD filing.
+  How many? What's their combined path count?
+
+  5d. EXECUTIVE SUMMARY
+  ──────────────────────
+  Produce a summary table:
+
+    FIX_LANDED:    N families (M%) — in model, still failing
+    FIX_PENDING:   N families (M%) — HSD filed, not yet landed
+    UNTRACKED:     N families (M%) — no HSD cross-reference
+      → already covered:  N (M%)
+      → need new action:  N (M%)
+
+  Output: sio_fix_coverage_analysis.txt
+
+
+================================================================================
+  STEP 6 — DEEP-DIVE RISK ASSESSMENT
+================================================================================
+
+  Goal: identify signals that CAN'T be fixed with current plan.
+
+  For each signal with WNS ≤ -100 (or FIX_LANDED still failing):
+
+  6a. PATH STRUCTURE ANALYSIS
+  ────────────────────────────
+  Check the timing path to understand WHY it fails:
+
+    - How many logic levels? (>20 = structural issue, SIO2PO won't fix)
+    - Is it a round-trip path? (A→B→A = inherently hard)
+    - Is it a FEEDTHRU path? (has _FEEDTHRU_ in name = crosses 3+ partitions)
+    - What's the path distance? (check coordinates in report_timing)
+    - Does it use illegal cells? (check against illegal.txt)
+
+  6b. HSD HISTORY CHECK
+  ────────────────────────
+  For signals with existing HSDs:
+
+    - How many RTL4BEs were already tried?
+    - Were any REJECTED? Why?
+    - Is there a repo_modified that hasn't landed yet?
+    - How many SIO2POs (sign_off, not_done)?
+    - Any WONT_DO SIO2POs? (means SIO gave up)
+
+  Red flags:
+    - Multiple RTL4BEs tried (≥2) and still >100ps gap → structural issue
+    - RTL4BE REJECTED → architecture decision needed
+    - SIO2PO WONT_DO → SIO says can't fix physically
+    - 20K+ paths → fix must be extremely robust
+
+  6c. FIX FEASIBILITY ESTIMATION
+  ────────────────────────────────
+  Rough guidelines for what SIO2PO can recover:
+
+    Bound flop (move closer):     10-30ps typical
+    Push clock (early launch):    15-40ps typical
+    Buffer insertion/removal:      5-15ps typical
+    Register duplication:         10-25ps typical
+    TIP cell (RTL change):        20-60ps typical
+
+  If gap > sum of all feasible fixes → needs RTL intervention.
+
+  ⚠ RTL FIX RULES — WHAT WE DO AND DON'T DO:
+    ✅ ALLOWED RTL4BE fixes:
+      • Retiming — rebalance FF positions (move logic across existing FF,
+        no new FFs, borrows slack from neighbor stages)
+      • Reduce logic depth — simplify combinational logic (fewer gates)
+      • Pre-compute — shift logic to earlier cycle
+
+    ❌ NEVER propose adding pipeline stages:
+      → Adds latency (e.g., +1 cycle to branch dispatch)
+      → Architecture change, NOT a timing fix
+      → We fix timing by MOVING or REDUCING logic, never by ADDING FFs
+
+  Coordinate conversion for distance analysis:
+    report_timing coordinates are in DBU (1 DBU = 1nm in GFC N2P)
+    To convert to microns (μm):  X_μm = X_DBU / 1000
+    Example: (1363464, 93574) → (1363.5, 93.6)μm
+    Manhattan dist (μm) = (|X1-X2| + |Y1-Y2|) / 1000
+
+  Example calculation:
+    Signal: mowbcheckrobidldm803h, WNS = -137ps
+    Best case: bound(30) + push_clk(40) + buffer(15) = 85ps recovery
+    Remaining gap: -137 + 85 = -52ps → NOT closable with SIO2PO alone
+
+
+================================================================================
+  STEP 7 — FINAL RISK CATEGORIZATION
+================================================================================
+
+  Place every signal into exactly ONE category:
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  CATEGORY        CRITERIA                                                  │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │  NO SOLUTION     RTL4BE tried & failed OR rejected OR WONT_DO              │
+  │     (Red)        Multiple fixes attempted, gap still >80ps                 │
+  │                  Structural logic depth issue (>20 levels)                 │
+  │                  Round-trip paths with no retime option                    │
+  │                                                                            │
+  │  HIGH RISK       Gap >70ps with ≤1 SIO2PO                                 │
+  │     (Magenta)    Extreme fanout (>10K paths) with >40ps gap                │
+  │                  No HSD and WNS ≤ -70ps                                   │
+  │                  FEEDTHRU crossing 3+ partitions with >60ps gap            │
+  │                                                                            │
+  │  MEDIUM RISK     No HSD but gap 40-70ps (need new SIO2PO filing)           │
+  │     (Cyan)       SIO2PO not_done (blocking on partition owner)             │
+  │                  FIX_PENDING with only sign_off (not yet validated)         │
+  │                  Gap 40-70ps with 1-2 SIO2POs in progress                  │
+  │                                                                            │
+  │  NO RISK         FIX_PENDING with gap <50ps and SIO2PO designed            │
+  │     (Green)      Multiple SIO2POs covering the path (sign_off/complete)    │
+  │                  Small gap (<40ps) with fix in pipeline                     │
+  │                  RTL4BE repo_modified + SIO2PO sign_off                    │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  Typical distribution (healthy project):
+    NO SOLUTION:   5-10%   (need escalation to architects)
+    HIGH RISK:    10-15%   (need additional SIO2PO or RTL)
+    MEDIUM RISK:  15-25%   (actionable, file/push HSDs)
+    NO RISK:      50-70%   (should close with current plan)
+
+
+================================================================================
+  STEP 8 — GENERATE THE RISK REPORT
+================================================================================
+
+  The final report (sio_project_summary.txt) should contain:
+
+  8a. HEADER WITH TOTALS
+  ────────────────────────
+    ┌──────────────────────────────────────────────┐
+    │  ■ NO SOLUTION        N  (M%)                │
+    │  ■ HIGH RISK          N  (M%)                │
+    │  ■ MEDIUM RISK        N  (M%)                │
+    │  ■ NO RISK            N  (M%)                │
+    │  ──────────────────────────────────────────── │
+    │    TOTAL              N                       │
+    └──────────────────────────────────────────────┘
+
+  8b. SIGNAL TABLE PER CATEGORY
+  ──────────────────────────────
+  For each category, list signals sorted by WNS:
+
+    #   WNS    Paths  Signal                              Crossing
+   ───  ────  ──────  ──────────────────────────────────  ────────────────────
+
+  8c. NO SOLUTION DEEP-DIVE
+  ──────────────────────────
+  For each NO SOLUTION signal, include:
+    - Why it can't be fixed (structural reason)
+    - What was already tried (HSD history)
+    - Recommended action (RTL re-arch, waiver, etc.)
+
+  8d. COLOR SCHEME (NO YELLOW)
+  ──────────────────────────────
+    Red      — NO SOLUTION category, worst WNS values
+    Magenta  — HIGH RISK category, warning items
+    Cyan     — MEDIUM RISK category, info items
+    Green    — NO RISK category, healthy signals
+    Dim/gray — metadata, crossing paths, footnotes
+    White    — headers, totals, section titles
+
+
+================================================================================
+  STEP 9 — PRESENT TO SIO
+================================================================================
+
+  What Gil (SIO) needs from this report:
+
+  9a. EXECUTIVE SUMMARY
+    - Total signal count and distribution across categories
+    - Trend vs previous assessment (better or worse?)
+    - Top 3-5 signals that need immediate escalation
+
+  9b. ACTION ITEMS
+    - NO SOLUTION → schedule RTL architect meeting
+    - HIGH RISK → file additional SIO2POs, push partition owners
+    - MEDIUM RISK → file new HSDs where missing
+    - Blocked SIO2POs (not_done) → who owns them? Push.
+
+  9c. COMPARISON WITH PREVIOUS DAILY
+    - Did any NO SOLUTION signals improve? (check diff reports)
+    - Any new regressions entering HIGH RISK?
+    - Any signals moving from HIGH → NO RISK? (celebrate!)
+
+
+================================================================================
+  STEP 10 — UPDATE RISK ASSESSMENT EACH DAILY
+================================================================================
+
+  When a new daily build arrives:
+
+  1. Run par_status (see daily_update_cookbook.txt)
+  2. Run diff reports to see what changed
+  3. Re-query the key signals:
+
+     # Check NO SOLUTION signals — did any improve?
+     for sig in mowbcheckrobidld doitmcreg fary_trigger_post dcsdbchktagfault \
+                ieportedjeclear rsearlycancelwbld dsbparityerror; do
+         grep -i "$sig" par_*_diff.txt 2>/dev/null | head -1
+     done
+
+  4. Check for NEW regressions entering the worst list:
+     # Any new signals worse than -100ps?
+     grep "NEW" par_*_diff.txt | grep -E "\s-1[0-9]{2}\s"
+
+  5. Update sio_project_summary.txt with:
+     - New WNS values for each signal
+     - Any category changes (HIGH→MEDIUM if improved, etc.)
+     - New signals that appeared
+
+  6. Update the SQL sio_families table for fresh queries
+
+
+================================================================================
+  USEFUL SQL QUERIES
+================================================================================
+
+  -- All NO SOLUTION signals
+  SELECT partition, signal, wns, paths, solution
+  FROM sio_families
+  WHERE solution = 'NO_SOLUTION'
+  ORDER BY wns;
+
+  -- HIGH RISK with extreme fanout
+  SELECT signal, wns, paths, crossing
+  FROM sio_families
+  WHERE solution = 'HIGH_RISK' AND paths > 10000
+  ORDER BY paths DESC;
+
+  -- Signals that moved categories between dailies
+  -- (requires loading both old and new data)
+
+  -- FIX_PENDING signals with not_done SIO2PO (blocking)
+  SELECT partition, signal, wns, hsd_summary
+  FROM sio_families
+  WHERE analysis = 'FIX_PENDING' AND hsd_statuses LIKE '%not_done%'
+  ORDER BY wns;
+
+  -- Gap analysis: what's the expected residual after fix?
+  -- (estimate: bound=25ps, push_clk=30ps, buffer=10ps, TIP=40ps)
+  SELECT signal, wns, 
+         wns + 25 + 30 as estimated_after_fix,
+         CASE WHEN wns + 55 < -40 THEN 'STILL FAILING' ELSE 'MAY CLOSE' END as outlook
+  FROM sio_families
+  WHERE analysis = 'FIX_PENDING'
+  ORDER BY wns;
+
+
+================================================================================
+  REFERENCE — EXAMPLE OUTPUT FILES
+================================================================================
+
+  See ww12_1/ directory for real examples:
+
+    sio_wns40_analysis.txt          — 60 untracked signals, 7 categories
+    sio_fix_coverage_analysis.txt   — executive summary, action items
+    sio_risk_assessment.txt         — deep-dive on 27 at-risk signals
+    sio_project_summary.txt         — final 4-category report (169 signals)
+
+  These were generated for FCT26WW11G (CLK039). Re-run the analysis for
+  each new daily build using the same procedure.
+
+
+================================================================================
+  TROUBLESHOOTING
+================================================================================
+
+  Problem: Too many signals show as UNTRACKED
+  Cause:   par_status.py only matches HSDs within the same partition
+  Fix:     In Step 4, do broader cross-partition search manually.
+           Many "untracked" signals are actually covered by HSDs filed
+           against the other partition in the crossing. (~66% in WW11G)
+
+  Problem: FIX_LANDED signal still shows same WNS as before
+  Cause:   Fix may not be in this build (check TIP column = "---")
+           Or: fix landed but wasn't enough (TIP present, still failing)
+  Fix:     If TIP = "---": fix not picked up yet, wait for next build.
+           If TIP present: fix insufficient, need additional SIO2PO or RTL4BE.
+
+  Problem: Signal appears in multiple partitions with different WNS
+  Cause:   Same signal can be the worst in multiple crossings
+  Fix:     Dedup by base signal name. Use worst WNS across all partitions
+           for the risk category. The crossing with worst WNS is the one
+           that drives the risk.
+
+  Problem: HSD status changed but risk assessment not updated
+  Cause:   HSD databases are snapshots — check the timestamp
+  Fix:     Re-download: ls -la /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be
+           If stale, ask the HSD database owner to refresh.

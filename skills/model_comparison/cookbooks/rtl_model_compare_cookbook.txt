@@ -1,0 +1,255 @@
+================================================================================
+  COOKBOOK: RTL MODEL COMPARISON — Which RTL4BE HSDs are in the new model?
+================================================================================
+
+  PURPOSE:
+    Compare two RTL models (old vs new) for a partition to determine which
+    RTL4BE HSD fixes are present in the new model.
+
+  USE CASE:
+    When a new RTL model is delivered (e.g. ww08_contour9e_newrtl), you want
+    to know which RTL4BE fixes from the HSD tracker are included vs still missing.
+
+
+================================================================================
+  1. FIND THE MODELS
+================================================================================
+
+  ARC model location:
+    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<PARTITION>/sta_primetime/
+
+  LATEST symlink:
+    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<PARTITION>/sta_primetime/GFCN2CLIENTA0LATEST
+
+  Check what LATEST points to:
+    readlink -f .../GFCN2CLIENTA0LATEST
+
+  List available versions:
+    ls -ltd .../GFCN2CLIENTA0_SC8_VER_*
+
+  Named models (e.g. contour runs):
+    ls -ltd .../ww*_contour*
+
+  Example:
+    OLD=/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_meu/sta_primetime/GFCN2CLIENTA0_SC8_VER_045
+    NEW=/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_meu/sta_primetime/ww08_contour9e_newrtl
+
+
+================================================================================
+  2. COMPARE HIP TAGS (quick check — which IP blocks changed?)
+================================================================================
+
+  Each model has hip_tags.xml listing the RTL version per IP block.
+
+  diff <(cat $OLD/hip_tags.xml) <(cat $NEW/hip_tags.xml)
+
+  Example output:
+    < <tag name="rsintprfctop" value="RTL6"/>
+    > <tag name="rsintprfctop" value="RTL7"/>
+
+  This tells you WHICH IP blocks got new RTL — but not WHAT changed.
+  Most RTL4BE fixes are within a single IP block.
+
+  NOTE: Not all partitions have hip_tags.xml. If missing, skip to step 3.
+
+
+================================================================================
+  3. COMPARE FF INSTANCES (structural check — what FFs were added/removed?)
+================================================================================
+
+  PT netlist file:  <PARTITION>.pt.v.gz  (compressed Verilog netlist)
+
+  Extract FF instance names:
+    zgrep "_reg" $OLD/<PAR>.pt.v.gz | grep -oP '\S+_reg\S*' | sort > /tmp/old_ffs.txt
+    zgrep "_reg" $NEW/<PAR>.pt.v.gz | grep -oP '\S+_reg\S*' | sort > /tmp/new_ffs.txt
+
+  Compare:
+    comm -23 /tmp/new_ffs.txt /tmp/old_ffs.txt > /tmp/added_ffs.txt    # new FFs
+    comm -23 /tmp/old_ffs.txt /tmp/new_ffs.txt > /tmp/removed_ffs.txt  # removed FFs
+    echo "Added: $(wc -l < /tmp/added_ffs.txt)  Removed: $(wc -l < /tmp/removed_ffs.txt)"
+
+  IMPORTANT NOTES:
+    - Multi-bit FF re-banking changes instance names massively (~20K) but
+      does NOT indicate logic changes. Look for SIGNAL NAME patterns, not raw counts.
+    - RTL4BE fixes that add/duplicate FFs will show as new _reg instances.
+    - RTL4BE fixes that remove FFs (e.g. dangling cleanup) show as removed _reg instances.
+    - Combo-only fixes (no FF change) will NOT appear in this comparison.
+
+
+================================================================================
+  4. SIGNAL GREP COMPARISON (most reliable — count signal references)
+================================================================================
+
+  For each RTL4BE HSD signal, count references in old vs new netlist.
+
+  Single signal check:
+    old_cnt=$(zgrep -c "SIGNAL_NAME" $OLD/<PAR>.pt.v.gz)
+    new_cnt=$(zgrep -c "SIGNAL_NAME" $NEW/<PAR>.pt.v.gz)
+    echo "Old: $old_cnt  New: $new_cnt  Delta: $((new_cnt - old_cnt))"
+
+  Batch check (all HSD signals at once):
+    for sig in signal1 signal2 signal3; do
+      old=$(zgrep -c "$sig" $OLD/<PAR>.pt.v.gz 2>/dev/null || echo 0)
+      new=$(zgrep -c "$sig" $NEW/<PAR>.pt.v.gz 2>/dev/null || echo 0)
+      delta=$((new - old))
+      printf "  %-35s  OLD: %6s  NEW: %6s  Δ: %+d\n" "$sig" "$old" "$new" "$delta"
+    done
+
+  HOW TO INTERPRET:
+    - Δ ≠ 0  → netlist changed for this signal → FIX LIKELY PRESENT
+    - Δ = 0  → no change → fix may be combo-only OR in another partition
+    - Δ > +50 → major restructure (flop duplication, path restructure)
+    - Δ < -10 → signal removed or simplified (dangling cleanup, retiming)
+    - Signal has 0 refs in BOTH → signal is in a DIFFERENT partition
+
+  TIPS:
+    - Use the short signal name without the stage suffix (e.g. "rsjerobid" not
+      "rsjerobidm808h") to catch all related signals across pipeline stages.
+    - Also check the specific suffix from the HSD to verify the exact port.
+    - Check for new port variants (e.g. _rob, _mob, _dup suffixes) which
+      indicate flop duplication fixes.
+
+
+================================================================================
+  5. GET RTL4BE HSD LIST FROM STATUS FILE
+================================================================================
+
+  RTL4BE HSD database:
+    /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be
+
+  Filter for a specific partition:
+    grep -i "par_meu" /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be
+
+  Get HSDs by status:
+    grep "complete"      → fix is done, should be in a recent model
+    grep "repo_modified" → fix is committed to RTL repo, may/may not be in model
+    grep "open\|approved\|new" → fix is IN PROGRESS, NOT in any model yet
+
+  From par_status report (preferred — already matched to timing families):
+    grep "RTL4BE" ww12_1/par_meu_status.txt
+
+  Extract HSD IDs and signal names for batch comparison:
+    grep "RTL4BE" par_meu_status.txt | awk '{print $2}' | while read hsd; do
+      grep "^$hsd" /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be
+    done
+
+
+================================================================================
+  6. CROSS-PARTITION CHECKING
+================================================================================
+
+  Some RTL4BE HSDs fix paths that CROSS partitions. The RTL change may be
+  in par_ooo_int or par_ooo_vec, even though the timing path goes through par_meu.
+
+  HOW TO DETECT:
+    - Signal has 0 refs in BOTH old and new par_meu netlists
+    - HSD title says [par_ooo_int] or [par_ooo_vec] but path crosses par_meu
+
+  HOW TO VERIFY:
+    Check the OTHER partition's LATEST model:
+
+    LATEST=/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_ooo_int/sta_primetime/GFCN2CLIENTA0LATEST
+
+    # Compare LATEST vs previous version
+    for ver in VER_039 VER_040 VER_041 VER_042; do
+      f=".../GFCN2CLIENTA0_SC8_VER_${ver}/par_ooo_int.pt.v.gz"
+      cnt=$(zgrep -c "SIGNAL" "$f" 2>/dev/null || echo 0)
+      echo "  $ver: $cnt refs"
+    done
+
+  WHAT TO LOOK FOR:
+    - Signal refs constant across ALL versions → fix was ALREADY present
+    - Signal refs changed between specific versions → fix went in at that version
+    - Look for new port suffixes (_rob, _mob, _dup) in the output ports
+    - Check with: zgrep "SIGNAL" .../LATEST/par_ooo_int.pt.v.gz | grep "output\|input"
+
+
+================================================================================
+  7. LIMITATIONS
+================================================================================
+
+  CANNOT DETECT via netlist grep:
+    - Combo-only logic fixes (no FF added/removed, no signal count change)
+    - Constraint-only changes (FEEDTHRU signals, exceptions)
+    - Fixes in IP blocks not visible in partition-level netlist
+
+  FOR THESE CASES:
+    - Check hip_tags.xml for IP version changes
+    - Ask the RTL designer / HSD owner directly
+    - Mark as "UNKNOWN" in the report
+
+
+================================================================================
+  8. REPORT FORMAT
+================================================================================
+
+  The report should clearly show for each HSD:
+
+  ★ NEW FIX       — NOT in old model, IS in new model  (netlist Δ detected)
+  ✓ ALREADY FIXED — was in old model AND in new model  (cross-partition, already there)
+  ? UNKNOWN       — cannot determine from netlist       (combo-only or cross-partition)
+  ✘ IN PROGRESS   — NOT in any model yet               (HSD status: open/approved)
+
+  Include columns: HSD ID, Status, Old Model, New Model, Signal, Evidence
+
+  For the "IN PROGRESS" section, list HSDs from gfc.rtl4be with status
+  open/approved/new that are relevant to the partition.
+
+
+================================================================================
+  9. EXAMPLE WORKFLOW (par_meu)
+================================================================================
+
+  # 1. Set paths
+  OLD=/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_meu/sta_primetime/GFCN2CLIENTA0_SC8_VER_045
+  NEW=/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_meu/sta_primetime/ww08_contour9e_newrtl
+
+  # 2. Quick HIP check
+  diff <(cat $OLD/hip_tags.xml) <(cat $NEW/hip_tags.xml)
+  # Result: rsintprfctop RTL6 → RTL7
+
+  # 3. Get HSD list from status
+  grep "RTL4BE" ww12_1/par_meu_status.txt | grep -v "rejected" | awk '{print $2}'
+  # Result: 20 HSD IDs
+
+  # 4. Signal grep each HSD
+  for sig in mowbcheckrobidld rsearlyuopv fastlockretbyp ...; do
+    old=$(zgrep -c "$sig" $OLD/par_meu.pt.v.gz 2>/dev/null || echo 0)
+    new=$(zgrep -c "$sig" $NEW/par_meu.pt.v.gz 2>/dev/null || echo 0)
+    printf "%-30s  OLD:%5d  NEW:%5d  Δ:%+d\n" "$sig" "$old" "$new" $((new-old))
+  done
+
+  # 5. Cross-partition check for 0-ref signals
+  #    → check par_ooo_int/par_ooo_vec LATEST models
+
+  # 6. In-progress HSDs
+  grep -i "par_meu\|meu" /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be | grep -v "complete\|repo_modified\|rejected"
+
+  # 7. Generate report → par_meu_rtl4be_model_check.txt
+
+
+================================================================================
+  10. DUAL-CORE NOTE
+================================================================================
+
+  The chip has two identical cores (icore0, icore1). When checking netlists:
+  - Strip icore0/icore1 prefixes before comparing signal names
+  - Only analyze one core (icore0) — they are the same template
+  - IFC reports may include BOTH cores — deduplicate before counting
+
+
+================================================================================
+  FILES REFERENCE
+================================================================================
+
+  RTL4BE HSD database:   /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be
+  SIO2PO HSD database:   /nfs/site/disks/baselibr_wa/tmp/gfc.sio2po.rtl4be
+  ARC models:            /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_*/sta_primetime/
+  LATEST symlink:        .../sta_primetime/GFCN2CLIENTA0LATEST
+  PT netlist:            .../sta_primetime/<MODEL>/<PARTITION>.pt.v.gz
+  HIP tags:              .../sta_primetime/<MODEL>/hip_tags.xml
+  par_status reports:    ww12_1/par_*_status.txt
+
+  Example output report: ww12_1/par_meu_rtl4be_model_check.txt
+
+================================================================================

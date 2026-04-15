@@ -1,0 +1,512 @@
+================================================================================
+  CROSS-PARTITION TIMING PATH DEBUG PLAYBOOK
+  Interactive step-by-step debug flow for analyzing and fixing failing paths
+  Author: sunger | Date: Feb 26, 2026
+  Companion to: cross_partition_timing_fix_guideline.txt
+================================================================================
+
+PURPOSE
+=======
+This playbook is a reusable checklist + decision tree + PT commands for
+debugging cross-partition timing paths. Use it each session by reading this
+file first, then following the steps in order.
+
+RULES
+=====
+  - MAX 5 MINUTES total run time
+  - STOP after each stage and report findings — ASK before continuing
+  - STAGE 0 is always ANALYSIS ONLY — never try to fix before reporting
+  - Work through stages in order — don't skip ahead
+
+
+================================================================================
+STAGE 0: PATH ANALYSIS (ALWAYS FIRST — NO FIXING)
+================================================================================
+
+  STEP 0.1: Extract basic path info
+  ──────────────────────────────────
+  From the timing report, extract and report:
+    □ Startpoint FF name, clock, location (x,y)
+    □ Endpoint FF name, clock, location (x,y)
+    □ Slack value (ps)
+    □ Path group
+    □ Data arrival time
+    □ Data required time
+    □ Clock period
+    □ Path type (functional / DFT-BISR / DFT-scan / clock)
+
+  STEP 0.2: Identify partitions crossed
+  ──────────────────────────────────────
+  List every partition the path goes through:
+    □ Source partition + delay in that partition
+    □ Each feedthrough partition + delay
+    □ Destination partition + delay
+    □ Boundary port names at each crossing
+    □ Total number of partition crossings
+
+  STEP 0.3: Identify delay contributors
+  ──────────────────────────────────────
+  Walk through path cells and flag:
+    □ SR2BFY buffers (slow slew-rate — Technique 2 candidate)
+    □ Weak cells: D1, D2, D3 drive strengths (Technique 1 candidate)
+    □ LVT cells that could be ULVT (Technique 1 candidate)
+    □ High-fanout nets (fos_count > 50) (Technique 4 candidate)
+    □ Long wires (>50μm, high cap nets >20fF) (placement issue)
+    □ Deep hierarchy pass-throughs (unplaced cells)
+    □ Logic depth on receiving side (count gates between port and endpoint FF)
+
+  STEP 0.4: Calculate distances
+  ─────────────────────────────
+    □ Source FF → boundary port (manhattan distance in μm)
+    □ Boundary port → endpoint FF (manhattan distance in μm)
+    □ Source FF → endpoint FF (total physical distance)
+
+  STEP 0.5: Classify the path
+  ────────────────────────────
+  Based on the analysis:
+    □ Is this functional or DFT? (DFT may be MCP/waiver candidate)
+    □ How many partitions? (1 crossing vs daisy-chain)
+    □ Slack severity: small(<40ps), medium(40-100ps), large(>100ps)
+    □ Dominant delay: buffers? logic depth? wire length? clock skew?
+
+  >>> STOP HERE — Report findings to user — ASK before continuing <<<
+
+
+================================================================================
+STAGE 1: CHECK CLOCK BALANCE & SKEW
+================================================================================
+
+  STEP 1.1: Get average clock latencies
+  ──────────────────────────────────────
+  Compare average network latencies for launch and capture clocks.
+
+  Offline:
+    cat $WA/check_clk_latency.func.max_high.*.rpt
+    # Format: #clk_name,avg_ntwrk,avg_src
+
+  Record:
+    □ Launch clock avg network latency = _____ ps
+    □ Capture clock avg network latency = _____ ps
+    □ Average skew (capture − launch) = _____ ps
+    □ Positive = favorable for setup (capture arrives later)
+    □ Negative = unfavorable for setup (capture arrives earlier)
+
+  STEP 1.2: Get actual latencies from the path report
+  ────────────────────────────────────────────────────
+  Extract from the timing report header/footer:
+    □ Launch clock network delay (propagated) = _____ ps
+    □ Capture clock network delay (propagated) = _____ ps
+    □ Local skew at these FFs (capture − launch) = _____ ps
+    □ Inter-clock uncertainty = _____ ps
+    □ Net clock effect = local_skew − uncertainty = _____ ps
+
+  STEP 1.3: Compare local vs average latency
+  ────────────────────────────────────────────
+  Check if the endpoint FF clock latency deviates from average:
+    □ Endpoint FF clock latency vs avg: _____ ps delta
+    □ If endpoint latency is BELOW avg → clock tree is PENALIZING this path
+    □ If endpoint latency is ABOVE avg → clock tree is HELPING this path
+    □ Large deviation (>15ps from avg) → flag as potential clock tree issue
+
+  STEP 1.4: Check clock definitions
+  ──────────────────────────────────
+  Verify clocks are synchronous and same period.
+
+  Offline:
+    cat $WA/clock_indicators_reports/all_clocks.csv | grep "<launch_clk>\|<capture_clk>"
+    # Format: clk_name,period,waveform,type,sources
+
+    cat $WA/clock_indicators_reports/clock_uncertainty.csv | grep "<launch_clk>.*<capture_clk>"
+
+  Record:
+    □ Same period? (YES/NO)
+    □ Same phase? (YES/NO)
+    □ Relationship: sync / async / physically_exclusive
+    □ Setup uncertainty = _____ ps
+    □ Hold uncertainty = _____ ps
+
+  STEP 1.5: Assess clock impact on slack
+  ───────────────────────────────────────
+    □ How much slack is lost/gained due to clock skew?
+    □ If local skew is unfavorable AND FF latency is far below avg:
+        → Could clock tree optimization help? (e.g., balance FF latency closer to avg)
+        → Quantify: if FF had avg latency, slack would improve by _____ ps
+    □ If clocks are the dominant problem (>30% of slack) → escalate to clock team
+    □ If clocks are neutral/favorable → problem is purely data path
+
+  QUICK REFERENCE — what's normal:
+    ┌────────────────────────────────────────────────────────────┐
+    │ Avg skew < ±20ps between sync clocks     → normal         │
+    │ Local vs avg deviation < ±15ps           → normal         │
+    │ Inter-clock uncertainty 10-15ps          → normal         │
+    │ Local vs avg deviation > 20ps            → investigate    │
+    │ Net clock effect worse than -20ps        → flag to clk team│
+    └────────────────────────────────────────────────────────────┘
+
+  >>> STOP HERE — Report findings to user — ASK before continuing <<<
+
+
+================================================================================
+STAGE 2: CHECK NEIGHBOR STAGES (RETIMING POTENTIAL)
+================================================================================
+
+  STEP 2.1: Stage BEFORE source FF
+  ─────────────────────────────────
+  Check what feeds into the source FF's D pin.
+
+  PT command:
+    report_timing -to [get_pins <source_FF>/D] -max_paths 5
+
+  Offline (from carpet/timing_summary):
+    grep for endpoint=<source_FF> in timing_summary.xml.filtered
+    If NOT found in worst paths → likely has positive slack (margin!)
+
+  Record: neighbor stage slack = _____ ps
+
+  STEP 2.2: Stage AFTER endpoint FF
+  ──────────────────────────────────
+  Check where the endpoint FF's Q drives next.
+
+  PT command:
+    report_timing -from [get_pins <endpoint_FF>/Q] -max_paths 5
+
+  Offline (from carpet/timing_summary):
+    grep for startpoint=<endpoint_FF> in timing_summary.xml.filtered
+    If NOT found in worst paths → likely has positive slack (margin!)
+
+  Record: neighbor stage slack = _____ ps
+
+  STEP 2.3: Evaluate retiming potential
+  ──────────────────────────────────────
+    □ If BEFORE has margin → can pull logic backward (Technique 6)
+    □ If AFTER has margin → can push logic forward (Technique 6)
+    □ If BOTH have margin → best case, most flexibility
+    □ If NEITHER has margin → retiming not viable, move to next stage
+
+  >>> STOP HERE — Report findings to user — ASK before continuing <<<
+
+
+================================================================================
+STAGE 3: CHECK BUS / GROUP BEHAVIOR
+================================================================================
+
+  STEP 3.1: Is this part of a bus?
+  ─────────────────────────────────
+  Check if the signal is a bus (e.g., signal_name[0], signal_name[1], etc.)
+
+  Offline:
+    grep "<port_base_name>" slack_per_port.func.max_high.*.rpt
+    
+  Record ALL bits and their slacks.
+
+  STEP 3.2: Classify bus behavior
+  ────────────────────────────────
+    □ ALL bits failing → systematic issue (bus-level fix needed)
+    □ SOME bits failing → check placement differences between good/bad bits
+    □ ONE bit failing → likely placement or routing issue (single-bit fix ok)
+
+  STEP 3.3: Check if source FF fans out to internal + external
+  ─────────────────────────────────────────────────────────────
+  From path report:
+    □ Source FF fanout count (from Q pin)
+    □ Does it drive BOTH internal par_msid logic AND boundary port?
+    □ If YES → FF duplication candidate (Technique 5)
+
+  >>> STOP HERE — Report findings to user — ASK before continuing <<<
+
+
+================================================================================
+STAGE 4: CHECK PORT SPEC / BUDGET
+================================================================================
+
+  STEP 4.1: Get port spec details
+  ────────────────────────────────
+  Check the spec allocated to the boundary port.
+
+  Offline:
+    grep "<port_name>" spec_info.rpt
+    grep "<port_name>" fct_level_slack_per_port.<par_name>.*.attribute.rpt
+
+  STEP 4.2: Check both sides of the port
+  ────────────────────────────────────────
+    □ Source side: port spec vs actual delay → margin?
+    □ Dest side: remaining budget vs actual delay → margin?
+    □ If one side has margin → can shift spec (Technique 8)
+
+  PT commands:
+    report_timing -to <boundary_port>    # source side delay
+    report_timing -from <boundary_port>  # dest side delay
+
+  STEP 4.3: Check port location
+  ──────────────────────────────
+    grep "<port_name>" port_location_outside_bbox.csv
+    □ Is port far from optimal? → Technique 3 candidate
+
+  >>> STOP HERE — Report findings to user — ASK before continuing <<<
+
+
+================================================================================
+STAGE 5: DECISION — RECOMMEND FIX TECHNIQUES
+================================================================================
+
+  Based on all data collected, apply the decision flowchart from the
+  guideline file (cross_partition_timing_fix_guideline.txt):
+
+  QUICK REFERENCE:
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ Slack > -40ps?                                                    │
+  │   YES → Technique 1 (cell sizing) + 2 (buffer opt)               │
+  │                                                                    │
+  │ Other side of port has margin?                                    │
+  │   YES → Technique 8 (adjust port spec) — quickest fix!           │
+  │                                                                    │
+  │ Neighbor stage has positive slack?                                │
+  │   YES → Technique 6 (retiming — borrow margin)                   │
+  │                                                                    │
+  │ Endpoint FF far from boundary pin?                                │
+  │   YES → Technique 9 (ask PO to place FF near pin)                │
+  │                                                                    │
+  │ Port has high fanout (>100)?                                      │
+  │   YES → Technique 4 (port duplication)                            │
+  │                                                                    │
+  │ Source FF fans out to internal + external?                        │
+  │   YES → Technique 5 (FF duplication)                              │
+  │                                                                    │
+  │ Port location far from optimal?                                   │
+  │   YES → Technique 3 (port relocation)                             │
+  │                                                                    │
+  │ Path is architecturally multi-cycle?                              │
+  │   YES → Technique 7b (MCP declaration)                            │
+  │                                                                    │
+  │ Slack > -100ps?                                                   │
+  │   YES → Combine techniques 1-6, 8-9                              │
+  │                                                                    │
+  │ Path fundamentally too long?                                      │
+  │   YES → Technique 7 (pipeline insertion — LAST RESORT)           │
+  └────────────────────────────────────────────────────────────────────┘
+
+  Present recommended techniques with:
+    □ Expected gain (ps)
+    □ Cost (area, power, RTL change)
+    □ Owner (who needs to act)
+    □ Risk level
+
+  >>> STOP HERE — Report to user — Let user decide which fix to pursue <<<
+
+
+================================================================================
+STAGE 6: DEEP DIVE INTO SELECTED FIX
+================================================================================
+
+  Only proceed here if user asks for a specific technique deep dive.
+
+  For each technique, show:
+    □ BEFORE vs AFTER diagram
+    □ Specific cells/nets affected
+    □ Expected timing impact calculation
+    □ RTL code change (if applicable)
+    □ PnR constraint change (if applicable)
+    □ Who to contact / what to request
+
+
+================================================================================
+STAGE 7: CREATE OUTPUT REPORT (MANDATORY FORMAT)
+================================================================================
+
+  After analysis is complete, create a .txt file with findings.
+  File name: <signal_name>_<fix_technique>_proposal.txt
+
+  THE FILE MUST FOLLOW THIS ORDER:
+  ────────────────────────────────
+
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  PART A — SUMMARY, SOLUTION & ACTIONS  (show this first)   ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+  SECTION 1: EXECUTIVE SUMMARY
+    - Problem in 2-3 lines (what signal, what partition crossing, how bad)
+    - Solution in 1-2 lines (what fix, expected gain)
+
+  SECTION 2: TIMING IMPACT — BEFORE vs AFTER
+    Format:
+      BEFORE (current):
+        Source FF CK→Q:     XX.X ps
+        Buffer chain:       XX.X ps  ← THIS GOES AWAY (or other bottleneck)
+        Boundary crossing:   X.X ps
+        Dest logic:         XX.X ps
+        TOTAL data path:   XXX.X ps
+        Slack:              -XX.X ps
+
+      AFTER (with fix):
+        [new path components]
+        TOTAL data path:   XXX.X ps
+        Slack:             ~+XX ps ✅  (gain of ~XXps!)
+
+    Expected result per bit (if bus):
+      Bit    Current     Expected After Fix
+      [0]     -XX ps      +XX ps  ✓
+      ...
+
+  SECTION 3: WHAT CHANGES IN RTL
+    Show BEFORE and AFTER Verilog code snippets
+
+  SECTION 4: FULL BUS TABLE (if applicable)
+    Table of all bits: Original FF | Dup FF | Location
+
+  SECTION 5: COST TABLE
+    ┌───────────────┬──────────────────────────────────┐
+    │ Item          │ Impact                           │
+    ├───────────────┼──────────────────────────────────┤
+    │ Area          │ ...                              │
+    │ Power         │ ...                              │
+    │ RTL change    │ ...                              │
+    │ Risk          │ ...                              │
+    │ Expected gain │ ...                              │
+    └───────────────┴──────────────────────────────────┘
+
+    ⚠ LATENCY NOTE (if fix adds pipeline stages)
+
+  SECTION 6: WHO NEEDS TO DO WHAT
+    1. RTL team: ...
+    2. PnR team: ...
+    3. Other partitions: ...
+
+  SECTION 7: ACTION ITEMS (checklist)
+    [ ] 1. ...
+    [ ] 2. ...
+
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  PART B — ANALYSIS DATA  (supporting evidence)             ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+  SECTION 8:  Problem details (path group, clocks, sigma, bus status)
+  SECTION 9:  Path analysis (startpoint, endpoint, timing breakdown)
+  SECTION 10: Clock balance analysis (latencies, skew, local vs avg)
+  SECTION 11: Bottleneck identification (cell-by-cell delay table)
+  SECTION 12: Physical distance analysis (FF locations, distances)
+  SECTION 13: Neighbor stage margin check (retiming data)
+  SECTION 14: Alternative fixes considered (and why rejected)
+  SECTION 15: PT/offline commands used (reproducibility)
+
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  PART C — ORIGINAL TIMING PATH (RAW REPORT)                ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+  SECTION 16: Full raw timing path report (copy-paste from PT output)
+    - Paste the ENTIRE report_timing output here
+    - This allows revisiting the solution without re-running PT
+    - Include all columns: fanout, cap, trans, delta, incr, path, location
+
+  TEMPLATE HEADER:
+  ================================================================================
+    <FIX_TYPE> PROPOSAL — <SIGNAL_NAME>
+    Cross-Partition Timing Fix (Technique <N>)
+  ================================================================================
+    Design    : <design>
+    Daily WA  : <wa_name>
+    Config    : <config>
+    Corner    : <corner>
+    PT Version: <version>
+    Date      : <date>
+    Author    : <author>
+    Model Path: <full_path_to_sta_pt_timing_model>
+  ================================================================================
+
+  >>> Save file to: my_learns/<signal_name>_<fix>_proposal.txt <<<
+
+
+================================================================================
+PT SHELL QUICK REFERENCE COMMANDS
+================================================================================
+
+  # Basic path report with full details
+  report_timing -nosplit -input_pins -nets -transition_time -capacitance \
+    -crosstalk_delta -sort_by slack -physical
+
+  # Path to specific endpoint
+  report_timing -to [get_pins <FF>/D] -max_paths 5
+
+  # Path from specific startpoint
+  report_timing -from [get_pins <FF>/Q] -max_paths 5
+
+  # Check fanout of a net
+  sizeof_collection [all_fanout -from [get_pins <FF>/Q] -flat -endpoints_only]
+
+  # Check all paths through a port
+  report_timing -through <port_name> -max_paths 10
+
+  # Check port spec
+  report_timing -to <boundary_port>     # source side
+  report_timing -from <boundary_port>   # dest side
+
+  # Cell sizing check — look for weak cells
+  report_timing -nosplit -input_pins -nets -transition_time -capacitance
+  # Look for: D1, D2, D3 drive strengths and LVT (could be ULVT)
+
+  # Placement info
+  report_cell -connections <cell_name>
+  get_attribute [get_cells <cell_name>] origin
+
+
+================================================================================
+OFFLINE (NO PT) QUICK REFERENCE COMMANDS
+================================================================================
+
+  WA=<path_to_sta_pt_reports>
+
+  # Worst slack per port for a bus
+  grep "<signal_base>" $WA/slack_per_port.func.max_high.*.rpt
+
+  # Find path in timing summary
+  grep "<FF_name>" $WA/*_timing_summary.xml.filtered
+
+  # Check port location
+  grep "<port_name>" $WA/port_location_outside_bbox.csv
+
+  # Check spec info
+  grep "<port_name>" $WA/*_spec_info.rpt
+
+  # Check fct level slack per port (with spec details)
+  grep "<port_name>" $WA/fct_level_slack_per_port.<par>.*attribute.rpt
+
+  # Margins summary per partition
+  cat $WA/*_margins_summary.csv
+
+
+================================================================================
+EXAMPLE DEBUG SESSION (from real path Feb 26, 2026)
+================================================================================
+
+  Path: in_flight_valid_brM112H[0][6] (par_msid → par_fe)
+  Slack: -60.7ps
+
+  Stage 0 findings:
+    - Functional path (branch prediction: MSID stsr → FE bpu)
+    - 1 partition crossing (par_msid → par_fe)
+    - par_msid delay: 97.7ps (83ps in buffer chain!)
+    - par_fe delay: 119ps (7 stages combinational logic)
+    - SR2BFY buffers on par_msid side
+    - Source FF 383μm from boundary
+
+  Stage 1 findings:
+    - Stage BEFORE source FF: not in worst paths → has margin ✅
+    - Stage AFTER endpoint FF: not in worst paths → has margin ✅
+    - Retiming viable
+
+  Stage 2 findings:
+    - Full bus [0:6] all failing (-33 to -61ps)
+    - Systematic issue — bus-level fix needed
+    - Source FF fans out to internal + external → FF dup candidate
+
+  Recommended fix: Technique 5 (FF duplication)
+    - Duplicate all 7 source FFs near boundary
+    - Expected gain: ~75ps (eliminates 383μm buffer chain)
+    - Cost: 7 FFs, ~14μm² area, negligible power
+    - Fixes ALL 7 bus bits at once
+
+
+================================================================================
+  File: cross_partition_debug_playbook.txt
+  Location: /nfs/site/disks/sunger_wa/fc_data/my_learns/
+  Companion: cross_partition_timing_fix_guideline.txt
+================================================================================

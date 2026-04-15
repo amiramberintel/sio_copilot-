@@ -1,0 +1,369 @@
+================================================================================
+  PAR_MEU — UARCH PATHS LEARNING GUIDE
+  GFC Client A0 — icore0/par_meu partition
+  Created: 2026-03-29
+================================================================================
+
+
+1. WHAT IS PAR_MEU?
+-------------------
+MEU = Memory Execution Unit. It is a partition inside icore that handles:
+  - L1 data cache (DCU L0/L1) — loads, stores, fills, snoops
+  - Store buffer (SDB) operations
+  - Memory ordering (MOB) — load/store ordering, write-back
+  - AGU (Address Generation Unit) output stage
+  - PRF (Physical Register File) write-back data path
+
+par_meu is the LARGEST cross-partition hub inside icore — it interfaces with
+4 other partitions (ooo_int, pmh, exe, ooo_vec) and has ~20,000 timing ports.
+
+Physical location: center-right of icore, between par_exe (left) and
+par_ooo_int (right), with par_pmh above.
+
+
+2. PAR_MEU INTERFACES
+---------------------
+par_meu communicates with these neighbors:
+
+  +-------------------------------------------------------------------+
+  |                           par_pmh                                  |
+  |  (L1 tag/data, demand requests, snoop, DC cache control)          |
+  +-------------------------------------------------------------------+
+       |  30 ports (in: dcl1*, pm*, moldclips*  |  out: dcl1demand*, req*)
+       v
+  +-------------------------------------------------------------------+
+  |                                                                    |
+  |   par_exe  <------>  PAR_MEU  <------>  par_ooo_int               |
+  |   18 ports           (THIS)             80 ports                  |
+  |   (data,disp,        ~20K ports         (RS dispatch,             |
+  |    cancel,AGU)        total              MOB writeback,           |
+  |                                          ordering, control)       |
+  +-------------------------------------------------------------------+
+       |  6 ports
+       v
+  +-------------------------------------------------------------------+
+  |                          par_ooo_vec                               |
+  |  (vector RS data, slow ROB, AGU RS errors)                        |
+  +-------------------------------------------------------------------+
+
+Port count by neighbor (from data_meu.csv, failing paths only):
+  par_ooo_int:  80 ports   (64% of all MEU cross-partition paths)
+  par_pmh:      30 ports   (24%)
+  par_exe:      18 ports   (14%)
+  par_ooo_vec:   6 ports   ( 5%)
+
+Direction split: 75 outputs (60%), 50 inputs (40%)
+
+
+3. CLOCK DOMAINS
+----------------
+MEU runs on mclk_meu. Cross-partition paths cross between:
+
+  Path type                     Count    Typical slack range
+  ----------------------------  -----    -------------------
+  mclk_meu -> mclk_ooo_int      38      -30 to -77 ps
+  mclk_ooo_int -> mclk_meu      37      -32 to -71 ps
+  mclk_meu -> mclk_pmh           21      -42 to -53 ps
+  mclk_meu -> mclk_exe           12      -47 to -85 ps
+  mclk_pmh -> mclk_meu            7      -47 to -60 ps
+  mclk_exe -> mclk_meu            5      -50 to -69 ps
+  mclk_meu -> mclk_ooo_vec        2      -49 to -87 ps
+  mclk_ooo_vec -> mclk_meu        2      -61 to -109 ps
+
+The period is ~186ps (high voltage). Clock skew between domains is
+typically 10-20ps. STA reports normalize slack as slack/period.
+
+
+4. UARCH FAMILY BREAKDOWN
+--------------------------
+The Uarch CP spreadsheet groups par_meu paths into families.
+Basel owns: 200H, 301H_int, 800h_int, 803, QSF, rspsrcm301h_int
+
+  Family          Owner    WC slack  LOS 186  Status
+  --------------  -------  --------  -------  --------------------------
+  803             Basel    -77ps     -30      MEU waiting for CI + SIO2PO
+  301H_int        Basel    -71ps     !!!!     MEU waiting for CI
+  QSF             Basel    -61ps     -10      —
+  200H            Basel    -60ps     -20      msid clock too late after refloorplan
+  rspsrcm301h_int Basel    -43ps     !!!!     MEU waiting for CI
+  800h_int        Basel    -30ps     -15      MEU bounded flop, ooo_int manual work
+  wbdatavld       Alex     -51ps     !!!!     MEU ?
+  Fault           Alex     -58ps     -10      MEU ?
+  rob-mob         Alex     -63ps     !!!!     MEU ?
+  JE              Fadi     -55ps     !!!!     MEU waiting for CI
+  805_meu         Fadi     -16ps     !!!!     MEU waiting for CI
+  ld_loop         Fadi     -54ps     !!!!     MEU waiting for CI
+  302-MIU         Fadi     -51ps     !!!!     MEU waiting for CI
+  IEU_loop        Fadi     -33ps     !!!!     MEU waiting for CI
+  AGU_loop        Fadi     -19ps     !!!!     MEU waiting for CI
+
+  LOS = Level Of Success target for model 186
+  !!!! = Blocked — MEU waiting for new CI from Michel
+
+
+5. KEY SIGNAL GROUPS (by uarch function)
+-----------------------------------------
+
+5a. M803H — MOB Write-Back Check (803 family, Basel)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Signals: mowbcheckrobidldm803h, rsearlycancelwbldm803h, molvpchkwbldm803h
+  Direction: MEU -> ooo_int
+  Clock: mclk_meu -> mclk_ooo_int
+  What: MOB checks whether a load-write-back should be cancelled. The
+        ROB ID travels from MEU to OOO_INT for ordering validation.
+  Worst: -123ps (mowbcheckrobidldm803h)
+  Fix approach: fix clock in MEU + in-to-ICG in ooo_int
+
+5b. M301H — RS Dispatch Data (301H_int family, Basel)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Signals: rslduopcodm301h, rsstauopcodm301h, rsbcastcolorm301h,
+           rsstduopcodm301h, rsldimmctlm301h
+  Direction: ooo_int -> MEU (inputs)
+  Clock: mclk_ooo_int -> mclk_meu
+  What: Reservation Station dispatches micro-ops to MEU for execution.
+        Includes opcode, color for broadcast, immediate control.
+  Worst: -71ps (rslduopcodm301h)
+  Fix approach: TIP (15/100 budget), ooo_int to meet spec in BE
+
+5c. M805H — Execution Results (JE family, Fadi)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Signals: jetakenbrclatem805h, exe_int_ieportedjeclearm805h,
+           exe_int_ieportedskidvalidm805h, jeo2idataearlym804h
+  Direction: MEU -> ooo_int (outputs)
+  Clock: mclk_meu -> mclk_ooo_int
+  What: Jump/branch execution results — taken branch, clear signals,
+        skid buffer valid. Critical for branch misprediction recovery.
+  Worst: -55ps (jetakenbrclatem805h)
+  Fix approach: fix clock in MEU, remove buffers near flop
+
+5d. M800H — MOB Load Ordering (800h_int family, Basel)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Signals: mopwrupldm800h, mowbvldm800h, monofirstbpfromldm800h
+  Direction: MEU -> ooo_int (outputs)
+  Clock: mclk_meu -> mclk_ooo_int
+  What: MOB power-up load, write-back valid, first bypass from load.
+        These control when loads can retire in the ROB.
+  Worst: -30ps (bounded flop, internal MEU is -70ps)
+  Fix approach: ooo_int manual work, SIO2PO ticket pending
+
+5e. M803H_vec — Slow ROB VP (part of 803)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Signals: rsslowrobidvpm803h
+  Direction: MEU -> ooo_vec (crosses ooo_int too)
+  Clock: mclk_meu -> mclk_ooo_vec
+  What: Slow ROB ID for vector pipe. 3-partition path (MEU->ooo_int->ooo_vec)
+  Worst: -59ps
+  Fix approach: bound MEU flop in (330,50) + fix clock to target
+
+5f. M40xH — DCU L1 (PMH interface)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Signals: dcl1demandreqm403h, dcl1taghitportm405h, dcl1rddatam408h,
+           dcl1dataeccisdedm408h, dcl1dataeccissecm408h
+  Direction: MEU <-> pmh (bidirectional)
+  Clock: mclk_meu <-> mclk_pmh
+  What: L1 cache demand requests, tag hits, read data, ECC status.
+  Worst: -60ps (dcl1dataeccisdedm408h)
+  Fix approach: meu push clk by 15ps + move logic cell to flop
+
+5g. FeedThrough Paths
+~~~~~~~~~~~~~~~~~~~~~
+  Signals: rsmoclearvm802h__FEEDTHRU, rsrealdispm304h__FEEDTHRU
+  Direction: pass-through MEU (ooo_int -> pmh, or meu -> exe)
+  What: Signals that don't terminate in MEU but pass through it.
+        Feed-through specs (par_meu_spec_ft.csv) constrain these.
+  Total FT specs: 3,254 (most are logic delay paths)
+
+
+6. TIMING SPECS
+---------------
+Location in daily:
+  runs/par_meu/n2p_htall_conf4/release/latest/timing_specs/
+
+  File                    Lines   Description
+  ---------------------   -----   ----------------------------------------
+  par_meu_spec.csv        2,299   IO timing specs (pin, spec_ps, clock, edge)
+  par_meu_spec_ft.csv     3,254   Feed-through specs (in_pin -> out_pin, spec_ps)
+
+  Spec format (par_meu_spec.csv):
+    active,pin,spec,par,clk,edge,Comment
+    1,dcsnphitmm404h[{0:1}],136,par_meu,mclk_meu,r,GFC_spec_by_fadi
+
+  Meaning: pin dcsnphitmm404h bits 0-1 has a spec of 136ps, rising edge
+  of mclk_meu. The spec says "this signal must arrive within 136ps of
+  the clock edge."
+
+  Spec value = max allowed data delay from clock edge to partition boundary.
+  slack = spec - actual_delay  (positive = met, negative = violated)
+
+  Spec owners:
+    Fadi:      2,177 specs (95%)
+    Aholtzma:    122 specs (5%)
+
+  FT spec format (par_meu_spec_ft.csv):
+    active,par,in_pin,out_pin,ft_spec,Comment
+    1,par_meu,jeclearlatem805h,jeclearm805h,70,PNC ft specs added by fadi
+
+  Meaning: signal entering at jeclearlatem805h must reach jeclearm805h
+  within 70ps. This constrains internal feed-through delay.
+
+
+7. CONSTRAINTS STRUCTURE
+-------------------------
+Location in daily:
+  runs/par_meu/n2p_htall_conf4/release/latest/constraints_mapping/
+
+  File                              Purpose
+  --------------------------------  -------------------------------------------
+  par_meu.clocks.sdc                Clock definitions for mclk_meu
+  par_meu.clock_groups.sdc          Clock group relationships (async, exclusive)
+  par_meu.exceptions.sdc            False paths, multicycle paths
+  par_meu.internal_exceptions.sdc   Internal partition timing exceptions
+  par_meu.misc.sdc                  Other SDC constraints
+  par_meu.pt_nonpg.v                Non-power-gated netlist (for PT)
+  setup_issues.rpt                  Constraint mapping issues/warnings
+  unmapped_constraints.out          Constraints that didn't map to netlist
+
+
+8. STA REPORTS
+--------------
+Location in daily:
+  runs/core_client/n2p_htall_conf4/sta_pt/<corner>/reports/
+
+  Key reports for par_meu:
+
+  a) Par-level margins:
+     par_level/core_client.<corner>_icore0__par_meu_margins.rpt
+     Lists every port with direction and type (FeedThrough, Constrained, etc.)
+
+  b) FCT-level slack per port:
+     fct_level_slack_per_port.par_meu.<corner>.none.rpt
+     Slack value per port (positive = met, negative = violated)
+     Format: port,direction,slack
+
+  c) FCT-level slack with attribute:
+     fct_level_slack_per_port.par_meu.<corner>.attribute.rpt
+     Same but with PBA attribute mode (more accurate)
+
+  d) Spec status:
+     spec_status/par_meu_missing_8bit.rpt   — missing 8-bit specs
+     spec_status/par_meu_missing_16bit.rpt  — missing 16-bit specs
+     spec_status/par_meu_missing_32bit.rpt  — missing 32-bit specs
+
+  e) Timing summary XML:
+     timing_closure/core_client.<corner>_timing_summary.xml.filtered
+     Worst paths across all partitions (par_meu paths included)
+
+
+9. HOW TO DEBUG A PAR_MEU PATH
+-------------------------------
+Example: debug mowbcheckrobidldm803h (803 family, -123ps)
+
+Step 1: Find the port in carpetdb
+  -> carpetdb.intel.com/project/GFCN2CLIENT?port=icore0/par_meu/mowbcheckrobidldm803h
+
+Step 2: Check the spec
+  -> grep mowbcheckrobidldm803h par_meu_spec.csv
+  -> Get the spec value in ps
+
+Step 3: Check slack per corner
+  -> Use hold_analysis.sh (Gil's toolkit) or pt_client.pl directly:
+     pt_client.pl -corner func.max_high.T_85.typical \
+       "report_timing -to icore0/par_meu/mowbcheckrobidldm803h_*_[*]"
+
+Step 4: Identify the bottleneck
+  - Clock path: is mclk_meu arriving too late/early?
+  - Data path: long routing? too many logic levels?
+  - Cross-partition: which partition owns the bottleneck?
+
+Step 5: Check the comment in data_meu.csv / Uarch CP spreadsheet
+  -> "fix clock in meu + in to icg in ooo_int"
+  -> This tells you: clock work in MEU + route to ICG in ooo_int
+
+Step 6: Common fix techniques:
+  a) Clock push/pull: adjust mclk_meu arrival at specific flops
+  b) Bound flop: constrain flop placement closer to boundary
+  c) TIP: add/modify topology plan for cross-partition net
+  d) Buffer removal: remove unnecessary buffers near critical flops
+  e) Logic collection: move logic cells closer to flops
+  f) RTL fix: simplify logic, duplicate registers, remove sideloads
+
+
+10. COMMON FIX PATTERNS IN MEU
+-------------------------------
+
+Pattern 1: "fix clock in meu"
+  The mclk_meu clock tree delivers the clock too late (or too early)
+  to the launching/capturing flop. Fix by adjusting clock insertion
+  delay (CTS skew) or moving the flop to a better clock branch.
+
+Pattern 2: "bound flop to logic"
+  The flop and its driving logic are physically far apart. Add
+  placement bounds to force the flop near the logic cells.
+  Example: "bound meu flop in (330,50)" — place within 330x50um box.
+
+Pattern 3: "TIP 15/100" or "TIP in contour"
+  The cross-partition path needs a TIP (Topology In-context Plan).
+  15/100 means spec budget: 15ps in source partition, 100ps in dest.
+  A .tp file defines the routing topology for this signal.
+
+Pattern 4: "improve routing" / "improve rc"
+  The data path has poor routing (high RC). Need to re-route on
+  better metal layers or shorter paths.
+
+Pattern 5: "in to icg" or "in2icg"
+  Route the signal directly to the ICG (Integrated Clock Gate) cell
+  in the destination partition to reduce logic depth.
+
+Pattern 6: "SIO2PO ticket"
+  A SIO (Spec I/O) to PO (Port/Pin Owner) reassignment is needed.
+  The endpoint should be connected to a different TIP cell.
+  Requires a ticket (HSD/JIRA) to the SIO team.
+
+Pattern 7: "MEU waiting for new CI from Michel"
+  MEU CI (Clock Integration) work is pending. Michel owns the CI
+  update. 12 families are blocked on this — largest single blocker.
+
+Pattern 8: "RTL fix — duplicate / simplification"
+  RTL change needed: duplicate a register to reduce fanout, or
+  simplify logic to reduce levels. Requires uarch owner sign-off.
+
+
+11. DATA_MEU.CSV REFERENCE
+---------------------------
+This is the master tracking file for par_meu failing paths.
+Location: /nfs/site/disks/sunger_wa/fc_data/my_learns/data_meu.csv
+
+Key columns:
+  port_compress     Signal name (compressed bus notation)
+  direction_new     in / out
+  wns_new           Worst Negative Slack in ps (negative = failing)
+  norm_wns_new      Normalized WNS (slack / period)
+  partitions        Which partitions this path crosses
+  startpoint_clock  Launch clock domain
+  endpoint_clock    Capture clock domain
+  uarch_new         Uarch family name (matches Uarch CP spreadsheet)
+  owner             Current owner
+  comment           Latest action item / fix plan
+  hsds              HSD ticket numbers (if any)
+  wns_prev          Previous model's WNS (for trend tracking)
+
+Total entries: 130 ports (125 with actual data, 5 headers/misc)
+10 identified uarch families, 105 ports with family "UNKNOWN"
+
+
+12. SLACK DISTRIBUTION (current model WW13G)
+---------------------------------------------
+  All 125 par_meu ports are FAILING (negative slack).
+
+     Slack range      Count   Pct
+     > 0 ps           0       0%    (none met)
+     0 to -20 ps      0       0%
+     -20 to -50 ps    81      65%   <-- bulk of work
+     -50 to -80 ps    39      31%
+     < -80 ps         5       4%    <-- critical
+
+  Worst:  -144.2ps  (simuldisablebugfixm3nnh — fma+meu routing)
+  Mean:   -47.8ps
+  Best:   -28.3ps
+
+================================================================================

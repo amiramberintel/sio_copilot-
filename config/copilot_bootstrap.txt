@@ -1,0 +1,344 @@
+================================================================================
+  SIO COPILOT SESSION BOOTSTRAP — GFC CLIENT A0 TIMING CLOSURE
+  Owner: sunger (Shachar Unger)
+  Last updated: 2026-03-30
+  Read this file at the start of every new session.
+================================================================================
+
+=== WHO AM I ===
+
+  You are helping Shachar Unger (sunger), an SIO (Sign-off Integration Owner)
+  engineer working on timing closure for the GFC Client A0 chip (N2P process
+  node). The work focuses on cross-partition IFC (Inter-Face Crossing) timing
+  debug and resolution for the core_client block.
+
+  IMPORTANT: sunger's terminal does NOT support Unicode — all output must use
+  ASCII characters only. No Unicode box drawing, no emoji in reports.
+
+=== KEY DIRECTORIES ===
+
+  Work area:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/          -- main learn/work dir
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/ww14_2/   -- current week results
+    /nfs/site/disks/sunger_wa/skills_for_sio_copilot/     -- all scripts & knowledge
+
+  Daily builds (new ones appear weekly, naming: FCT26WW<tag>):
+    /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_*CLK050.bu_postcts
+    Recent builds:
+      FCT26WW12D (ww12)
+      FCT26WW13F (ww13, prev)
+      FCT26WW13G (ww13, latest stable)
+      FCT26WW14A (ww14, latest — may have missing data)
+
+  Daily build structure:
+    <daily_wa>/par_<name>_ifc.rpt                   -- Gil's IFC family reports
+    <daily_wa>/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/
+      reports/core_client.<corner>_timing_summary.xml  -- timing summary XML
+
+  PTECO (Alex Yarokhovich's post-ECO runs):
+    /nfs/site/disks/ayarokh_wa/pteco/runs/GFC/core_client_<date>_ww<N>/
+      runs/core_client/n2p_htall_conf4/pt_eco/reports/*nworst*xml
+
+  PVT/Scenario definitions:
+    <daily_wa>/project/GFCN2CLIENTA0/pvt.tcl
+    <daily_wa>/project/GFCN2CLIENTA0/pvt.csv
+    <daily_wa>/project/GFCN2CLIENTA0/global_derate_table.tcl
+
+  Contour tags:
+    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<partition>/<bundle>/<CONTOUR_TAG>/
+
+=== PARTITIONS ===
+
+  11 partitions in core_client:
+    par_exe      par_fe       par_fmav0    par_fmav1    par_meu
+    par_mlc      par_msid     par_ooo_int  par_ooo_vec  par_pm       par_pmh
+
+  Primary focus: par_meu (most IFC families, worst WNS)
+  Other hot partitions: par_ooo_int, par_exe, par_pmh
+
+=== TOOLS WE BUILT ===
+
+  All scripts live in: /nfs/site/disks/sunger_wa/skills_for_sio_copilot/scripts/
+
+  1. ifc_per_corner_report.py — Per-corner IFC timing report
+     Generates setup+hold WNS for all IFC families across all PVT corners.
+     Columns: SIGNAL, DIRECTION, SP_CLK, EP_CLK, WNS, TNS, #Path, per-corner data.
+     Outputs both .txt (ASCII table) and .csv.
+     Usage:
+       python3 scripts/ifc_per_corner_report.py \
+         --daily <daily_wa>  \
+         --par par_meu       \
+         --outdir <dir>      \
+         --pteco <pteco_root>  # optional
+
+  2. par_status.py — Partition health status
+     Cross-references IFC timing with HSD fix tracking.
+     Usage:
+       python3 scripts/par_status.py -p par_meu --wa <daily_wa>
+
+  3. par_status_diff.py — Build-to-build diff
+     Compares IFC timing across daily builds (regressions, improvements).
+     Usage:
+       python3 scripts/par_status_diff.py --latest WW13G -p par_meu
+
+  4. check_daily_vs_po.py — Daily vs PO comparison
+
+  5. hold_per_port_report.py — Multi-corner hold per-port detail report
+     Shows every unique IFC crossing (start port -> end port) with actual
+     start/end FF names and slack across all 12 hold corners.
+     Groups paths by boundary port, shows Clk(s>e), port name, per-corner WNS.
+     Usage:
+       python3 scripts/hold_per_port_report.py \
+         --wa <daily_wa>    \
+         --par par_meu      \
+         --outdir <dir>
+     Output: <outdir>/<par_name>_hold_per_port.txt
+
+  6. hold_daily_vs_pteco.py — Daily hold vs PTECO post-ECO comparison
+     Compares daily hold timing with PTECO results to show what's fixed,
+     what's remaining, and what new violations the ECO introduced.
+     Auto-discovers which hold corners have data in both daily and PTECO.
+     Usage:
+       python3 scripts/hold_daily_vs_pteco.py \
+         --wa <daily_wa>      \
+         --par par_meu        \
+         --pteco <pteco_root> \
+         --outdir <dir>
+     Output: <outdir>/<par_name>_hold_daily_vs_pteco.txt
+
+  7. pt_client.pl — Live PrimeTime server queries (NOT our script, team tool)
+     Location: /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl
+     Requires: sg soc -c "pt_client.pl ..." (needs soc group access)
+     Usage:
+       sg soc -c "pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical -c 'report_timing -through icore0/par_meu/signal_name'"
+     Mode format: latest_gfcn2clienta0_bu_prp_<corner>
+     Read-only! Forbidden: source, exit, save, exec, insert_buffer, size_cell
+     Server refreshes daily at 00:00. Use -debug to see which model is loaded.
+     GOLDEN RULE: Always verify data source with get_designs before analysis!
+
+=== PT SHELL / PRIMETIME KNOWLEDGE ===
+
+  PT server access:
+    - pt_client.pl sends commands via netcat to pre-loaded PT server sessions
+    - No need to open local PT — saves 2-4 hours of session load time
+    - Server has ALL corners pre-loaded on different machines/ports
+    - Config: pt_server_c2dgbcptserver_cron.cfg
+
+  Key PT commands for IFC debug:
+    report_timing -through <hier_path> -max_paths 10
+    report_timing -from <startpoint> -to <endpoint> -pba_mode path
+    report_timing -through <signal> -path_type full_clock_expanded
+    get_timing_paths -through <signal> -max_paths 1000
+    get_attribute [get_cells <cell>] ref_name     # check cell type
+    get_attribute [get_cells <cell>] threshold_voltage_group  # LVT/ULVT/HVT
+
+  PBA (Path-Based Analysis):
+    - More accurate than GBA (Graph-Based) — removes pessimism
+    - Use -pba_mode path for single paths, -pba_mode exhaustive for full analysis
+    - Typical PBA improvement: 5-15ps on setup, varies on hold
+    - DCU L1 databank paths: extensive PBA analysis done in ww13_3
+
+  Hierarchy in PT server:
+    - Always use full hierarchy: icore0/par_meu/signal_name (not relative)
+    - icore0 = primary core instance, icore1 = secondary (skip icore1 in analysis)
+    - Port hierarchy: icore0/par_<src>/signal → icore0/par_<dst>/signal
+
+  Cross-partition path analysis flow (from cookbook):
+    Step 0.1: Identify partitions involved and crossing direction
+    Step 0.2: Analyze cell types — check for LVT/HVT upgrade candidates
+    Step 0.3: Find high-cap/high-delay nets (monsters)
+    Step 0.4: Check logic depth (>15 stages is a red flag)
+    Step 0.5: Evaluate MCP (multi-cycle path) opportunities
+    Step 0.6: ULVT upgrade candidates (LVT→ULVT gain ~5-8ps per swap)
+    Step 0.7: FF location sanity (distance > 500um is suspicious)
+    Step 0.8: Spec budget impact (moving FF changes clock latency)
+
+  PT analysis reports in skills dir:
+    pt_analysis/ — 48 files: PBA reports, DCU L1 hold analysis,
+    PTECO unfixable analysis, RSMOClearVM803H demo walkthrough,
+    max_high per-databank reports, path margin ECO reports
+
+=== PVT CORNER SYSTEM ===
+
+  Scenario name format: <mode>.<voltage_corner>.<process_temp>.<rc_corner>
+    Example: func.max_high.T_85.typical
+
+  Mode:     func = aged (BTI),  fresh = no aging
+  Process:  T = typical,  F = fast,  S = slow
+  Temp:     85 = 85C,  125 = 125C,  M40 = -40C
+  RC:       typical, cworst, rcworst, CCworst, CCworst_T
+
+  Setup corners (func.max_*): max_high, max_nom, max_low, max_med,
+    max_fast, max_slow_rc_high, max_turbo, max_slow_low, max_slow_mid
+  Hold corners (fresh.min_* and func.min_*): min_fast, min_fast_cold,
+    min_slow, min_hi_lo_hi, min_low, min_nom, min_hvqk, min_slow_cold
+
+  Key voltages (VCCCORE):
+    max_low=0.550V  max_nom=0.650V  max_med=0.850V  max_high=1.100V
+    max_turbo=1.210V  min_fast=1.271V  min_slow=0.540V
+
+=== OCV / DERATE SUMMARY ===
+
+  Setup:  POCV sigma 4.4 (2.2 for max_fast), net derate 0.90/1.10 for S_ corners
+  Fresh hold: POCV sigma 5.2, clock_cell_late 1.045-1.1, hold guardband 1.15/1.20
+  Func hold (aged): POCV sigma 5.41, per-corner aging taxes, RSS floors per voltage
+
+  Source: global_derate_table.tcl
+  POCV files: /nfs/site/proj/tech1/n2p/tech-release/v1.0.6p1/r2g/pocv/
+
+=== XML PARSING GOTCHAS ===
+
+  CRITICAL bugs we discovered (avoid repeating):
+
+  1. IFC parser: line.startswith('-') skips ALL negative WNS data lines!
+     FIX: use line.startswith('-WNS') to skip only the header
+
+  2. XML slack regex: slack="(-?\d+) matches normalized_slack BEFORE slack!
+     Because XML attribute order is: normalized_slack="..." slack="..."
+     FIX: use ' slack="(-?\d+)' with a LEADING SPACE
+
+  3. Clock names: NOT all clocks have mclk_ prefix.
+     Hold corners have: idvfreqOut, idvfreqOut_div2/4/8/16, dcmcbbclk,
+     ijtag_tck, scanclk_div, scanclk_notdiv_phyex, ssh_ijtag, etc.
+     Always show FULL clock names.
+
+=== IFC REPORT STRUCTURE ===
+
+  Gil's IFC report format (par_<name>_ifc.rpt):
+    -WNS  WNS_norm  TNS       Paths   Ports
+    -103  -0.55     -309      3       icore0/par_meu/signal_*  icore0/par_ooo_int/signal_*
+
+  Direction extraction from port ordering:
+    First port's partition = source, second unique partition = destination
+    Example: icore0/par_meu/sig  icore0/par_ooo_int/sig  -> "meu --> ooo_int"
+
+  Match key generation (for XML cross-reference):
+    1. Strip icore0/par_<name>/ prefix
+    2. Strip [*] brackets, {}, trailing _*
+    3. Lowercase
+    4. Remove _op_N suffix, _feedthru* suffix
+
+=== DFX (DESIGN FOR TESTABILITY) ===
+
+  DFX timing is reported separately from functional (mclk) timing.
+  DFX paths use test clocks: bist, bisr, misr, scanclk, ijtag_tck,
+  bisr_ijtag, ssh_ijtag, ssnclk, slos, tap, clkg, pm_clock, saf, m4saf, async.
+
+  DFX report structure (from Maha):
+    - External paths: cross-partition DFX timing (like IFC but for test modes)
+    - Internal paths: within-partition DFX timing
+    - Per-domain breakdown: WNS/TNS per clock domain per partition
+    - Compared TST (latest) vs REF (previous release)
+
+  DFX report commands:
+    m $MODEL/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/reports/*only_dfx.x* | grep -v ifc_ | grep external | m
+    m $MODEL/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/reports/*only_dfx.x* | grep -v ifc_ | grep internal | m
+
+  Key corners for DFX: func.max_high (setup), func.min_low (hold), func.max_low+CT
+
+  Tracking: RTL4BE HSD (GFC), DFX2PO tickets
+  Tools: Carpet (https://carpet.intel.com), BEI Dashboard
+
+  NOTE: dcm_release models (not dcm_daily) are used for DFX status.
+
+  Full DFX knowledge:  /nfs/site/disks/sunger_wa/skills_for_sio_copilot/dfx/
+    dfx_overview.txt             -- What DFX is, commands, file locations
+    dfx_clock_domains.txt        -- All clock periods (mclk=186ps to ijtag=6266ps)
+    dfx_components.txt           -- BIST, BISR, JTAG, IJTAG, scan chains explained
+    dfx_par_meu_status_ww14a.txt -- par_meu DFX per corner + domain breakdown
+    dfx_report_reading_guide.txt -- How to read Maha's weekly DFX report
+    dfx_status_ww14a_summary.txt -- Full WW14A status analysis
+
+=== CALIBER (FC SIGNOFF) ===
+
+  Caliber = Intel full-chip timing signoff checker (physical/electrical rules).
+  Different from STA: checks cap, slopes, pulse widths, clock integrity, latch margins.
+  Violations are per-pin (not per-path like STA).
+  Most violations are internal to partitions (not IFC).
+
+  Top rules: SlowSlope, MaxCap, ClockMinPulseWidth, LatchMarginWithRecovery
+  Owner types: PO_PV (physical), PO_SYN (synthesis), PO (partition owner)
+
+  Report locations:
+    $MODEL/runs/core_client/n2p_htall_conf4/intel_caliber_all/<corner>/reports/caliber/
+    $MODEL/runs/core_client/n2p_htall_conf4/sta_pt/reports/caliber_indicators/
+
+  Full caliber knowledge: /nfs/site/disks/sunger_wa/skills_for_sio_copilot/caliber/
+
+=== FEV (FORMAL EQUIVALENCE VERIFICATION) ===
+
+  FEV = RTL vs netlist logic equivalence check (Cadence Conformal LEC).
+  Must-pass signoff: no tapeout without clean FEV.
+  Checks: NonEquivalent, NotMapped, RTLUndrivenNets, BBox matching, power intent.
+
+  FEV WA: /nfs/site/disks/idc_bei_fev/gpavanku/GFC_FEV_RUN/FEV_RUN/
+  Key report: .../IF_<par>_fev_rtl2apr/results/Greenstone_summary.rpt
+  LEC log: .../fev_conformal/fev_rtl2apr/logs/lec.log
+
+  Status (WW14A): 5 PASS, 7 FAIL. par_meu FAIL (243 RTL dangling, AR on RTL team).
+  Full FEV knowledge: /nfs/site/disks/sunger_wa/skills_for_sio_copilot/fev/
+
+=== TEAM (updated) ===
+
+  Gil        — Runs daily builds, generates IFC reports
+  Alex (ayarokh) — Runs PTECO post-ECO timing
+  Maha       — DFX status reporting
+  Shachar (sunger) — SIO, timing closure debug (you help him)
+  Kris/Kristine  — JNC partner for TIP conversion
+  Yifat Stern Alkalay — Synthesis (scanclk relaxation)
+  gpavanku — FEV run owner (Conformal LEC)
+  Yarden Kanner — Fusion compiler LCP files for FEV
+
+=== COOKBOOKS & KNOWLEDGE ===
+
+  All cookbooks:  /nfs/site/disks/sunger_wa/skills_for_sio_copilot/cookbooks/
+  All knowledge:  /nfs/site/disks/sunger_wa/skills_for_sio_copilot/knowledge/
+
+  Key references:
+    cross_partition_debug_playbook.txt   — Master debug flow
+    copilot_daily_work_guideline.txt     — How copilot helps with daily tasks
+    hold_ifc_debug_cookbook.txt           — Hold timing debug flow
+    master_timing_fix_cookbook.txt        — Fix methodology
+    sta_primetime_GOLDEN_file_reference.txt — PT golden file reference
+    pvt_tcl_overview.txt                 — PVT system overview
+
+=== WEEKLY WORKFLOW ===
+
+  Each work week (wwNN_N):
+  1. New daily build drops -> run par_status.py for all partitions
+  2. Diff vs previous build -> run par_status_diff.py
+  3. Generate per-corner report -> run ifc_per_corner_report.py
+  4. Analyze regressions, track in HSD
+  5. Work with partition owners on ECO fixes
+  6. Update PTECO data when Alex's runs complete
+
+  Results stored in: /nfs/site/disks/sunger_wa/fc_data/my_learns/ww<NN>_<N>/
+
+=== CURRENT STATUS (as of ww14_2, 2026-03-30) ===
+
+  Latest stable daily: WW13G / CLK050
+  Latest PTECO: ww12 (core_client_260322_ww12) — 9 corners complete
+  PTECO ww13: core_client_260329_ww13 — may be available now, check nworst XMLs
+  WW14A daily: exists but may have missing IFC files
+
+  par_meu status:
+    246 unique IFC families, worst WNS = -103ps (rsslowrobidvpm803h)
+    218/246 families matched to daily XML failing paths
+    PTECO hold nearly clean (only mn_low/mn_nom have 1 family at -4ps)
+    PTECO setup worse on some families (simuldisablebugfixm3nnh: -221ps)
+
+  Clock period: mclk_meu = 186ps (waveform: 0/93)
+
+================================================================================
+  END OF BOOTSTRAP
+
+  TO UPDATE THIS KNOWLEDGE BASE — run or ask copilot to run:
+    python3 /nfs/site/disks/sunger_wa/skills_for_sio_copilot/update_skills.py --bootstrap
+    (use --dry-run first to preview)
+
+  When you create a new script, cookbook, or analysis file in my_learns/,
+  tell copilot: "please update skills" and it will sync everything.
+
+  Start by asking "what do you need?" or read the latest ww<NN>_<N>
+  directory for current week status.
+================================================================================

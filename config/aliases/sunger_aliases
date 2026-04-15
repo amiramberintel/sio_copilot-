@@ -1,0 +1,206 @@
+#!/bin/csh
+# =============================================================================
+#  sunger_aliases - Personal SIO/FCT aliases for par_msid timing closure
+#  Created: 2026-02-23
+#  Based on: ahaimovi_aliases, baselibr_aliases, mburak_aliases
+# =============================================================================
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  GENERAL SHORTCUTS
+# ─────────────────────────────────────────────────────────────────────────────
+alias ll        'ls -ltrh --color=auto'
+alias m         'most'
+alias cdlink    'cd $links; pwd'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  ENVIRONMENT VARIABLES - Update these per model!
+# ─────────────────────────────────────────────────────────────────────────────
+# Model link - uses symlink so $links auto-updates with new daily models
+# NOTE: $ward is set by cth_psetup (= your work area), do NOT redefine it here
+setenv GFC_LINKS "/nfs/site/home/baselibr/gfc_links"
+setenv links    "$GFC_LINKS"
+setenv model    "daily_gfc0a_n2_core_client_bu_postcts"
+
+setenv block    "core_client"
+setenv tech     "n2p_htall_conf4"
+setenv par      "par_msid"
+setenv MYSTOD   "/nfs/site/disks/sunger_wa/fc_data"
+setenv MYLEARNS "/nfs/site/disks/sunger_wa/fc_data/my_learns/temp_txt_files"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  NAVIGATION - Quick cd to key directories
+# ─────────────────────────────────────────────────────────────────────────────
+alias cdward    'cd $links; pwd'
+alias cdpar     'cd $links/$model/runs/$par/$tech; pwd'
+alias cdreport  'cd $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports; pwd'
+alias cdreport_nom 'cd $links/$model/runs/$block/$tech/sta_pt/func.max_nom.T_85.typical/reports; pwd'
+alias cdscripts 'cd $links/$model/runs/$block/$tech/sta_pt/scripts; pwd'
+alias cdrelease 'cd $links/$model/runs/$par/$tech/release/latest; pwd'
+alias cdsio     'cd $links/$model/runs/$par/$tech/release/latest/sio_ovr; pwd'
+alias cddef     'cd $links/$model/runs/$par/$tech/release/latest/sta_primetime; pwd'
+alias cdtiming  'cd $links/$model/runs/$par/$tech/release/latest/timing_collateral; pwd'
+alias cdlog     'cd $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/logs; pwd'
+alias cdlearns  'cd $MYLEARNS; pwd'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  REPORT VIEWING - Quick access to timing reports
+# ─────────────────────────────────────────────────────────────────────────────
+# List all reports for a corner
+alias hvreport  'ls $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/*.rpt $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/*.csv $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/*.xml 2>/dev/null | m'
+alias nomreport 'ls $links/$model/runs/$block/$tech/sta_pt/func.max_nom.T_85.typical/reports/*.rpt $links/$model/runs/$block/$tech/sta_pt/func.max_nom.T_85.typical/reports/*.csv 2>/dev/null | m'
+
+# View PT log
+alias hvlog     'less $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/logs/$block.func.max_high.T_85.typical.pt.log'
+alias nomlog    'less $links/$model/runs/$block/$tech/sta_pt/func.max_nom.T_85.typical/logs/$block.func.max_nom.T_85.typical.pt.log'
+
+# View timing summary XML
+alias hvxml     'less $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/${block}.func.max_high.T_85.typical_timing_summary.xml'
+alias nomxml    'less $links/$model/runs/$block/$tech/sta_pt/func.max_nom.T_85.typical/reports/${block}.func.max_nom.T_85.typical_timing_summary.xml'
+
+# View SIO override file
+alias sioovr    'less $links/$model/runs/$par/$tech/release/latest/sio_ovr/${par}_sio_ovrs.tcl'
+
+# View exceptions
+alias hvexcep   'less $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/${par}_exceptions.log.rpt'
+alias intexcep  'less $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/${par}.internal_exceptions.log.rpt'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  XML PARSING - Parse timing_summary.xml (from baselibr & mburak)
+# ─────────────────────────────────────────────────────────────────────────────
+# Parse XML: shows WNS, TNS, path count grouped by startpoint→endpoint
+alias fctxml       'awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"' | bus_compress_Full | awk '"'"'{if (a[$2" "$3]==0) {b[$2" "$3]=$1} ; a[$2" "$3] += $1 ; c[$2" "$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths from startpoint to endpoint"} {print $1,$2,$3" -from "$4" -to "$5}'"'"' | column -t | m'
+
+# Parse XML: grouped by startpoint only
+alias fctxml_start 'awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"' | bus_compress_Full | awk '"'"'{if (a[$2]==0) {b[$2]=$1} ; a[$2] += $1 ; c[$2] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint"} {print $1,$2,$3,$4}'"'"' | column -t | m'
+
+# Parse XML: grouped by endpoint only
+alias fctxml_end   'awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"' | bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1} ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths endpoint"} {print $1,$2,$3,$4}'"'"' | column -t | m'
+
+# Parse XML: grouped by port name
+alias fctxml_port  'awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $34}'"'"' | bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1 ; d[$3] = $4","$5","$6 ; } ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i,d[i]}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths Ports"} {print $1,$2,$3,$4,$5}'"'"' | column -t | m'
+
+# Usage: grep "par_msid" timing_summary.xml | fctxml
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SIO OVERRIDE WORKFLOW (from mburak)
+# ─────────────────────────────────────────────────────────────────────────────
+# Compare local SIO overrides vs GOLDEN (archived)
+alias sio_ovr_diff 'meld $links/$model/runs/$par/$tech/release/latest/sio_ovr/ ${PROJ_ARCHIVE}/arc/$par/sio_ovr/GOLDEN/'
+
+# Check specs across all partitions
+alias check_specs  'grep \!* ${PROJ_ARCHIVE}/arc/*/timing_specs/*LATEST/*.csv'
+
+# Check overrides across all partitions
+alias check_ovrs   'grep \!* ${PROJ_ARCHIVE}/arc/*/sio_ovr/GOLDEN/*.tcl'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SIO OVERRIDE GENERATION (from baselibr)
+# ─────────────────────────────────────────────────────────────────────────────
+# Generate annotet_port commands from spec analysis
+# Usage: cat spec_file | check_spec_2_anottate_port
+# Requires: $bu_slack, $target_slack, $min_override to be set
+alias check_spec_2_anottate_port 'awk -v bu=$bu_slack '"'"'$2<bu && $4>0'"'"' | sort -nk2 | awk -v tar=$target_slack -v min_ovr=$min_override '"'"'$5-tar<min_ovr {print "annotet_port "$3" [expr ${factor}* "$5-tar" ] ; #The distance from the spec is "$5" and the BU margin is "$2" , so adding a override to reflect "tar" to the spec"}'"'"''
+
+# Generate overrides from port TNS data
+# Usage: cat port_tns_file | port_tns_2_anottate_port "comment text"
+alias port_tns_2_anottate_port 'awk -v bu=$bu_slack '"'"'$3<bu '"'"' | sort -nk3 | awk -v comment="\!:1" -v tar=$target_slack -v min_ovr=$min_override '"'"'$3-tar<min_ovr {print "annotet_port "$1" [expr ${factor}* "$3-tar" ] ; #"comment}'"'"''
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  DEF FILE QUERIES - Metal layer / routing analysis
+# ─────────────────────────────────────────────────────────────────────────────
+# Search net routing in DEF (usage: defnet <net_name>)
+alias defnet    'zgrep -A 200 "^- msid/\!:1$" $links/$model/runs/$par/$tech/release/latest/sta_primetime/${par}.def.gz'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SPEC STATUS REPORTS
+# ─────────────────────────────────────────────────────────────────────────────
+alias spec_missing    'less $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/spec_status/missing_spec/*.csv'
+alias spec_unbalanced 'less $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/spec_status/unbalanced_spec_dir/*.csv'
+alias spec_highio     'less $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/spec_status/high_io_delay/*.csv'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  QUICK GREP / SEARCH HELPERS
+# ─────────────────────────────────────────────────────────────────────────────
+# Search for a port/signal in SIO override file
+alias grepovr   'grep -i \!:1 $links/$model/runs/$par/$tech/release/latest/sio_ovr/${par}_sio_ovrs.tcl'
+
+# Search for a port in timing summary XML
+alias grephv    'grep -i \!:1 $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/${block}.func.max_high.T_85.typical_timing_summary.xml'
+
+# Search for a port in pin slack summary
+alias grepslack 'grep -i \!:1 $links/$model/runs/$block/$tech/sta_pt/func.max_high.T_85.typical/reports/${par}.func.max_high.T_85.typical_pin_slack_summary.rpt'
+
+# Count overrides in SIO file (active, not commented)
+alias countovr  'grep "annotet_port" $links/$model/runs/$par/$tech/release/latest/sio_ovr/${par}_sio_ovrs.tcl | grep -v "^    #" | wc -l'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  CSV ALIGNMENT (from mburak)
+# ─────────────────────────────────────────────────────────────────────────────
+alias aligncsv  '/p/mpg/proc/common2/da_utils/fct_skl42/bin//align.pl -id "," -od " "'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  PT SESSION LOADING (all via NetBatch)
+# ─────────────────────────────────────────────────────────────────────────────
+# Base NB loader (from ahaimovi) - usage: loadptnb_cth <session_path> <title>
+alias loadptnb_cth 'nbjob run --class "SLES15SP4&&256G&&4C" --qslot bc15_gfc_fct --target sc8_express /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+
+# Load from GOLDEN archive (usage: loadpt_golden_nb par_msid max_high)
+alias loadpt_golden_nb 'loadptnb_cth $PROJ_ARCHIVE/arc/\!:1/sta_primetime/GOLDEN/*.\!:2.* "\!:1_\!:2_GOLDEN"'
+
+# Load from daily model (usage: loadpt_daily_nb max_high)
+alias loadpt_daily_nb  'loadptnb_cth $links/$model/runs/$block/$tech/sta_pt/func.\!:1.T_85.typical/outputs/$block.pt_session.func.\!:1.T_85.typical "${par}_\!:1_daily"'
+
+# Load from latest release model (usage: loadpt_latest_nb max_high)
+alias loadpt_latest_nb 'loadptnb_cth $links/latest_gfc0a_n2_core_client_bu_postcts/runs/$block/$tech/sta_pt/func.\!:1.T_85.typical/outputs/$block.pt_session.func.\!:1.T_85.typical "${par}_\!:1_latest"'
+
+# Load from previous release model (usage: loadpt_prev_nb max_high)
+alias loadpt_prev_nb   'loadptnb_cth $links/prev_gfc0a_n2_core_client_bu_postcts/runs/$block/$tech/sta_pt/func.\!:1.T_85.typical/outputs/$block.pt_session.func.\!:1.T_85.typical "${par}_\!:1_prev"'
+
+# Quick shortcuts for par_msid max_high (most common):
+alias loadpt_daily_hv  'loadpt_daily_nb max_high'
+alias loadpt_daily_nom 'loadpt_daily_nb max_nom'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  MODEL LINKS - Quick access to all models (from ~baselibr/gfc_links/)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Daily models
+alias cddaily   'cd $GFC_LINKS/daily_gfc0a_n2_core_client_bu_postcts; pwd'
+alias cddailytd 'cd $GFC_LINKS/daily_gfc0a_n2_core_client_fcl; pwd'
+
+# Latest release models
+alias cdlatest  'cd $GFC_LINKS/latest_gfc0a_n2_core_client_bu_postcts; pwd'
+alias cdlatestfcl 'cd $GFC_LINKS/latest_gfc0a_n2_core_client_fcl; pwd'
+alias cdfe2be   'cd $GFC_LINKS/latest_gfc0a_n2_core_client_fe2be; pwd'
+
+# Previous release
+alias cdprev    'cd $GFC_LINKS/prev_gfc0a_n2_core_client_bu_postcts; pwd'
+
+# Noise model
+alias cdnoise   'cd $GFC_LINKS/noise_daily_gfc0a_n2_core_client_bu_postcts; pwd'
+
+# Show all current model links
+alias showmodels 'ls -l $GFC_LINKS/ | awk '"'"'{print $NF, $9}'"'"' | grep -v "^$" | column -t'
+
+# Switch ward to a different model (usage: setward daily / setward latest / setward prev)
+alias setdaily  'setenv model daily_gfc0a_n2_core_client_bu_postcts; echo "model = $model"'
+alias setlatest 'setenv model latest_gfc0a_n2_core_client_bu_postcts; echo "model = $model"'
+alias setprev   'setenv model prev_gfc0a_n2_core_client_bu_postcts; echo "model = $model"'
+
+# =============================================================================
+#  HOW TO USE:
+#    source /nfs/site/disks/sunger_wa/fc_data/my_learns/aliases/sunger_aliases
+#
+#  Then:
+#    cdreport          → jump to max_high reports
+#    sioovr            → view SIO override file
+#    grephv signal     → find signal in timing XML
+#    grepovr signal    → find signal in SIO overrides
+#    defnet net_name   → check routing metals for a net
+#    countovr          → count active overrides
+#
+#  For XML parsing:
+#    grep "par_msid" timing_summary.xml | fctxml
+#    grep "par_msid" timing_summary.xml | fctxml_start
+#    grep "par_msid" timing_summary.xml | fctxml_end
+# =============================================================================

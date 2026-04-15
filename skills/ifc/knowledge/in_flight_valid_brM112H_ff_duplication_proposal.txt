@@ -1,0 +1,521 @@
+================================================================================
+  FF DUPLICATION PROPOSAL — in_flight_valid_brM112H[0][0:6] BUS
+  Cross-Partition Timing Fix (Technique 5)
+================================================================================
+  Design    : core_client (GFC_CLIENT)
+  Daily WA  : GFC_CLIENT_26ww06b_ww07_6_TIP_clockroute_RCOs-FCT26WW09D_dcm_daily-CLK039
+  Config    : n2p_htall_conf4
+  Corner    : func.max_high.T_85.typical
+  PT Version: V-2023.12-SP5-4-VAL-20251014
+  Date      : 2026-02-26
+  Author    : sunger
+  Model Path: /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/
+              GFC_CLIENT_26ww06b_ww07_6_TIP_clockroute_RCOs-FCT26WW09D_dcm_daily-CLK039.bu_postcts/
+              runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical
+================================================================================
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    PART A — SUMMARY, SOLUTION & ACTIONS                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+========================================
+1. EXECUTIVE SUMMARY
+========================================
+
+  Problem:
+  7-bit bus "in_flight_valid_brM112H[0][0:6]" crossing par_msid → par_fe
+  is FAILING on ALL 7 bits (slack -33 to -61 ps). Systematic bus-level
+  failure caused by a 5-stage buffer chain (~83 ps) driving signal 383 μm
+  from source FF to partition boundary.
+
+  Solution:
+  Duplicate 7 source FFs near the par_msid boundary. Eliminates the
+  buffer chain entirely. Expected gain: ~75 ps → closes ALL 7 bits.
+
+========================================
+2. TIMING IMPACT — BEFORE vs AFTER
+========================================
+
+     BEFORE (current):
+       Source FF CK→Q:     14.4 ps
+       Buffer chain:       83.3 ps  ← THIS GOES AWAY
+       Boundary crossing:   0.0 ps
+       par_fe logic:      119.0 ps
+       TOTAL data path:   216.7 ps
+       Slack:             -60.7 ps
+
+     AFTER (with duplicated FF near boundary):
+       Dup FF CK→Q:       14.4 ps  (same FF type)
+       Short wire to port:  ~8 ps  (instead of 83ps)
+       Boundary crossing:   0.0 ps
+       par_fe logic:      119.0 ps  (unchanged)
+       TOTAL data path:   ~141 ps
+       Slack:             ~+15 ps ✅  (gain of ~75ps!)
+
+  Expected Result Per Bit:
+
+     Bit    Current     Expected After Fix
+     ----   --------    ------------------
+     [0]     -33 ps      +42 ps  ✓
+     [1]     -37 ps      +38 ps  ✓
+     [2]     -40 ps      +35 ps  ✓
+     [3]     -42 ps      +33 ps  ✓
+     [4]     -45 ps      +30 ps  ✓
+     [5]     -51 ps      +24 ps  ✓
+     [6]     -61 ps      +14 ps  ✓
+
+========================================
+3. WHAT CHANGES IN RTL
+========================================
+
+     // BEFORE — single FF drives everything
+     always @(posedge clk) begin
+       in_flight_valid_brM112H[0][6] <= next_value;
+     end
+     // Q drives both internal stsrbrcalc logic AND boundary port
+
+
+     // AFTER — two FFs, same D input, separate Q outputs
+     always @(posedge clk) begin
+       in_flight_valid_brM112H[0][6]     <= next_value;  // internal use
+       in_flight_valid_brM112H_dup[0][6] <= next_value;  // boundary use
+     end
+     // Original Q → internal stsrbrcalc logic only
+     // Dup Q     → boundary port only (placed near boundary)
+
+========================================
+4. FULL BUS — ALL 7 DUPLICATE FFs
+========================================
+
+  ┌───────────────────────────────────┬────────────────┬───────────────┐
+  │ Original FF                       │ Dup FF         │ Location      │
+  ├───────────────────────────────────┼────────────────┼───────────────┤
+  │ in_flight_valid_brM112H_reg_0__0_ │ _reg_0__0__dup │ Near boundary │
+  ├───────────────────────────────────┼────────────────┼───────────────┤
+  │ in_flight_valid_brM112H_reg_0__1_ │ _reg_0__1__dup │ Near boundary │
+  ├───────────────────────────────────┼────────────────┼───────────────┤
+  │ in_flight_valid_brM112H_reg_0__2_ │ _reg_0__2__dup │ Near boundary │
+  ├───────────────────────────────────┼────────────────┼───────────────┤
+  │ in_flight_valid_brM112H_reg_0__3_ │ _reg_0__3__dup │ Near boundary │
+  ├───────────────────────────────────┼────────────────┼───────────────┤
+  │ in_flight_valid_brM112H_reg_0__4_ │ _reg_0__4__dup │ Near boundary │
+  ├───────────────────────────────────┼────────────────┼───────────────┤
+  │ in_flight_valid_brM112H_reg_0__5_ │ _reg_0__5__dup │ Near boundary │
+  ├───────────────────────────────────┼────────────────┼───────────────┤
+  │ in_flight_valid_brM112H_reg_0__6_ │ _reg_0__6__dup │ Near boundary │
+  └───────────────────────────────────┴────────────────┴───────────────┘
+
+  Placement Constraint (par_msid constraint file):
+  set_location -coordinates {1430000 345000} \
+    [get_cells stsrbrcalc/in_flight_valid_brM112H_dup_reg_*]
+
+========================================
+5. COST
+========================================
+
+  ┌───────────────┬─────────────────────────────────────────────────────────────────────┐
+  │ Item          │ Impact                                                              │
+  ├───────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ Area          │ ~7 FFs × ~2μm² = ~14μm² (negligible)                                │
+  ├───────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ Power         │ ~7 FFs × ~0.01mW = ~0.07mW (negligible, may even save buffer power) │
+  ├───────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ RTL change    │ Add 7 duplicate registers + rewire boundary outputs                 │
+  ├───────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ Risk          │ Low — same D input, functionally identical                          │
+  ├───────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ Expected gain │ ~75ps on all 7 bits — enough to close the entire bus                │
+  └───────────────┴─────────────────────────────────────────────────────────────────────┘
+
+  ⚠ LATENCY NOTE: Duplicated FF adds 1 cycle of latency on this signal.
+  Architecture team MUST confirm branch prediction can tolerate 1 extra
+  cycle on in_flight_valid_brM112H from MSID stsr → FE bpu/bpstewd.
+
+========================================
+6. WHO NEEDS TO DO WHAT
+========================================
+
+   1. RTL team (par_msid owner): Add 7 duplicate FFs in stsrbrcalc,
+      wire their Q to the boundary port instead of the original Q
+   2. PnR team (par_msid PO): Add placement bound to put the 7 dup
+      FFs near the boundary port region (~1430K, ~340K)
+   3. No change needed in par_fe — it just sees the signal arriving
+      faster
+
+========================================
+7. ACTION ITEMS
+========================================
+
+  [ ] 1. Get architecture review on 1-cycle latency impact
+        - Signal: in_flight_valid_brM112H[0:6]
+        - From: MSID stsr branch calculator
+        - To: FE bpu steer/update (BpStBlockUpdatesM122H)
+        - Question: Can branch prediction tolerate 1 extra cycle?
+
+  [ ] 2. If approved — implement RTL change in stsrbrcalc module
+        - Add 7 duplicate registers
+        - Route output through duplicates
+
+  [ ] 3. Add placement constraint for duplicate FFs near boundary
+
+  [ ] 4. Run branch prediction regression tests
+
+  [ ] 5. Verify timing closure on next daily run
+
+  [ ] 6. Check icore1 — same fix applies (identical topology)
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              PART B — ANALYSIS DATA (HOW WE GOT HERE)                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+========================================
+8. PROBLEM DETAILS
+========================================
+
+  Signal "in_flight_valid_brM112H[0][0:6]" is a 7-bit bus crossing from
+  par_msid (source) to par_fe (endpoint). ALL 7 bits are failing timing.
+  This is a SYSTEMATIC bus-level failure — not a single-bit issue.
+
+  Path Group : mclk_fe
+  Path Type  : max (setup)
+  Clock      : mclk_msid → mclk_fe (inter-clock, period = 186ps)
+  Sigma      : 4.4
+
+  Bus Slack Status:
+
+  Bit    Slack (ps)   Status
+  ----   ----------   ---------
+  [0]     -33         VIOLATED
+  [1]     -37         VIOLATED
+  [2]     -40         VIOLATED
+  [3]     -42         VIOLATED
+  [4]     -45         VIOLATED
+  [5]     -51         VIOLATED
+  [6]     -61         VIOLATED  ← worst bit (in filtered report)
+
+  Notes:
+  - Only bit [6] appears in timing_summary.xml.filtered (worst path report)
+  - All other bits found via slack_per_port report
+  - icore0 and icore1 have identical failure pattern → design/topology issue
+
+========================================
+9. PATH ANALYSIS (WORST BIT [6])
+========================================
+
+  Startpoint : icore0/par_msid/msid/stsr/stsrbrcalc/
+               in_flight_valid_brM112H_reg_0__6_/CP
+               (rising edge-triggered FF, clocked by mclk_msid)
+
+  Endpoint   : icore0/par_fe/fe/bpu/bpstewd/
+               BpStBlockUpdatesM122H_reg/CN
+               (rising edge-triggered FF, clocked by mclk_fe)
+               ** NOTE: CN pin = inverted clock input **
+
+  Slack      : -60.7 ps (VIOLATED)
+  Norm Slack : -0.3
+
+  ---- Timing Breakdown ----
+
+  Clock network (source)     : 101.1 ps
+  par_msid data path         :  97.7 ps  ← 83ps in buffer chain
+  Partition boundary crossing :   0.0 ps  (hierarchical ports)
+  par_fe data path           : 119.0 ps  ← 7 logic stages
+  Total data arrival         : 317.8 ps
+  Data required              : 254.2 ps
+  Slack                      : -60.7 ps (after statistical adjustment)
+
+========================================
+10. BOTTLENECK IDENTIFICATION
+========================================
+
+  A) par_msid SIDE (source → boundary): 97.7 ps
+  -----------------------------------------------
+  The source FF output goes through a 5-stage buffer chain to reach
+  the par_msid boundary port:
+
+    Stage  Cell                              Type        Delay
+    -----  ----                              ----        -----
+    1      invs_cts_FE_OCPC187314_*         BUFFSR2BFYD8   5.4 ps
+    2      invs_place_FE_OFC1182789_*       INVREPM2P30    3.8 ps
+    3      invs_place_FE_OFC792539_*        INVREPM2P30    4.1 ps
+    4      invs_cts_FE_RC_158358_0          BUFFSR2BFYD18  8.9 ps
+    5      invs_place_FE_OFC19235_*         BUFFSR2BFYD6   6.8 ps
+    6      invs_place_FE_OFC781452_*        INVD16         3.1 ps
+    7      in_flight_valid_brm112h_*_inv_2  INVREPM2P30    6.2 ps
+           ─────────────────────────────────────────────────────
+           Buffer chain subtotal:                        ~83 ps
+
+  KEY ISSUE: SR2BFY cells (scan-repair-friendly) are weak drive.
+  Long physical distance from FF to boundary requires multiple stages.
+
+  B) par_fe SIDE (boundary → endpoint): 119 ps
+  -----------------------------------------------
+  Signal enters par_fe and goes through combinational logic stages
+  in bpbitarym (branch prediction bit array) and bpstewd:
+
+    Stage  Cell / Function                            Delay
+    -----  ----                                       -----
+    1      invs_cts_FE_OFC1254009_* (BUFFSR2BFYD6)    8.2 ps
+    2      invs_place_FE_OFC502168_* (BUFFSR2D6)       8.3 ps
+    3      invs_place_FE_RC_68201_0 (NR2SKF)           8.8 ps
+    4      invs_place_FE_RC_60346_0 (NR2SKR)           6.0 ps
+    5      invs_place_FE_RC_136033_0 (ND2D6)           4.2 ps
+    6      invs_place_FE_RC_155010_0 (NR2SKR)          3.4 ps
+    7      invs_place_FE_RC_155004_0 (ND3D4)           3.7 ps
+    8      invs_place_FE_RC_46197_0 (ND2D6)            4.4 ps
+    9      invs_place_FE_OCPC924404_* (BUFFSKF)        7.7 ps
+    10     invs_place_FE_OFC550928_* (INVD12)          5.2 ps
+    11     invs_place_FE_RC_64710_0 (NDNR22)           3.1 ps
+    12     invs_place_FE_OFC528200_* (INVSKR)          3.7 ps
+           ─────────────────────────────────────────────────
+           par_fe logic subtotal:                    ~119 ps
+
+  KEY ISSUE: Deep combinational logic in branch prediction. This side
+  is harder to optimize without RTL changes to bpbitarym/bpstewd.
+
+========================================
+11. PHYSICAL DISTANCE ANALYSIS
+========================================
+
+  Source FF location   : (1,104,648 , 168,655)   in par_msid/stsrbrcalc
+  par_msid boundary    : (1,440,672 , 352,510)   partition edge
+  par_fe boundary      : (1,441,248 , 352,510)   partition edge
+  Endpoint FF location : (1,553,256 , 649,965)   in par_fe/bpstewd
+
+  Distance source FF → boundary   : ~383 μm (Manhattan)
+  Distance boundary → endpoint FF : ~318 μm (Manhattan)
+  Total path distance             : ~657 μm
+
+  CONCLUSION: The buffer chain in par_msid exists to drive signal
+  over 383 μm from the source FF to the partition boundary.
+
+  ---- Path Diagram ----
+
+  BEFORE:
+    Source FF          5-stage buffer chain          Boundary
+    (stsrbrcalc)  ──→  BUF → INV → INV → BUF → BUF → INV → INV ──→  par_fe
+    @(1104648,         ~383 μm wire + buffers                @(1440672,
+     168655)           83 ps delay                            352510)
+
+  AFTER:
+    Source FF       short wire      Dup FF         short wire    Boundary
+    (stsrbrcalc) ──────────────→  (near boundary) ────────────→  par_fe
+    @(1104648,     1 cycle latency  @(~1430000,    ~8 ps wire    @(1440672,
+     168655)       (186 ps avail)    ~345000)      NO buffers     352510)
+
+========================================
+12. NEIGHBOR STAGE MARGIN CHECK
+========================================
+
+  Checked retiming potential (Technique 6) for stages adjacent to
+  source and endpoint FFs:
+
+  A) Stage BEFORE source FF (feeds D pin of source FF):
+     - NOT found in timing_summary.xml.filtered
+     - NOT found in nworst reports
+     → Likely has POSITIVE slack (margin available)
+
+  B) Stage AFTER endpoint FF (driven by Q pin of endpoint FF):
+     - NOT found in timing_summary.xml.filtered
+     - NOT found in nworst reports
+     → Likely has POSITIVE slack (margin available)
+
+  CONCLUSION: Both neighbor stages have margin. Retiming is viable
+  but FF duplication is simpler and more effective for this case.
+
+========================================
+13. ALTERNATIVE FIXES CONSIDERED (AND WHY REJECTED)
+========================================
+
+  Technique 1 — Cell Upsizing:
+    Replace SR2BFY buffers with stronger cells.
+    Expected gain: ~15-20 ps. NOT enough to close -61 ps.
+    REJECTED as standalone fix.
+
+  Technique 2 — Remove SR2BFY Cells:
+    Replace scan-repair-friendly buffers with standard buffers.
+    Expected gain: ~20-30 ps. May not close worst bits.
+    COULD BE COMBINED with other techniques.
+
+  Technique 6 — Retiming:
+    Borrow time from neighbor stages.
+    Both neighbors have margin, but -61 ps is too much to borrow
+    without risking failures on neighbor paths.
+    REJECTED as standalone fix.
+
+  Technique 8 — Port Spec Rebudget:
+    Change timing budget at partition boundary.
+    Possible but pushes problem to par_fe side which already has
+    deep logic (119 ps). May create new failures.
+    NOT RECOMMENDED.
+
+  Technique 9 — Placement Optimization:
+    Move cells closer. Limited gain since distance is inherent
+    to partition floorplan.
+    COULD HELP but won't solve 61 ps gap alone.
+
+  ▶ TECHNIQUE 5 (FF DUPLICATION) was selected because:
+    - Provides largest gain (~75 ps) — closes ALL bits with margin
+    - Minimal area/power cost
+    - Clean implementation (RTL + constraint)
+    - Only risk is 1-cycle latency — needs architecture review
+
+========================================
+14. COMMANDS USED FOR THIS ANALYSIS
+========================================
+
+  # Get worst path for specific bit:
+  report_timing -from */in_flight_valid_brM112H_reg_0__6_/CP \
+    -to */BpStBlockUpdatesM122H_reg/CN \
+    -nosplit -input_pins -nets -transition_time -capacitance \
+    -crosstalk_delta -sort_by slack -physical
+
+  # Check all bus bits in slack_per_port report:
+  grep "in_flight_valid_brm112h_0_\[" \
+    slack_per_port.func.max_high.T_85.typical.rpt
+
+  # Check neighbor margins:
+  grep "in_flight_valid_brM112H_reg_0__6_/D" \
+    *_timing_summary.xml.filtered
+  grep "BpStBlockUpdatesM122H_reg/Q" \
+    *_timing_summary.xml.filtered
+
+  # Check if bits appear in filtered reports:
+  grep "in_flight_valid_brm112h" \
+    *_timing_summary.xml.filtered
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║              PART C — ORIGINAL TIMING PATH (RAW REPORT)                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Report : timing
+	collection of 1 path(s)
+	-nosplit
+	-input_pins
+	-nets
+	-transition_time
+	-capacitance
+	-crosstalk_delta
+	-sort_by slack
+	-physical
+Design : core_client
+Version: V-2023.12-SP5-4-VAL-20251014
+Date   : Thu Feb 26 13:27:49 2026
+****************************************
+Report timing status: Started...
+  Startpoint: icore0/par_msid/msid/stsr/stsrbrcalc/in_flight_valid_brM112H_reg_0__6_/CP (rising edge-triggered flip-flop clocked by mclk_msid)
+  Endpoint: icore0/par_fe/fe/bpu/bpstewd/BpStBlockUpdatesM122H_reg/CN (rising edge-triggered flip-flop clocked by mclk_fe)
+  Path Group: mclk_fe
+  Path Type: max
+  Sigma: 4.4
+  Fanout   Cap DTrans   Trans     Delta    Mean     Sensit   Incr       Path    Location                 object.max_slack        Point
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                            0.0               0.0        0.0                                                     clock mclk_msid (rise edge)
+                                           99.1      0.4    101.1      101.1                                                     clock network delay (propagated)
+                          18.7              0.0      0.0      0.0      101.1 r  (1104648.0,168655.0)                -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/in_flight_valid_brM112H_reg_0__6_/CP (SDFMQSXGD2BWP156HPNPN3P48CPDULVT)
+                           5.3             13.7      0.4     14.4 &    115.5 f  (1105320.0,168641.0)                -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/in_flight_valid_brM112H_reg_0__6_/Q (SDFMQSXGD2BWP156HPNPN3P48CPDULVT)
+    1   1.5                                                                                                                      icore0/par_msid/msid/stsr/stsrbrcalc/invs_place_FE_OFN449824_n_4133 (net) 
+                 0.0       5.8     0.0      0.4      0.0      0.4 &    115.9 f  (1105992.0,167822.0)                -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/invs_cts_FE_OCPC187314_invs_place_FE_OFN449824_n_4133/I (BUFFSR2BFYD8BWP156HNPPN3P48CPDULVT)
+                           2.6              5.0      0.2      5.0 &    120.9 f  (1105896.0,167689.0)                -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/invs_cts_FE_OCPC187314_invs_place_FE_OFN449824_n_4133/Z (BUFFSR2BFYD8BWP156HNPPN3P48CPDULVT)
+    2   4.9                                                                                                                      icore0/par_msid/msid/stsr/stsrbrcalc/invs_cts_FE_OCPN1130441_invs_place_FE_OFN449824_n_4133 (net) 
+                 0.0       5.9     0.0      1.4      0.0      1.4 &    122.3 f  (1107192.0,167705.0)                -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/invs_place_FE_OFC1182789_n_4133/I (INVREPM2P30ITLICMD12BWP156HNPPN3P48CPDULVT)
+                           6.7              3.8      0.1      3.8 &    126.1 r  (1107008.0,167629.0)                -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/invs_place_FE_OFC1182789_n_4133/ZN (INVREPM2P30ITLICMD12BWP156HNPPN3P48CPDULVT)
+    1  18.9                                                                                                                      icore0/par_msid/msid/stsr/stsrbrcalc/invs_place_FE_OFN449826_n_4133 (net) 
+                 4.4      12.3     0.7      5.0      0.0      5.0 &    131.1 r  (1144968.0,182369.0)                -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/invs_place_FE_OFC792539_n_4133/I (INVREPM2P30ITLICMD18BWP156HNPPN3P48CPDULVT)
+                           6.1              4.1      0.1      4.1 &    135.2 f  (1144666.0,182293.0)                -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/invs_place_FE_OFC792539_n_4133/ZN (INVREPM2P30ITLICMD18BWP156HNPPN3P48CPDULVT)
+    3  32.0                                                                                                                      icore0/par_msid/msid/stsr/stsrbrcalc/in_flight_valid_brM112H[0][6] (net) 
+                           0.0              0.0      0.0      0.0 &    135.2 f  unplaced                            -60.7        icore0/par_msid/msid/stsr/stsrbrcalc/in_flight_valid_brM112H[0][6] (par_msid_stsrbrcalc)
+                                                                                                                                 icore0/par_msid/msid/stsr/in_flight_valid_brM112H[0][6] (net) 
+                           0.0              0.0      0.0      0.0 &    135.2 f  unplaced                            -60.7        icore0/par_msid/msid/stsr/in_flight_valid_brM112H[0][6] (par_msid_stsr)
+                                                                                                                                 icore0/par_msid/msid/in_flight_valid_brM112H[0][6] (net) 
+                           0.0              0.0      0.0      0.0 &    135.2 f  unplaced                            -60.7        icore0/par_msid/msid/in_flight_valid_brM112H[0][6] (par_msid_msid)
+                                                                                                                                 icore0/par_msid/n_4133 (net) 
+                12.2      24.7     1.1     12.0      0.0     12.0 &    147.2 f  (1239384.0,224466.0)                -60.7        icore0/par_msid/invs_cts_FE_RC_158358_0/I (BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT)
+                           5.5              8.8      0.1      8.9 &    156.1 f  (1239048.0,224473.0)                -60.7        icore0/par_msid/invs_cts_FE_RC_158358_0/Z (BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT)
+    1  31.3                                                                                                                      icore0/par_msid/invs_cts_FE_OFN1100353_n_4133 (net) 
+                12.0      15.9     1.4      7.9      0.0      7.9 &    164.0 f  (1332840.0,267001.0)                -60.7        icore0/par_msid/invs_place_FE_OFC19235_n_4133/I (BUFFSR2BFYD6BWP156HNPPN3P48CPDULVT)
+                           3.8              6.7      0.2      6.8 &    170.8 f  (1332744.0,266935.0)                -60.7        icore0/par_msid/invs_place_FE_OFC19235_n_4133/Z (BUFFSR2BFYD6BWP156HNPPN3P48CPDULVT)
+    1   4.4                                                                                                                      icore0/par_msid/invs_place_FE_OFN449827_n_4133 (net) 
+                 0.0       4.5     0.0      0.5      0.0      0.5 &    171.2 f  (1332936.0,267187.0)                -60.7        icore0/par_msid/invs_place_FE_OFC781452_n_4133/I (INVD16BWP156HNPPN3P48CPDULVT)
+                           6.0              3.1      0.1      3.1 &    174.4 r  (1332744.0,267247.0)                -60.7        icore0/par_msid/invs_place_FE_OFC781452_n_4133/ZN (INVD16BWP156HNPPN3P48CPDULVT)
+    1  34.0                                                                                                                      icore0/par_msid/n_4134 (net) 
+                19.6      36.7     4.2     18.3      0.0     18.3 &    192.7 r  (1436424.0,300073.0)                -60.7        icore0/par_msid/in_flight_valid_brm112h_0_x6x_sideload_inv_2/I (INVREPM2P30ITLICMD16BWP156HNPPN3P48CPDULVT)
+                          11.3              6.1      0.1      6.2 &    198.8 f  (1436354.0,299917.0)                -60.7        icore0/par_msid/in_flight_valid_brm112h_0_x6x_sideload_inv_2/ZN (INVREPM2P30ITLICMD16BWP156HNPPN3P48CPDULVT)
+    2  22.7                                                                                                                      icore0/par_msid/in_flight_valid_brm112h_0_[6] (net) 
+                           0.0              0.0      0.0      0.0 &    198.8 f  (1440672.0,352510.0)                -60.7        icore0/par_msid/in_flight_valid_brm112h_0_[6] (par_msid) <-
+                                                                                                                                 icore0/in_flight_valid_brM112H_6_ (net) 
+                           0.0              0.0      0.0      0.0 &    198.8 f  (1441248.0,352510.0)                -60.7        icore0/par_fe/in_flight_valid_brm112h_0_[6] (par_fe)
+                                                                                                                                 icore0/par_fe/in_flight_valid_brm112h_0_[6] (net) 
+                           0.0              0.0      0.0      0.0 &    198.8 f  unplaced                            -60.7        icore0/par_fe/fe/in_flight_valid_brM112H[0][6] (par_fe_fe)
+                                                                                                                                 icore0/par_fe/fe/in_flight_valid_brM112H[0][6] (net) 
+                 6.3      20.5     0.9      9.5      0.0      9.5 &    208.4 f  (1464264.0,382650.0)                -60.7        icore0/par_fe/fe/invs_cts_FE_OFC1254009_in_flight_valid_brm112h_0__6/I (BUFFSR2BFYD6BWP156HNPPN3P48CPDULVT)
+                          10.4              8.1      0.2      8.2 &    216.6 f  (1464168.0,382687.0)                -60.7        icore0/par_fe/fe/invs_cts_FE_OFC1254009_in_flight_valid_brm112h_0__6/Z (BUFFSR2BFYD6BWP156HNPPN3P48CPDULVT)
+    1  22.3                                                                                                                      icore0/par_fe/fe/invs_cts_FE_OFN2181884_in_flight_valid_brm112h_0__6 (net) 
+                           0.0              0.0      0.0      0.0 &    216.6 f  unplaced                            -60.7        icore0/par_fe/fe/bpu/in_flight_valid_brM112H[0][6] (par_fe_bpu)
+                                                                                                                                 icore0/par_fe/fe/bpu/in_flight_valid_brM112H[0][6] (net) 
+                           0.0              0.0      0.0      0.0 &    216.6 f  unplaced                            -60.7        icore0/par_fe/fe/bpu/bpbitarym/in_flight_valid_brM112H[0][6] (par_fe_bpbitarym)
+                                                                                                                                 icore0/par_fe/fe/bpu/bpbitarym/in_flight_valid_brM112H[0][6] (net) 
+                19.2      22.9     2.4     11.6      0.0     11.6 &    228.2 f  (1438056.0,436975.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OFC502168_in_flight_valid_brm112h_0__6/I (BUFFSR2D6BWP156HNPPN3P48CPDULVT)
+                           5.5              8.1      0.2      8.3 &    236.4 f  (1438152.0,436975.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OFC502168_in_flight_valid_brm112h_0__6/Z (BUFFSR2D6BWP156HNPPN3P48CPDULVT)
+    3   9.9                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OFN1568510_in_flight_valid_brm112h_0__6 (net) 
+                11.6      13.6     2.7      8.4      0.0      8.4 &    244.8 f  (1438392.0,474861.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_68201_0/A1 (NR2SKFITLICMD4BWP156HPNPN3P48CPDULVT)
+                          13.5              8.7      0.2      8.8 &    253.6 r  (1438248.0,474884.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_68201_0/ZN (NR2SKFITLICMD4BWP156HPNPN3P48CPDULVT)
+    2   3.3                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/n_14339 (net) 
+                 0.0      14.0     0.0      0.6      0.0      0.6 &    254.3 r  (1438248.0,476710.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_60346_0/A2 (NR2SKROD4BWP156HPNPN3P48CPDULVT)
+                           8.1              5.8      0.2      6.0 &    260.3 f  (1438152.0,476725.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_60346_0/ZN (NR2SKROD4BWP156HPNPN3P48CPDULVT)
+    1   1.9                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/n_14351 (net) 
+                 0.0       8.1     0.0      0.1      0.0      0.1 &    260.4 f  (1438248.0,476828.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_136033_0/A1 (ND2D6BWP156HNPPN3P48CPDULVT)
+                           8.5              4.2      0.1      4.2 &    264.6 r  (1438152.0,476977.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_136033_0/ZN (ND2D6BWP156HNPPN3P48CPDULVT)
+    1   5.5                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RN_67670_0 (net) 
+                 4.2      10.2     0.9      3.0      0.0      3.0 &    267.7 r  (1443576.0,496545.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_155010_0/A1 (NR2SKRD4BWP156HPNPN3P48CPDULVT)
+                           4.8              3.3      0.1      3.4 &    271.0 f  (1443432.0,496537.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_155010_0/ZN (NR2SKRD4BWP156HPNPN3P48CPDULVT)
+    1   1.6                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RN_77955_0 (net) 
+                 0.4       5.1     0.1      0.5      0.0      0.5 &    271.5 f  (1442616.0,496796.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_155004_0/A3 (ND3D4BWP156HNPPN3P48CPDULVT)
+                           7.9              3.7      0.1      3.7 &    275.3 r  (1442472.0,497035.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_155004_0/ZN (ND3D4BWP156HNPPN3P48CPDULVT)
+    1   2.0                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RN_22435_0 (net) 
+                 0.0       8.6     0.0      0.7      0.0      0.7 &    276.0 r  (1444056.0,498082.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_46197_0/A2 (ND2D6BWP156HPPNN3P48CPDULVT)
+                           7.8              4.4      0.1      4.4 &    280.4 f  (1444104.0,498067.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_46197_0/ZN (ND2D6BWP156HPPNN3P48CPDULVT)
+    2   5.0                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/BpBiqIsFull111H (net) 
+                 0.0      10.6     0.0      1.5      0.0      1.5 &    281.9 f  (1444296.0,503119.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OCPC924404_invs_place_FE_RN_22436_0/I (BUFFSKFDHDVGD32BWP156HPNPN3P48CPDULVT)
+                           6.1              7.6      0.1      7.7 &    289.6 f  (1444488.0,503089.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OCPC924404_invs_place_FE_RN_22436_0/Z (BUFFSKFDHDVGD32BWP156HPNPN3P48CPDULVT)
+    3  38.8                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OCPN43334_invs_place_FE_RN_22436_0 (net) 
+                 1.8      20.2     0.5      8.4      0.0      8.4 &    298.0 f  (1487880.0,636595.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OFC550928_n_59584/I (INVD12BWP156HNPPN3P48CPDULVT)
+                           6.7              5.2      0.1      5.2 &    303.2 r  (1487784.0,636625.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OFC550928_n_59584/ZN (INVD12BWP156HNPPN3P48CPDULVT)
+    1   5.1                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_OFN1701322_n_59584 (net) 
+                 1.6       7.6     0.5      1.8      0.0      1.8 &    305.1 r  (1495032.0,650026.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_64710_0/A1 (NDNR22ITLICMD4BWP156HPNPN3P48CPDULVT)
+                           5.0              3.1      0.1      3.1 &    308.2 f  (1495080.0,649988.0)                -60.7        icore0/par_fe/fe/bpu/bpbitarym/invs_place_FE_RC_64710_0/Z (NDNR22ITLICMD4BWP156HPNPN3P48CPDULVT)
+    1   2.0                                                                                                                      icore0/par_fe/fe/bpu/bpbitarym/BpBiqIsFullContainsUpdatesM112H (net) 
+                           0.0              0.0      0.0      0.0 &    308.2 f  unplaced                            -60.7        icore0/par_fe/fe/bpu/bpbitarym/BpBiqIsFullContainsUpdatesM112H (par_fe_bpbitarym)
+                                                                                                                                 icore0/par_fe/fe/bpu/BpBiqIsFullContainsUpdatesM112H (net) 
+                           0.0              0.0      0.0      0.0 &    308.2 f  unplaced                            -60.7        icore0/par_fe/fe/bpu/bpstewd/BpBiqIsFullContainsUpdatesM112H (par_fe_bpstewd)
+                                                                                                                                 icore0/par_fe/fe/bpu/bpstewd/BpBiqIsFullContainsUpdatesM112H (net) 
+                 0.0       5.0     0.0      0.1      0.0      0.1 &    308.2 f  (1495368.0,649839.0)                -60.7        icore0/par_fe/fe/bpu/bpstewd/invs_place_FE_OFC528200_BpBiqIsFullContainsUpdatesM112H/I (INVSKRD8BWP156HNPPN3P48CPDULVT)
+                           7.8              3.7      0.1      3.7 &    311.9 r  (1495272.0,649759.0)                -60.7        icore0/par_fe/fe/bpu/bpstewd/invs_place_FE_OFC528200_BpBiqIsFullContainsUpdatesM112H/ZN (INVSKRD8BWP156HNPPN3P48CPDULVT)
+    1  10.2                                                                                                                      icore0/par_fe/fe/bpu/bpstewd/invs_place_FE_OFN1781261_BpBiqIsFullContainsUpdatesM112H (net) 
+                 4.5      12.1     1.3      5.9      0.0      5.9 &    317.8 r  (1553256.0,649965.0)                -60.7        icore0/par_fe/fe/bpu/bpstewd/BpStBlockUpdatesM122H_reg/CN (SDFKCNQTXGOPTQAITLICMD4BWP156HPNPN3P48CPDULVT)
+                                                                       317.8                                                     data arrival time
+                                          186.0             186.0      186.0                                                     clock mclk_fe (rise edge)
+                                           87.8      0.4     86.2      272.2                                                     clock network delay (propagated)
+                                            0.0      0.0      0.0      272.2                                                     clock reconvergence pessimism
+                                          -12.0             -12.0      260.2                                                     inter-clock uncertainty
+                                                                       260.2 r  (1552488.0,650049.0)                             icore0/par_fe/fe/bpu/bpstewd/BpStBlockUpdatesM122H_reg/CP (SDFKCNQTXGOPTQAITLICMD4BWP156HPNPN3P48CPDULVT)
+                                           -0.6      1.5     -6.0      254.2                                                     library setup time
+                                          261.2      1.6               254.2                                                     data required time
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                          261.2      1.6               254.2                                                     data required time
+                                         -314.0      0.9              -317.8                                                     data arrival time
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                              2.9      -60.7                                                     statistical adjustment
+                                          -52.8      1.8               -60.7                                                     slack (VIOLATED)
+  ---------------------------------------------------
+  normalization delay                     186.0
+  normalized slack                         -0.3
+
+================================================================================
+  END OF PROPOSAL
+  File: in_flight_valid_brM112H_ff_duplication_proposal.txt
+================================================================================

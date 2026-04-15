@@ -1,0 +1,161 @@
+================================================================================
+  PAR_STATUS_DIFF COOKBOOK
+  Partition Interface Diff Tool — Track Changes Across Daily Builds
+================================================================================
+
+WHAT THIS TOOL DOES:
+  Compares IFC timing data between 2 or 3 daily builds and reports:
+  - REGRESSIONS: signals that got worse (WNS decreased)
+  - IMPROVEMENTS: signals that got better (WNS increased)
+  - NEW: signals that appeared (not in the older build)
+  - GONE: signals that disappeared (were in older, not in newer)
+  - UNCHANGED: signals within threshold of same WNS
+
+  Generates per-partition diff reports with ANSI colors baked in,
+  plus an all-partition summary table.
+
+================================================================================
+  QUICK START
+================================================================================
+
+  # Compare latest build against previous 2 (auto-detected):
+  python3 par_status_diff.py --latest WW11G
+
+  # Compare specific builds:
+  python3 par_status_diff.py --builds WW11E WW11G
+
+  # Single partition only:
+  python3 par_status_diff.py --latest WW11G -p par_exe
+
+  # Higher threshold (only show >10ps changes):
+  python3 par_status_diff.py --latest WW11G -t 10
+
+  # Plain text (no colors):
+  python3 par_status_diff.py --latest WW11G --no-color
+
+================================================================================
+  COMMAND LINE OPTIONS
+================================================================================
+
+  --latest TAG        Latest build tag (e.g. WW11G). Auto-finds previous 2.
+  --builds TAG1 TAG2  Compare specific build tags (2 or 3 tags).
+  -p, --partition     Partition name or "all" (default: all).
+  -t, --threshold     Min WNS delta in ps to report (default: 3ps).
+  -o, --outdir        Output directory (default: current directory).
+  --no-color          Plain text output without ANSI codes.
+
+================================================================================
+  OUTPUT FILES
+================================================================================
+
+  all_par_diff_summary.txt      — one-line summary per partition
+  par_ooo_int_diff.txt          — full diff for par_ooo_int
+  par_meu_diff.txt              — full diff for par_meu
+  par_exe_diff.txt              — full diff for par_exe
+  ... (one per partition)
+
+  All files have ANSI colors baked in by default.
+  Use: cat par_exe_diff.txt     — colors show directly in terminal.
+
+================================================================================
+  HOW TO READ THE SUMMARY
+================================================================================
+
+  PARTITION        Total→  Regress  Improve    New   Gone  Unchg  Worst Regression   Δ
+  ──────────────  ───────  ───────  ───────  ─────  ─────  ─────  ─────────────────  ─
+  par_ooo_int     515→571        1        0     56      0    514  idisvpenabledm200h -8
+  par_meu         428→485        2        0     59      2    424  pmphyadrm402h     -11
+
+  Total→        Families in old → new build
+  Regress       Signals with WNS worse by more than threshold
+  Improve       Signals with WNS better by more than threshold
+  New           Signals only in the newer build
+  Gone          Signals only in the older build
+  Unchg         Signals within threshold — effectively no change
+  Worst Regr.   Signal with biggest WNS degradation
+  Δ             WNS change of worst regression (negative = worse)
+
+================================================================================
+  HOW TO READ PER-PARTITION DIFF
+================================================================================
+
+  Each partition diff has 4 sections:
+
+  REGRESSIONS — signals that got WORSE
+    Signal             Crossing                E      G     Δ
+    rsi2vuopvm304h     par_ooo_int → par_meu   -24   -84   -60
+
+    → This signal regressed 60ps between E and G. Investigate!
+
+  IMPROVEMENTS — signals that got BETTER
+    Signal             Crossing                E      G     Δ
+    rsagisflatm301h    par_ooo_int → par_meu   -92   -41   +51
+
+    → Fix landed or model improved. 51ps gain.
+
+  NEW SIGNALS — only in the newer build
+    Signal             Crossing                WNS  Paths
+    intprf_fary_post   par_ooo_int → par_meu  -222     56
+
+    → Brand new failing interface. Likely new IFC constraint or RTL change.
+
+  GONE SIGNALS — were failing, no longer reported
+    Signal             Crossing                was  Paths
+    rsgsseulem301h     par_ooo_int → par_meu   -53     12
+
+    → Fixed, or constraint removed, or merged into another family.
+
+================================================================================
+  TYPICAL WORKFLOW
+================================================================================
+
+  1. New daily build arrives
+     → Run par_status_diff.py --latest <TAG>
+     → Check summary: any regressions? Big new signals?
+
+  2. Regressions found
+     → Open par_<name>_diff.txt for details
+     → Compare WNS delta — prioritize >20ps regressions
+     → Check if regression is from model change or new constraint
+
+  3. New signals found
+     → Check if these need HSDs filed (use par_status.py for full status)
+     → Large new WNS failures may indicate IFC or RTL changes
+
+  4. Improvements found
+     → Verify fix landed (cross-reference with HSD status)
+     → If improvement is from TIP cells, note in tracking
+
+================================================================================
+  ICORE0 / ICORE1 HANDLING
+================================================================================
+
+  The tool automatically deduplicates icore0/icore1 entries:
+  - Strips icore0/ and icore1/ prefixes from port names
+  - Keeps worst WNS if both cores report different values
+  - Works with both old (par_*_ifc.rpt) and new (test_par_*_ifc.rpt) naming
+
+  See par_status_cookbook.txt for full dual-core explanation.
+
+================================================================================
+  BUILD TAG FORMAT
+================================================================================
+
+  Tags follow: WW<week><letter>   e.g. WW11E, WW11F, WW11G
+  - Week = work week number
+  - Letter = build within that week (A=first, B=second, etc.)
+  - --latest WW11G auto-finds WW11E and WW11F as previous builds
+
+  The tool searches for WA directories matching:
+    GFC_CLIENT_*FCT26<TAG>_dcm_daily-CLK039.bu_postcts
+
+================================================================================
+  FILES
+================================================================================
+
+  par_status_diff.py             — the diff engine (in ww12_1/)
+  par_status_diff_cookbook.txt    — this file (in cookbooks/)
+  par_status_cookbook.txt         — main par_status cookbook
+  par_status.py                  — full status tool (in ww12_1/)
+
+================================================================================

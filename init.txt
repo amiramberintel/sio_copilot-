@@ -1,0 +1,132 @@
+================================================================================
+  SIO COPILOT -- INIT FILE
+  Read this file FIRST at the start of every new session.
+  Location: /nfs/site/disks/sunger_wa/init_sio_copilot/init.txt
+================================================================================
+
+=== SEC 1: IDENTITY ===
+
+  User:       Shachar Unger (sunger)
+  Role:       SIO (Sign-off Integration Owner)
+  Project:    GFC Client A0
+  Node:       N2P
+  Focus:      Cross-partition IFC timing debug for core_client block
+  Terminal:   ASCII ONLY -- no Unicode, no emoji
+
+=== SEC 2: PROJECT ===
+
+  Chip:       GFC Client A0
+  Node:       N2P
+  Block:      core_client
+  Clock:      mclk_meu = 186ps (waveform: 0/93)
+
+  Partitions (11):
+    par_exe  par_fe  par_fmav0  par_fmav1  par_meu
+    par_mlc  par_msid  par_ooo_int  par_ooo_vec  par_pm  par_pmh
+
+  Hot partitions (most IFC families, worst WNS):
+    par_meu      -- P1 (246 IFC families, worst WNS -103ps)
+    par_ooo_int  -- P1
+    par_exe      -- P1
+    par_pmh      -- P2
+
+=== SEC 3: PATHS ===
+
+  -> See config/paths.cfg for full path definitions.
+
+  Quick reference:
+    Init root:     /nfs/site/disks/sunger_wa/init_sio_copilot/
+    Skills source: /nfs/site/disks/sunger_wa/skills_for_sio_copilot/
+    Work area:     /nfs/site/disks/sunger_wa/fc_data/my_learns/
+    Current week:  /nfs/site/disks/sunger_wa/fc_data/my_learns/ww14_2/
+
+=== SEC 4: TOOLS ===
+
+  -> See config/tools.cfg for full tool definitions.
+
+  Quick reference:
+    pt_client.pl:  /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl
+    Access:        sg soc -c "pt_client.pl -m <mode> -c '<command>'"
+    Forbidden:     source, exit, save, exec, insert_buffer, size_cell
+
+=== SEC 5: PARTITIONS ===
+
+  -> See partitions/par_*/info.cfg for per-partition details.
+  -> Auto-scan: ls partitions/par_*/info.cfg
+
+=== SEC 6: SKILL REGISTRY ===
+
+  -> See skills/_task_routing.cfg for task-to-skill routing.
+
+  Auto-load (P1 -- always read at session start):
+    skills/ifc/README.txt
+    skills/daily_monitoring/README.txt
+    skills/bu_model/README.txt
+    skills/model_comparison/README.txt
+    skills/setup/README.txt
+    skills/hold/README.txt
+    skills/pvt/README.txt
+    skills/reporting/README.txt
+
+  On-demand (P2-P4 -- read when user asks):
+    skills/clock/               skills/eco/
+    skills/specs/               skills/dfx/
+    skills/caliber/             skills/fev/
+    skills/tip/                 skills/hsd_tracking/
+    skills/onboarding/          skills/cell_library/
+    skills/routing/             skills/cdc/
+    skills/power/               skills/regression_debug/
+
+=== SEC 7: STATUS SNAPSHOT ===
+
+  Latest stable daily: FCT26WW13G / CLK050
+  Latest PTECO:        ww12 (core_client_260322_ww12) -- 9 corners
+  PTECO ww13:          core_client_260329_ww13 -- check availability
+  WW14A daily:         exists but may have missing IFC files
+
+  par_meu:
+    246 unique IFC families
+    Worst WNS: -103ps (rsslowrobidvpm803h)
+    218/246 families matched to daily XML
+    PTECO hold nearly clean (mn_low/mn_nom: 1 family at -4ps)
+    PTECO setup worse on some (simuldisablebugfixm3nnh: -221ps)
+
+  Last updated: 2026-03-30 (ww14_2)
+
+=== SEC 8: TEAM ===
+
+  -> See config/team.cfg for full team list.
+
+  Quick reference:
+    Gil            -- daily builds, IFC reports
+    Alex (ayarokh) -- PTECO post-ECO timing
+    Maha           -- DFX status reporting
+    Shachar (sunger) -- SIO, timing closure debug
+    gpavanku       -- FEV runs (Conformal LEC)
+
+=== SEC 9: GOTCHAS ===
+
+  CRITICAL parsing traps (avoid repeating):
+
+  1. IFC parser: line.startswith('-') skips ALL negative WNS!
+     FIX: use line.startswith('-WNS') to skip only the header
+
+  2. XML slack regex: slack="(-?\d+) matches normalized_slack BEFORE slack!
+     FIX: use ' slack="(-?\d+)' with a LEADING SPACE
+
+  3. Clock names: NOT all clocks have mclk_ prefix.
+     Hold corners: idvfreqOut, idvfreqOut_div2/4/8/16, dcmcbbclk,
+     ijtag_tck, scanclk_div, etc. Always show FULL clock names.
+
+  IFC report direction: first port's partition = source,
+  second unique partition = destination.
+
+  Match key: strip icore0/par_<name>/, strip [*]{}, lowercase,
+  remove _op_N, _feedthru*.
+
+  Hierarchy: always use icore0/par_<name>/signal (not relative).
+  icore0 = primary core, skip icore1.
+
+  GOLDEN RULE: Always verify PT data source with get_designs!
+
+================================================================================

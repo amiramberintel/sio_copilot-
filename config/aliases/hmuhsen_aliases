@@ -1,0 +1,459 @@
+# EC Standard Login Environment -*- sh -*-
+# user .aliases file
+# $Source: /usr/cvs/cvsrep/ec_environ-1.0/release/user/aliases,v $
+# $Revision: 1.1 $
+
+# You may place your personal aliases here or in .cshrc.$USER
+
+#source /p/hdk/pu_tu/prd/fct_alias/rshahav_sbox/utils/fct_run_aliases
+#source /nfs/iil/proj/lnl/pt_server/cth2_ptserver/cth2_ptserver_root//aliases_for_pt_client
+
+alias find_hsd '~baselibr/PNC_script/find_hsd'
+
+set WA = /nfs/site/disks/hmuhsen_wa
+alias change_title 'echo -n "\033]0;\!:1\007"; set title = \!:1 ;set prompt="%{\033[1;34m%}${title}: %{\033[1;31m%}%c>%{\033[0m%} "'
+alias par_data '/nfs/site/disks/home_user/fnaseral/scripts/partition_contour_data'
+# /nfs/site/disks/home_user/fnaseral/scripts/partition_contour_data par_exe PNC78SERVERA0P05_CONTOUR_23WW16B_pkd05_2023WW21.Wednesday
+
+alias pfd 'source /nfs/site/disks/home_user/baselibr/PNC_script/draw_ports_from_def.tcsh \!:1 \!:2 PNC78SERVERA0LATEST > temp.rpt &'
+
+alias port_slack_comp "comp | sort -u -t , -nk2 | sort -u -t , -k1,1 | sort -u -t , -nk2 | aligncsv"
+alias awkmean "awk '{s+="'$1'"}END{print int(s/NR)}'"
+
+alias RTL_ag 'ag "\!:1" \!:2/target/core/suchef//server_1278p6/rtl/*'
+
+# in new unix : nb_cmd xterm &
+alias nb_cmd '/usr/intel/bin/nbjob run --target "sc8_express" --qslot "/c2dg/BE_BigCore/pnc/sd/sles12_sd" --class "SLES12SP5&&256G&&16C"'
+
+#replace multiple spaces with one space
+alias spaces "tr -s ' '"
+
+#delete empty lines
+alias empty_lines 'sed '"'"'/^$/d'"'"' '
+
+#check clocks missing stamping in all_clocks.csv indicators report
+alias missing_stamp 'awk -F '"'"','"'"' '"'"'{if($5=="") print}'"'"''
+
+#unix compress ports
+alias ports_compress '/nfs/site/disks/home_user/baselibr/PNC_script/compress_ports.py'
+
+#OVRs from check_spec
+alias check_spec_2_anottate_port 'awk -v bu=$bu_slack '"'"'$2<bu && $4>0'"'"' | sort -nk2 |  awk -v tar=$target_slack -v min_ovr=$min_override '"'"'$5-tar<min_ovr {print "annotet_port "$3" [expr ${factor}* "$5-tar" ] ; #The distance from the spec is "$5" and the BU margin is "$2" , so adding a override to reflect "tar" to the spec"}'"'"' '
+
+#nb_remove
+alias nb_remove 'echo "nbjob --target sc8_express remove Jobid==\!:1"'
+
+#nb
+alias nbqstate2 'nbstatus jobs --target sc8_express --format table --fi status,jobid,Qslot::40,class::25,Cmdline::200'
+
+#find all releases that private RTL model is based on
+alias setPNC  'source /p/hdk/rtl/hdk.rc -cfg xhdk74 -model_shell -org cdg -m core -s pnc-a0  \!:* ; source ~/.cshrc ~/.aliases '
+
+#remove all lines after match
+alias rm_lines_after_match "sed -n '/Path id 1/q;p'"
+
+#samba path
+alias path2windows 'realpath \!:1 | perl -pe "s|^|\\\\sc8-samba.sc.intel.com|" | perl -pe "s|/|\\|g" | tee /dev/tty | xclip'
+
+#gvim
+alias gv gvim -U ~/.vimrc
+
+#tkdiff with sort
+alias stkdiff 'sort \!:1 > /tmp/left.$USER ; sort \!:2 > /tmp/right.$USER;tkdiff /tmp/left.$USER /tmp/right.$USER &'
+
+#copilot
+alias copilot 'env http_proxy="http://proxy-dmz.intel.com:912/" https_proxy="http://proxy-dmz.intel.com:912/" HTTP_PROXY="http://proxy-dmz.intel.com:912/" HTTPS_PROXY="http://proxy-dmz.intel.com:912/" ALL_PROXY="socks5://proxy-chain.intel.com" /p/hdk/cad/copilot/latest/copilot'
+alias copilot 'setenv http_proxy http://proxy-dmz.intel.com:912; setenv https_proxy http://proxy-dmz.intel.com:912; setenv no_proxy intel.com,.intel.com,localhost,127.0.0.0/8,10.0.0.0/8,192.168.0.0/16,134.134.0.0/16; cat /etc/ssl/certs/Intel_SHA256_Root_CA.pem /etc/ssl/certs/Intel_SHA384_Root_CA.pem /etc/ssl/certs/Intel_Internal_Issuing_CA_5A.pem /etc/ssl/certs/Intel_Internal_Issuing_CA_5B.pem /etc/ssl/certs/Intel_SHA384_Issuing_CA_02.pem >! ~/intel-all.pem; setenv NODE_EXTRA_CA_CERTS ~/intel-all.pem; /p/hdk/cad/copilot/latest/copilot'
+###################### pointers to my disk space #########################
+alias exe_spec_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -file /nfs/iil/stod/stod903/w.hmuhsen.100/spec/par_exe_spec.tcl -par par_exe -type spec
+alias fma_spec_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -file /nfs/iil/stod/stod903/w.hmuhsen.100/spec/par_fma_spec.tcl -par par_fma -type spec
+alias exe_ft_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -file /nfs/iil/stod/stod903/w.hmuhsen.100/spec/par_exe_ft.tcl -par par_exe -type ft_spec
+alias fma_ft_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -file /nfs/iil/stod/stod903/w.hmuhsen.100/spec/par_fma_ft.tcl -par par_fma -type ft_spec
+alias exe_ovr_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -par par_exe -type sio_ovr
+alias fma_ovr_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -par par_fma -type sio_ovr
+alias exe_rm_ovr_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -par par_exe -type remove_sio_ovr
+alias fma_rm_ovr_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -par par_fma -type remove_sio_ovr
+alias exe_internal_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -file /nfs/iil/stod/stod903/w.hmuhsen.100/spec/par_exe_internal_exceptions.tcl -par par_exe -type internal_excep
+alias fma_internal_ci /nfs/iil/disks/core_fct/lnc/fct/fct_scripts/sio_spec_ci.csh -file /nfs/iil/stod/stod903/w.hmuhsen.100/spec/par_fma_internal_exceptions.tcl -par par_fma -type internal_excep
+
+alias send_to_mail "mail $USER -s unix_file -a "
+
+alias comp "sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*\//_*\//g' | sed -e 's/\[[0-9]*\]/\[*\]/g' | sed -e 's/\/d[0-9]/\/d*/g' | sed -e 's/\/D[0-9]/\/D*/g' "
+alias my_count "sort | uniq -c | sort -nr"
+alias aligncsv '/p/mpg/proc/common2/da_utils/fct_skl42/bin//align.pl -id "," -od " "'
+
+alias a alias
+alias home 'cd /nfs/site/disks/home09/hmuhsen'
+#alias wa 'cd /nfs/iil/proj/mpg/procw56/dniv'
+alias p 'pwd'
+alias users_vnc 'ls -tr ~\!:1/.vnc/*log | tail -1|perl -ne "s/.*\///;s/\.log//;print;"'
+alias g 'grep'
+alias l 'less -S -N'
+alias zg 'zgrep'
+alias ne   'nedit'
+alias ndf 'ndf -g'
+alias status '~yvekayya/bin/nbstatus &'
+alias na 'n ~/.aliases'
+alias ra_gui '~yonatanl/scripts/ra_exe_gui.pl &'
+alias sch_gr 'perl /nfs/site/proj/gsr/common/da_utils/fct_gsr/bin/sch_grep.pl'
+alias gueston "vncconfig -EnableGuestLogin=1; vncconfig -GuestAccess=d"
+a reset_fcm 'fcmserver -force -clean -local -mem 2048'lias reset_fcm 'fcmserver -force -clean -local -mem 2048'
+
+#Eden setup
+#/nfs/site/proj/mpg/proc/cad/em64t_linux26/uesetup/uesetup -p cnlcore -milestone cdr2f -m ckt_model -pr 1274 -b <fub> -t eden -n
+#[area name in the stod] -ov [stod path] -d
+
+alias setCNL 'source /p/cnl/rtl/proj_bin_a/setCNL.csh \!:*'
+alias setSNC  'source /p/cnl/rtl/proj_bin_a/setSNC.csh \!:*'
+
+
+
+alias pdgui /nfs/iil/home/ebarnett/pdguib
+setenv S0 /nfs/iil/stod/areas/y/w.hmuhsen.100
+setenv S1 /nfs/iil/stod/areas/y/w.hmuhsen.101
+setenv STOD_DIR /nfs/iil/stod/stod903/w.hmuhsen.100
+setenv EDITOR nedit
+set listmaxrows=100
+set complete=enhance
+alias line 'set listmaxrows=50'
+alias item /nfs/site/proj/mpg/proc/projects/mrm/utils/bin/item
+
+alias runFEV "/nfs/site/proj/mpg/proc/data/fev/tools.rev/ftv_latest/run_fev.pl \!*"
+alias sig_gr '~enevet/scripts/sig_gr.pl'
+alias rep_sig '~/scripts/report_sig.pl'
+alias xm 'xterm -T \!* -geometry 160x50 -fn fixed `~gpatkin/MyTools/rand_color.pl` -e most \!* &'
+alias xl 'xterm -T \!* -geometry 160x50 -fn fixed `~gpatkin/MyTools/rand_color.pl` -e less \!* &'
+alias bgu '~egreen/bin/bgu.pl'
+alias rtler '/p/cnl/rtl/proj_bin_a/rtler &'
+
+#alias dniv_nbqstat 'nbqstat -P sles_exp | grep dniv'
+alias sa 'source ~/.aliases'
+alias tgrp              'zegrep -B1 "O\s+[0-9]"'
+
+alias fixne 'setenv XKEYSYMDB /usr/share/X11/XKeysymDB'
+
+
+###################### CD boot camp #############################
+alias sskl  'source /nfs/site/proj/skl/cd/central/docs/skl_uesetup_aliases'
+alias sivb  'source /nfs/site/proj/ivb/cd/central/docs/ivb_uesetup_aliases'
+
+alias tovr  'ne $WORK/tango/cmd/vex_timing.ovr &'
+alias thack 'ne $WORK/tango/cmd/vex_hack_bvr.ovr &'
+alias rovr  'ne $WORK/tango/rcdly/vex_override.rcdly &'
+
+###################### to open rtl #############################
+alias rtl 'l /p/skl/rtl/models/core/core-ertl-skl-a0-latest/src/core/exe/$DBB.vs'
+
+###################### to open tango interactive #############################
+alias tg 'tg_ta -ri -cell {$DBB} -rls' #after run tg_gui_init
+
+###################### to open FEV map in eden #############################
+alias map 'n $WORK/fev_eden/${DBB}_sch2rtl_full/fev/work/${DBB}.map'
+
+
+###################### to see the tango run log file #########################
+alias tglog 'm $WORK/tango/analysis/${DBB}.tg_ta.log'
+alias tglogp 'm $WORK/tango/analysis/previous_run/${DBB}.tg_ta.log.gz'
+
+
+
+
+###################### LNC #######################################
+
+#Cheeth 1276 setup command
+#/p/hdk/bin/cth_psetup -proj lnl/20.04.036 -cfg lnllnc/LNLLNCA0P03_1276.20.09.SP1_p5.cth -ward $S1 -x '$SETUP_R2G -w LNC_FC/WA -b par_exe -force'
+
+#Create directories (un in Unix under setup):
+#/nfs/site/disks/hdk_sd_utilities/sd_user_utils/cheetah_utils/projects/lnc/bin/create_cth_dir.csh
+
+setenv TZ Asia/Jerusalem
+
+alias BU_path 'echo "runs/lnc_client/h169p45_80nm_tsmc_m18/sta_pt/func.max_turbo.T_85.typical/outputs/lnc_client.pt_session.func.max_turbo.T_85.typical/"'
+
+
+alias lnc_cp_tim 'echo "copy timing collaterals from \!:1" ; cp -Rf \!:1/collateral/timing* collateral/ &'
+alias lnc_cp_rtl 'echo "copy rtl collaterals from \!:1" ; cp -Rf \!:1/collateral/rtl/ collateral/ &'
+alias lnc_cp_upf 'echo "copy upf collaterals from \!:1" ; cp 128 \!:1/collateral/upf/ collateral/ &'
+alias lnc_cp_fp  'echo "copy floorplan collaterals from \!:1" ; cp -Rf \!:1/collateral/floorplan/ collateral/ &'
+alias lnc_cp_snps_scripts  'echo "copy snpsfc scripts from \!:1" ; cp -Rf \!:1/snpsfc/scripts/ snpsfc/ &'
+alias lnc_cp_cdns_scripts  'echo "copy cdninv scripts from \!:1" ; cp -Rf \!:1/cdninv/scripts/ cdninv/ &'
+alias lnc_cp_all 'lnc_cp_tim \!:1 ; lnc_cp_rtl \!:1 ; lnc_cp_upf \!:1 ; lnc_cp_fp \!:1 ; lnc_cp_snps_scripts \!:1 ; lnc_cp_cdns_scripts \!:1'
+
+alias nbstat_alias 'nbstatus jobs --tar iil_express "User=~\!:1"'
+alias nbst "nbstat_alias 'atraitel'"
+
+alias setLNC 'source /p/hdk/rtl/hdk.rc -cfg xhdk74 -model_shell -org cdg -m core -s lnc-a0 \!:* '
+
+#setenv FCT_ALIAS_VER rshahav_sbox
+
+
+alias loadptnb_cth 'nbjob run --target sc8_express --qslot bc12_pnc_fct --class "SLES12SP5&&4C&&256G" /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh  \!:1 -title \!:2'
+alias pnc_loadptnb_cth 'nbjob run --target sc8_express --qslot bc12_pnc_fct --class "SLES12SP5&&4C&&256G" /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh  \!:1 -title \!:2'
+alias gfc_loadptnb_cth 'nbjob run --target sc8_express --qslot bc15_gfc_fct --class "SLES15&&4C&&350G" /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh  \!:1 -title \!:2'
+#alias loadptnb_cth 'nbjob run --target sc8_express --qslot bc12_pnc_fct --class "SLES12SP5&&4C&&256G" /nfs/site/disks/hmuhsen_wa/load_session_cth.csh \!:1 -title \!:2'
+alias loadptnb64_cth '/usr/intel/bin/nbq -C "SLES12&&64G&&4C" -Q lnc12_sd_64G_4C -P iil_express /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh  \!:1 -title \!:2'
+alias loadptnb128_cth '/usr/intel/bin/nbq -C "SLES12&&128G&&8C" -Q lnc12_sd -P iil_express /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+
+alias loadpt_cth '/p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+
+#alias nbqstate 'nbqstat -j -P iil_short user=$USER ; nbqstat -j -P iil_critical user=$USER ; nbqstat -j -P iil_normal user=$USER ; nbqstat -j -P iil_express user=$USER'
+alias nbqstate 'nbqstat -P sc8_express user=$USER'
+#alias nb_remove 'echo "nbjob --target iil_critical remove Jobid==971483143"'
+
+alias soc_fcfe_nb 'nbq -P iil_express -Q /ipg_cnl/design/lnc_be -C "SLES11&&8C&&128G" $SD_RLS/bin/run_fc -fe'
+alias soc_fcbe_nb 'nbq -P iil_express -Q /ipg_cnl/design/lnc_be -C "SLES11&&8C&&128G" $SD_RLS/bin/run_fc -be'
+
+alias rundp2_nb 'nbq -P iil_express -Q /ipg_cnl/design/lnc_be -C "SLES11&&8C&&128G" $SD_INTEG2_OVERRIDES/bin/rundp2'
+
+source /p/mpg/proc/common2/da_utils/fct_skl23ult0j/bin/fct_aliases
+ 
+alias fc 'xterm -geometry 200x40 -bg lightpink -fg black -cr black -font fixed -title "fc_shell" -e fc_shell &'
+
+alias rtlclnt  'm \!:1/target/core/suchef/lnc_client_syn/results/rtl/\!:2.v'
+alias rtlsrvr  'm \!:1/target/core/suchef/lnc_server_syn/results/rtl/\!:2.v'
+alias rtl2be   'm /p/hdk/rtl/models/xhdk74/lnc/core/core-lnc-a0-20ww52b/tools/suchef/suchef_restructure_config.py'
+alias misspec16      'm ~gilkeren/lnc_links/latest_lnc0a_fcl/spec_status/func.max_high.TT_100.tttt/lncserver.missing.spec_filtered.16bit.rpt'
+alias misspec32      'm ~gilkeren/lnc_links/latest_lnc0a_fcl/spec_status/func.max_high.TT_100.tttt/lncserver.missing.spec_filtered.32bit.rpt'
+alias dang      'm ~gilkeren/lnc_links/latest_lnc0a_fcl/runs/lncserver/1276.31/sta_pt/func.max_high.TT_100.tttt/reports/lncserver.func.max_high.TT_100.tttt_margins.rpt | grep "Unconstrained"|most' 
+alias bad_io	'm ~gilkeren/lnc_links/latest_lnc0a_fcl/runs/lncserver/1276.31/sta_pt/func.max_high.TT_100.tttt/reports/par_exe_bad_io.rpt'
+#alias ptlog     'm ~gilkeren/lnc_links/latest_lnc0a_fcl/runs/lncserver/1276.31/sta_pt/func.max_high.TT_100.tttt/logs/lncserver.func.max_high.TT_100.tttt.pt.log'
+alias ptfclerr  'm ~gilkeren/lnc_links/latest_lnc0a_n3_fcl//runs/lnc_server/h169p45_80nm_tsmc_m18/sta_pt/func.max_turbo.T_85.typical/reports/par_\!:1_internal_exception.errors.rpt'
+alias ptbuerr  'm /nfs/iil/home/gilkeren/lnc_links/latest_lnc0a_n3_bu_pre/runs/lnc_server/h169p45_80nm_tsmc_m18/sta_pt/func.max_turbo.T_85.typical/reports/par_\!:1_internal_exception.errors.rpt'
+
+#EBB checker:should provide path to csv file
+alias ebbcheck '~/lnc/fct_files/scripts/ebb_checker \!:1'
+alias washfc 'wash -n -g mpgall sklall hdk10nm hdk7nm hdk7nmproc soc skl_rtl n3 gsrall c2dgusers lionc i1278 tyc tyc78 tyc78proc '
+alias washdesign 'wash -n -g mpgall sklall skl_rtl adl mpgdsgn c2dgusers i1278proc i1278 soc lionc'
+alias specs 'm /nfs/iil/disks/home01/gilkeren/lnc/io_constraints/user_xml/full_user_spec.tcl'
+#N3: /runs/lnc_server/h169p45_80nm_tsmc_m18/sta_pt/inputs/lnc_server.func.max_high.T_85.typical_timing_specs.xml
+alias fmaio 'm ~gilkeren/lnc_links/latest_lnc0a_fcl/runs/par_fma/1276.31/release/latest/timing_collateral/func.max_high.TT_100.tttt/par_fma_io_constraints.tcl'
+alias exeio 'm ~gilkeren/lnc_links/latest_lnc0a_fcl/runs/par_exe/1276.31/release/latest/timing_collateral/func.max_high.TT_100.tttt/par_exe_io_constraints.tcl'
+
+
+
+alias userspec 'm ~gilkeren/lnc_links/latest_lnc0a_fcl/fct/lncserver.func.max_high.TT_100.tttt_timing_specs.xml'
+alias ftasser  'm ~gilkeren/lnc_links/latest_lnc0a_fcl/fct/ft_assertion.func.max_high.TT_100.tttt.txt'
+alias userft   'm ~gilkeren/lnc_links/latest_lnc0a_fcl/fct/lncserver.func.max_high.TT_100.tttt_ft_timing_specs.xml'
+alias specmax  'm ~gilkeren/lnc_links/latest_lnc0a_fcl/spec_margin_status/func.max_high.TT_100.tttt/port_spec_report_summary.txt'
+alias specmaxd 'm ~gilkeren/lnc_links/latest_lnc0a_fcl/spec_margin_status/func.max_high.TT_100.tttt/port_spec_report_details.txt'
+
+alias n3ft    ~gilkeren/lnc_links/latest_lnc0a_n3_bu_pre/runs/lnc_server/h169p45_80nm_tsmc_m18/sta_pt/inputs/lnc_server.func.max_turbo.T_85.typical_ft_timing_specs.xml
+alias n3spec  ~gilkeren/lnc_links/latest_lnc0a_n3_bu_pre/runs/lnc_server/h169p45_80nm_tsmc_m18/sta_pt/inputs/lnc_server.func.max_turbo.T_85.typical_timing_specs.xml
+
+alias prevexemax 'cat ~gilkeren/lnc_links/prev_prev_lnc0a_fcl/spec_margin_status/func.max_high.TT_100.tttt/port_spec_report_summary.txt|egrep "^par_exe|Port_Name" | most'
+alias exemax 'cat ~gilkeren/lnc_links/latest_lnc0a_fcl/spec_margin_status/func.max_high.TT_100.tttt/port_spec_report_summary.txt|egrep "^par_exe|Port_Name" | most'
+alias execomp 'm ~gilkeren/lnc_links/latest_lnc0a_fcl/spec_margin_status/func.max_high.TT_100.tttt/par_exe_port_spec_report_summary.compress.txt' 
+
+#alias exe30 ' m ~gilkeren/lnc_links/latest_lnc0a_n3_bu_pre/spec_margin_status/func.max_turbo.T_85.typical/par_exe_port_spec_report_summary.compress.txt | egrep "^par_exe|Port_Name" | awk -F "|" '{if ($7 < -30) print $0}' | most'
+
+alias prevfmamax 'cat ~gilkeren/lnc_links/prev_prev_lnc0a_fcl/spec_margin_status/func.max_high.TT_100.tttt/port_spec_report_summary.txt|egrep "^par_fma|Port_Name" | most'
+alias fmamax 'cat ~gilkeren/lnc_links/latest_lnc0a_fcl/spec_margin_status/func.max_high.TT_100.tttt/port_spec_report_summary.txt|egrep "^par_fma|Port_Name" | most'
+alias fmacomp 'm ~gilkeren/lnc_links/latest_lnc0a_fcl/spec_margin_status/func.max_high.TT_100.tttt/par_fma_port_spec_report_summary.compress.txt'
+#alias fma30 'cat /nfs/iil/disks/core_fct/lnc/fct/LNC0A-RTL20ww51a_FCLww2.3-FCT21WW03C_test_-CLK029.fcl/spec_margin_status/func.max_high.TT_100.tttt/port_spec_report_summary.txt|egrep "^par_fma|Port_Name" | awk -F "|" '{if ($7 < -30) print $0}' | most'
+
+alias arcexcep 'm $PROJ_ARCHIVE/arc/\!:1/sio_timing_collateral/GOLDEN/\!:1_internal_exceptions.tcl'
+alias partci   'm $PROJ_ARCHIVE/arc/par_exe/sta_primetime'
+
+alias mf_pt_rpt 'm ~gilkeren/scripts/tcl/mf_rpt.tcl'
+alias rtl_dfx 'm /p/hdk/rtl/models/xhdk74/lnc/core/core-lnc-a0-core_be-21ww11a/target/core/dft_insert/syn/lnc_server/rtl_out'
+alias core_ndm '$PROJ_ARCHIVE/arc/lnc_server/spec_nlib/latest/lnc_server/lnc_server.nlib'
+
+alias path_gr ~gilkeren/scripts/path_gr.pl
+#alias exe_spec_ci /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file /nfs/iil/disks/home01/ysternal/lnc/fct_files/N3/par_exe_NewFormat_spec.tcl -par par_exe -type spec
+#alias fma_spec_ci /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file /nfs/iil/disks/home01/ysternal/lnc/fct_files/N3/par_fma_NewFormat_spec.tcl -par par_fma -type spec
+#alias exe_ft_ci /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file /nfs/iil/disks/home01/ysternal/lnc/fct_files/N3/par_exe_ft.tcl -par par_exe -type ft_spec
+#alias fma_ft_ci /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file /nfs/iil/disks/home01/ysternal/lnc/fct_files/N3/par_fma_ft.tcl -par par_fma -type ft_spec
+#alias exe_internal_ci /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file /nfs/iil/disks/home01/ysternal/lnc/fct_files/N3/par_exe_internal_exceptions.tcl -par par_exe -type internal_excep
+#alias fma_internal_ci /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file /nfs/iil/disks/home01/ysternal/lnc/fct_files/N3/par_fma_internal_exceptions.tcl -par par_fma -type internal_excep
+alias check_bu 'source ~gilkeren/scripts/check_bu.csh'
+
+alias cheetah_apr_innovus 'Iinnovus  -F apr_innovus -stylus  -P -I -N -B $block --bg DodgerBlue4 \!* &'
+
+set rtl_release="/p/hdk/rtl/models/xhdk74/lnc/core/"
+#~gilkeren/scripts/path_gr.pl "par_pmhglb/mltapirreadyt_m735h[3]" #~gilkeren/lnc_links/latest_lnc0a_n3_bu_pre/spec_margin_status/func.max_high.T_85.typical/port_spec_report_details.txt 
+
+
+#~/lnc/fct_files/scripts/spec_ci_p4 -file ~/lnc/fct_files/N3/par_fma_NewFormat_spec_BU.tcl -par par_fma -type spec
+
+
+###################### new evr manager #######################################
+alias evr_editor '$PARADE/utils/rls_evr.pl -cell $DBB -sch $WORK_AREA_ROOT_DIR/netlists/snet/$DBB.sch '
+
+###################### to see the clk_node_trace report  #####################
+alias clk 'm $WORK/tango/analysis/$DBB.clk_node_trace.rep.gz'
+
+###################### to see how many inverters there is on sequentials  ####
+alias ctm 'm $WORK/synopsys/reports/icc_route/$DBB.ctm.accuracy.out.gz'
+
+###################### to see tail report  ###################################
+alias tailrep 'm $WORK/tango/analysis/tail_report.log'
+
+alias newlink 'set prev=`realpath /nfs/iil/home/$USER/glc0p_vex_latest` ; rm -fr /nfs/iil/home/$USER/glc0p_vex_latest ; rm -fr /nfs/iil/home/$USER/glc0p_vex_prev ; ln -s `realpath $PWD` /nfs/iil/home/$USER/glc0p_vex_latest ; ln -s $prev /nfs/iil/home/ysternal/glc0p_vex_prev'
+
+
+
+###################### to see tango valid report  ############################
+alias valid 'm $WORK/tango/analysis/$DBB.valid_report.gz'
+
+###################### when copying from windows to vnc doesn't work  ########
+### instead of ":8" to write the vnc session
+alias fix_vnc '/usr/intel/bin/vncconfig -nowin -poll=3000 -display $DISPLAY &'
+##############################################################################
+
+#alias fubrev '/nfs/site/disks/home03/bdalai/scripts/tcl/fubreview_summary.csh'
+alias fubrev '/nfs/iil/disks/home01/ysternal/README/STO/scripts/tcl/fubreview_summary.csh'
+alias pts 'csh /nfs/iil/proj/snc/big_snc_fct/fct/glc_axe_ww20/ooo_check/post_timing_report.csh'
+alias fcc_glc_nom '$FCT_SCRIPTS/server_client/apvCreateTangoClient.pl -tag glcsrvr_nominal'
+alias fcc_glc_hv  '$FCT_SCRIPTS/server_client/apvCreateTangoClient.pl -tag glcsrvr_highv'
+
+alias fcc_glc0p_nom '$FCT_SCRIPTS/server_client/apvCreateTangoClient.pl -tag glcsrvr0p_nominal'
+alias fcc_glc0p_hv  '$FCT_SCRIPTS/server_client/apvCreateTangoClient.pl -tag glcsrvr0p_highv'
+
+alias fcc_glc0q_nom '$FCT_SCRIPTS/server_client/apvCreateTangoClient.pl -tag glcsrvr0q_nominal'
+alias fcc_glc0q_hv  '$FCT_SCRIPTS/server_client/apvCreateTangoClient.pl -tag glcsrvr0q_highv'
+
+
+###################### to see multi corner setup timing  ##################################
+
+alias setup  'm  $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.setup.report.gz'
+alias setupv 'gzcat $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.setup.report.gz |g -v '
+#alias setupp 'm $WORK/tango/analysis/previous_run/$DBB.setup.report.gz'
+#alias setuppv 'gzcat $WORK/tango/analysis/previous_run/$DBB.setup.report.gz |g -v'
+
+alias rc_sort '/nfs/iil/proj/mpg/procw51/hbahry/sklpf/perl/nets_sort_by_delay.pl'
+
+###################### to see multicorner hold timing  ###################################
+alias hold 'm $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.hold.report.gz'
+alias holdv 'gzcat $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.hold.report.gz | g -v '
+#alias holdp 'm $WORK/tango/analysis/previous_run/$DBB.hold.report.gz'
+#alias holdpv 'gzcat $WORK/tango/analysis/previous_run/$DBB.hold.report.gz | g -v '
+
+
+
+###################### to see nominal corner setup timing  ##################################
+alias setupn 'm $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/nominal/tango/analysis/\!:1.setup.report.gz'
+alias setupnv 'gzcat $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/nominal/tango/analysis/\!:1.setup.report.gz |g -v '
+
+
+###################### to see nominal corner setup timing  ##################################
+alias holdn 'm $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/nominal/tango/analysis/\!:1.hold.report.gz'
+alias holdnv 'gzcat $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/nominal/tango/analysis/\!:1.hold.report.gz |g -v '
+#alias holdnp 'm $WORK/cornet/$DBB/nominal/tango/analysis/previous_run/$DBB.hold.report.gz'
+#alias holdnpv 'gzcat $WORK/cornet/$DBB/nominal/tango/analysis/previous_run/$DBB.hold.report.gz |g -v'
+
+
+###################### to see low corner setup timing  ##################################
+alias setupl 'm $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/lowv/tango/analysis/\!:1.setup.report.gz'
+alias setuplv 'gzcat $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/lowv/tango/analysis/\!:1.setup.report.gz |g -v '
+
+
+###################### slopes   ##################################
+alias slp65     'cat ./tango/analysis/${DBB}.slope_report | awk -F\| '\''{if ($8 >= 0.065 || $10 >= 0.065) print $0}'\'' | sed '\''s/\s\+/ /g'\'' | most'
+alias slp70     'cat ./tango/analysis/${DBB}.slope_report | awk -F\| '\''{if ($8 >= 0.070 || $10 >= 0.070) print $0}'\'' | sed '\''s/\s\+/ /g'\'' | most'
+alias slpf     'cat ./tango/analysis/${DBB}.slope_report | awk -F\| -v slpth=\!:1 '\''{if ($8 >= slpth || $10 >= slpth) print $0}'\'' | sed '\''s/\s\+/ /g'\'' | most'
+
+
+
+
+###################### to see low corner hold timing  ##################################
+alias holdl 'm $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/lowv/tango/analysis/\!:1.hold.report.gz'
+alias holdlv 'gzcat $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/lowv/tango/analysis/\!:1.hold.report.gz |g -v '
+#alias holdlp 'm $WORK/cornet/$DBB/lowv/tango/analysis/previous_run/$DBB.hold.report.gz'
+#alias holdlpv 'gzcat $WORK/cornet/$DBB/lowv/tango/analysis/previous_run/$DBB.hold.report.gz |g -v'
+
+
+###################### to see high corner setup timing  ##################################
+alias setuph 'm $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/highv/tango/analysis/\!:1.setup.report.gz'
+alias setuphv 'gzcat $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/highv/tango/analysis/\!:1.setup.report.gz |g -v '
+#alias setuphp 'm $WORK/cornet/$DBB/highv/tango/analysis/previous_run/$DBB.setup.report.gz'
+#alias setuphpv 'gzcat $WORK/cornet/$DBB/highv/tango/analysis/previous_run/$DBB.setup.report.gz |g -v'
+
+
+###################### to see high corner hold timing  ##################################
+alias holdh 'm $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/highv/tango/analysis/\!:1.hold.report.gz'
+alias holdhv 'gzcat $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/highv/tango/analysis/\!:1.hold.report.gz |g -v '
+#alias holdhp 'm $WORK/cornet/$DBB/highv/tango/analysis/previous_run/$DBB.hold.report.gz'
+#alias holdhpv 'gzcat $WORK/cornet/$DBB/highv/tango/analysis/previous_run/$DBB.hold.report.gz |g -v'
+
+
+##################### to see golden setup report  ##################################
+alias gsetuph 'm $FCT_GOLDEN/highv/collateral/tango/analysis/glcsrvr/\!:1.setup.report.gz'
+alias gsetupn 'm $FCT_GOLDEN/collateral/tango/analysis/glcsrvr/\!:1.setup.report.gz' 
+
+alias gholdh 'm $FCT_GOLDEN/highv/collateral/tango/analysis/glcsrvr/\!:1.hold.report.gz'
+alias gholdl 'm $FCT_GOLDEN/lowv/collateral/tango/analysis/glcsrvr/\!:1.hold.report.gz'
+alias gholdn 'm $FCT_GOLDEN/collateral/tango/analysis/glcsrvr/\!:1.hold.report.gz' 
+
+alias gbvrh 'm $FCT_GOLDEN/highv/collateral/tango/evrbvr/glcsrvr/\!:1.bvr.gz'
+alias gbvrn 'm $FCT_GOLDEN/collateral/tango/evrbvr/glcsrvr/\!:1.bvr.gz' 
+
+alias gpsetuph 'm $FCT_GOLDEN/highv/collateral/tango/analysis/glcsrvr0p/\!:1.setup.report.gz'
+alias gpsetupn 'm $FCT_GOLDEN/collateral/tango/analysis/glcsrvr0p/\!:1.setup.report.gz' 
+
+alias gqsetuph 'm $FCT_GOLDEN/highv/collateral/tango/analysis/glcsrvr0q/\!:1.setup.report.gz'
+alias gqsetupn 'm $FCT_GOLDEN/collateral/tango/analysis/glcsrvr0q/\!:1.setup.report.gz' 
+
+alias gqholdh 'm $FCT_GOLDEN/highv/collateral/tango/analysis/glcsrvr0q/\!:1.hold.report.gz'
+alias gqholdl 'm $FCT_GOLDEN/lowv/collateral/tango/analysis/glcsrvr0q/\!:1.hold.report.gz'
+alias gqholdn 'm $FCT_GOLDEN/collateral/tango/analysis/glcsrvr0q/\!:1.hold.report.gz' 
+
+
+
+alias gpholdh 'm $FCT_GOLDEN/highv/collateral/tango/analysis/glcsrvr0p/\!:1.hold.report.gz'
+alias gpholdl 'm $FCT_GOLDEN/lowv/collateral/tango/analysis/glcsrvr0p/\!:1.hold.report.gz'
+alias gpholdn 'm $FCT_GOLDEN/collateral/tango/analysis/glcsrvr0p/\!:1.hold.report.gz' 
+
+alias gpbvrh 'm $FCT_GOLDEN/highv/collateral/tango/evrbvr/glcsrvr0p/\!:1.bvr.gz'
+alias gpbvrn 'm $FCT_GOLDEN/collateral/tango/evrbvr/glcsrvr0p/\!:1.bvr.gz' 
+
+alias gpdebugh 'm $FCT_GOLDEN/highv/collateral/tango/analysis/glcsrvr0p/\!:1.bvr_debug_info.gz'
+alias gpdebugl 'm $FCT_GOLDEN/lowv/collateral/tango/analysis/glcsrvr0p/\!:1.bvr_debug_info.gz'
+alias gpdebugn 'm $FCT_GOLDEN/collateral/tango/analysis/glcsrvr0p/\!:1.bvr_debug_info.gz' 
+
+
+###################### to get the freest machine  ############################
+alias csdCircuit 'setenv TERM_CONF `~gpatkin/MyTools/rand_color.pl`; csd -quiet -group mcddsg_FOX -pool Circuit -x xterm $TERM_CONF '
+alias ionRTL 'setenv TERM_CONF `~gpatkin/MyTools/rand_color.pl`; ion --group cmpg/CSD_MIGRATION/mcddsg_FOX/RTL -- xterm $TERM_CONF >& /dev/null & '
+
+###################### to get the total Z of fub  ############################
+#alias getz '$HULA_DA/utils/property_getz.tcl -n netlists/tango/fpsishufld.sn'
+
+#FUB_REPORTS
+###################### to see high corner setup timing  ##################################
+alias maxh 'm cornet/\!:1/highv/tango/analysis/\!:1.setup.report.gz'
+alias maxn 'm cornet/\!:1/nominal/tango/analysis/\!:1.setup.report.gz'
+	
+###################### HVM lab ##########################
+
+alias a 'alias'
+## UNIX aliases ##
+alias cd.. 'cd ..'
+alias cd// 'cd ..'
+alias msl 'mpgstod listareas'
+# alias most '/nfs/iil/home/gilkeren/bin/x86-64/most -R'
+alias m 'most'
+alias l 'less -S'
+alias title 'echo -n "]0;\!*"'
+alias n 'nedit \!* &'
+alias g 'grep --color=auto'
+alias gi 'grep -i --color=auto'
+alias zgi 'zgrep -i'
+alias c 'clear'
+alias ll 'ls -ltr --color=auto'
+alias p 'pwd'
+alias f 'find / -name \!* -type f -print'
+alias mcdir 'mkdir \!^; cd \!^'
+alias wa 'cd $WORK_AREA_ROOT_DIR'
+alias sa 'source ~/.aliases'
+alias rp 'realpath'
+alias mcdir 'mkdir \!^; cd \!^'
+alias tkdiff "~rrais/perl/scripts/tkdiff \!* "
+alias ftel 'ftel \!* | grep -iP --color=auto "\!*|\|"'
+alias cd 'cd \!^; sa'
+
+
+alias sss 'echo "icsl7057"; ssh2 icsl7057'
+alias del 'rm -fr'
+alias tuxedo '/nfs/site/proj/mpg/proc/common2/proj_tools/genesys/overrides/tuxedo&'
+
+# source /nfs/iil/proj/gsr/common/da_utils/fct_gsr/bin/fct_aliases

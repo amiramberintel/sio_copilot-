@@ -1,0 +1,198 @@
+#|-------------------------------------------------------------------
+#| FILENAME          : icore.ilgbpqidm107h.tp
+#| USER              : sunger
+#| TIMESTAMP         : Sat Mar 01 09:43:00 2026
+#| BLOCK             : icore.design
+#| COMMENT           : TIP topology plan for ILGBPQIdM107H[0:5] bus (6 bits)
+#|                   : Cross-partition: par_msid → par_fe
+#|                   : Based on RTLFP plan from icore_plans.tcl
+#|                   : 4 nodes (bound+pin per partition), 3 edges, 4 BUF repeaters
+#|                   : All 6 bits failing: slack -24.6 to -34.7 ps
+#|-------------------------------------------------------------------
+
+
+#------------------------------------------------------------
+# Check TIP Planning Versus Netlist
+#------------------------------------------------------------
+###Check Nets matching###
+set old_rtl_top_nets_list "ILGBPQIdM107H_0_ ILGBPQIdM107H_1_ ILGBPQIdM107H_2_ ILGBPQIdM107H_3_ ILGBPQIdM107H_4_ ILGBPQIdM107H_5_"
+set found_rtl_top_nets_collection [get_nets -quiet $old_rtl_top_nets_list]
+if { [llength $old_rtl_top_nets_list] != [sizeof_collection $found_rtl_top_nets_collection] } {
+    iproc_msg -error "-E- TIP nets planning are not matched to Netlist -  Mismatch old nets Versus Netlist, skip Reading the TP file"
+    return
+}
+
+###Check Pins matching###
+set old_rtl_pins_list "par_fe/ilgbpqidm107h\[0\] par_fe/ilgbpqidm107h\[1\] par_fe/ilgbpqidm107h\[2\] par_fe/ilgbpqidm107h\[3\] par_fe/ilgbpqidm107h\[4\] par_fe/ilgbpqidm107h\[5\] par_msid/ilgbpqidm107h\[0\] par_msid/ilgbpqidm107h\[1\] par_msid/ilgbpqidm107h\[2\] par_msid/ilgbpqidm107h\[3\] par_msid/ilgbpqidm107h\[4\] par_msid/ilgbpqidm107h\[5\]"
+set found_rtl_pins_collection [get_pins -quiet $old_rtl_pins_list]
+if { [llength $old_rtl_pins_list] != [sizeof_collection $found_rtl_pins_collection] } {
+    iproc_msg -error "-E- TIP Pins planning are not matched to Netlist - Mismatch old pins Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set nets_segments_collection [rtlfp_get_nets_segments $found_rtl_top_nets_collection]
+set rtl_pins_collection [get_pins -quiet -of_objects $nets_segments_collection -filter "is_hierarchical==true&&cell.is_soft_macro==true&&port.is_shadow==false"]
+if { [compare_collection $rtl_pins_collection $found_rtl_pins_collection] != 0 } {
+    iproc_msg -error "-E- TIP Pins planning are not matched to Netlist - pins connectivity has changed, skip Reading the TP file"
+    return
+}
+
+###Check Ports matching###
+set old_rtl_ports_list ""
+set found_rtl_ports_collection [get_ports -quiet $old_rtl_ports_list]
+if { [llength $old_rtl_ports_list] != [sizeof_collection $found_rtl_ports_collection] } {
+    iproc_msg -error "-E- TIP Ports planning are not matched to Netlist - Mismatch old ports Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set rtl_ports_collection [get_ports -quiet -of_objects $nets_segments_collection -filter "is_shadow==false"]
+if { [compare_collection $rtl_ports_collection $found_rtl_ports_collection] != 0 } {
+    iproc_msg -error "-E- TIP Ports planning are not matched to Netlist - ports connectivity has changed, skip Reading the TP file"
+    return
+}
+
+###Check Units-Pins matching###
+set old_units_pins_list "par_fe/fe/ILGBPQIdM107H\[0\] par_fe/fe/ILGBPQIdM107H\[1\] par_fe/fe/ILGBPQIdM107H\[2\] par_fe/fe/ILGBPQIdM107H\[3\] par_fe/fe/ILGBPQIdM107H\[4\] par_fe/fe/ILGBPQIdM107H\[5\] par_msid/msid/ILGBPQIdM107H\[0\] par_msid/msid/ILGBPQIdM107H\[1\] par_msid/msid/ILGBPQIdM107H\[2\] par_msid/msid/ILGBPQIdM107H\[3\] par_msid/msid/ILGBPQIdM107H\[4\] par_msid/msid/ILGBPQIdM107H\[5\]"
+set found_units_pins_collection [get_pins -quiet $old_units_pins_list]
+if { [llength $old_units_pins_list] != [sizeof_collection $found_units_pins_collection] } {
+    iproc_msg -error "-E- TIP Units-Pins planning are not matched to Netlist - Mismatch old units-pins Versus Netlist, skip Reading the TP file"
+    return
+}
+
+set rtl_units_pins_collection [get_pins -quiet -of_objects $nets_segments_collection -filter "cell.is_soft_macro==false&&cell.is_physical==false"]
+if { [compare_collection $rtl_units_pins_collection $found_units_pins_collection] != 0 } {
+    iproc_msg -error "-E- TIP Units-Pins planning are not matched to Netlist - Units-Pins connectivity has changed, skip Reading the TP file"
+    return
+}
+
+#------------------------------------------------------------
+# Define supernet exceptions.
+#------------------------------------------------------------
+#------------------------------------------------------------
+# Define bounds.
+#------------------------------------------------------------
+#------------------------------------------------------------
+# Define topology plans.
+#------------------------------------------------------------
+# fc V-2023.12-SP5-6 Dec 17, 2025
+# design: icore
+# Sat Mar 01 09:43:00 2026
+
+
+### user attributes (per block)
+define_user_attribute -type string -classes {topology_node} -name master_topology_node -quiet
+define_user_attribute -type string -classes {topology_node} -name unit_cell_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name new_split_node -quiet
+define_user_attribute -type string -classes {topology_node} -name split_constrained_objects_full_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name corner_repeater -quiet
+define_user_attribute -type string -classes {topology_node} -name split_constrained_objects_name -quiet
+define_user_attribute -type boolean -classes {topology_node} -name split_multi_units -quiet
+define_user_attribute -type int -classes {topology_plan} -name eco_object_count -quiet
+define_user_attribute -type string -classes {topology_plan} -name points_topology_edges -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_height_multiplier -quiet
+define_user_attribute -type boolean -classes {topology_plan} -name tip_routing_blockage -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_width_multiplier -quiet
+define_user_attribute -type string -classes {topology_plan} -name repeater_group_constraints -quiet
+define_user_attribute -type boolean -classes {topology_plan} -name disable_enable_virtual_connection -quiet
+define_user_attribute -type boolean -classes {topology_repeater} -name split_multi_units -quiet
+define_user_attribute -type boolean -classes {topology_repeater} -name corner_repeater -quiet
+
+### NER (per block)
+
+remove_net_estimation_rules -reset default -quiet
+
+remove_net_estimation_rules -reset ilgbpqidm107h_ner -quiet
+set_net_estimation_rule ilgbpqidm107h_ner -parameter "layer" -horizontal_value "M18" -vertical_value "M17"
+set_net_estimation_rule ilgbpqidm107h_ner -parameter "buffer" -value "tcbn02p_bwph156nppnl3p48cpd_base_ulvt_c240429/BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT"
+set_net_estimation_rule ilgbpqidm107h_ner -parameter "buffer_spacing" -value "170.000"
+
+### Topology Groups (per block)
+if {[sizeof_collection [get_topology_groups tip_repeater -quiet]] == 0} { create_topology_group -name tip_repeater }
+
+### plan name: ilgbpqidm107h_tp
+if {[sizeof_collection [get_topology_plans ilgbpqidm107h_tp -quiet]] != 0} { remove_topology_plans ilgbpqidm107h_tp }
+
+if {[sizeof_collection [get_bundles -quiet ilgbpqidm107h_boundle]] != 0} { remove_bundles ilgbpqidm107h_boundle }
+if {[sizeof_collection [get_supernets -quiet ILGBPQIdM107H_0_]] != 0} { remove_supernets ILGBPQIdM107H_0_ }
+if {[sizeof_collection [get_supernets -quiet ILGBPQIdM107H_1_]] != 0} { remove_supernets ILGBPQIdM107H_1_ }
+if {[sizeof_collection [get_supernets -quiet ILGBPQIdM107H_2_]] != 0} { remove_supernets ILGBPQIdM107H_2_ }
+if {[sizeof_collection [get_supernets -quiet ILGBPQIdM107H_3_]] != 0} { remove_supernets ILGBPQIdM107H_3_ }
+if {[sizeof_collection [get_supernets -quiet ILGBPQIdM107H_4_]] != 0} { remove_supernets ILGBPQIdM107H_4_ }
+if {[sizeof_collection [get_supernets -quiet ILGBPQIdM107H_5_]] != 0} { remove_supernets ILGBPQIdM107H_5_ }
+create_supernet -name ILGBPQIdM107H_0_ [get_pins par_fe/ilgbpqidm107h\[0\]]
+create_supernet -name ILGBPQIdM107H_1_ [get_pins par_fe/ilgbpqidm107h\[1\]]
+create_supernet -name ILGBPQIdM107H_2_ [get_pins par_fe/ilgbpqidm107h\[2\]]
+create_supernet -name ILGBPQIdM107H_3_ [get_pins par_fe/ilgbpqidm107h\[3\]]
+create_supernet -name ILGBPQIdM107H_4_ [get_pins par_fe/ilgbpqidm107h\[4\]]
+create_supernet -name ILGBPQIdM107H_5_ [get_pins par_fe/ilgbpqidm107h\[5\]]
+create_bundle -name ilgbpqidm107h_boundle [get_supernets { ILGBPQIdM107H_0_ ILGBPQIdM107H_1_ ILGBPQIdM107H_2_ ILGBPQIdM107H_3_ ILGBPQIdM107H_4_ ILGBPQIdM107H_5_ }]
+
+set _objLst_ [get_bundles { ilgbpqidm107h_boundle }]
+create_topology_plan -name ilgbpqidm107h_tp -group tip_repeater -objects $_objLst_ -net_estimation_rule ilgbpqidm107h_ner -allow_feedthrough all
+set_attribute [get_topology_plans ilgbpqidm107h_tp] -name points_topology_edges -value {{{1632.0240 308.2560} {809.8560 308.2560} {809.8560 302.3280}}}
+set_attribute [get_topology_plans ilgbpqidm107h_tp] -name eco_object_count -value 6
+set_attribute [get_topology_plans ilgbpqidm107h_tp] -name repeater_height_multiplier -value {1.5}
+set_attribute [get_topology_plans ilgbpqidm107h_tp] -name repeater_width_multiplier -value {1.5}
+set_attribute [get_topology_plans ilgbpqidm107h_tp] -name repeater_group_constraints -value {set_repeater_group_constraints -type insertion -layer_cutting_distance {{M18 0.5 0.5} {M17 0.5 0.5}}}
+
+# 4 topology nodes: bound nodes (NODE0/NODE1) + pin nodes (NODE2/NODE3)
+create_topology_node -plan ilgbpqidm107h_tp -name TOPOLOGY_NODE0 -objects [get_bounds { par_fe/TOPOLOGY_NODE0_master_bound_1 }] -constrained_objects [get_pins { par_fe/ilgbpqidm107h\[0\] par_fe/ilgbpqidm107h\[1\] par_fe/ilgbpqidm107h\[2\] par_fe/ilgbpqidm107h\[3\] par_fe/ilgbpqidm107h\[4\] par_fe/ilgbpqidm107h\[5\] }] -constraint_type bbox -bbox_percentage {50.000 50.605}
+create_topology_node -plan ilgbpqidm107h_tp -name TOPOLOGY_NODE1 -objects [get_bounds { par_msid/TOPOLOGY_NODE1_master_bound_0 }] -constrained_objects [get_pins { par_msid/ilgbpqidm107h\[0\] par_msid/ilgbpqidm107h\[1\] par_msid/ilgbpqidm107h\[2\] par_msid/ilgbpqidm107h\[3\] par_msid/ilgbpqidm107h\[4\] par_msid/ilgbpqidm107h\[5\] }] -constraint_type bbox -bbox_percentage {50.000 50.000}
+create_topology_node -plan ilgbpqidm107h_tp -name TOPOLOGY_NODE2 -objects [get_pins { par_fe/ilgbpqidm107h\[0\] par_fe/ilgbpqidm107h\[1\] par_fe/ilgbpqidm107h\[2\] par_fe/ilgbpqidm107h\[3\] par_fe/ilgbpqidm107h\[4\] par_fe/ilgbpqidm107h\[5\] }] -constraint_type bbox
+create_topology_node -plan ilgbpqidm107h_tp -name TOPOLOGY_NODE3 -objects [get_pins { par_msid/ilgbpqidm107h\[0\] par_msid/ilgbpqidm107h\[1\] par_msid/ilgbpqidm107h\[2\] par_msid/ilgbpqidm107h\[3\] par_msid/ilgbpqidm107h\[4\] par_msid/ilgbpqidm107h\[5\] }] -constraint_type bbox
+
+# 3 topology edges:
+# EDGE0: par_fe pins → par_fe bound (M18)
+create_topology_edge -plan ilgbpqidm107h_tp -name TOPOLOGY_EDGE0 -nodes {ilgbpqidm107h_tp/TOPOLOGY_NODE2 ilgbpqidm107h_tp/TOPOLOGY_NODE0} -shape_layers { {M18 100% 2.0920} }
+# EDGE1: par_msid pins → par_fe pins (M18, crossing)
+create_topology_edge -plan ilgbpqidm107h_tp -name TOPOLOGY_EDGE1 -nodes {ilgbpqidm107h_tp/TOPOLOGY_NODE3 ilgbpqidm107h_tp/TOPOLOGY_NODE2} -shape_layers { {M18 100% 2.0920} }
+# EDGE3: par_msid bound → par_msid pins (M17+M18)
+create_topology_edge -plan ilgbpqidm107h_tp -name TOPOLOGY_EDGE3 -nodes {ilgbpqidm107h_tp/TOPOLOGY_NODE1 ilgbpqidm107h_tp/TOPOLOGY_NODE3} -shape_layers { {M17 100% 2.0920} {M18 100% 2.0920} }
+
+# TIP repeater chain: all BUF (D18 per NER)
+# EDGE0 repeaters (par_fe side)
+create_topology_repeater -edge ilgbpqidm107h_tp/TOPOLOGY_EDGE0 -name TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0 -type repeater -offset 5.646
+set_attribute -objects [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0] -name physical_status -value locked
+set_attribute -objects [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0] -name index -value {0 3}
+set_attribute [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0] -name corner_repeater -value true
+create_topology_repeater -edge ilgbpqidm107h_tp/TOPOLOGY_EDGE0 -name TOPOLOGY_REPEATER0 -type repeater -offset 110.802
+set_attribute -objects [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER0] -name physical_status -value locked
+set_attribute -objects [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER0] -name index -value {0 4}
+
+# EDGE3 repeaters (par_msid side)
+create_topology_repeater -edge ilgbpqidm107h_tp/TOPOLOGY_EDGE3 -name TOPOLOGY_REPEATER1 -type repeater -offset 34.936
+set_attribute -objects [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE3/TOPOLOGY_REPEATER1] -name physical_status -value locked
+set_attribute -objects [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE3/TOPOLOGY_REPEATER1] -name index -value {0 1}
+create_topology_repeater -edge ilgbpqidm107h_tp/TOPOLOGY_EDGE3 -name TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1 -type repeater -offset 145.936
+set_attribute -objects [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE3/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1] -name physical_status -value locked
+set_attribute -objects [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE3/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1] -name index -value {0 2}
+set_attribute [get_topology_repeaters ilgbpqidm107h_tp/TOPOLOGY_EDGE3/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1] -name corner_repeater -value true
+
+
+
+#------------------------------------------------------------
+# Define non-default routing rules.
+#------------------------------------------------------------
+#------------------------------------------------------------
+# Define track blocking for pin placement and routing.
+# NOTE: These ivars reference variables ($M17_half_shield_1w, etc.)
+# defined in pre.tip_implementation.tcl. They should be added
+# to that file, NOT kept here. Shown for reference only.
+#
+# Add to pre.tip_implementation.tcl:
+#   set ivar(tip_block_track_for_pin_placment,M17,ilgbpqidm107h_tp) "$M17_half_shield_1w 3"
+#   set ivar(tip_block_track_for_pin_placment,M18,ilgbpqidm107h_tp) "$M18_half_shield_1w 3"
+#   set ivar(tip_block_track_for_route,M17,ilgbpqidm107h_tp) "$M17_half_shield_1w 3"
+#   set ivar(tip_block_track_for_route,M18,ilgbpqidm107h_tp) "$M18_half_shield_1w 3"
+#------------------------------------------------------------
+
+#------------------------------------------------------------
+# Define bundle pin constraints.
+#------------------------------------------------------------
+#------------------------------------------------------------
+# Define bundle and topology plan attributes.
+#------------------------------------------------------------
+define_user_attribute -quiet -classes topology_plan -type boolean -name is_td
+define_user_attribute -quiet -classes topology_plan -type boolean -name is_preroute
+define_user_attribute -quiet -classes topology_plan -type string -name hierarchy_owner
+set_attribute -quiet [get_topology_plans -quiet ilgbpqidm107h_tp] is_visible true

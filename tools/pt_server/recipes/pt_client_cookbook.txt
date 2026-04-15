@@ -1,0 +1,507 @@
+================================================================================
+  pt_client.pl — LIVE PT SERVER CLIENT COOKBOOK
+  Run PrimeTime commands instantly without opening a PT session
+  Author: sunger | Date: 2026-03-10 (WW11.2)
+  Location: /nfs/site/disks/sunger_wa/fc_data/my_learns/pt_client/
+================================================================================
+
+================================================================================
+  *** GOLDEN RULE: ALWAYS VERIFY YOUR DATA SOURCE ***
+================================================================================
+
+  In timing analysis, knowing WHERE your data comes from is CRITICAL.
+  A slack number is meaningless if you don't know which model produced it.
+
+  BEFORE running ANY timing query, ALWAYS run with -debug first:
+
+    pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c 'get_designs' -debug
+
+  CHECK these lines in the output:
+    -I- MODEL: .../GFC_CLIENT_26ww08b_...-FCT26WW11B_dcm_daily-...
+                                          ^^^^^^^^^^
+                                          THIS is your data source tag
+
+    -I- Date modela : '1772976588' at @ Sun Mar  8 06:29:48 2026
+    -I- Date modelb : '1773068403' at @ Tue Mar 10 05:21:01 2026
+        → Server auto-picks the NEWER model (modelb in this case)
+
+  WHY THIS MATTERS:
+    • A fix that looks good on WW10 data might already be solved in WW11
+    • A path that was clean last week might be failing this week
+    • RCOs, TIPs, and clock changes between builds can shift slack ±50ps
+    • Comparing results across different models gives WRONG conclusions
+
+  ALWAYS DOCUMENT:
+    When reporting timing results, always note the model tag:
+      "RSMOClearVM803H slack = -71.6ps (FCT26WW11B, func.max_high.T_85.typical)"
+
+================================================================================
+  1. WHAT IS pt_client.pl?
+================================================================================
+
+  pt_client.pl is a Perl script that sends PT commands to a LIVE PrimeTime
+  server running 24/7 with pre-loaded design databases (DBS). Instead of:
+    1. Opening a PT session (5-15 min startup)
+    2. Loading a design (10-30 min for core_client)
+    3. Running your command
+    4. Closing the session
+
+  You just run ONE command and get results in seconds:
+    pt_client.pl -m <corner> -c '<PT command>'
+
+  Author: Ooi, Thean Wui (2016), maintained by FCT team (yifrach, ogivol)
+
+================================================================================
+  2. ACCESS & SETUP
+================================================================================
+
+  TOOL LOCATION:
+    /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl
+
+  REQUIRED GROUP: soc (GID 1680)
+    Check: groups | grep soc
+    If missing: request via AGS/IdentityIQ
+
+  SETUP OPTION A — Source aliases (recommended):
+    source /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/aliases_for_pt_client
+    Then use short alias names (see Section 5)
+
+  SETUP OPTION B — Direct call:
+    /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl -m <corner> -c '<command>'
+
+  SETUP OPTION C — From Copilot session (sg workaround if groups not loaded):
+    sg soc -c "/nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl -m <corner> -c '<command>'"
+
+  ALIAS SHORTCUT (add to your .aliases or .cshrc):
+    alias pt_client '/nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl'
+
+================================================================================
+  3. BASIC USAGE
+================================================================================
+
+  SYNTAX:
+    pt_client.pl -m <mode> -c '<PrimeTime command>'
+
+  OPTIONS:
+    -m <mode>    Corner/scenario to query (default: func_max)
+    -c '<cmd>'   PrimeTime TCL command to execute (MUST be in quotes)
+    -o <file>    Save output to file instead of stdout (optional)
+    -debug       Show server mapping debug info
+    -help/-h     Show usage
+
+  EXAMPLES:
+
+  # Basic timing query
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit'
+
+  # Save to file
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 6' \
+    -o rsmoclearvm803h_timing.rpt
+
+  # Multiple corners (comma-separated)
+  pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical,latest_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical \
+    -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1'
+
+================================================================================
+  4. MODE/CORNER NAMING CONVENTION
+================================================================================
+
+  Mode format: <version>_<product>_<flow>_<scenario>
+
+  VERSION PREFIX:
+    latest_  → most recent model (auto-selects newer of modela/modelb)
+    prev_    → previous model
+    modela_  → explicitly model A
+    modelb_  → explicitly model B
+
+  PRODUCT:
+    gfcn2clienta0  → GFC N2 Client A0
+
+  FLOW:
+    bu_prp  → BU postCTS (PrimeTime with real parasitics)
+    fcl     → FCL (flat chip level, less common)
+
+  SCENARIO (same as STA corners):
+    func.max_high.T_85.typical       → Setup, slow process, 85°C (PRIMARY)
+    func.max_nom.T_85.typical        → Setup, nominal
+    func.max_low.T_85.typical        → Setup, low voltage
+    func.max_med.T_85.typical        → Setup, medium
+    func.min_low.T_85.typical        → Hold, fast process
+    func.min_nom.T_85.typical        → Hold, nominal
+    func.max_fast.F_125.rcworst_CCworst_T → Fast corner with RC worst
+    fresh.min_fast.F_125.rcworst_CCworst  → Fresh/burn-in min
+    fresh.min_hvqk.F_125.rcworst_CCworst  → HVQK qualification
+    fresh.min_fast_cold.F_M40.rcworst_CCworst → Cold temperature
+    fresh.min_lo_hi_hi.T_85.typical  → Lo-hi-hi corner
+
+  CCworst SUFFIX:
+    _CCworst  → With crosstalk (SI) analysis
+    (no suffix) → Without crosstalk
+
+  MOST COMMON MODES FOR OUR WORK:
+    latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical   ← SETUP (primary)
+    latest_gfcn2clienta0_bu_prp_func.min_low.T_85.typical    ← HOLD
+    latest_gfcn2clienta0_bu_prp_func.max_nom.T_85.typical    ← SETUP nominal
+
+================================================================================
+  5. SHORT ALIAS NAMES (after sourcing aliases_for_pt_client)
+================================================================================
+
+  After sourcing the aliases file, you can use short names:
+
+  SETUP CORNERS:
+    gfcn2clienta0bmhigt085   'report_timing ...'   ← latest BU max_high (PRIMARY)
+    gfcn2clienta0bmhigt0850  'report_timing ...'   ← prev BU max_high
+    gfcn2clienta0bmnomt085   'report_timing ...'   ← latest BU max_nom
+    gfcn2clienta0bmmedt085   'report_timing ...'   ← latest BU max_med
+    gfcn2clienta0bmlowt085   'report_timing ...'   ← latest BU max_low
+
+  HOLD CORNERS:
+    gfcn2clienta0bnlowt085   'report_timing ...'   ← latest BU min_low (HOLD)
+    gfcn2clienta0bnnomt085   'report_timing ...'   ← latest BU min_nom
+
+  FCL CORNERS:
+    gfcn2clienta0lmhigt085   'report_timing ...'   ← latest FCL max_high
+    gfcn2clienta0lmlowt085   'report_timing ...'   ← latest FCL max_low
+
+  ALIAS NAME DECODE:
+    gfcn2clienta0  = product
+    b              = bu_prp (BU) or l = fcl
+    m/n            = max/min
+    hig/nom/low/med = voltage corner
+    t085           = T_85 temperature
+    (no suffix)    = latest
+    0              = prev
+    _a / _b        = explicit modela/modelb
+    tcc            = with CCworst (crosstalk)
+
+  EXAMPLE with alias:
+    gfcn2clienta0bmhigt085 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1'
+
+================================================================================
+  6. IMPORTANT: HIERARCHY PREFIX
+================================================================================
+
+  The PT server runs at core_client level, so all paths need full hierarchy:
+
+    WRONG:  par_ooo_int/rsmoclearvm803h
+    RIGHT:  icore0/par_ooo_int/rsmoclearvm803h
+
+  The icore0/ prefix is REQUIRED (or icore1/ for second core instance).
+
+  PIN PATHS:
+    icore0/par_ooo_int/rsmoclearvm803h       ← partition port
+    icore0/par_ooo_int/rs_int/rsrptint/...   ← cell pin
+
+  CELL PATHS:
+    icore0/par_fe/...
+    icore0/par_msid/...
+    icore0/par_ooo_int/...
+    icore0/par_ooo_vec/...
+
+================================================================================
+  7. COMMON PT COMMANDS FOR PATH DEBUG
+================================================================================
+
+  # 7.1 REPORT TIMING — basic
+  -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1 -nosplit'
+
+  # 7.2 REPORT TIMING — full detail (our standard for analysis)
+  -c 'report_timing -to icore0/.../ROBEarlyQualJumpM304H_reg/D \
+    -include_hierarchical_pins -significant_digits 1 -nosplit \
+    -nets -physical -input_pins -capacitance -transition_time \
+    -attributes points.object.max_slack'
+
+  # 7.3 REPORT TIMING — multiple paths from same startpoint
+  -c 'report_timing -from icore0/.../MBIT_RSMOClearVM803H_reg/CP -max_paths 20 -nosplit'
+
+  # 7.4 CHECK INPUT PATH (D-pin) — critical for de-merge analysis
+  -c 'report_timing -to icore0/.../MBIT_RSMOClearVM803H_reg/D2 \
+    -include_hierarchical_pins -significant_digits 1 -nosplit \
+    -nets -physical -input_pins -capacitance -transition_time'
+
+  # 7.5 EP FF SAFETY — check startpoint paths
+  -c 'report_timing -from icore0/.../ROBEarlyQualJumpM304H_reg/CP -max_paths 5'
+
+  # 7.6 GET CELL LOCATION
+  -c 'report_cell [get_cells icore0/par_ooo_int] -nosplit'
+
+  # 7.7 GET DESIGN INFO
+  -c 'get_designs'
+
+  # 7.8 SIZEOF COLLECTION — check if pin/cell exists
+  -c 'sizeof_collection [get_pins icore0/par_ooo_int/rsmoclearvm803h -hierarchical]'
+
+  # 7.9 REPORT TIMING — with POR slack
+  -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h \
+    -attributes points.object.por_slack -max_paths 1'
+
+  # 7.10 REPORT TIMING — specific corner with crosstalk
+  Use mode: latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical_CCworst
+
+================================================================================
+  8. FORBIDDEN COMMANDS (read-only server)
+================================================================================
+
+  The PT server is READ-ONLY. These commands are BLOCKED:
+    set_           (set_attribute, set_load, etc.)
+    create_        (create_clock, create_bound, etc.)
+    source         (cannot source TCL scripts)
+    save           (cannot save session)
+    exec           (cannot run shell commands)
+    exit/quit      (cannot close server)
+    size_cell      (cannot resize cells)
+    insert_buffer  (cannot insert buffers)
+    fix_           (no ECO commands)
+    update_        (no update commands)
+
+  YOU CAN ONLY: report_timing, get_*, sizeof_collection, report_cell,
+                report_clock_timing, report_constraint, etc.
+
+================================================================================
+  8b. ILLEGAL CELLS CHECK
+================================================================================
+
+  ⚠️ When analyzing path reports, always cross-check cell ref_names against
+  the illegal cells list. PT may use banned cells for optimization — the
+  timing report looks good but the cell will be rejected in physical design.
+
+  Illegal list: $wa/project/GFCN2CLIENTA0/illegal.txt  (~15,746 cells)
+
+  Banned suffixes to watch for:
+    CPDELVT  → BANNED (eLVT)
+    CPDLVTLL → BANNED (LVT low-leakage)
+
+  Quick check after getting a path report:
+    # Save report, then grep for banned cells
+    grep -oP '\w+BWP156H\w+' /tmp/report.txt | sort -u | while read c; do
+      grep -q "$c" $wa/project/GFCN2CLIENTA0/illegal.txt && echo "ILLEGAL: $c"
+    done
+
+  If found: the real slack is WORSE than reported (typically 5-10ps per
+  illegal cell). Account for this when estimating fix potential.
+
+================================================================================
+  9. SERVER STATUS & SPECIAL COMMANDS
+================================================================================
+
+  The server auto-refreshes daily at 00:00 (midnight).
+  Two models (modela/modelb) alternate — while one refreshes, other serves.
+
+  SPECIAL COMMANDS (via -c):
+    'get_latest_status'     → check which WA/DBS is loaded
+    'resource_server'       → check server resource usage
+
+  CHECK WHICH MODEL IS LOADED:
+    pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c 'get_designs' -debug
+
+  The -I- MODEL line in output shows the full DBS path:
+    -I- MODEL: /nfs/site/disks/.../GFC_CLIENT_26ww08b_...-FCT26WW11B_dcm_daily-...
+
+  SERVER STATES:
+    Online   → ready to accept queries
+    LOADING  → refreshing DBS (wait a few minutes)
+    OFFLINE  → down, contact FCT team (yifrach, ogivol)
+
+================================================================================
+  10. WORKFLOW: USING pt_client IN PATH ANALYSIS
+================================================================================
+
+  BEFORE (old workflow):
+    1. Find latest WA on disk             → 2 min
+    2. Navigate to sta_pt directory        → 1 min
+    3. Open PT / load DBS                  → 15-30 min
+    4. Run report_timing                   → 1 min
+    5. Copy results                        → 1 min
+    Total: 20-35 minutes
+
+  AFTER (with pt_client):
+    1. Run pt_client.pl with command       → 5-10 seconds
+    Total: 10 seconds!
+
+  The server always has the LATEST daily build loaded.
+  No need to find WA paths — pt_client knows where the data is.
+
+  EXAMPLE — Full RSMOClearVM803H analysis in ONE command:
+    pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h \
+        -max_paths 6 -nosplit -include_hierarchical_pins -significant_digits 1 \
+        -nets -physical -input_pins -capacitance -transition_time \
+        -attributes points.object.max_slack' \
+      -o rsmoclearvm803h_ww11b.rpt
+
+================================================================================
+  11. TIPS & TRICKS
+================================================================================
+
+  TIP 1: QUOTING — use single quotes for -c, double quotes for TCL strings inside:
+    CORRECT:  -c 'report_timing -to [get_pins "icore0/.../D"]'
+    WRONG:    -c "report_timing -to [get_pins 'icore0/.../D']"
+
+  TIP 2: OUTPUT TO FILE — use -o for large reports:
+    -o my_report.rpt
+
+  TIP 3: MULTIPLE CORNERS — comma-separate modes:
+    -m latest_..._func.max_high.T_85.typical,latest_..._func.max_nom.T_85.typical
+
+  TIP 4: CHECK SERVER FRESHNESS — the -I- MODEL line shows the WA tag:
+    FCT26WW11B = work week 11, build B
+
+  TIP 5: HIERARCHICAL PINS — always use -include_hierarchical_pins for
+    cross-partition paths to see partition port crossings
+
+  TIP 6: COPILOT WORKAROUND — if groups not loaded in session:
+    sg soc -c "pt_client.pl ..."
+
+  TIP 7: ALIAS FOR DAILY USE — add to .cshrc:
+    alias pt  'pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical -c'
+    alias pth 'pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.min_low.T_85.typical -c'
+    Then: pt 'report_timing -through icore0/par_ooo_int/rsmoclearvm803h -max_paths 1'
+
+  TIP 8: COMPARE MODELS — use modela vs modelb or latest vs prev:
+    -m modela_...  vs  -m modelb_...
+    -m latest_...  vs  -m prev_...
+
+================================================================================
+  12. QUICK REFERENCE CARD
+================================================================================
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ pt_client.pl QUICK REFERENCE                                          │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │                                                                        │
+  │ SETUP (primary):                                                       │
+  │   pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical │
+  │     -c '<PT command>'                                                  │
+  │                                                                        │
+  │ HOLD:                                                                  │
+  │   pt_client.pl -m latest_gfcn2clienta0_bu_prp_func.min_low.T_85.typical  │
+  │     -c '<PT command>'                                                  │
+  │                                                                        │
+  │ HIERARCHY: always prefix with icore0/ (or icore1/)                    │
+  │                                                                        │
+  │ COMMON COMMANDS:                                                       │
+  │   report_timing -through icore0/<par>/<signal> -max_paths N           │
+  │   report_timing -to icore0/.../<FF>/D -physical -nets -input_pins     │
+  │   report_timing -from icore0/.../<FF>/CP -max_paths 20                │
+  │   sizeof_collection [get_pins icore0/<par>/<signal> -hierarchical]    │
+  │   report_cell [get_cells icore0/<par>]                                │
+  │                                                                        │
+  │ READ-ONLY: no set_, create_, source, save, exec, size_cell            │
+  │                                                                        │
+  │ SERVER: auto-refresh daily 00:00, admin: yifrach/ogivol               │
+  └────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  END OF pt_client.pl COOKBOOK
+================================================================================
+
+================================================================================
+  10. estimate_eco — CHECK IF DATA-PATH ECO CAN HELP (PBA mode)
+================================================================================
+
+  estimate_eco tells you: can we improve slack by sizing/buffering cells?
+  USE THIS BEFORE assuming ECO gains — it prevents wrong estimates.
+
+  IMPORTANT: Our bus analysis uses PBA (path-based analysis).
+  estimate_eco reports GBA slack internally, but the DELTA applies to PBA too.
+  NEVER use GBA slack values directly — only use the improvement delta.
+
+  10.1 SYNTAX
+  -----------
+
+  SIZE_CELL — can we upsize or Vt-swap a cell?
+
+    pt_client.pl -m <corner> -c 'estimate_eco -type size_cell \
+      -sort_by slack -nosplit [get_cells <cell_instance>]'
+
+  INSERT_BUFFER — would adding a buffer on a net help?
+
+    pt_client.pl -m <corner> -c 'estimate_eco -type insert_buffer \
+      -sort_by slack -nosplit \
+      -lib_cells {BUFFD4BWP156HNPPN3P48CPDULVT BUFFD8BWP156HNPPN3P48CPDULVT} \
+      [get_pins <pin>]'
+
+  10.2 READING THE OUTPUT
+  -----------------------
+
+  The output is sorted by slack (best first):
+
+    lib cell                            area stage_delay  arrival    slack
+    --------------------------------------------------------------------------
+   *current_cell/XYZD2BWP...CPDULVT    0.097    8.387    927.313   -54.542
+    alternative/XYZD4BWP...CPDULVT      0.150    7.200    928.500   -55.800
+
+  * = current cell (already placed)
+  If * is first = current cell is ALREADY BEST — no ECO helps
+  If alternative is first = that cell would improve slack
+
+  DELTA = alternative_slack - current_slack
+    Positive delta = improvement
+    Negative delta = makes it worse
+
+  For insert_buffer:
+    *No_buffer = current state (no buffer)
+    If No_buffer is first = buffer insertion makes it WORSE
+
+  10.3 COMMON FINDINGS
+  --------------------
+
+  When ALL cells show * as best:
+    -> Path is fully optimized by P&R, no data-path ECO possible
+    -> Reason: larger cells have higher input cap, which slows the driver
+       more than the cell speeds up (diminishing returns on timing-critical paths)
+
+  When DULVTLL or LVT cells appear on path:
+    -> Vt swap to DULVT may help (check estimate_eco to verify)
+    -> But on GFC Client A0, most critical paths are already DULVT
+
+  10.4 WORKFLOW: VERIFY ECO GAINS BEFORE CLAIMING THEM
+  ----------------------------------------------------
+
+  WRONG approach:
+    1. See D1/D2 cells on path
+    2. Assume "upsize D1->D4 = ~5ps gain"    <- WRONG! Often WORSE
+    3. Claim ECO fixes N paths                <- OVERESTIMATE
+
+  RIGHT approach:
+    1. Get worst path: report_timing -through ... -max_paths 1
+    2. For each small cell: estimate_eco -type size_cell [get_cells ...]
+    3. If * is best: NO ECO helps, move on
+    4. If alternative is better: record actual delta
+    5. Also try: estimate_eco -type insert_buffer on long nets
+    6. Sum verified deltas = real ECO potential
+
+  10.5 EXAMPLE: dcl1rddatam408h BUS (WW15 finding)
+  -------------------------------------------------
+
+  DISCOVERY: All 18 top SFFs (810/1024 paths) are fully optimized.
+  estimate_eco -type size_cell shows *current = BEST for every cell.
+  Only insert_buffer on 1 long net gave +3.9ps (marginal).
+
+  Conclusion: data-path ECO = ~0ps gain. Useful skew push REQUIRED.
+
+  This is EXPECTED for paths through ECC hmatrix + correction logic:
+    - Deep XOR/XNR chains (6-8 stages)
+    - All cells already DULVT (fastest Vt)
+    - Cells already optimally sized by Innovus
+    - Net delays dominated by wire length, not cell speed
+
+  10.6 TIPS
+  ---------
+
+  - Always run with -sort_by slack — shows best option first
+  - Always use -nosplit for cleaner output through pt_client
+  - Check BOTH max_rise and max_fall — worst may differ
+  - For cross-partition paths: only ECO cells in YOUR partition
+  - estimate_eco is READ-ONLY — safe to run on pt_client server
+  - Run on the SAME corner as your bus report (func.max_high for setup)
+  - For hold paths: use -min flag with func.min_low corner
+
+================================================================================
+  END OF estimate_eco SECTION
+================================================================================

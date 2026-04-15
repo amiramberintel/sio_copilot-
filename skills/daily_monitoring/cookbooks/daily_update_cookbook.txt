@@ -1,0 +1,480 @@
+================================================================================
+  DAILY UPDATE COOKBOOK
+  End-to-end procedure for processing a new GFC Client A0 daily build
+  Author: sunger | Created: Mar 16, 2026
+================================================================================
+
+
+OVERVIEW
+========
+  When a new daily build lands, run this procedure to generate:
+    1. par_*_status.txt   — per-partition health reports (IFC x HSD x TIP)
+    2. par_*_diff.txt     — what changed vs the previous build
+    3. ww*_daily_report.txt — executive summary with colors
+    4. Updated SQL tables  — for deeper analysis / SIO queries
+
+  Total time: ~5-10 min (mostly par_status.py parsing all partitions)
+
+  All output files go to: my_learns/ww<WW>_<day>/
+    e.g. ww12_2/ for WW12, day 2
+
+
+================================================================================
+  STEP 0 — IDENTIFY THE NEW DAILY BUILD
+================================================================================
+
+  New dailies appear at:
+    /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/
+
+  Naming convention:
+    GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26<TAG>_dcm_daily-CLK<NNN>.bu_postcts
+
+  Example:
+    FCT26WW12A_dcm_daily-CLK045   ← tag=WW12A, clock version=CLK045
+
+  Quick check — does it exist?
+    ls -d /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/*WW12A*
+
+  Verify IFC reports are present:
+    ls /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/*WW12A*/par_*_ifc.rpt | wc -l
+    # Should be 11 (one per partition, or with test/test2 prefix)
+
+  NOTE: Older builds may have "test2_par_*_ifc.rpt" prefix instead of
+        "par_*_ifc.rpt". The tools handle both naming conventions.
+
+
+================================================================================
+  STEP 1 — CREATE OUTPUT DIRECTORY
+================================================================================
+
+  mkdir -p /nfs/site/disks/sunger_wa/fc_data/my_learns/ww<WW>_<DAY>
+  cd /nfs/site/disks/sunger_wa/fc_data/my_learns/ww<WW>_<DAY>
+
+  Example:
+    mkdir -p ww12_2 && cd ww12_2
+
+  Convention:
+    ww12_1 = first daily of WW12
+    ww12_2 = second daily of WW12
+    (increment _<DAY> for each new build within the same work week)
+
+
+================================================================================
+  STEP 2 — COPY AND UPDATE par_status.py
+================================================================================
+
+  Copy from the previous day's directory:
+    cp ../ww<PREV>/par_status.py .
+
+  Edit DEFAULT_WA to point to the new daily:
+    # In par_status.py, update this line:
+    DEFAULT_WA = "/nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW12A_dcm_daily-CLK045.bu_postcts"
+
+  Verify:
+    python3 par_status.py --help
+
+
+================================================================================
+  STEP 3 — GENERATE ALL PARTITION STATUS REPORTS
+================================================================================
+
+  Run par_status.py for each partition and redirect to file:
+
+    PARTITIONS="par_ooo_int par_meu par_ooo_vec par_msid par_fe par_exe par_pmh par_mlc par_fmav0 par_fmav1 par_pm"
+
+    for par in $PARTITIONS; do
+        echo -n "Generating $par... "
+        python3 par_status.py -p "$par" --color > "${par}_status.txt" 2>&1
+        echo "$(wc -l < "${par}_status.txt") lines"
+    done
+
+  Expected output:  11 files, ~100-1200 lines each
+  Expected time:    ~3-5 minutes total (parsing HSDs each time)
+
+  Quick validation:
+    wc -l par_*_status.txt
+    # par_pm should be ~100 lines (smallest)
+    # par_ooo_int should be ~1200 lines (largest)
+
+  Flags:
+    --color      Bake ANSI colors into output (default ON)
+    --no-color   Plain text output
+    --show-clean Include CLEAN/FIXED entries (normally hidden)
+    --top N      Only show top N worst entries per section
+
+  NOTE: Do NOT use --output — the tool writes to stdout, use shell redirect >
+
+
+================================================================================
+  STEP 4 — COPY AND UPDATE par_status_diff.py
+================================================================================
+
+  Copy from the previous day's directory:
+    cp ../ww<PREV>/par_status_diff.py .
+
+  The diff tool auto-discovers WA directories by build tag (WW11G, WW12A, etc.)
+  It uses find_wa() which tries multiple naming patterns including different CLK
+  versions, so usually no code changes are needed.
+
+  Verify it can find both builds:
+    python3 par_status_diff.py --builds WW11G WW12A -p par_pm --color --outdir . 2>&1 | head -5
+    # Should show both WA paths
+
+
+================================================================================
+  STEP 5 — GENERATE DIFF REPORTS (old vs new)
+================================================================================
+
+  Compare the previous daily against the new one:
+
+    python3 par_status_diff.py --builds <OLD_TAG> <NEW_TAG> --partition all --color --outdir .
+
+  Example:
+    python3 par_status_diff.py --builds WW11G WW12A --partition all --color --outdir .
+
+  This generates:
+    - 11x par_*_diff.txt        — per-partition regression/improvement details
+    - 1x all_par_diff_summary.txt — cross-partition overview table
+
+  Alternative — compare last 3 builds:
+    python3 par_status_diff.py --builds WW11E WW11G WW12A --partition all --color --outdir .
+
+  Or auto-detect previous builds from tag:
+    python3 par_status_diff.py --latest WW12A --partition all --color --outdir .
+
+  Quick validation:
+    cat all_par_diff_summary.txt
+    # Should show a table with Regress/Improve/New/Gone/Unchg per partition
+
+
+================================================================================
+  STEP 6 — GENERATE EXECUTIVE SUMMARY REPORT
+================================================================================
+
+  Create the colorized daily report (ww*_daily_report.txt) that summarizes:
+    - Overall health (total families, trend direction)
+    - Per-partition breakdown table
+    - Top 10 regressions and improvements
+    - Key observations
+    - Critical stuck signals
+
+  This is done with the build_daily_report.py script or manually.
+  See ww12_2/ww12a_daily_report.txt for format reference.
+
+  Key data points to include:
+    - Total failing families count (old → new)
+    - Net improvement/regression count
+    - Which partitions improved vs regressed
+    - Worst regression signal + delta
+    - Best improvement signal + delta
+    - Signals that are STUCK (same WNS as last build, worst offenders)
+
+  Color scheme (NO YELLOW — we use magenta instead):
+
+    WNS VALUE COLORING (in par_*_status.txt and daily report):
+      Red      ≤ -100ps    Critical — deep timing violation
+      Magenta  ≤  -50ps    Moderate — needs fix but may close with SIO2PO
+      Cyan     <    0ps    Mild — small violation, likely closable
+      Green    ≥    0ps    Met timing — clean
+
+    CATEGORY COLORING (in par_*_status.txt summary bar):
+      Red        UNTRACKED              No HSD filed — needs immediate attention
+      Magenta    FIX PENDING            HSD exists, fix not yet landed
+      Magenta    FIX LANDED still FAIL  Fix in repo but signal still failing
+      Dim/gray   REJECTED / UNKNOWN     HSD rejected or status unclear
+      Green      FIXED                  Was tracked, now meets timing
+      Green      CLEAN                  Always met timing
+
+    HSD STATUS COLORING (in FIX PENDING / FIX LANDED sections):
+      Green      complete, repo_modified, closed   — fix landed
+      Magenta    open, new, not_done               — still in progress
+      Dim/gray   sign_off, other                   — awaiting approval
+
+    SECTION HEADER COLORING:
+      Red        UNTRACKED section title
+      Magenta    FIX PENDING / FIX LANDED section titles
+      White bold Column headers, partition name, summary totals
+
+    DIFF REPORT COLORING (in par_*_diff.txt):
+      Red        Regression lines (signal got worse)
+      Green      Improvement lines (signal got better)
+      Magenta    New signal (appeared in new build)
+      Dim/gray   Unchanged / metadata
+
+    DAILY SUMMARY REPORT (ww*_daily_report.txt):
+      Red        Regression count, worst regressions table, stuck signals
+      Green      Improvement count, best improvements table, trend arrow ▲
+      Magenta    Warning items, NEW signal count
+      Cyan       Partition names, info items
+      White bold Table headers, totals, section titles
+      Dim/gray   Crossings, secondary data, footnotes
+
+    FLAGS:
+      --color      Bake ANSI colors into output files (default ON)
+      --no-color   Generate plain text with no escape codes
+
+    VIEWING COLORED FILES:
+      cat file.txt               Always works in terminal
+      less -R file.txt           Use -R to preserve ANSI in less
+      vim file.txt               :set t_Co=256 if colors look wrong
+
+    STRIPPING COLORS (for email or non-terminal use):
+      sed 's/\x1b\[[0-9;]*m//g' report.txt > report_plain.txt
+
+
+================================================================================
+  STEP 7 — SPOT-CHECK KEY SIGNALS
+================================================================================
+
+  After generating reports, always spot-check a few things:
+
+  7a. Check the "NO SOLUTION" signals from sio_project_summary — did any improve?
+      grep "mowbcheckrobidld\|doitmcreg\|fary_trigger_post\|dcsdbchktagfault" par_ooo_int_diff.txt
+
+  7b. Check if any new regressions involve illegal cells:
+      # Get the illegal cells list
+      ILLEGAL="$WA/project/GFCN2CLIENTA0/illegal.txt"
+      # For any new regression signal, check if the path uses illegal cells
+      # (see path_analysis_procedure.txt STEP 5 for details)
+
+  7c. Check FIX_LANDED signals — are they improving at all?
+      grep "FIX LANDED" par_*_status.txt | head -10
+
+  7d. Check SIO2PO WONT_DO / REJECTED signals:
+      grep "WONT_DO\|REJECTED\|rejected" par_*_status.txt
+
+
+================================================================================
+  STEP 7e — CHECK DAILY vs PO VERSIONS (MANIFEST COMPARISON)
+================================================================================
+
+  Run the check_daily_vs_po.py script to see if the daily build is using
+  the latest PO data for each partition, or if it's behind.
+
+  This compares the arc version (VER_NNN) in the daily's symlinks against
+  the GFCN2CLIENTA0LATEST manifest for each partition.
+
+  Usage:
+
+    # Auto-detect latest daily, colorized output:
+    python3 /nfs/site/disks/sunger_wa/sio_scripts/check_daily_vs_po.py
+
+    # Specify a particular daily:
+    python3 avi_exe/check_daily_vs_po.py --daily /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/<DAILY_DIR>
+
+    # Save to file:
+    python3 avi_exe/check_daily_vs_po.py -o ww13_daily_vs_po.txt
+
+    # Plain text (no ANSI):
+    python3 avi_exe/check_daily_vs_po.py --no-color -o ww13_daily_vs_po.txt
+
+  Output shows per partition:
+    - Daily VER vs PO VER (from manifest LATEST)
+    - MATCH / DAILY BEHIND (-N) / DAILY AHEAD (+N)
+    - PO owner, date, config name, workspace path
+
+  What to look for:
+    - DAILY BEHIND = PO archived newer data since this daily was built.
+      The daily is stale for that partition. Fixes in the new PO won't
+      appear until the next daily that picks up the new arc version.
+    - DAILY AHEAD  = Rare. The daily pulled a version that was LATEST at
+      build time, but the manifest has since been rolled back or replaced.
+    - MATCH        = Daily uses the same data as the current PO.
+
+  HOW IT WORKS:
+    The daily build populates partition data from the arc archive using
+    symlinks. Each symlink target contains the version string, e.g.:
+      runs/par_meu/.../sta_primetime/par_meu.def.gz
+        -> .../GFCN2CLIENTA0_SC8_VER_053/par_meu.def.gz
+    The script resolves these symlinks and compares against the manifest.
+
+  MANIFEST LOCATIONS:
+    Per-partition manifests (GFCN2CLIENTA0LATEST):
+      /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<par>/sta_primetime/
+        GFCN2CLIENTA0LATEST/<par>.sta_primetime.manifest.gz
+
+    Fields extracted from manifest:
+      Version     — GFCN2CLIENTA0_SC8_VER_NNN
+      User Name   — PO owner (who archived)
+      Current Date — when it was archived
+      Configs     — PO config name (workspace flavor)
+      From dir    — full path to PO workspace sta_primetime release
+      Work Area   — PO owner's work area root
+
+  PO WORKSPACE ACCESS (via manifest From dir):
+    The "From dir" field gives the exact path to each partition's PO data:
+      <From_dir>/../../  = runs/<par>/n2p_htall_conf4/release/latest/
+      <From_dir>/../../../..  = PO workspace root with apr_fc/, sta_pt/, etc.
+
+    Example for par_meu (mfeldma1):
+      From dir: /nfs/site/disks/mfeldma1_wa/gfc/par_meu_ww11/runs/par_meu/
+                n2p_htall_conf4/release/latest/sta_primetime
+      PO root:  /nfs/site/disks/mfeldma1_wa/gfc/par_meu_ww11/runs/par_meu/
+                n2p_htall_conf4/
+      STA:      .../sta_pt/func.max_high.T_85.typical/reports/
+      P&R:      .../apr_fc/scripts/  (sio2po.tcl, user_reg_bound2port.tcl)
+      Timing:   .../release/latest/timing_collateral/
+
+  CROSS-REFERENCING WITH HSD ANALYSIS:
+    When checking if a sign_off HSD was implemented, use the PO workspace
+    paths from the manifests to access the actual P&R scripts:
+      1. Get PO workspace from manifest: zgrep "From dir" <manifest>
+      2. Navigate to apr_fc/scripts/ (or apr_cdns/scripts/ for Cadence)
+      3. Check sio2po.tcl, user_reg_bound2port.tcl, user_useful_skew.tcl
+         for the signal name
+      4. If the signal appears in bound/skew TCLs, the fix IS implemented
+         even if the HSD status still shows sign_off
+
+    Example:
+      # Check if par_ooo_vec bounded miintwbrsderrm807h:
+      grep miintwbrsderrm807h /nfs/site/disks/eabuyuni_wa/OOO_VEC/GFC/\
+        par_ooo_vec_GFC_ww11d1_RL10a/runs/par_ooo_vec/n2p_htall_conf4/\
+        apr_fc/scripts/user_reg_bound2port.tcl
+
+
+================================================================================
+  STEP 8 — UPDATE SQL DATABASE (OPTIONAL)
+================================================================================
+
+  For deeper analysis, load the WW12A IFC data into the sio_families SQL table:
+
+    -- Clear old data
+    DELETE FROM sio_families;
+
+    -- Re-import from new par_*_status.txt files
+    -- (use the par_status.py tool or manual parsing)
+
+  This enables queries like:
+    -- All signals worse than -100ps across all partitions
+    SELECT partition, signal, wns FROM sio_families WHERE wns <= -100 ORDER BY wns;
+
+    -- Signals that are UNTRACKED and worse than -60ps
+    SELECT * FROM sio_families WHERE analysis = 'UNTRACKED' AND wns <= -60;
+
+    -- Risk category counts
+    SELECT analysis, COUNT(*) FROM sio_families GROUP BY analysis;
+
+
+================================================================================
+  STEP 9 — SHARE RESULTS
+================================================================================
+
+  Key files to share with SIO (Gil) or team:
+
+    1. ww*_daily_report.txt     — executive summary (start here)
+    2. all_par_diff_summary.txt — quick delta table
+    3. par_*_diff.txt           — detailed per-partition diffs
+    4. par_*_status.txt         — full status with HSD cross-reference
+
+  View colored reports:
+    cat ww12a_daily_report.txt        # colors render in terminal
+    less -R par_ooo_int_status.txt    # -R flag preserves ANSI colors
+
+  For email / non-terminal:
+    Regenerate with --no-color flag, or:
+    sed 's/\x1b\[[0-9;]*m//g' report.txt > report_plain.txt
+
+
+================================================================================
+  QUICK REFERENCE — FULL FLOW IN ONE BLOCK
+================================================================================
+
+  AUTOMATED (recommended):
+    python3 /nfs/site/disks/sunger_wa/sio_scripts/run_daily_update.py
+    # or with explicit tag:
+    python3 /nfs/site/disks/sunger_wa/sio_scripts/run_daily_update.py --tag WW13B
+    # dry-run first to preview:
+    python3 /nfs/site/disks/sunger_wa/sio_scripts/run_daily_update.py --tag WW13B --dry-run
+
+  MANUAL (step-by-step, if you need more control):
+
+  # === Config ===
+  NEW_TAG="WW12A"
+  OLD_TAG="WW11G"
+  PREV_DIR="ww12_1"
+  NEW_DIR="ww12_2"
+  NEW_WA="/nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26${NEW_TAG}_dcm_daily-CLK045.bu_postcts"
+
+  # === Setup ===
+  cd /nfs/site/disks/sunger_wa/fc_data/my_learns
+  mkdir -p $NEW_DIR && cd $NEW_DIR
+  cp ../$PREV_DIR/par_status.py .
+  cp ../$PREV_DIR/par_status_diff.py .
+  # Update DEFAULT_WA in par_status.py to $NEW_WA
+
+  # === Generate status reports ===
+  for par in par_ooo_int par_meu par_ooo_vec par_msid par_fe par_exe par_pmh par_mlc par_fmav0 par_fmav1 par_pm; do
+      python3 par_status.py -p "$par" --color > "${par}_status.txt" 2>&1
+  done
+
+  # === Check daily vs PO versions ===
+  python3 /nfs/site/disks/sunger_wa/sio_scripts/check_daily_vs_po.py \
+    --daily "$NEW_WA" -o ${NEW_TAG}_daily_vs_po.txt
+
+  # === Generate diff reports ===
+  python3 par_status_diff.py --builds $OLD_TAG $NEW_TAG --partition all --color --outdir .
+
+  # === Review ===
+  cat all_par_diff_summary.txt
+  cat par_ooo_int_status.txt | head -60
+
+
+================================================================================
+  FILE INVENTORY (per daily update)
+================================================================================
+
+  INPUT FILES (from daily WA):
+    <WA>/par_*_ifc.rpt                    — interface timing (11 files)
+    <WA>/csv/uarch_sum_hv.csv             — UARC official summary
+    <WA>/runs/core_client/*/tip_status.rpt — TIP cell placement status
+    <WA>/project/GFCN2CLIENTA0/illegal.txt — banned cells list (15,746 cells)
+
+  PER-PARTITION MANIFESTS (arc archive — for check_daily_vs_po):
+    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_*/sta_primetime/
+      GFCN2CLIENTA0LATEST/<par>.sta_primetime.manifest.gz
+
+  HSD DATABASES (shared, not per-daily):
+    /nfs/site/disks/baselibr_wa/tmp/gfc.rtl4be           — RTL4BE HSDs (724+)
+    /nfs/site/disks/baselibr_wa/tmp/gfc.sio2po.rtl4be    — SIO2PO HSDs (1334+)
+
+  OUTPUT FILES (generated):
+    par_*_status.txt           — 11 partition status reports (~100-1200 lines each)
+    par_*_diff.txt             — 11 partition diff reports
+    all_par_diff_summary.txt   — cross-partition summary table
+    ww*_daily_report.txt       — executive summary with colors
+    ww*_daily_vs_po.txt        — daily vs PO version comparison per partition
+
+  TOOLS:
+    par_status.py              — generates status reports
+    par_status_diff.py         — generates diff reports
+    check_daily_vs_po.py       — compares daily arc versions vs PO manifest LATEST
+    run_daily_update.py        — FULL PIPELINE: automates steps 0-7e in one command
+                                 (all scripts in /nfs/site/disks/sunger_wa/sio_scripts/)
+
+  ALL PARTITIONS:
+    par_ooo_int  par_meu  par_ooo_vec  par_msid  par_fe
+    par_exe  par_pmh  par_mlc  par_fmav0  par_fmav1  par_pm
+
+
+================================================================================
+  TROUBLESHOOTING
+================================================================================
+
+  Problem: par_status_diff.py shows all signals as "NEW" (0 in old build)
+  Cause:   IFC file naming mismatch — older builds use "test2_" prefix
+  Fix:     The find_wa() and parse_ifc() functions try multiple prefixes:
+           par_*_ifc.rpt, test_par_*_ifc.rpt, test2_par_*_ifc.rpt
+
+  Problem: par_status_diff.py can't find WA directory
+  Cause:   CLK version changed (e.g. CLK039 → CLK045)
+  Fix:     find_wa() now uses glob fallback: *FCT26<TAG>_dcm_daily-CLK*.bu_postcts
+
+  Problem: All signals show as UNTRACKED in par_status.txt
+  Cause:   HSD databases may be stale or HSD signal names don't match IFC names
+  Note:    Many signals appear UNTRACKED because HSDs are filed against the OTHER
+           partition in the crossing. The sio_project_summary analysis cross-checks
+           both sides.
+
+  Problem: Colors don't render in less/more
+  Fix:     Use: less -R file.txt  (the -R flag preserves ANSI escape codes)
+           Or:  cat file.txt      (always works in terminal)

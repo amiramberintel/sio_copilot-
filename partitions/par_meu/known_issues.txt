@@ -1,0 +1,6 @@
+# par_meu -- Known Issues
+# Format: signal | slack | corner | status | HSD/AR | notes
+
+rsslowrobidvpm803h      | -103ps | max_high | OPEN | TBD | worst WNS
+simuldisablebugfixm3nnh | -221ps | max_high | OPEN | TBD | worse after PTECO
+FEV: 243 RTL dangling nets | -- | -- | AR on RTL team | -- | blocking FEV pass

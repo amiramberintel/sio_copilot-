@@ -1,0 +1,143 @@
+<xml>
+<!-- ================================================================= -->
+<!-- par_exe MISSING SPECS FIX                                         -->
+<!-- Generated: 2026-03-03                                             -->
+<!-- Source WA: GFC_CLIENT_26ww08b_ww09_3_initial-FCT26WW10B_Daily-CLK040.fcl -->
+<!-- Owner: baselibr (Basel)                                           -->
+<!--                                                                   -->
+<!-- WHAT: 36 par_exe output pins have no userSpec in timing_specs.xml -->
+<!--       The budget tool falls back to "slack_allocation" for these  -->
+<!--                                                                   -->
+<!-- HOW TO USE:                                                       -->
+<!--   Add these <net> lines to:                                       -->
+<!--   release/latest/sta_primetime/run_dir/inputs/                    -->
+<!--     core_client.func.max_high.T_85.typical_timing_specs.xml       -->
+<!--                                                                   -->
+<!-- CAT 1: Bus bits - siblings have specs, just extend the range      -->
+<!-- CAT 2: FEEDTHRU pins - auto-generated, may need waiver instead    -->
+<!-- CAT 3: Analog/sense/bisr/jtag - likely waivable                   -->
+<!-- CAT 4: Functional signals needing new specs                       -->
+<!-- ================================================================= -->
+
+<!-- ======= CAT 1: BUS BITS — copy sibling spec value ======= -->
+<!-- mi2v0blendzerom303h: bits [0]-[5] have spec=123.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mi2v0blendzerom303h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="123.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mi2v0blendzerom303h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="123.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mi2v0vecrdym302h: bits [0]-[5] have spec=79.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mi2v0vecrdym302h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="79.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mi2v0vecrdym302h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="79.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mi2v1blendzerom303h: bits [0]-[5] have spec=123.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mi2v1blendzerom303h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="123.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mi2v1blendzerom303h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="123.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mi2v1vecrdym302h: bits [0]-[5] have spec=79.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mi2v1vecrdym302h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="79.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mi2v1vecrdym302h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="79.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mimaskisnotallonem305h: bits [0]-[5] have spec=128.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mimaskisnotallonem305h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="128.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mimaskisnotallonem305h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="128.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- miv2iwakeupm302h: bits [2]-[5] have spec=119.0, bits [0]-[1] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miv2iwakeupm302h[0]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="119.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miv2iwakeupm302h[1]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="119.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- rsi2vavoidm305h: bits [0]-[1] have spec=88.0, bits [2]-[3] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsi2vavoidm305h[2]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="88.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsi2vavoidm305h[3]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="88.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- rsuopisgitm302h: bits [2]-[5] have spec=128.0, bits [0]-[1] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsuopisgitm302h[0]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="128.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsuopisgitm302h[1]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="128.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- rsvecrobidvpm803h: bits [0]-[5] have spec=54.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsvecrobidvpm803h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="54.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsvecrobidvpm803h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="54.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- rsvecrobidvm804h: bits _0_ to _5_ have spec=68.0, bits _6_ and _7_ missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsvecrobidvm804h_6_" related_clk_latency="" related_clk_port="" rollup_mode="" spec="68.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsvecrobidvm804h_7_" related_clk_latency="" related_clk_port="" rollup_mode="" spec="68.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- fmddataoutv0cm802h: bits [2]-[7] have spec=90.0, bits [0]-[1] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="fmddataoutv0cm802h[0]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="90.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="fmddataoutv0cm802h[1]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="90.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- rsmaskmuxctlm302h: partial bits have spec=103.0, bits _12__2_[0..1] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsmaskmuxctlm302h_12__2_[0]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="103.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsmaskmuxctlm302h_12__2_[1]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="103.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mii2vkgenimmdatam802h: partial bits have spec=44.0, bits [2]-[3] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mii2vkgenimmdatam802h[2]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="44.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mii2vkgenimmdatam802h[3]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="44.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mii2vkgenselm802h: partial bits have spec=84.0, bits [2]-[3] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mii2vkgenselm802h[2]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="84.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mii2vkgenselm802h[3]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="84.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mii2vwbdrivem802h: partial bits have spec=79.0, bits [2]-[3] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mii2vwbdrivem802h[2]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="79.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mii2vwbdrivem802h[3]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="79.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- miisi2kwbm802h: partial bits have spec=64.0, bits [2]-[3] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miisi2kwbm802h[2]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="64.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miisi2kwbm802h[3]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="64.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- miisi2vbrcstwbvm802h: partial bits have spec=64.0, bits [2]-[3] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miisi2vbrcstwbvm802h[2]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="64.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miisi2vbrcstwbvm802h[3]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="64.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- miisi2x87wbvm802h: partial bits have spec=64.0, bits [2]-[3] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miisi2x87wbvm802h[2]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="64.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miisi2x87wbvm802h[3]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="64.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- miisi2x87writepefm802h: partial bits have spec=34.0, bits [2]-[3] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miisi2x87writepefm802h[2]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="34.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="miisi2x87writepefm802h[3]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="34.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- fpbyp1wbenv0m804h: partial bits have spec=84.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="fpbyp1wbenv0m804h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="84.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="fpbyp1wbenv0m804h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="84.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- fpbyp1wbenv1m804h: partial bits have spec=84.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="fpbyp1wbenv1m804h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="84.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="fpbyp1wbenv1m804h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="84.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- rsveceurobidvm801h: partial bits have spec=133.0, bits [6]-[7] missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsveceurobidvm801h[6]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="133.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="rsveceurobidvm801h[7]" related_clk_latency="" related_clk_port="" rollup_mode="" spec="133.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mebrkpnttrpm805h: bits _0_ to _26_ have spec=49.0, bit _27_ missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mebrkpnttrpm805h_27_" related_clk_latency="" related_clk_port="" rollup_mode="" spec="49.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- mebrkpnttrpm806h: bits _0_ to _26_ have spec=113.0, bit _27_ missing -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="mebrkpnttrpm806h_27_" related_clk_latency="" related_clk_port="" rollup_mode="" spec="113.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- tmmsdedatamnn1h: _sdeerror subfield missing, sibling has spec=89.0 -->
+<net dir="" disableInBU="0" applySpecOnBU="1" lockDelay="0" lbForward="0" par="par_exe" pin="tmmsdedatamnn1h_sdeerror" related_clk_latency="" related_clk_port="" rollup_mode="" spec="89.0" spec_clock="mclk_exe" spec_edge="Rise" user_add="baselibr" />
+
+<!-- ======= CAT 2: FEEDTHRU pins — need Basel to decide: add spec or waive ======= -->
+<!-- mi2v0uopcodm303h FEEDTHRU bits — these are auto-generated FT pins -->
+<!-- Suggestion: use same spec as the non-FT siblings if they exist    -->
+<!-- <net ... par="par_exe" pin="mi2v0uopcodm303h_p_2___FEEDTHRU_1[11]" spec="TBD" ... /> -->
+<!-- <net ... par="par_exe" pin="mi2v0uopcodm303h_p_3___FEEDTHRU_1[11]" spec="TBD" ... /> -->
+
+<!-- ======= CAT 3: Analog/sense/bisr/jtag — likely waivable ======= -->
+<!-- 29 pins: tsremotebjt*, *sense*, *bisr*, *ijtag*, *lcp*, *lfsr*, *dfx*, *ldo* -->
+<!-- These are non-functional timing paths — recommend adding to waiver list -->
+<!-- rather than creating specs. Basel to confirm.                              -->
+
+<!-- ======= CAT 4: Remaining singles — need new specs from Basel ======= -->
+<!-- These 5 signals have NO sibling specs to copy — Basel must determine values -->
+<!-- altmulpwrgoodmnnnh         — power good signal -->
+<!-- iepwrdwnovrdenmnnnh        — power down override -->
+<!-- sigfcryptpwrdwnovrm3nnh    — crypto power down override -->
+<!-- sishuf6pwrdwnovrm3nnh      — shuffle power down override -->
+<!-- sishuf7pwrdwnovrm3nnh      — shuffle power down override -->
+<!-- tmpgdirectcontmnnh_pgdirectcontaltmopenallicgs  — PG direct control -->
+<!-- tmpgdirectcontmnnh_pgdirectcontaltmpwrgood      — PG direct control -->
+<!-- tmpgdirectcontmnnh_pgdirectcontaltmwakeuprst    — PG direct control -->
+<!-- tmpgdirectcontmnnh_pgdirectconten               — PG direct control -->
+
+</xml>

@@ -1,0 +1,130 @@
+================================================================================
+  sio_common.tcl -- PROC CATALOG BY SKILL AREA
+  Source: /nfs/site/disks/tsabek_wa01/playground/sio_common.tcl  (Timor Sabek)
+  ~6058 lines, 100+ procs
+================================================================================
+
+--- IFC / PATH ANALYSIS ---
+sio_logic_count_path                    Count logic stages in a timing path
+sio_logic_count_path_get_max_slack      Get max slack for logic count analysis
+sio_logic_count_path_get_max_slack_real Get real max slack (not estimated)
+sio_logic_count_path_check_all_ports    Check all ports for logic count
+sio_logic_count_path_check_ooo_vec      Special check for ooo_vec partition
+
+--- MANHATTAN DISTANCE ---
+sio_manh_dist                           Calculate manhattan distance between 2 points
+sio_mow_tot_dist_from_points            Total distance from timing path points
+
+--- MOW (MAP OF WORLD) VISUALIZATION ---
+run_sio_mow                             Main MOW entry point
+run_sio_mow_ryl                         MOW with RYL (Red/Yellow/Light) coloring
+sio_mow_get_initial_data                Initialize MOW data structures
+sio_mow_get_all_ports                   Get all ports for MOW display
+sio_mow_report_timing                   Report timing within MOW context
+sio_mow_center_of_mass                  Calculate center of mass for port cluster
+sio_mow_get_interface_ooo_vec           Get OOO_VEC interface for MOW
+
+--- BUFFER CHAIN ANALYSIS ---
+server_buff_chain_server                Buffer chain analysis in PT server mode
+server_buff_chain_server_get_xys        Get XY coords of buffer chain
+check_regexs_buffs_invs                 Check buffer/inverter regex patterns
+sio_inv_buff_delay_to_endpoint_haya     Buffer/inv delay to endpoint (Haya's method)
+
+--- PORT ANALYSIS ---
+get_ports_from_points                   Extract ports from timing path points
+sio_mow_get_port_that_drived_by_pin     Get port driving a specific pin
+sio_mow_get_port_that_drive_pin         Get port driven by a specific pin
+get_abutted_port                        Find abutted port for interface
+sio_check_abbutted_pins                 Check abutted pin pairs
+check_port_location_outside_bbox        Check if port is outside bounding box
+
+--- CELL CATALOGING ---
+cells_cataloging                        Catalog all cells in a path/region
+sio_write_all_cells                     Write cell list for analysis
+sio_write_all_cells_clusters            Write cell cluster data
+sio_write_all_cells_clusters_analysis_between_clusters  Compare clusters
+
+--- TIP DATA (TIMING INTERFACE PROTOCOL) ---
+sio_mow_tip_data                        Get TIP data for timing path
+sio_mow_get_tip_data                    Extract TIP timing data
+sio_mow_fix_tip_data                    Fix/adjust TIP data
+
+--- TNS/SLACK ---
+lsum                                    Sum a list of values
+lsum_tns                                Sum TNS values
+sio_mow_port_tns                        Calculate port-level TNS
+sio_mow_port_tns_check_exceptions       Check TNS exceptions per port
+sio_get_tns_for_RFs_pins                Get TNS for rise/fall pins
+sio_get_tns_for_ebbs_pins               Get TNS for EBB pins
+
+--- SPEC CHECKING ---
+sio_check_specs_that_overlapped         Find overlapping timing specs
+sio_mow_report_unbalance_spec           Report unbalanced specs
+
+--- PTECO SUPPORT ---
+pteco_check_meu_meu                     Check PTECO results for par_meu
+sio_mow_pceco_read_unfixable            Read unfixable violations from PCECO
+
+--- DFT ---
+dft_wall                                Analyze DFT wall timing
+sio_maha_tpi_find                       Find TPI (Test Point Insertion) points
+
+--- BOUNDING CHECK ---
+sio_check_if_can_bound                  Check if path can be bounded
+sio_check_if_can_bound_path             Check if specific path is boundable
+sio_check_if_can_bound_clk_latency      Check bounding via clock latency
+sio_check_if_can_bound_logic_nearest_logic  Check nearest logic for bounding
+
+--- ICG (INTEGRATED CLOCK GATING) ---
+sio_icg_check                           Check ICG cells in design
+
+--- MBIT (MULTIBIT) ---
+sio_mow_mbit_get_relevant               Get relevant MBIT flops
+sio_mow_mbit_compress_pin_name          Compress MBIT pin names
+
+--- SEQ TO SEQ DATA ---
+sio_write_seq_to_seq_data               Write sequential-to-sequential data
+sio_write_seq_to_seq_data_one_pin       Single pin seq-to-seq data
+sio_write_seq_to_seq_data_one_pin_fast  Fast version single pin
+
+--- PARTITION HELPERS ---
+get_partition_from_name                 Get partition name from path/net
+get_partitions_from_name                Get multiple partitions
+get_partitions                          List all partitions
+
+--- SIO BUFFER ANALYSIS ---
+sio_mow_get_sio_buffer_data_from_paths  Get SIO buffer data from timing paths
+get_regexs_buffs_invs_N2                Buffer patterns for N2 process
+get_regexs_buffs_invs_N3                Buffer patterns for N3 process
+get_regexs_buffs_invs_current           Current process buffer patterns
+
+--- VEC/EXE SPECIFIC ---
+sio_vec_sio_logic_count_path_data_one_pin        VEC logic count single pin
+sio_vec_sio_logic_count_path_data_rob_mob         VEC ROB/MOB paths
+sio_vec_exe_find_ports_logic_only_not_in_middle   EXE port analysis
+run_sio_vec_sio_logic_count_path_data_parallel    Parallel VEC analysis
+
+--- UTILITY ---
+open_file                               Open file for read/write
+printt                                  Print with timestamp
+arginfo                                 Print argument info
+pinfo                                   Print info message
+infoc                                   Print colored info
+nm_to_um                                Convert nanometers to micrometers
+mktemp                                  Create temp file
+get_nbclass_cores                       Get NB class cores count
+get_realted_percent                     Calculate relative percentage
+sio_session_name_get                    Get current PT session name
+
+--- SERVER/CLIENT ---
+server_run_cmd                          Run command on PT server
+server_run_cmd_cadence                  Run command on Cadence server
+server_run_cmd_ohad                     Run command (Ohad's variant)
+server_run_cmd_parse_params             Parse server command params
+sio_cache_data_from_id                  Cache data by ID
+
+================================================================================
+  USAGE: source sio_common.tcl in PT shell, then call procs directly
+  NOTE:  Some procs require active PT session with loaded design
+  NOTE:  Buffer regex procs are process-specific (N2 vs N3)
+================================================================================

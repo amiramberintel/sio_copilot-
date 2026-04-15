@@ -1,0 +1,80 @@
+FEV (Formal Equivalence Verification) - Overview
+==================================================
+Last updated: 2026-03-30
+
+WHAT IS FEV?
+  FEV = Formal Equivalence Verification (also called LEC = Logic Equivalence Check)
+  Tool: Cadence Conformal LEC
+  Purpose: Verify that the NETLIST (post-synthesis, post-P&R) is logically equivalent
+           to the RTL (original design intent). Catches synthesis/P&R bugs.
+
+  If FEV fails, it means the physical implementation differs from what the designer wrote.
+  This is a MUST-PASS signoff check -- no tapeout without clean FEV.
+
+WHAT FEV CHECKS:
+  - RTL vs APR (After Place & Route) equivalence -- called "fev_rtl2apr"
+  - Compares every register, latch, and output between RTL model and netlist
+  - Checks power intent (UPF) equivalence
+  - Verifies black box matching
+  - Validates clock gating equivalence
+
+FEV TOOL: fev_rtl2apr app (Cadence Conformal)
+  Run command: fev_rtl2apr
+  Scripts location:
+    /nfs/site/disks/idc_bei_fev/gpavanku/GFC_FEV_RUN/FEV_RUN/core-gfc-a0-master-26ww10b/
+    runs/par_*/n2p_htall_conf4/fev_conformal/fev_rtl2apr/scripts/*
+
+FEV WA:
+  /nfs/site/disks/idc_bei_fev/gpavanku/GFC_FEV_RUN/FEV_RUN/
+
+FEV DIRECTORY STRUCTURE:
+  $FEV_WA/<rtl_model>/runs/<partition>/n2p_htall_conf4/fev_conformal/fev_rtl2apr/
+    scripts/              -- Run scripts (fev_post_setup.tcl)
+    logs/                 -- lec.log (main log file)
+    reports/              -- Detailed reports
+    IF_<par>_fev_rtl2apr/ -- Results directory
+      results/Greenstone_summary.rpt  -- KEY REPORT: rule pass/fail summary
+
+GREENSTONE SUMMARY REPORT:
+  The main signoff report. Lists all FEV rules with:
+    RuleName, Active, Severity, RuleOrigin, TotalViolations, UserWaived, Approved, Remaining, Status
+
+  Key rules:
+    NonEquivalent        -- Registers/outputs that don't match (CRITICAL)
+    NotMapped            -- Points in netlist not found in RTL (or vice versa)
+    Abort                -- Comparison aborted (tool issue or complexity)
+    RTLUndrivenNets      -- Nets in RTL that have no driver (dangling)
+    NonMatchingBBoxes    -- Black boxes that don't match between RTL and netlist
+    CheckIGNThreeDotTwo  -- ING 3.2 audit rule violations
+    VerificationFailed   -- Overall verification failed
+    CheckPGECNoneq       -- Power-gated equivalence check non-equivalent
+    UnmappedPins         -- Pins that couldn't be mapped
+    Zmapped              -- Points mapped to constant Z (tri-state)
+
+COMMON FAILURE CAUSES:
+  1. Dangling RTL connections   -- RTL team must fix (RTLUndrivenNets)
+  2. Clock connection mismatch  -- mclk connected differently in RTL vs netlist
+  3. FDR buffer not black-boxed -- ctech_lib_bb_buf needs bbox in netlist
+  4. Bad LCP file               -- LCP (Low Cost Pattern) file not dumped correctly
+  5. Isolation strategy issues  -- UPF isolation added incorrectly in scan chain
+  6. Black box imbalance        -- Different black boxes in RTL vs netlist
+
+AUDIT REVIEW:
+  Separate from Greenstone, checks design methodology compliance:
+    ING3.2              -- Intel Next Gen 3.2 methodology
+    Black box Balance   -- RTL and netlist have same black boxes
+    Golden Low Power    -- UPF/power intent check
+    Revised Low Power   -- Updated power intent
+    Power Grid          -- Power grid consistency
+    Power Consistency   -- Power domain consistency
+
+  Report location:
+    $FEV_WA/.../IF_<par>_fev_rtl2apr/results/Greenstone_summary.rpt
+
+NOTE: Most POs use LOCAL RTL model for FEV. For CR (Caliber Review), Pandora tool
+      will use only latest sta_pt & latest RTL fe_collateral. All POs should move
+      to latest RTL model.
+
+TEAM:
+  gpavanku  -- FEV run owner
+  Yarden Kanner -- Fusion compiler partitions LCP file contact

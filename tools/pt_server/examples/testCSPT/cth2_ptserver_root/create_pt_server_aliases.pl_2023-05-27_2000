@@ -1,0 +1,77 @@
+#!/usr/intel/bin/perl
+
+#print "alias fcts_cth2  \"/nfs/site/disks/ogivol_wa/ogivol_pt_server_repo/cth2_ptserver_root/aliases_for_pt_client\"\n";
+print "\n\n\n";
+
+my %modela_modelb          = ("modela_" => "_a", "modelb_" => "_b");
+my %modela_modelb_end_user = ("modela_" => "", "modelb_" => "0");
+my %projects               = ("cgc78clienta0" => "cgc78clienta0", "cgc78clientb0" => "cgc78clientb0", "lnc78a0" => "lnc78a0", "lnc78b0" => "lnc78b0", "pnc78servera0" => "pnc78servera0", "pnc78serverb0" => "pnc78serverb0", "lncn3clienta0" => "lncn3clienta0", "lncn3clientb0" => "lncn3clientb0", "lncn3lnlcliena0" => "lncn3lnlcliena0", "lncn3lnlclienb0" => "lncn3lnlclienb0");
+my %model_types            = ("_fcl" => "l", "_bu_prects" => "p", "_bu_prp" => "b", "_bu" => "i", "_fcn" => "n");
+my %modes                  = ("_func" => "");
+my %min_max_types          = ("min_" => "n" , "max_" => "m", "noise_" => "nnn", "rv_" => "rvv");
+my %voltages               = ("dvfs"      => "dvf", "hi_hi_lo" => "hhl", "hi_lo_hi" => "hlh", "hi_lo_lo" => "hll", "high"       => "hig", "high_cold" => "hco", "lo_hi_hi"  => "lhh",
+                              "lo_hi_lo"  => "lhl", "lo_lo_hi" => "llh", "low"      => "low", "med"      => "med", "noise_high" => "nhi", "noise_low" => "nlo", "nom"       => "nom", "turbo" => "tur",
+                              "high_cold" => "hco", "low_cold" => "lco", "slow" => "slo", "slow_cold" => "slc");
+my %temps                  = ("F_125" => "f125", "S_M40" => "sm40", "S_125" => "s125" , "T_85" => "t085", "S_0" => "s000", "F_M40" => "fm40", "F_105" => "f105", "TT_100" => "t100", "TM_100" => "tm1",
+                              "rcffcminpcff_125" => "rcffcminpcff_125","rcffcminpcff_m40" => "rcffcminpcff_m40","rcsscmaxpcss_125" => "rcsscmaxpcss_125",
+			      "rcsscmaxpcss_m40" => "rcsscmaxpcss_m40","rfffcmintttt_110" => "rfffcmintttt_110","ttttcmaxtttt_100" => "ttttcmaxtttt_100",
+			      "ttttcmaxtttt_m40" => "ttttcmaxtttt_m40","ttttcmintttt_100" => "ttttcmintttt_100","ttttctyptttt_105" => "ttttctyptttt_105"
+                             );
+
+my %skew                   = ("typical" => "", "cbest_CCbest" => "ccb", "cworst_CCworst" => "ccw", "cworst_CCworst_T" => "cct", "typical_CCworst" => "tcc", "tttt" => "ttt");              
+
+foreach my $proj (keys %projects) {
+   print "\n\n### ". uc($proj) . "\n\n";
+   foreach my $modela_or_modelb (keys %modela_modelb) {
+      print "\n# ${modela_or_modelb}servers\n\n" if ($modela_or_modelb ne "modela_");
+      foreach my $model_type (keys %model_types) {  
+         foreach my $mode (keys %modes) {
+            foreach my $min_max (keys %min_max_types) {
+               foreach my $volt (keys %voltages) {
+                  foreach my $temp (keys %temps) {
+                      foreach my $skew (keys %skew) {  
+   		          next if ($mode eq "_all" && ($min_max ne "max_" || $temp ne "" || ($volt ne "" && $volt ne "_lowvcc")));
+                          next if (($model_type eq "_fcl" || $model_type eq "_fcn") && ($temp eq "_cold" || $volt =~ /2|hvqk/ || $min_max ne "max_" || $mode eq "_scan"));
+                          next if ($temp eq "_cold" && $min_max ne "min_");
+                          next if ($mode eq "_spec" && $model_type ne "_fcl");
+                          next if ($min_max ne "min_" && $volt eq "_hvqk");
+                          my $server_name_prefix_end_user;
+                          if ($modela_or_modelb eq 'modela_') {
+		              $server_name_prefix_end_user = 'latest_';
+                          } else {
+		              $server_name_prefix_end_user = 'prev_';
+		          }
+		          my $server_name = "${modela_or_modelb}${proj}${model_type}${mode}\.${min_max}${volt}\.${temp}\.${skew}";
+                          my $server_name_end_user = "$server_name_prefix_end_user"."${proj}${model_type}${mode}\.${min_max}${volt}\.${temp}\.${skew}";
+	                  my $alias = $projects{$proj}; 
+                          $alias .= $model_types{$model_type};
+                          $alias .= $modes{$mode} if ($model_type eq "_fcl" || $mode eq "_scan" || $model_type eq "_fcn" || $mode eq "_all");
+                          $alias .= $min_max_types{$min_max}; #unless ($model_type eq "_fcl" || $model_type eq "_fcn");
+                          $alias .= $voltages{$volt};
+                          $alias .= $temps{$temp};
+                          $alias .= $skew{$skew};
+		          my $alias_end_user = $alias;
+                          $alias .= $modela_modelb{$modela_or_modelb};
+                          #print "$server_name => $alias\n";
+                          print "alias  $alias   \'fcts_cth2 -m $server_name    -c \"\\!*\"\'\n";
+		          $alias_end_user .= $modela_modelb_end_user{$modela_or_modelb};
+		          print "alias  $alias_end_user   \'fcts_cth2 -m $server_name_end_user    -c \"\\!*\"\'\n";
+                      }
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
+#
+#4	2	1
+#low	low	low 
+#low	low	high
+#low	high	low 
+#low	high	high
+#high	low	low 
+#high	low	high
+#high	high	low 
+#high	high	high

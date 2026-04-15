@@ -1,0 +1,506 @@
+=======================================================================================================================================================================================================================
+  DCU L1 DUAL-VIOLATED ENDPOINTS — MIN/MAX WINDOW ANALYSIS (PBA-calibrated)
+  Hold:  func.min_low PBA < -50ps  (modelb WW13B daily)
+  Setup: func.max_high PBA estimated (GBA + 20ps validated gap)
+  GBA-to-PBA gap: avg +20ps (range 1.8-37.2ps), validated on 245 PBA paths (modela WW13A)
+  par_meu=VER_053  par_pmh=VER_046  CLK048
+=======================================================================================================================================================================================================================
+
+  TOTAL DUAL-VIOLATED (GBA): 403 endpoint+pin combos
+  Hold  WNS: -84.4ps (PBA min_low)
+  Setup WNS: -12.7ps (est. PBA max_high)
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │  PBA SETUP VALIDATION                                       │
+  │                                                             │
+  │  245 PBA setup paths queried (modela WW13A max_high)        │
+  │  All 245 have negative PBA slack → confirmed real violations│
+  │  PBA setup WNS (measured): -17.7ps  (on dcibbankd00)       │
+  │  GBA-to-PBA gap: avg +20ps  min +1.8ps  max +37.2ps       │
+  │                                                             │
+  │  PBA RISK ASSESSMENT (based on validated gap):              │
+  │    DEFINITE :   27 endpoints  → PBA still < 0             │
+  │    LIKELY   :  101 endpoints  → PBA likely < 0            │
+  │    POSSIBLE :  107 endpoints  → PBA borderline            │
+  │    UNLIKELY :  168 endpoints  → PBA likely > 0            │
+  │                                                             │
+  │  Conservative: 27 true PBA dual-violated                │
+  │  Worst case:   up to 403 dual-violated                      │
+  └──────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │  MIN/MAX WINDOW PROOF                                       │
+  │  Same IFC Port:  403/403 (100%)                            │
+  │  Same MEU Cloud: 403/403 (100%)                            │
+  │  → FIX: Clock adjustment required (reduce cclk_meu)        │
+  └──────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────────────────────────────────────────────────────────────┐
+  │  DATA ECO FEASIBILITY (min-delay buffer on PMH side)                        │
+  │                                                                             │
+  │  Test path: #1 D8 hold=-84.4ps (DcL1RdDataIntM408H[0][1][153]/CP)          │
+  │  Insertion net: dataCOut[158] (XOR2 ECC out → port buffer, fanout=1)        │
+  │                                                                             │
+  │  PMH-unique cells: FF Q (36ps) + XOR2 ECC (23ps) — only 2 cells            │
+  │  Shared cells:     port_inv BUFFD14/16 + AO22 mux → endpoint               │
+  │                                                                             │
+  │  Setup paths through dataCOut[158] (PBA max_high, modela WW13A):            │
+  │    6 paths total, tightest MET = +6.2ps PBA                                 │
+  │    (WSBDataArrayMnnnH[0][3][0][1]/D8)                                       │
+  │                                                                             │
+  │  Budget to -5ps PBA target:  +6.2 − (−5.0) = 11.2ps max delay              │
+  │  DLYGATE ratio ~2.5:1:      11ps max → 28ps min hold gain                  │
+  │  Hold deficit:               84.4ps                                         │
+  │  Coverage:                   28/84 = 33%                                    │
+  │                                                                             │
+  │  ⚠ CONCLUSION: Data ECO alone INSUFFICIENT                                 │
+  │    Min-delay buffers recover only 28ps of 84ps hold deficit                 │
+  │    Remaining ~56ps MUST come from cclk_meu clock reduction                  │
+  │    Combined approach: DLYGATE (28ps) + clock fix (56ps)                     │
+  └──────────────────────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  1. PER DATABANK SUMMARY
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Databank          Paths  HoldWNS  SetupPBA  DEFINITE  DEF+LIKELY
+  ────────────── ────── ──────── ───────── ───────── ───────────
+  dcibbankd00           9    -74.9       0.0         0           4
+  dcibbankd01          69    -77.4     -12.7         8          30
+  dcibbankd10          26    -76.4       0.0         0           2
+  dcibbankd11          71    -74.9      -3.0         2          14
+  dcibbankd20          40    -78.0       0.0         0           9
+  dcibbankd21         104    -84.4     -10.2        13          47
+  dcibbankd30          21    -70.3       0.0         0           4
+  dcibbankd31          63    -74.5      -4.6         4          18
+  TOTAL               403    -84.4     -12.7        27         128
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  2. FULL PATH LIST (sorted by hold WNS)
+     Setup_PBA = estimated PBA slack (GBA + 20ps validated avg gap)
+     PMH_Ovlp  = % overlap of par_pmh data path cells between hold & setup paths
+     Risk = DEFINITE | LIKELY | POSSIBLE | UNLIKELY
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+     #  Pin    Hold   S_PBA      Risk  lclk_min_low  cclk_min_low   Skew  SamePort SameMEU  PMH% Window  Databank       Startpoint(hold)                   Endpoint                          
+  ──── ──── ─────── ─────── ───────── ───────────── ───────────── ──────  ──────── ─────── ───── ──────  ────────────── ────────────────────────────────── ──────────────────────────────────
+     1   D8   -84.4    17.4  UNLIKELY           146           327   +181       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][153]      WSBDataArrayMnnnH[0][0][0][1]/D8  
+     2   D1   -80.6    18.6  UNLIKELY           144           328   +184       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][238]      WSBDataArrayMnnnH[0][0][1][2]/D1  
+     3   D1   -78.4    17.5  UNLIKELY           144           325   +181       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][238]      WSBDataArrayMnnnH[0][2][1][2]/D1  
+     4   D2   -78.0     6.3    LIKELY           146           336   +190       YES     YES   18%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][47]       WSBDataArrayMnnnH[0][2][1][0]/D2  
+     5   D1   -77.7    10.0    LIKELY           144           328   +184       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][0][0][2]/D1  
+     6   D3   -77.4    18.9  UNLIKELY           145           328   +183       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][0][1][0]/D3  
+     7   D4   -77.3     2.0    LIKELY           146           328   +182       YES     YES   22%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][204]      WSBDataArrayMnnnH[0][0][0][2]/D4  
+     8   D2   -76.7     5.4    LIKELY           146           337   +191       YES     YES   18%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][47]       WSBDataArrayMnnnH[0][0][1][0]/D2  
+     9   D1   -76.7     9.9    LIKELY           148           329   +181       YES     YES   29%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][141]      WSBDataArrayMnnnH[0][0][0][0]/D1  
+    10   D1   -76.4    18.9  UNLIKELY           156           321   +165       YES     YES   19%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][0]        WSBDataArrayMnnnH[0][3][0][0]/D1  
+    11   D8   -75.7    12.8  POSSIBLE           146           320   +174       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][153]      WSBDataArrayMnnnH[0][1][0][1]/D8  
+    12   D7   -75.5     9.2    LIKELY           144           327   +183       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][190]      WSBDataArrayMnnnH[0][0][1][1]/D7  
+    13   D2   -75.3     4.4    LIKELY           146           336   +190       YES     YES   18%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][47]       WSBDataArrayMnnnH[0][1][1][0]/D2  
+    14   D8   -74.9     5.7    LIKELY           152           332   +180       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][198]      WSBDataArrayMnnnH[1][0][0][2]/D8  
+    15   D7   -74.9    19.6  UNLIKELY           143           324   +181       YES     YES   19%    YES  dcibbankd00    DcL1RdDataIntM408H[1][0][69]       WSBDataArrayMnnnH[1][0][0][2]/D7  
+    16   D3   -74.8     8.9    LIKELY           144           328   +184       YES     YES   24%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][0][0][2]/D3  
+    17   D1   -74.5    12.6  POSSIBLE           144           326   +182       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][177]      WSBDataArrayMnnnH[0][2][1][0]/D1  
+    18   D7   -74.4    16.1  UNLIKELY           143           325   +182       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][172]      WSBDataArrayMnnnH[0][2][1][1]/D7  
+    19   D5   -73.6    15.1  UNLIKELY           143           328   +185       YES     YES   21%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][172]      WSBDataArrayMnnnH[0][0][1][1]/D5  
+    20   D3   -73.4    -1.4  DEFINITE           145           327   +182       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][153]      WSBDataArrayMnnnH[0][0][0][1]/D3  
+    21   D7   -73.0     6.5    LIKELY           144           323   +179       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][190]      WSBDataArrayMnnnH[0][2][1][1]/D7  
+    22   D3   -72.9    17.8  UNLIKELY           145           323   +178       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][2][1][0]/D3  
+    23   D8   -72.7    12.7  POSSIBLE           146           323   +177       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][153]      WSBDataArrayMnnnH[0][2][0][1]/D8  
+    24   D2   -72.7    17.4  UNLIKELY           142           325   +183       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][45]       WSBDataArrayMnnnH[1][1][1][0]/D2  
+    25   D1   -72.3     9.1    LIKELY           152           331   +179       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][205]      WSBDataArrayMnnnH[1][1][0][2]/D1  
+    26   D6   -72.3    19.0  UNLIKELY           151           323   +172       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][185]      WSBDataArrayMnnnH[1][2][1][1]/D6  
+    27   D5   -72.0    17.7  UNLIKELY           144           327   +183       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][0][1][2]/D5  
+    28   D7   -72.0    13.7  POSSIBLE           148           328   +180       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][141]      WSBDataArrayMnnnH[0][0][0][1]/D7  
+    29   D3   -72.0    18.4  UNLIKELY           146           325   +179       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][1][1][3]/D3  
+    30   D1   -71.9    19.3  UNLIKELY           152           331   +179       YES     YES   18%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][216]      WSBDataArrayMnnnH[1][2][0][3]/D1  
+    31   D2   -71.9    18.9  UNLIKELY           151           331   +180       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][185]      WSBDataArrayMnnnH[1][2][1][1]/D2  
+    32   D3   -71.9    19.8  UNLIKELY           146           325   +179       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][0][1][3]/D3  
+    33   D3   -71.8     5.6    LIKELY           146           325   +179       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][1][1][2]/D3  
+    34   D1   -71.8    19.3  UNLIKELY           146           327   +181       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][151]      WSBDataArrayMnnnH[0][0][0][1]/D1  
+    35   D1   -71.6    16.3  UNLIKELY           144           320   +176       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][238]      WSBDataArrayMnnnH[0][1][1][2]/D1  
+    36   D7   -71.5    11.2  POSSIBLE           148           321   +173       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][141]      WSBDataArrayMnnnH[0][1][0][1]/D7  
+    37   D2   -71.5     6.9    LIKELY           146           337   +191       YES     YES   18%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][47]       WSBDataArrayMnnnH[0][3][1][0]/D2  
+    38   D8   -71.5    19.6  UNLIKELY           146           325   +179       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][174]      WSBDataArrayMnnnH[0][2][1][1]/D8  
+    39   D5   -71.4    19.1  UNLIKELY           149           325   +176       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][220]      WSBDataArrayMnnnH[0][2][0][3]/D5  
+    40   D7   -71.4    10.6  POSSIBLE           144           328   +184       YES     YES   29%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][0][0][2]/D7  
+    41   D1   -71.3     6.7    LIKELY           144           323   +179       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][2][0][2]/D1  
+    42   D3   -71.1     6.3    LIKELY           146           325   +179       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][0][1][2]/D3  
+    43   D3   -70.7    16.7  UNLIKELY           145           320   +175       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][1][1][0]/D3  
+    44   D1   -70.7    17.5  UNLIKELY           156           316   +160       YES     YES   19%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][0]        WSBDataArrayMnnnH[0][0][0][0]/D1  
+    45   D2   -70.7    19.8  UNLIKELY           147           327   +180       YES     YES   16%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][8]        WSBDataArrayMnnnH[0][2][0][1]/D2  
+    46   D8   -70.7    11.8  POSSIBLE           146           313   +167       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][153]      WSBDataArrayMnnnH[0][3][0][1]/D8  
+    47   D1   -70.6    19.2  UNLIKELY           152           329   +177       YES     YES   18%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][216]      WSBDataArrayMnnnH[1][0][0][3]/D1  
+    48   D1   -70.5    16.5  UNLIKELY           144           329   +185       YES     YES   27%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][0][0][3]/D1  
+    49   D4   -70.5    -2.1  DEFINITE           146           323   +177       YES     YES   22%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][204]      WSBDataArrayMnnnH[0][2][0][2]/D4  
+    50   D1   -70.5     6.4    LIKELY           148           323   +175       YES     YES   29%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][141]      WSBDataArrayMnnnH[0][1][0][0]/D1  
+    51   D5   -70.4    14.2  POSSIBLE           149           321   +172       YES     YES   20%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][42]       WSBDataArrayMnnnH[0][3][1][1]/D5  
+    52   D8   -70.3    16.4  UNLIKELY           152           332   +180       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][141]      WSBDataArrayMnnnH[1][0][0][1]/D8  
+    53   D2   -70.3    19.3  UNLIKELY           151           328   +177       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][185]      WSBDataArrayMnnnH[1][3][1][1]/D2  
+    54   D3   -70.3    16.5  UNLIKELY           143           326   +183       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][2][0][1]/D3  
+    55   D1   -70.3    19.3  UNLIKELY           152           328   +176       YES     YES   18%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][216]      WSBDataArrayMnnnH[1][3][0][3]/D1  
+    56   D6   -70.3    19.0  UNLIKELY           143           325   +182       YES     YES   16%    YES  dcibbankd30    DcL1RdDataIntM408H[0][1][23]       WSBDataArrayMnnnH[0][2][0][1]/D6  
+    57   D8   -70.3     4.8    LIKELY           152           327   +175       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][198]      WSBDataArrayMnnnH[1][1][0][2]/D8  
+    58   D5   -70.3    17.8  UNLIKELY           149           327   +178       YES     YES   20%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][42]       WSBDataArrayMnnnH[0][2][1][1]/D5  
+    59   D3   -70.1    18.7  UNLIKELY           146           324   +178       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][2][1][3]/D3  
+    60   D1   -70.0    11.3  POSSIBLE           144           328   +184       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][168]      WSBDataArrayMnnnH[0][0][1][1]/D1  
+    61   D7   -70.0     4.9    LIKELY           144           328   +184       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][157]      WSBDataArrayMnnnH[0][0][1][0]/D7  
+    62   D1   -70.0     6.2    LIKELY           152           331   +179       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][205]      WSBDataArrayMnnnH[1][2][0][2]/D1  
+    63   D7   -69.6    19.3  UNLIKELY           145           329   +184       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][22]       WSBDataArrayMnnnH[1][3][0][0]/D7  
+    64   D1   -69.6     6.2    LIKELY           144           320   +176       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][1][0][2]/D1  
+    65   D3   -69.5    18.7  UNLIKELY           142           325   +183       YES     YES   16%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][17]       WSBDataArrayMnnnH[1][1][0][0]/D3  
+    66   D5   -69.5    17.5  UNLIKELY           144           329   +185       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][177]      WSBDataArrayMnnnH[0][0][1][0]/D5  
+    67   D7   -69.5    12.9  POSSIBLE           143           319   +176       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][172]      WSBDataArrayMnnnH[0][3][1][1]/D7  
+    68   D3   -69.2     5.2    LIKELY           146           324   +178       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][2][1][2]/D3  
+    69   D3   -69.2    10.3  POSSIBLE           143           320   +177       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][3][0][1]/D3  
+    70   D4   -68.8    -2.5  DEFINITE           146           320   +174       YES     YES   22%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][204]      WSBDataArrayMnnnH[0][1][0][2]/D4  
+    71   D3   -68.7     6.8    LIKELY           146           322   +176       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][3][1][2]/D3  
+    72   D8   -68.6     5.1    LIKELY           152           325   +173       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][198]      WSBDataArrayMnnnH[1][2][0][2]/D8  
+    73   D5   -68.6    19.6  UNLIKELY           148           320   +172       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][226]      WSBDataArrayMnnnH[0][3][1][2]/D5  
+    74   D2   -68.5    12.3  POSSIBLE           146           321   +175       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][153]      WSBDataArrayMnnnH[0][3][0][1]/D2  
+    75   D5   -68.5    17.7  UNLIKELY           144           323   +179       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][2][1][2]/D5  
+    76   D8   -68.3    17.3  UNLIKELY           151           322   +171       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][189]      WSBDataArrayMnnnH[1][0][1][1]/D8  
+    77   D1   -68.3    15.8  UNLIKELY           144           314   +170       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][238]      WSBDataArrayMnnnH[0][3][1][2]/D1  
+    78   D7   -68.3     6.2    LIKELY           144           320   +176       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][190]      WSBDataArrayMnnnH[0][1][1][1]/D7  
+    79   D5   -68.2    19.4  UNLIKELY           156           321   +165       YES     YES   20%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][69]       WSBDataArrayMnnnH[0][3][0][2]/D5  
+    80   D1   -68.2    11.9  POSSIBLE           143           320   +177       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][3][0][1]/D1  
+    81   D1   -68.2    17.0  UNLIKELY           143           326   +183       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][2][0][1]/D1  
+    82   D5   -68.1    12.9  POSSIBLE           143           323   +180       YES     YES   21%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][172]      WSBDataArrayMnnnH[0][2][1][1]/D5  
+    83   D3   -68.0     5.1    LIKELY           144           323   +179       YES     YES   24%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][2][0][2]/D3  
+    84   D1   -67.9    14.6  POSSIBLE           145           328   +183       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][0][1][0]/D1  
+    85   D4   -67.6    -0.9  DEFINITE           146           329   +183       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][144]      WSBDataArrayMnnnH[0][0][0][0]/D4  
+    86   D5   -67.5    16.8  UNLIKELY           144           325   +181       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][177]      WSBDataArrayMnnnH[0][2][1][0]/D5  
+    87   D8   -67.4    -0.6  DEFINITE           146           328   +182       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][204]      WSBDataArrayMnnnH[0][0][0][3]/D8  
+    88   D2   -67.4    16.4  UNLIKELY           146           326   +180       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][153]      WSBDataArrayMnnnH[0][2][0][1]/D2  
+    89   D5   -67.3    16.7  UNLIKELY           149           316   +167       YES     YES   20%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][42]       WSBDataArrayMnnnH[0][0][1][1]/D5  
+    90   D2   -67.3    15.9  UNLIKELY           143           326   +183       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][136]      WSBDataArrayMnnnH[0][2][0][1]/D2  
+    91   D3   -67.3    12.3  POSSIBLE           146           324   +178       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][178]      WSBDataArrayMnnnH[1][1][1][0]/D3  
+    92   D1   -67.3    10.8  POSSIBLE           157           328   +171       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][128]      WSBDataArrayMnnnH[0][0][0][0]/D1  
+    93   D6   -67.1    16.1  UNLIKELY           147           328   +181       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][164]      WSBDataArrayMnnnH[0][0][1][0]/D6  
+    94   D5   -67.0     5.3    LIKELY           146           323   +177       YES     YES   23%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][180]      WSBDataArrayMnnnH[1][0][1][0]/D5  
+    95   D8   -66.9    15.8  UNLIKELY           151           323   +172       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][189]      WSBDataArrayMnnnH[1][2][1][1]/D8  
+    96   D3   -66.8    13.0  POSSIBLE           146           323   +177       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][178]      WSBDataArrayMnnnH[1][0][1][0]/D3  
+    97   D5   -66.8    16.8  UNLIKELY           149           328   +179       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][212]      WSBDataArrayMnnnH[0][0][0][2]/D5  
+    98   D7   -66.8    11.3  POSSIBLE           146           331   +185       YES     YES   24%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][2][1][2]/D7  
+    99   D2   -66.8    13.6  POSSIBLE           147           327   +180       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][224]      WSBDataArrayMnnnH[0][0][1][2]/D2  
+   100   D7   -66.8    15.2  UNLIKELY           144           326   +182       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][2][0][2]/D7  
+   101   D7   -66.5    11.4  POSSIBLE           148           323   +175       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][141]      WSBDataArrayMnnnH[0][2][0][1]/D7  
+   102   D5   -66.5     4.9    LIKELY           146           323   +177       YES     YES   23%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][180]      WSBDataArrayMnnnH[1][2][1][0]/D5  
+   103   D8   -66.5    16.3  UNLIKELY           146           319   +173       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][174]      WSBDataArrayMnnnH[0][3][1][1]/D8  
+   104   D5   -66.4     3.4    LIKELY           146           324   +178       YES     YES   23%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][180]      WSBDataArrayMnnnH[1][1][1][0]/D5  
+   105   D1   -66.4    16.1  UNLIKELY           156           321   +165       YES     YES   19%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][78]       WSBDataArrayMnnnH[0][3][0][2]/D1  
+   106   D5   -66.3    12.1  POSSIBLE           143           321   +178       YES     YES   21%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][172]      WSBDataArrayMnnnH[0][1][1][1]/D5  
+   107   D3   -66.2     4.5    LIKELY           144           320   +176       YES     YES   24%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][1][0][2]/D3  
+   108   D8   -66.1    18.9  UNLIKELY           146           320   +174       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][241]      WSBDataArrayMnnnH[0][3][1][2]/D8  
+   109   D4   -66.1    13.9  POSSIBLE           152           332   +180       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][202]      WSBDataArrayMnnnH[1][0][0][3]/D4  
+   110   D3   -66.0    12.1  POSSIBLE           146           323   +177       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][178]      WSBDataArrayMnnnH[1][2][1][0]/D3  
+   111   D1   -66.0     7.8    LIKELY           148           325   +177       YES     YES   29%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][141]      WSBDataArrayMnnnH[0][2][0][0]/D1  
+   112   D4   -65.8    19.5  UNLIKELY           141           329   +188       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][111]      WSBDataArrayMnnnH[1][3][1][2]/D4  
+   113   D1   -65.8    18.5  UNLIKELY           136           329   +193       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][117]      WSBDataArrayMnnnH[1][3][1][3]/D1  
+   114   D3   -65.8    16.8  UNLIKELY           144           326   +182       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][250]      WSBDataArrayMnnnH[0][2][1][3]/D3  
+   115   D2   -65.7     8.6    LIKELY           143           320   +177       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][136]      WSBDataArrayMnnnH[0][3][0][1]/D2  
+   116   D1   -65.6    14.6  POSSIBLE           144           323   +179       YES     YES   27%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][1][0][3]/D1  
+   117   D2   -65.5    17.9  UNLIKELY           142           324   +182       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][45]       WSBDataArrayMnnnH[1][0][1][0]/D2  
+   118   D3   -65.4    15.4  UNLIKELY           145           313   +168       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][3][1][0]/D3  
+   119   D4   -65.3    18.5  UNLIKELY           151           332   +181       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][193]      WSBDataArrayMnnnH[1][0][0][2]/D4  
+   120   D4   -65.2    17.0  UNLIKELY           151           330   +179       YES     YES   25%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][206]      WSBDataArrayMnnnH[1][2][1][2]/D4  
+   121   D5   -65.2    16.3  UNLIKELY           144           323   +179       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][177]      WSBDataArrayMnnnH[0][1][1][0]/D5  
+   122   D7   -65.1     3.4    LIKELY           144           323   +179       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][157]      WSBDataArrayMnnnH[0][2][1][0]/D7  
+   123   D1   -65.0     4.9    LIKELY           152           329   +177       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][205]      WSBDataArrayMnnnH[1][0][0][2]/D1  
+   124   D5   -65.0    14.4  POSSIBLE           149           320   +171       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][220]      WSBDataArrayMnnnH[0][3][0][3]/D5  
+   125   D1   -64.9     5.8    LIKELY           152           328   +176       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][205]      WSBDataArrayMnnnH[1][3][0][2]/D1  
+   126   D2   -64.9    19.1  UNLIKELY           142           329   +187       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][45]       WSBDataArrayMnnnH[1][2][1][0]/D2  
+   127   D1   -64.9     9.6    LIKELY           144           323   +179       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][168]      WSBDataArrayMnnnH[0][2][1][1]/D1  
+   128   D5   -64.9     5.6    LIKELY           146           321   +175       YES     YES   23%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][180]      WSBDataArrayMnnnH[1][3][1][0]/D5  
+   129   D8   -64.8    16.1  UNLIKELY           151           331   +180       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][189]      WSBDataArrayMnnnH[1][1][1][1]/D8  
+   130   D5   -64.7    15.0  UNLIKELY           144           320   +176       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][1][1][2]/D5  
+   131   D1   -64.7    17.3  UNLIKELY           144           327   +183       YES     YES   21%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][34]       WSBDataArrayMnnnH[0][2][0][2]/D1  
+   132   D8   -64.5    14.0  POSSIBLE           152           327   +175       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][141]      WSBDataArrayMnnnH[1][1][0][1]/D8  
+   133   D7   -64.4     6.6    LIKELY           144           323   +179       YES     YES   29%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][2][0][2]/D7  
+   134   D3   -64.4    12.9  POSSIBLE           146           321   +175       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][178]      WSBDataArrayMnnnH[1][3][1][0]/D3  
+   135   D4   -64.3   -10.4  DEFINITE           145           327   +182       YES     YES   17%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][192]      WSBDataArrayMnnnH[0][0][0][2]/D4  
+   136   D2   -64.2    16.5  UNLIKELY           147           321   +174       YES     YES   16%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][8]        WSBDataArrayMnnnH[0][3][0][1]/D2  
+   137   D7   -64.0     9.9    LIKELY           146           328   +182       YES     YES   24%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][3][1][2]/D7  
+   138   D4   -63.9     8.8    LIKELY           147           323   +176       YES     YES   24%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][234]      WSBDataArrayMnnnH[0][2][1][3]/D4  
+   139   D3   -63.8     8.6    LIKELY           139           331   +192       YES     YES   22%    YES  dcibbankd30    DcL1RdDataIntM408H[1][0][82]       WSBDataArrayMnnnH[1][0][0][2]/D3  
+   140   D4   -63.8    17.5  UNLIKELY           141           328   +187       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][111]      WSBDataArrayMnnnH[1][2][1][2]/D4  
+   141   D3   -63.8    13.3  POSSIBLE           149           329   +180       YES     YES   27%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][218]      WSBDataArrayMnnnH[0][0][0][3]/D3  
+   142   D6   -63.8    19.3  UNLIKELY           143           321   +178       YES     YES   16%    YES  dcibbankd30    DcL1RdDataIntM408H[0][1][23]       WSBDataArrayMnnnH[0][3][0][1]/D6  
+   143   D5   -63.7    16.7  UNLIKELY           143           324   +181       YES     YES   27%    YES  dcibbankd10    DcL1RdDataIntM408H[1][0][69]       WSBDataArrayMnnnH[1][3][0][2]/D5  
+   144   D1   -63.7    13.9  POSSIBLE           145           323   +178       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][2][1][0]/D1  
+   145   D8   -63.5    17.6  UNLIKELY           145           321   +176       YES     YES   14%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][39]       WSBDataArrayMnnnH[0][3][1][0]/D8  
+   146   D1   -63.5    14.8  POSSIBLE           146           320   +174       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][151]      WSBDataArrayMnnnH[0][1][0][1]/D1  
+   147   D2   -63.5    17.9  UNLIKELY           151           329   +178       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][185]      WSBDataArrayMnnnH[1][0][1][1]/D2  
+   148   D1   -63.4    10.4  POSSIBLE           157           323   +166       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][128]      WSBDataArrayMnnnH[0][2][0][0]/D1  
+   149   D8   -63.3    14.8  POSSIBLE           151           331   +180       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][189]      WSBDataArrayMnnnH[1][2][1][1]/D8  
+   150   D8   -63.3     7.9    LIKELY           152           324   +172       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][198]      WSBDataArrayMnnnH[1][3][0][2]/D8  
+   151   D8   -63.2    15.7  UNLIKELY           152           324   +172       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][141]      WSBDataArrayMnnnH[1][3][0][1]/D8  
+   152   D5   -63.2    19.3  UNLIKELY           156           316   +160       YES     YES   20%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][69]       WSBDataArrayMnnnH[0][0][0][2]/D5  
+   153   D6   -63.1    14.8  POSSIBLE           146           328   +182       YES     YES   19%    YES  dcibbankd30    DcL1RdDataIntM408H[0][1][117]      WSBDataArrayMnnnH[0][0][1][2]/D6  
+   154   D7   -63.1    13.8  POSSIBLE           146           331   +185       YES     YES   24%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][1][1][2]/D7  
+   155   D7   -63.0     8.6    LIKELY           146           328   +182       YES     YES   24%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][242]      WSBDataArrayMnnnH[1][0][1][2]/D7  
+   156   D1   -63.0     8.7    LIKELY           144           321   +177       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][168]      WSBDataArrayMnnnH[0][1][1][1]/D1  
+   157   D7   -62.9    16.4  UNLIKELY           144           323   +179       YES     YES   27%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][238]      WSBDataArrayMnnnH[0][2][1][3]/D7  
+   158   D7   -62.9     2.2    LIKELY           144           320   +176       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][157]      WSBDataArrayMnnnH[0][1][1][0]/D7  
+   159   D1   -62.9    16.3  UNLIKELY           145           329   +184       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][22]       WSBDataArrayMnnnH[1][3][0][1]/D1  
+   160   D3   -62.9    15.1  UNLIKELY           156           336   +180       YES     YES   27%    YES  dcibbankd20    DcL1RdDataIntM408H[0][0][17]       WSBDataArrayMnnnH[0][1][0][0]/D3  
+   161   D7   -62.8     6.2    LIKELY           144           320   +176       YES     YES   29%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][1][0][2]/D7  
+   162   D2   -62.8    13.0  POSSIBLE           147           323   +176       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][224]      WSBDataArrayMnnnH[0][2][1][2]/D2  
+   163   D6   -62.8    19.9  UNLIKELY           158           325   +167       YES     YES   23%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][131]      WSBDataArrayMnnnH[1][2][0][1]/D6  
+   164   D1   -62.7     8.7    LIKELY           144           321   +177       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][177]      WSBDataArrayMnnnH[0][3][1][0]/D1  
+   165   D4   -62.7    17.7  UNLIKELY           146           321   +175       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][144]      WSBDataArrayMnnnH[0][3][0][0]/D4  
+   166   D3   -62.6    -8.9  DEFINITE           145           320   +175       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][153]      WSBDataArrayMnnnH[0][1][0][1]/D3  
+   167   D6   -62.5    17.6  UNLIKELY           151           323   +172       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][185]      WSBDataArrayMnnnH[1][1][1][1]/D6  
+   168   D3   -62.4    13.9  POSSIBLE           156           337   +181       YES     YES   27%    YES  dcibbankd20    DcL1RdDataIntM408H[0][0][17]       WSBDataArrayMnnnH[0][0][0][0]/D3  
+   169   D8   -62.4    13.6  POSSIBLE           152           325   +173       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][141]      WSBDataArrayMnnnH[1][2][0][1]/D8  
+   170   D4   -62.3    -3.3  DEFINITE           146           323   +177       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][144]      WSBDataArrayMnnnH[0][1][0][0]/D4  
+   171   D8   -62.2    -0.8  DEFINITE           146           323   +177       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][204]      WSBDataArrayMnnnH[0][2][0][3]/D8  
+   172   D3   -62.2     4.5    LIKELY           148           328   +180       YES     YES   21%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][199]      WSBDataArrayMnnnH[0][0][0][3]/D3  
+   173   D5   -62.1    15.9  UNLIKELY           143           324   +181       YES     YES   27%    YES  dcibbankd10    DcL1RdDataIntM408H[1][0][69]       WSBDataArrayMnnnH[1][2][0][2]/D5  
+   174   D7   -62.0    11.3  POSSIBLE           143           312   +169       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][172]      WSBDataArrayMnnnH[0][0][1][1]/D7  
+   175   D4   -61.9    15.1  UNLIKELY           151           328   +177       YES     YES   25%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][206]      WSBDataArrayMnnnH[1][3][1][2]/D4  
+   176   D6   -61.9    14.6  POSSIBLE           147           323   +176       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][164]      WSBDataArrayMnnnH[0][2][1][0]/D6  
+   177   D7   -61.8    17.5  UNLIKELY           145           329   +184       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][22]       WSBDataArrayMnnnH[1][2][0][0]/D7  
+   178   D1   -61.8    10.0    LIKELY           157           320   +163       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][128]      WSBDataArrayMnnnH[0][1][0][0]/D1  
+   179   D8   -61.5    -3.7  DEFINITE           146           322   +176       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][204]      WSBDataArrayMnnnH[0][1][0][3]/D8  
+   180   D4   -61.5    18.0  UNLIKELY           144           324   +180       YES     YES   21%    YES  dcibbankd01    DcL1RdDataIntM408H[1][1][137]      WSBDataArrayMnnnH[1][1][0][1]/D4  
+   181   D7   -61.5    19.3  UNLIKELY           144           314   +170       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][250]      WSBDataArrayMnnnH[0][3][1][3]/D7  
+   182   D8   -61.5    14.9  POSSIBLE           151           328   +177       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][189]      WSBDataArrayMnnnH[1][3][1][1]/D8  
+   183   D3   -61.4     9.4    LIKELY           149           325   +176       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][218]      WSBDataArrayMnnnH[0][2][0][3]/D3  
+   184   D5   -61.4     7.5    LIKELY           151           331   +180       YES     YES   31%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][253]      WSBDataArrayMnnnH[1][1][1][3]/D5  
+   185   D7   -61.3    13.7  POSSIBLE           144           325   +181       YES     YES   27%    YES  dcibbankd01    DcL1RdDataIntM408H[1][0][157]      WSBDataArrayMnnnH[1][2][1][0]/D7  
+   186   D6   -61.3    19.2  UNLIKELY           142           329   +187       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][58]       WSBDataArrayMnnnH[1][3][1][1]/D6  
+   187   D8   -61.2     5.2    LIKELY           147           327   +180       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][188]      WSBDataArrayMnnnH[0][0][1][1]/D8  
+   188   D1   -61.2    12.4  POSSIBLE           145           320   +175       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][1][1][0]/D1  
+   189   D4   -61.1     6.2    LIKELY           147           327   +180       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][224]      WSBDataArrayMnnnH[0][0][1][2]/D4  
+   190   D1   -61.0    14.7  POSSIBLE           136           325   +189       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][117]      WSBDataArrayMnnnH[1][1][1][3]/D1  
+   191   D5   -60.9    19.2  UNLIKELY           143           323   +180       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][164]      WSBDataArrayMnnnH[0][2][1][0]/D5  
+   192   D4   -60.9    15.6  UNLIKELY           141           325   +184       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][111]      WSBDataArrayMnnnH[1][1][1][2]/D4  
+   193   D7   -60.9    17.0  UNLIKELY           146           323   +177       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][187]      WSBDataArrayMnnnH[1][0][1][1]/D7  
+   194   D1   -60.9    17.7  UNLIKELY           156           324   +168       YES     YES   19%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][78]       WSBDataArrayMnnnH[0][2][0][2]/D1  
+   195   D4   -60.8    12.4  POSSIBLE           152           327   +175       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][202]      WSBDataArrayMnnnH[1][1][0][3]/D4  
+   196   D4   -60.8    15.8  UNLIKELY           147           325   +178       YES     YES   17%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][169]      WSBDataArrayMnnnH[0][2][1][1]/D4  
+   197   D4   -60.8    16.1  UNLIKELY           141           324   +183       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][111]      WSBDataArrayMnnnH[1][0][1][2]/D4  
+   198   D4   -60.8    13.6  POSSIBLE           151           328   +177       YES     YES   25%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][206]      WSBDataArrayMnnnH[1][0][1][2]/D4  
+   199   D6   -60.8    18.0  UNLIKELY           158           323   +165       YES     YES   23%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][131]      WSBDataArrayMnnnH[1][1][0][1]/D6  
+   200   D6   -60.7    18.9  UNLIKELY           158           323   +165       YES     YES   23%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][131]      WSBDataArrayMnnnH[1][0][0][1]/D6  
+   201   D1   -60.7    14.5  POSSIBLE           146           323   +177       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][151]      WSBDataArrayMnnnH[0][2][0][1]/D1  
+   202   D1   -60.7    15.6  UNLIKELY           144           325   +181       YES     YES   27%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][2][0][3]/D1  
+   203   D7   -60.6    17.6  UNLIKELY           156           327   +171       YES     YES   20%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][69]       WSBDataArrayMnnnH[0][2][0][2]/D7  
+   204   D5   -60.5    19.1  UNLIKELY           142           323   +181       YES     YES   18%    YES  dcibbankd00    DcL1RdDataIntM408H[1][0][42]       WSBDataArrayMnnnH[1][1][1][1]/D5  
+   205   D5   -60.4    16.9  UNLIKELY           158           325   +167       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][244]      WSBDataArrayMnnnH[1][1][1][2]/D5  
+   206   D8   -60.4     7.5    LIKELY           147           323   +176       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][237]      WSBDataArrayMnnnH[0][2][1][3]/D8  
+   207   D1   -60.4    18.7  UNLIKELY           149           326   +177       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][224]      WSBDataArrayMnnnH[0][2][1][2]/D1  
+   208   D8   -60.4    19.7  UNLIKELY           143           326   +183       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][196]      WSBDataArrayMnnnH[0][2][0][2]/D8  
+   209   D5   -60.4    13.2  POSSIBLE           149           323   +174       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][212]      WSBDataArrayMnnnH[0][2][0][2]/D5  
+   210   D7   -60.4    17.0  UNLIKELY           143           320   +177       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][164]      WSBDataArrayMnnnH[0][3][1][0]/D7  
+   211   D3   -60.4    10.1  POSSIBLE           143           321   +178       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][1][0][1]/D3  
+   212   D1   -60.3    16.8  UNLIKELY           144           319   +175       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][168]      WSBDataArrayMnnnH[0][3][1][1]/D1  
+   213   D4   -60.3     6.5    LIKELY           147           320   +173       YES     YES   24%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][234]      WSBDataArrayMnnnH[0][1][1][3]/D4  
+   214   D5   -60.3    19.9  UNLIKELY           156           329   +173       YES     YES   19%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][82]       WSBDataArrayMnnnH[0][0][0][2]/D5  
+   215   D4   -60.2    16.8  UNLIKELY           151           327   +176       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][193]      WSBDataArrayMnnnH[1][1][0][2]/D4  
+   216   D5   -60.2     9.8    LIKELY           143           313   +170       YES     YES   21%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][172]      WSBDataArrayMnnnH[0][3][1][1]/D5  
+   217   D5   -60.1    19.7  UNLIKELY           142           323   +181       YES     YES   18%    YES  dcibbankd00    DcL1RdDataIntM408H[1][0][42]       WSBDataArrayMnnnH[1][0][1][1]/D5  
+   218   D1   -60.1    14.1  POSSIBLE           156           304   +148       YES     YES   19%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][0]        WSBDataArrayMnnnH[0][1][0][0]/D1  
+   219   D8   -60.1    19.2  UNLIKELY           145           316   +171       YES     YES   14%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][39]       WSBDataArrayMnnnH[0][0][1][0]/D8  
+   220   D8   -60.0    19.8  UNLIKELY           158           332   +174       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][175]      WSBDataArrayMnnnH[1][0][1][1]/D8  
+   221   D7   -60.0    19.3  UNLIKELY           148           320   +172       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][199]      WSBDataArrayMnnnH[0][3][0][2]/D7  
+   222   D2   -60.0     2.3    LIKELY           143           328   +185       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][136]      WSBDataArrayMnnnH[0][0][0][1]/D2  
+   223   D4   -60.0   -11.3  DEFINITE           145           323   +178       YES     YES   17%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][192]      WSBDataArrayMnnnH[0][2][0][2]/D4  
+   224   D7   -60.0    16.6  UNLIKELY           144           327   +183       YES     YES   27%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][238]      WSBDataArrayMnnnH[0][0][1][3]/D7  
+   225   D7   -60.0    18.0  UNLIKELY           145           325   +180       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][22]       WSBDataArrayMnnnH[1][0][0][0]/D7  
+   226   D6   -59.9    13.4  POSSIBLE           147           320   +173       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][164]      WSBDataArrayMnnnH[0][1][1][0]/D6  
+   227   D4   -59.9     8.7    LIKELY           147           327   +180       YES     YES   24%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][234]      WSBDataArrayMnnnH[0][0][1][3]/D4  
+   228   D2   -59.9    10.8  POSSIBLE           146           312   +166       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][153]      WSBDataArrayMnnnH[0][0][0][1]/D2  
+   229   D5   -59.9    17.8  UNLIKELY           158           325   +167       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][244]      WSBDataArrayMnnnH[1][0][1][2]/D5  
+   230   D5   -59.9    10.6  POSSIBLE           143           320   +177       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][164]      WSBDataArrayMnnnH[0][3][1][0]/D5  
+   231   D8   -59.8    13.6  POSSIBLE           147           305   +158       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][164]      WSBDataArrayMnnnH[0][1][1][0]/D8  
+   232   D6   -59.8    18.5  UNLIKELY           146           320   +174       YES     YES   17%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][213]      WSBDataArrayMnnnH[0][3][0][2]/D6  
+   233   D4   -59.8    14.1  POSSIBLE           152           324   +172       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][202]      WSBDataArrayMnnnH[1][3][0][3]/D4  
+   234   D7   -59.8    14.6  POSSIBLE           144           320   +176       YES     YES   27%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][238]      WSBDataArrayMnnnH[0][1][1][3]/D7  
+   235   D6   -59.7    16.9  UNLIKELY           142           329   +187       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][58]       WSBDataArrayMnnnH[1][2][1][1]/D6  
+   236   D2   -59.7    11.1  POSSIBLE           147           320   +173       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][224]      WSBDataArrayMnnnH[0][1][1][2]/D2  
+   237   D3   -59.6    15.5  UNLIKELY           151           325   +174       YES     YES   17%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][206]      WSBDataArrayMnnnH[1][1][0][2]/D3  
+   238   D3   -59.6    11.1  POSSIBLE           143           328   +185       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][0][0][1]/D3  
+   239   D7   -59.6    13.2  POSSIBLE           139           323   +184       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][102]      WSBDataArrayMnnnH[1][2][1][0]/D7  
+   240   D7   -59.4    13.9  POSSIBLE           151           325   +174       YES     YES   25%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][253]      WSBDataArrayMnnnH[1][1][1][3]/D7  
+   241   D3   -59.4    11.4  POSSIBLE           146           323   +177       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][183]      WSBDataArrayMnnnH[1][3][1][1]/D3  
+   242   D7   -59.4    15.3  UNLIKELY           151           325   +174       YES     YES   25%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][253]      WSBDataArrayMnnnH[1][0][1][3]/D7  
+   243   D6   -59.4    10.9  POSSIBLE           151           332   +181       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][197]      WSBDataArrayMnnnH[1][0][0][2]/D6  
+   244   D5   -59.3     5.9    LIKELY           151           331   +180       YES     YES   31%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][253]      WSBDataArrayMnnnH[1][2][1][3]/D5  
+   245   D7   -59.3    15.2  UNLIKELY           146           323   +177       YES     YES   19%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][187]      WSBDataArrayMnnnH[1][2][1][1]/D7  
+   246   D4   -59.3    12.4  POSSIBLE           152           325   +173       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][202]      WSBDataArrayMnnnH[1][2][0][3]/D4  
+   247   D7   -59.3    12.5  POSSIBLE           139           323   +184       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][102]      WSBDataArrayMnnnH[1][0][1][0]/D7  
+   248   D2   -59.2    -0.7  DEFINITE           143           321   +178       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][136]      WSBDataArrayMnnnH[0][1][0][1]/D2  
+   249   D4   -59.2    16.4  UNLIKELY           151           331   +180       YES     YES   25%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][206]      WSBDataArrayMnnnH[1][1][1][2]/D4  
+   250   D3   -59.1    16.7  UNLIKELY           151           325   +174       YES     YES   17%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][206]      WSBDataArrayMnnnH[1][0][0][2]/D3  
+   251   D1   -59.1    15.7  UNLIKELY           144           321   +177       YES     YES   21%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][34]       WSBDataArrayMnnnH[0][3][0][2]/D1  
+   252   D7   -59.1    -1.5  DEFINITE           146           332   +186       YES     YES   28%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][255]      WSBDataArrayMnnnH[1][1][1][3]/D7  
+   253   D3   -59.0     8.2    LIKELY           139           325   +186       YES     YES   22%    YES  dcibbankd30    DcL1RdDataIntM408H[1][0][82]       WSBDataArrayMnnnH[1][2][0][2]/D3  
+   254   D8   -59.0    14.7  POSSIBLE           146           312   +166       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][174]      WSBDataArrayMnnnH[0][0][1][1]/D8  
+   255   D8   -59.0    17.7  UNLIKELY           147           304   +157       YES     YES   18%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][13]       WSBDataArrayMnnnH[0][1][0][1]/D8  
+   256   D8   -59.0    19.0  UNLIKELY           142           328   +186       YES     YES   17%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][86]       WSBDataArrayMnnnH[1][2][0][2]/D8  
+   257   D7   -58.9    10.1  POSSIBLE           139           324   +185       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][102]      WSBDataArrayMnnnH[1][1][1][0]/D7  
+   258   D6   -58.9    14.8  POSSIBLE           146           328   +182       YES     YES   17%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][204]      WSBDataArrayMnnnH[0][0][0][3]/D6  
+   259   D1   -58.9    17.8  UNLIKELY           136           329   +193       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][117]      WSBDataArrayMnnnH[1][2][1][3]/D1  
+   260   D1   -58.9    14.7  POSSIBLE           144           314   +170       YES     YES   27%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][3][0][3]/D1  
+   261   D5   -58.9     8.8    LIKELY           147           327   +180       YES     YES   27%    YES  dcibbankd11    DcL1RdDataIntM408H[1][0][229]      WSBDataArrayMnnnH[1][1][1][2]/D5  
+   262   D1   -58.9    19.2  UNLIKELY           156           325   +169       YES     YES   20%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][21]       WSBDataArrayMnnnH[0][2][0][1]/D1  
+   263   D4   -58.9     9.6    LIKELY           147           336   +189       YES     YES   27%    YES  dcibbankd00    DcL1RdDataIntM408H[0][1][2]        WSBDataArrayMnnnH[0][2][0][0]/D4  
+   264   D3   -58.9   -10.2  DEFINITE           145           323   +178       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][153]      WSBDataArrayMnnnH[0][2][0][1]/D3  
+   265   D7   -58.9    17.3  UNLIKELY           143           327   +184       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][164]      WSBDataArrayMnnnH[0][0][1][0]/D7  
+   266   D8   -58.8     2.8    LIKELY           147           323   +176       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][188]      WSBDataArrayMnnnH[0][2][1][1]/D8  
+   267   D5   -58.8    18.2  UNLIKELY           143           320   +177       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][164]      WSBDataArrayMnnnH[0][1][1][0]/D5  
+   268   D7   -58.8     9.2    LIKELY           148           313   +165       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][141]      WSBDataArrayMnnnH[0][3][0][1]/D7  
+   269   D3   -58.8    14.6  POSSIBLE           144           327   +183       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][250]      WSBDataArrayMnnnH[0][0][1][3]/D3  
+   270   D5   -58.7    12.9  POSSIBLE           149           320   +171       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][212]      WSBDataArrayMnnnH[0][1][0][2]/D5  
+   271   D6   -58.6     5.3    LIKELY           147           329   +182       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][178]      WSBDataArrayMnnnH[0][0][1][0]/D6  
+   272   D3   -58.5    12.8  POSSIBLE           156           320   +164       YES     YES   18%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][59]       WSBDataArrayMnnnH[0][3][1][1]/D3  
+   273   D7   -58.5    15.3  UNLIKELY           145           325   +180       YES     YES   19%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][22]       WSBDataArrayMnnnH[1][1][0][0]/D7  
+   274   D3   -58.5    -8.8  DEFINITE           145           313   +168       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][153]      WSBDataArrayMnnnH[0][3][0][1]/D3  
+   275   D4   -58.5    17.2  UNLIKELY           151           325   +174       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][193]      WSBDataArrayMnnnH[1][2][0][2]/D4  
+   276   D6   -58.4    12.0  POSSIBLE           146           325   +179       YES     YES   19%    YES  dcibbankd30    DcL1RdDataIntM408H[0][1][117]      WSBDataArrayMnnnH[0][2][1][2]/D6  
+   277   D1   -58.3     6.4    LIKELY           144           327   +183       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][190]      WSBDataArrayMnnnH[0][0][0][2]/D1  
+   278   D4   -58.3    -6.3  DEFINITE           146           327   +181       YES     YES   17%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][153]      WSBDataArrayMnnnH[0][0][0][1]/D4  
+   279   D7   -58.2    19.6  UNLIKELY           142           323   +181       YES     YES   20%    YES  dcibbankd00    DcL1RdDataIntM408H[1][0][12]       WSBDataArrayMnnnH[1][0][0][1]/D7  
+   280   D5   -58.1     6.2    LIKELY           157           328   +171       YES     YES   19%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][84]       WSBDataArrayMnnnH[0][0][0][3]/D5  
+   281   D5   -58.0    19.8  UNLIKELY           156           327   +171       YES     YES   18%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][75]       WSBDataArrayMnnnH[0][2][1][3]/D5  
+   282   D6   -58.0    11.1  POSSIBLE           146           321   +175       YES     YES   19%    YES  dcibbankd30    DcL1RdDataIntM408H[0][1][117]      WSBDataArrayMnnnH[0][3][1][2]/D6  
+   283   D8   -58.0     2.1    LIKELY           146           321   +175       YES     YES   27%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][140]      WSBDataArrayMnnnH[0][1][0][1]/D8  
+   284   D7   -58.0    19.4  UNLIKELY           149           305   +156       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][247]      WSBDataArrayMnnnH[0][1][1][2]/D7  
+   285   D7   -58.0    10.9  POSSIBLE           144           327   +183       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][214]      WSBDataArrayMnnnH[0][0][0][2]/D7  
+   286   D5   -57.9    15.8  UNLIKELY           144           314   +170       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][177]      WSBDataArrayMnnnH[0][3][1][0]/D5  
+   287   D7   -57.9    14.9  POSSIBLE           156           320   +164       YES     YES   21%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][63]       WSBDataArrayMnnnH[0][3][1][1]/D7  
+   288   D6   -57.9    19.8  UNLIKELY           146           320   +174       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][229]      WSBDataArrayMnnnH[0][3][1][2]/D6  
+   289   D5   -57.9    18.8  UNLIKELY           158           322   +164       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][244]      WSBDataArrayMnnnH[1][3][1][2]/D5  
+   290   D3   -57.8    10.4  POSSIBLE           146           323   +177       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][183]      WSBDataArrayMnnnH[1][0][1][1]/D3  
+   291   D5   -57.8    16.5  UNLIKELY           158           324   +166       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][244]      WSBDataArrayMnnnH[1][2][1][2]/D5  
+   292   D5   -57.8     6.1    LIKELY           151           328   +177       YES     YES   31%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][253]      WSBDataArrayMnnnH[1][3][1][3]/D5  
+   293   D5   -57.7    11.2  POSSIBLE           143           327   +184       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][164]      WSBDataArrayMnnnH[0][0][1][0]/D5  
+   294   D3   -57.7    -1.3  DEFINITE           152           331   +179       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][205]      WSBDataArrayMnnnH[1][1][0][2]/D3  
+   295   D7   -57.6    14.3  POSSIBLE           151           324   +173       YES     YES   25%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][253]      WSBDataArrayMnnnH[1][2][1][3]/D7  
+   296   D5   -57.6    12.0  POSSIBLE           157           325   +168       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][133]      WSBDataArrayMnnnH[0][2][0][0]/D5  
+   297   D8   -57.6     4.3    LIKELY           146           328   +182       YES     YES   27%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][140]      WSBDataArrayMnnnH[0][0][0][1]/D8  
+   298   D5   -57.5    18.0  UNLIKELY           144           305   +161       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][157]      WSBDataArrayMnnnH[0][1][0][1]/D5  
+   299   D8   -57.5    16.7  UNLIKELY           146           311   +165       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][241]      WSBDataArrayMnnnH[0][0][1][2]/D8  
+   300   D6   -57.5    15.8  UNLIKELY           155           327   +172       YES     YES   16%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][74]       WSBDataArrayMnnnH[0][2][0][3]/D6  
+   301   D4   -57.4   -12.7  DEFINITE           145           320   +175       YES     YES   17%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][192]      WSBDataArrayMnnnH[0][1][0][2]/D4  
+   302   D5   -57.3    10.2  POSSIBLE           147           332   +185       YES     YES   27%    YES  dcibbankd11    DcL1RdDataIntM408H[1][0][229]      WSBDataArrayMnnnH[1][0][1][2]/D5  
+   303   D3   -57.3    14.8  POSSIBLE           156           335   +179       YES     YES   27%    YES  dcibbankd20    DcL1RdDataIntM408H[0][0][17]       WSBDataArrayMnnnH[0][2][0][0]/D3  
+   304   D8   -57.2    14.3  POSSIBLE           151           323   +172       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[1][1][189]      WSBDataArrayMnnnH[1][1][1][1]/D8  
+   305   D4   -57.2    -2.3  DEFINITE           146           325   +179       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][144]      WSBDataArrayMnnnH[0][2][0][0]/D4  
+   306   D5   -57.2     9.7    LIKELY           147           324   +177       YES     YES   27%    YES  dcibbankd11    DcL1RdDataIntM408H[1][0][229]      WSBDataArrayMnnnH[1][3][1][2]/D5  
+   307   D8   -57.2    18.4  UNLIKELY           151           331   +180       YES     YES   23%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][159]      WSBDataArrayMnnnH[1][1][0][1]/D8  
+   308   D7   -57.2    17.8  UNLIKELY           143           325   +182       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][164]      WSBDataArrayMnnnH[0][2][1][0]/D7  
+   309   D1   -57.1    17.7  UNLIKELY           149           320   +171       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][224]      WSBDataArrayMnnnH[0][3][1][2]/D1  
+   310   D1   -57.1     4.8    LIKELY           144           313   +169       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][182]      WSBDataArrayMnnnH[0][3][0][2]/D1  
+   311   D7   -57.0    18.0  UNLIKELY           139           328   +189       YES     YES   21%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][82]       WSBDataArrayMnnnH[1][2][0][2]/D7  
+   312   D6   -56.9     8.8    LIKELY           143           337   +194       YES     YES   22%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][23]       WSBDataArrayMnnnH[0][0][0][1]/D6  
+   313   D3   -56.9     4.1    LIKELY           148           323   +175       YES     YES   21%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][199]      WSBDataArrayMnnnH[0][2][0][3]/D3  
+   314   D3   -56.9    15.2  UNLIKELY           156           327   +171       YES     YES   18%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][59]       WSBDataArrayMnnnH[0][2][1][1]/D3  
+   315   D6   -56.9    19.0  UNLIKELY           156           321   +165       YES     YES   17%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][35]       WSBDataArrayMnnnH[0][3][1][0]/D6  
+   316   D6   -56.9    10.0  POSSIBLE           143           335   +192       YES     YES   22%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][23]       WSBDataArrayMnnnH[0][2][0][1]/D6  
+   317   D1   -56.8    18.5  UNLIKELY           144           320   +176       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][190]      WSBDataArrayMnnnH[0][3][0][2]/D1  
+   318   D6   -56.7    10.1  POSSIBLE           152           331   +179       YES     YES   23%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][220]      WSBDataArrayMnnnH[1][2][0][3]/D6  
+   319   D7   -56.7    -4.6  DEFINITE           146           331   +185       YES     YES   28%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][255]      WSBDataArrayMnnnH[1][2][1][3]/D7  
+   320   D5   -56.6    19.7  UNLIKELY           143           328   +185       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][0][0][1]/D5  
+   321   D5   -56.6    12.4  POSSIBLE           149           311   +162       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][220]      WSBDataArrayMnnnH[0][0][0][3]/D5  
+   322   D3   -56.6    13.8  POSSIBLE           148           326   +178       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][194]      WSBDataArrayMnnnH[0][2][0][2]/D3  
+   323   D7   -56.6    19.1  UNLIKELY           146           321   +175       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][151]      WSBDataArrayMnnnH[0][3][0][0]/D7  
+   324   D6   -56.5     4.6    LIKELY           147           325   +178       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][178]      WSBDataArrayMnnnH[0][2][1][0]/D6  
+   325   D5   -56.5    12.3  POSSIBLE           143           325   +182       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][164]      WSBDataArrayMnnnH[0][2][1][0]/D5  
+   326   D3   -56.5    19.5  UNLIKELY           145           320   +175       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][3][1][0]/D3  
+   327   D7   -56.4    16.6  UNLIKELY           156           327   +171       YES     YES   21%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][63]       WSBDataArrayMnnnH[0][2][1][1]/D7  
+   328   D1   -56.4     5.9    LIKELY           144           313   +169       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][168]      WSBDataArrayMnnnH[0][3][1][1]/D1  
+   329   D3   -56.4    19.8  UNLIKELY           139           326   +187       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][209]      WSBDataArrayMnnnH[0][2][0][2]/D3  
+   330   D5   -56.4    17.5  UNLIKELY           143           321   +178       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][1][0][1]/D5  
+   331   D8   -56.3    17.4  UNLIKELY           142           324   +182       YES     YES   17%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][86]       WSBDataArrayMnnnH[1][1][0][2]/D8  
+   332   D6   -56.3    14.8  POSSIBLE           142           325   +183       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][58]       WSBDataArrayMnnnH[1][1][1][1]/D6  
+   333   D8   -56.3     7.0    LIKELY           156           327   +171       YES     YES   18%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][4]        WSBDataArrayMnnnH[0][2][0][0]/D8  
+   334   D5   -56.2    19.9  UNLIKELY           156           327   +171       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][116]      WSBDataArrayMnnnH[0][0][0][1]/D5  
+   335   D6   -56.2     8.3    LIKELY           143           336   +193       YES     YES   22%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][23]       WSBDataArrayMnnnH[0][1][0][1]/D6  
+   336   D6   -56.2    15.3  UNLIKELY           142           324   +182       YES     YES   20%    YES  dcibbankd20    DcL1RdDataIntM408H[1][1][58]       WSBDataArrayMnnnH[1][0][1][1]/D6  
+   337   D6   -56.2    10.9  POSSIBLE           152           332   +180       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][202]      WSBDataArrayMnnnH[1][0][0][3]/D6  
+   338   D1   -56.1    11.4  POSSIBLE           145           313   +168       YES     YES   20%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][3][1][0]/D1  
+   339   D2   -56.1    -0.8  DEFINITE           146           329   +183       YES     YES   24%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][174]      WSBDataArrayMnnnH[0][0][1][0]/D2  
+   340   D4   -56.1     1.0    LIKELY           147           328   +181       YES     YES   25%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][169]      WSBDataArrayMnnnH[0][0][1][1]/D4  
+   341   D3   -56.0     8.4    LIKELY           146           323   +177       YES     YES   21%    YES  dcibbankd21    DcL1RdDataIntM408H[1][0][183]      WSBDataArrayMnnnH[1][2][1][1]/D3  
+   342   D1   -56.0     2.8    LIKELY           143           337   +194       YES     YES   29%    YES  dcibbankd00    DcL1RdDataIntM408H[0][0][38]       WSBDataArrayMnnnH[0][0][1][1]/D1  
+   343   D8   -56.0    19.4  UNLIKELY           152           332   +180       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][202]      WSBDataArrayMnnnH[1][0][0][3]/D8  
+   344   D6   -55.9     7.8    LIKELY           145           336   +191       YES     YES   25%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][52]       WSBDataArrayMnnnH[0][2][1][0]/D6  
+   345   D8   -55.9    17.4  UNLIKELY           151           331   +180       YES     YES   23%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][214]      WSBDataArrayMnnnH[1][1][0][2]/D8  
+   346   D4   -55.8     6.2    LIKELY           149           329   +180       YES     YES   22%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][217]      WSBDataArrayMnnnH[0][0][0][3]/D4  
+   347   D6   -55.8    16.3  UNLIKELY           152           331   +179       YES     YES   23%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][220]      WSBDataArrayMnnnH[1][1][0][3]/D6  
+   348   D1   -55.7     3.6    LIKELY           145           320   +175       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][3][1][0]/D1  
+   349   D3   -55.7    11.2  POSSIBLE           143           323   +180       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][2][0][1]/D3  
+   350   D2   -55.7    15.3  UNLIKELY           147           325   +178       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][127]      WSBDataArrayMnnnH[0][2][0][0]/D2  
+   351   D1   -55.6     6.3    LIKELY           145           327   +182       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][0][1][0]/D1  
+   352   D7   -55.6     5.1    LIKELY           144           313   +169       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][0][190]      WSBDataArrayMnnnH[0][3][1][1]/D7  
+   353   D5   -55.3    10.6  POSSIBLE           156           328   +172       YES     YES   19%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][114]      WSBDataArrayMnnnH[0][0][1][2]/D5  
+   354   D1   -55.3    18.6  UNLIKELY           148           326   +178       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][241]      WSBDataArrayMnnnH[0][2][1][2]/D1  
+   355   D7   -55.2    -3.9  DEFINITE           146           328   +182       YES     YES   28%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][255]      WSBDataArrayMnnnH[1][3][1][3]/D7  
+   356   D3   -55.2    12.6  POSSIBLE           139           324   +185       YES     YES   22%    YES  dcibbankd30    DcL1RdDataIntM408H[1][0][82]       WSBDataArrayMnnnH[1][3][0][2]/D3  
+   357   D6   -55.2     5.3    LIKELY           147           323   +176       YES     YES   20%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][178]      WSBDataArrayMnnnH[0][1][1][0]/D6  
+   358   D8   -55.1    16.6  UNLIKELY           151           331   +180       YES     YES   23%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][159]      WSBDataArrayMnnnH[1][2][0][1]/D8  
+   359   D6   -55.1     6.9    LIKELY           145           337   +192       YES     YES   25%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][52]       WSBDataArrayMnnnH[0][0][1][0]/D6  
+   360   D4   -55.1    11.4  POSSIBLE           147           319   +172       YES     YES   17%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][169]      WSBDataArrayMnnnH[0][3][1][1]/D4  
+   361   D2   -55.0    -6.9  DEFINITE           146           329   +183       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][213]      WSBDataArrayMnnnH[0][0][0][3]/D2  
+   362   D8   -55.0    14.0  POSSIBLE           151           329   +178       YES     YES   20%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][189]      WSBDataArrayMnnnH[1][0][1][1]/D8  
+   363   D8   -54.9    17.9  UNLIKELY           146           326   +180       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][140]      WSBDataArrayMnnnH[0][2][0][1]/D8  
+   364   D3   -54.8    13.5  POSSIBLE           156           335   +179       YES     YES   27%    YES  dcibbankd20    DcL1RdDataIntM408H[0][0][17]       WSBDataArrayMnnnH[0][3][0][0]/D3  
+   365   D2   -54.8    12.7  POSSIBLE           147           325   +178       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][169]      WSBDataArrayMnnnH[0][2][1][1]/D2  
+   366   D6   -54.7     9.9    LIKELY           151           327   +176       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][197]      WSBDataArrayMnnnH[1][1][0][2]/D6  
+   367   D8   -54.7    12.6  POSSIBLE           146           320   +174       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][140]      WSBDataArrayMnnnH[0][3][0][1]/D8  
+   368   D6   -54.6     8.8    LIKELY           152           329   +177       YES     YES   23%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][220]      WSBDataArrayMnnnH[1][0][0][3]/D6  
+   369   D1   -54.6     2.7    LIKELY           143           336   +193       YES     YES   29%    YES  dcibbankd00    DcL1RdDataIntM408H[0][0][38]       WSBDataArrayMnnnH[0][3][1][1]/D1  
+   370   D5   -54.5    18.0  UNLIKELY           156           326   +170       YES     YES   20%    YES  dcibbankd30    DcL1RdDataIntM408H[0][0][91]       WSBDataArrayMnnnH[0][2][0][3]/D5  
+   371   D6   -54.5     9.3    LIKELY           152           328   +176       YES     YES   23%    YES  dcibbankd31    DcL1RdDataIntM408H[1][1][220]      WSBDataArrayMnnnH[1][3][0][3]/D6  
+   372   D7   -54.5    -3.0  DEFINITE           152           332   +180       YES     YES   19%    YES  dcibbankd11    DcL1RdDataIntM408H[1][0][205]      WSBDataArrayMnnnH[1][0][0][3]/D7  
+   373   D6   -54.4    13.6  POSSIBLE           143           306   +163       YES     YES   16%    YES  dcibbankd30    DcL1RdDataIntM408H[0][1][23]       WSBDataArrayMnnnH[0][1][0][1]/D6  
+   374   D7   -54.3    16.5  UNLIKELY           139           324   +185       YES     YES   21%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][82]       WSBDataArrayMnnnH[1][1][0][2]/D7  
+   375   D2   -54.3    -0.4  DEFINITE           143           323   +180       YES     YES   18%    YES  dcibbankd01    DcL1RdDataIntM408H[0][1][136]      WSBDataArrayMnnnH[0][2][0][1]/D2  
+   376   D8   -54.3    12.5  POSSIBLE           145           336   +191       YES     YES   25%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][52]       WSBDataArrayMnnnH[0][2][1][0]/D8  
+   377   D8   -54.2     9.2    LIKELY           158           332   +174       YES     YES   18%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][165]      WSBDataArrayMnnnH[1][0][1][0]/D8  
+   378   D7   -54.1    15.2  UNLIKELY           142           322   +180       YES     YES   18%    YES  dcibbankd10    DcL1RdDataIntM408H[1][0][12]       WSBDataArrayMnnnH[1][3][0][1]/D7  
+   379   D8   -54.1     6.9    LIKELY           156           327   +171       YES     YES   18%    YES  dcibbankd10    DcL1RdDataIntM408H[0][1][70]       WSBDataArrayMnnnH[0][2][0][2]/D8  
+   380   D2   -54.0    -1.6  DEFINITE           146           325   +179       YES     YES   24%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][174]      WSBDataArrayMnnnH[0][2][1][0]/D2  
+   381   D3   -53.9     3.6    LIKELY           149           320   +171       YES     YES   21%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][218]      WSBDataArrayMnnnH[0][3][0][3]/D3  
+   382   D3   -53.9    16.8  UNLIKELY           144           332   +188       YES     YES   22%    YES  dcibbankd31    DcL1RdDataIntM408H[1][0][151]      WSBDataArrayMnnnH[1][1][0][1]/D3  
+   383   D8   -53.8     2.2    LIKELY           147           320   +173       YES     YES   18%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][188]      WSBDataArrayMnnnH[0][1][1][1]/D8  
+   384   D1   -53.7     6.5    LIKELY           145           325   +180       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][160]      WSBDataArrayMnnnH[0][2][1][0]/D1  
+   385   D5   -53.7    12.7  POSSIBLE           143           323   +180       YES     YES   27%    YES  dcibbankd10    DcL1RdDataIntM408H[1][0][69]       WSBDataArrayMnnnH[1][1][0][2]/D5  
+   386   D1   -53.6    14.2  POSSIBLE           144           316   +172       YES     YES   21%    YES  dcibbankd10    DcL1RdDataIntM408H[0][0][34]       WSBDataArrayMnnnH[0][0][0][2]/D1  
+   387   D7   -53.5     1.6    LIKELY           143           336   +193       YES     YES   27%    YES  dcibbankd00    DcL1RdDataIntM408H[0][0][38]       WSBDataArrayMnnnH[0][3][1][0]/D7  
+   388   D4   -53.5    11.8  POSSIBLE           147           337   +190       YES     YES   27%    YES  dcibbankd00    DcL1RdDataIntM408H[0][1][2]        WSBDataArrayMnnnH[0][0][0][0]/D4  
+   389   D6   -53.5     5.9    LIKELY           145           336   +191       YES     YES   25%    YES  dcibbankd20    DcL1RdDataIntM408H[0][1][52]       WSBDataArrayMnnnH[0][1][1][0]/D6  
+   390   D6   -53.3    10.7  POSSIBLE           151           325   +174       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][197]      WSBDataArrayMnnnH[1][2][0][2]/D6  
+   391   D8   -53.3    14.9  POSSIBLE           146           305   +159       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][241]      WSBDataArrayMnnnH[0][1][1][2]/D8  
+   392   D1   -53.2    10.3  POSSIBLE           143           311   +168       YES     YES   21%    YES  dcibbankd11    DcL1RdDataIntM408H[0][0][137]      WSBDataArrayMnnnH[0][0][0][1]/D1  
+   393   D1   -53.1    15.3  UNLIKELY           144           320   +176       YES     YES   19%    YES  dcibbankd31    DcL1RdDataIntM408H[0][0][181]      WSBDataArrayMnnnH[0][3][1][1]/D1  
+   394   D6   -53.1    13.7  POSSIBLE           139           326   +187       YES     YES   20%    YES  dcibbankd11    DcL1RdDataIntM408H[0][1][201]      WSBDataArrayMnnnH[0][2][0][3]/D6  
+   395   D2   -53.1    15.2  UNLIKELY           152           332   +180       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][198]      WSBDataArrayMnnnH[1][0][0][3]/D2  
+   396   D7   -52.9    18.4  UNLIKELY           138           328   +190       YES     YES   18%    YES  dcibbankd20    DcL1RdDataIntM408H[1][0][118]      WSBDataArrayMnnnH[1][2][1][2]/D7  
+   397   D2   -52.8    16.7  UNLIKELY           147           304   +157       YES     YES   17%    YES  dcibbankd31    DcL1RdDataIntM408H[0][1][184]      WSBDataArrayMnnnH[0][1][1][1]/D2  
+   398   D8   -52.3    17.3  UNLIKELY           158           325   +167       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][175]      WSBDataArrayMnnnH[1][2][1][1]/D8  
+   399   D2   -52.1    -2.3  DEFINITE           158           332   +174       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][165]      WSBDataArrayMnnnH[1][0][1][1]/D2  
+   400   D3   -52.1     6.7    LIKELY           139           326   +187       YES     YES   22%    YES  dcibbankd30    DcL1RdDataIntM408H[1][0][82]       WSBDataArrayMnnnH[1][1][0][2]/D3  
+   401   D8   -52.0     9.5    LIKELY           148           326   +178       YES     YES   24%    YES  dcibbankd21    DcL1RdDataIntM408H[0][1][254]      WSBDataArrayMnnnH[0][2][1][3]/D8  
+   402   D8   -51.8    17.5  UNLIKELY           158           324   +166       YES     YES   23%    YES  dcibbankd11    DcL1RdDataIntM408H[1][1][175]      WSBDataArrayMnnnH[1][3][1][1]/D8  
+   403   D7   -51.7     4.2    LIKELY           142           331   +189       YES     YES   22%    YES  dcibbankd30    DcL1RdDataIntM408H[1][0][29]       WSBDataArrayMnnnH[1][0][0][1]/D7  
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  3. KEY FINDINGS
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1. PBA setup violations are REAL — validated PBA WNS = -17.7ps
+  2. GBA-to-PBA gap is only ~20ps avg (NOT ~50ps as estimated earlier)
+  3. 27 endpoints DEFINITELY fail both hold AND setup in PBA
+  4. 128 endpoints likely fail both (DEF+LIKELY)
+  5. ALL 403 paths are confirmed MIN/MAX WINDOW (same port + same MEU cloud)
+  6. PMH cloud overlap is 19-29% — port buffers shared, ECC stages differ
+  7. Data ECO alone INSUFFICIENT — DLYGATE on dataCOut recovers 28ps (33% of 84ps deficit)
+     Budget limited by -5ps PBA setup target: 11ps max delay → 28ps min gain (2.5:1 ratio)
+  8. Combined fix required: DLYGATE (~28ps) + cclk_meu reduction (~56ps)
+     Pure clock fix would need ~100ps cclk_min_low reduction (327→230ps)
+     Combined approach reduces clock fix to ~56ps (327→271ps)
+

@@ -1,0 +1,12 @@
+#! /bin/csh -f
+
+set rule=$1
+echo  "####"
+echo  "########################################################"
+echo  "####   Working on rule: $rule"
+echo  "####   PV archive:" $FUB_PV_ARCHIVE
+echo  "########################################################"
+echo  "####"
+echo "%% rule" "Num_of_violating_fubs" "Avg_violations_per_fub" "Total_num_of_violations"
+echo "$rule" `zcat $FUB_PV_ARCHIVE/*/duet/report/*.summary.gz | egrep -i $rule | replace "|" "" | ~hagays/bin/item 2 | sort | uniq -c | egrep -v " 0" | ~hagays/bin/item 1 | ~hagays/bin/sum| ~hagays/bin/item 3` `zcat $FUB_PV_ARCHIVE/*/duet/report/*.summary.gz | egrep -i $rule | replace "|" "" | ~hagays/bin/item 2 | sort | ~hagays/bin/avg| ~hagays/bin/item 3` `zcat $FUB_PV_ARCHIVE/*/duet/report/*.summary.gz | egrep -i $rule | replace "|" "" | ~hagays/bin/item 2 | sort | ~hagays/bin/sum| ~hagays/bin/item 3`
+

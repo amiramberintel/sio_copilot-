@@ -1,0 +1,149 @@
+================================================================================
+  DFX STATUS REPORT — GFC CLIENT A0  (FCT26WW14A vs FCT26WW13A)
+  Author: Maha
+  Date: ~WW14 2026
+  Based on: GFCN2CLIENTA0 DCM BU FCT model
+================================================================================
+
+=== MODELS ===
+
+  TST (WW14A): /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_26ww10b_ww12_5_TIP_update-FCT26WW14A_dcm_release-CLK050.bu_postcts
+  REF (WW13A): /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW13A_dcm_release-CLK048.bu_postcts
+
+  NOTE: TST is dcm_release (not dcm_daily). REF uses CLK048 (not CLK050).
+  New CIs in WW14A: all partitions except par_fe.
+  Last synthesis: par_fmav0, par_fmav1, par_exe, par_pmh, par_pm, par_mlc.
+
+=== TOOLS ===
+
+  Carpet: https://carpet.intel.com
+  Dashboard: http://goto.intel.com/bei-dashboard
+
+=== TRACKING ===
+
+  RTL4BE HSD: GFC has NO open RTL4be HSDs.
+  DFX2PO: 12 open tickets. Main items: (1) Flop bounds, (2) Insert bisr mux.
+
+=== DFX REPORT COMMANDS ===
+
+  External paths:
+    m $TST_model/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/reports/*only_dfx.x* | grep -v ifc_ | grep external | m
+
+  Internal paths:
+    m $TST_model/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/reports/*only_dfx.x* | grep -v ifc_ | grep internal | m
+
+  Bisr ijtag external:
+    m $TST_model/.../reports/*only_dfx* | grep external | grep -v ifc | grep "bisr.*ijtag" | m
+
+=== CORNER: func.max_high (SETUP) ===
+
+  --- External Paths ---
+  TST Total: 26 paths at 0ps, WNS=-13ps, TNS=-184ps
+  REF Total: 25 paths at 0ps, WNS=-23ps, TNS=-164ps
+  Worst: par_meu (TST: -13ps/17 paths), par_fmav1 (TST: -6ps/8 paths)
+  Improvement: par_pmh went clean (REF had -8ps)
+  Regression: par_fmav1 more paths (8 vs 1), par_exe worse (-12 vs -3)
+
+  Domain breakdown (external):
+    mclk: WNS=-13, TNS=-494  (110 paths) — EXE paths, AR sent to EXE
+    bist: WNS=-8,  TNS=-160  (44 paths)
+    bisr: WNS=-12, TNS=-294  (72 paths)
+    PMH->MEU mclk path: AR sent to MEU to fix
+
+  --- Internal Paths ---
+  TST Total: 213 paths at 0ps, WNS=-99ps, TNS=-1596ps  (HUGE improvement!)
+  REF Total: 1604 paths at 0ps, WNS=-110ps, TNS=-12884ps
+  Biggest win: par_pmh 1108->1 paths, par_meu 348->98 paths
+
+  Domain breakdown (internal):
+    mclk:     WNS=-49, TNS=-3892  (590 paths)
+    lcp:      WNS=-37, TNS=-3642  (317 paths)
+    bist:     WNS=-99, TNS=-1626  (80 paths) — par_pm worst
+    bisr:     WNS=-99, TNS=-1468  (26 paths) — par_pm worst
+    pm_clock: WNS=-99, TNS=-1464  (24 paths) — par_pm only
+    slos:     WNS=-7,  TNS=-488   (224 paths)
+    clkg:     WNS=-37, TNS=-1050  (84 paths)
+    misr:     WNS=-49, TNS=-356   (15 paths)
+  All internal paths should be fixed by BE.
+
+=== CORNER: func.min_low (HOLD) ===
+
+  --- External Paths ---
+  TST Total: 10759 paths at 0ps, WNS=-834ps, TNS=-3.3M  (MASSIVE regression!)
+  REF Total: 3002 paths at 0ps,  WNS=-2178ps, TNS=-327K
+  Key regressions:
+    par_fmav0: 0 -> 3104 paths (new, from last synthesis)
+    par_fmav1: 43 -> 3105 paths (72x increase!)
+    par_exe: 69 -> 2080 paths (30x increase!)
+  Note: WNS improved (-2178 -> -834) but path count exploded
+
+  Domain breakdown (external):
+    scanclk:     WNS=-834,  TNS=-6M   (15646 paths!) — core wrapper cells
+    ssh_ijtag:   WNS=-338,  TNS=-131K (702 paths) — will be fixed in PT ECO
+    bisr_ijtag:  WNS=-500,  TNS=-27K  (153 paths) — BE fix by adding mux
+    async:       WNS=-211,  TNS=-311K (4237 paths)
+    ijtag_tck:   WNS=-23                (2 paths)
+    ssnclk:      WNS=-86              (77 paths)
+    mclk:        WNS=-81              (51 paths)
+    bist:        WNS=-108             (62 paths)
+
+  Action items:
+    - Bisr ijtag: AR to MEU, EXE, PM, MSID. Fixed at OOO_vec, MLC.
+    - Ssh_ijtag: Will be fixed in FCT PT ECO.
+    - Scanclk: Check relaxation post last synthesis (Yifat Stern Alkalay).
+    - PT ECO run on all non-mclk paths: all external are fixable.
+
+  --- Internal Paths ---
+  TST Total: 357443 paths at 0ps, WNS=-2416ps, TNS=-19.6M
+  REF Total: 438164 paths at 0ps, WNS=-2419ps, TNS=-11M
+  Note: Path count improved but TNS worsened.
+  Worst partitions: par_meu (65K paths), par_mlc (107K), par_msid (51K)
+  par_ooo_int: WNS=-2416 (worst), jump due to wrong DFT collaterals tag
+
+=== CORNER: func.max_low (CT=ttttcmaxtttt_100.tttt, SETUP) ===
+
+  --- External Paths ---
+  TST Total: 96 paths, WNS=-50ps, TNS=-1324ps   (HUGE improvement!)
+  REF Total: 1659 paths, WNS=-900ps, TNS=-731K
+  Only par_meu has external failures.
+  PMH->MEU path: AR sent to MEU.
+
+  --- Internal Paths ---
+  TST Total: 6681 paths, WNS=-1498ps, TNS=-1.6M
+  REF Total: 9821 paths, WNS=-1510ps, TNS=-2.4M
+  Worst: par_ooo_int WNS=-1498ps (ijtag_tck domain)
+  par_mlc: internal paths are with delay cells.
+  par_ooo_int: needs new CI with latest DFT collaterals.
+
+=== KEY OBSERVATIONS ===
+
+  1. func.max_high improved dramatically: internal 1604->213 paths, par_pmh near clean
+  2. func.min_low external exploded: scanclk paths from new synthesis (fmav0/1, exe)
+  3. func.max_low(CT) external massive improvement: 1659->96 paths
+  4. par_pm consistently worst on bist/bisr domains
+  5. par_ooo_int has wrong DFT collaterals — needs CI update
+  6. DFX2PO has 12 open tickets (flop bounds + bisr mux)
+  7. All ssh_ijtag fixable via PT ECO
+  8. Scanclk wrapper cell issue needs synthesis relaxation check
+
+=== DFX CLOCK DOMAINS ===
+
+  mclk        — Main functional clock
+  lcp         — Low-power clock
+  bist        — Built-In Self-Test clock
+  bisr        — Built-In Self-Repair clock
+  misr        — Multiple Input Signature Register clock
+  slos        — Slow scan clock
+  clkg        — Clock gating test clock
+  pm_clock    — Power management clock
+  ijtag_tck   — IEEE 1687 IJTAG test clock
+  bisr_ijtag  — BISR IJTAG clock
+  ssh_ijtag   — SSH IJTAG clock
+  ssnclk      — SSN (Simultaneous Switching Noise) clock
+  scanclk     — Scan test clock
+  tap         — Test Access Port clock
+  async       — Asynchronous paths
+  m4saf       — M4 stuck-at-fault test
+  saf         — Stuck-at-fault test
+
+================================================================================

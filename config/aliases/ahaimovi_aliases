@@ -1,0 +1,639 @@
+# # EC Standard Login Environment -*- sh -*-
+# user .aliases file
+# $Source: /usr/cvs/cvsrep/ec_environ-1.0/release/user/aliases,v $
+# $Revision: 1.1 $
+
+# You may place your personal aliases here or in .cshrc.$USER
+#
+# examples:
+# alias . exit
+
+#Viewers
+#------------------------------------
+alias e emacs
+alias align '~ahaimovi/bin/align.pl'
+alias m '~ahaimovi/bin/gzm'
+alias most '~ahaimovi/bin/gzm'
+alias mal 'align| ~ahaimovi/bin/gzm'
+alias n nedit
+alias kate 'kate \!*>&/dev/null&'
+#alias gvim '/usr/intel/pkgs/vim/ -g -U  ~ahaimovi/.vimrc_lnx_orenl -geometry 200x75+10+10 \!*'
+# alias telnet ssh2
+#alias xmost 'xterm -T \!* -geometry 160x50 -fn fixed `~/bin/rand_color.pl` -e "/nfs/iil/home/ebarnett/bin/most -R \!*" &'
+alias xm 'xterm -T \!* -geometry 160x50 -fn fixed `~/bin/rand_color.pl` -e "m \!*" &'
+alias xless 'xterm -T \!* -geometry 160x50 -fn fixed `~/bin/rand_color.pl` -e "less \!*" &'
+alias xcm 'xterm -T "\!*" -geometry 160x50 -fn fixed `~/bin/rand_color.pl` -e "\!* |m" &'
+# alias pipexm 'cat > /tmp_proj/tmp_file2open.$$ ;xterm -T "Xterm \!*" -geometry 160x50 -fn fixed `~/bin/rand_color.pl` -e "m /tmp_proj/tmp_file2open.$$ " &'
+alias pipexm ' cat > /tmp_proj/tmp_file2open.$$ ;xterm -T "Xterm \!*" -geometry 160x50 -fn fixed `~/bin/rand_color.pl` -e "m /tmp_proj/tmp_file2open.$$ " &'
+alias pipexl ' cat > /tmp_proj/tmp_file2open.$$ ;xterm -T "Xterm \!*" -geometry 160x50 -fn fixed `~/bin/rand_color.pl` -e "less /tmp_proj/tmp_file2open.$$ " &'
+alias xsv /nfs/site/disks/ayarokh_wa/git/release/xsv 
+alias ag 'rg -i '
+alias mul_cat 'ls \!* | xargs -I {} sh -c '\''echo "=== {} ==="; cat {}'\'''
+
+
+
+#Clear Case aliases
+#------------------------------------
+alias ct /usr/atria/bin/cleartool
+alias xc /usr/atria/bin/xclearcase
+#alias settitle 'echo -e \033]2;*\007
+alias lsco 'ct lsco -me -cview -all -short'
+alias cdiff       'ct diff -g -pred &'
+alias pg          'grep "proc \!*" *.tcl'
+alias ctvtree 	'ct lsvtree -graph \!* &'
+
+#General Comands
+#------------------------------------
+#alias cp 'cp -i \!* '
+alias c 'clear'
+alias ll 'ls -ltrh --color=auto'
+alias rp realpath
+alias s suspend
+alias g grep
+alias gi 'grep -i \!* '
+alias gv 'grep -v \!* '
+alias stkdiff 'sort \!:1 > /tmp/left.$USER; sort \!:2 > /tmp/right.$USER;tkdiff /tmp/left.$USER /tmp/right.$USER &'
+alias smeld 'sort \!:1 > /tmp/left.$USER; sort \!:2 > /tmp/right.$USER;meld /tmp/left.$USER /tmp/right.$USER &'
+alias fix_most 'ps -ef | grep $USER | grep gilt | grep -ve "grep" -ve "defunc" | item 2 | paste -s'
+alias awkp 'awk -F "|"' 
+alias awkc 'awk -F ","'
+alias uc_utils '/nfs/site/disks/hdk_sd_utilities/sd_user_utils/uc_utils/infra/uc_utils_gui.py&'
+
+#Stods
+#------------------------------------
+# old sotd suppose to be deleted 9.12.12
+##setenv my_stod "/nfs/iil/stod/areas/a/w.ahaimovi.100"
+#setenv my_stod2 "/nfs/iil/stod/areas/a/w.ahaimovi.100"
+
+if ( $USER == ahaimovi  ) then
+    setenv my_stod "/nfs/site/disks/ahaimovi_wa/"
+    alias MY_STOD "/nfs/site/disks/ahaimovi_wa/"
+    setenv MYSTOD "/nfs/site/disks/ahaimovi_wa/"
+    #alias check_stod_space "kdirstat $my_stod &"
+    alias check_stod_space " /p/hdk/rtl/proj_tools/design-utils/xhdk74/latest/qdirstat $my_stod &"
+    alias check_home_space " /p/hdk/rtl/proj_tools/design-utils/xhdk74/latest/qdirstat ~ahaimovi/ &"
+endif
+#DP
+#------------------------------------
+
+
+if ( $?TOP_DIE  ) then 
+  setenv FE_APV_LATEST "/nfs/site/proj/mpg/proc/projects/glc/central_data/fct/fctiming/MODEL_POINTERS/section_models/latest_${TOP_DIE}_fe/"
+endif
+alias es /nfs/iil/disks/home01/omryrom/debug_extract.pl
+alias sloc '~lstambul/debug_extract.pl \!:* -loc -p glc'
+alias fsloc '~lstambul/debug_extract.pl $DBB%\!:* -loc -p glc'
+alias get_fub_z 'getz -n netlists/tango/${DBB}.sn'
+
+
+
+#Tango
+#------------------------------------
+# alias evr 'm tango/evrbvr/$DBB.evr'
+# alias bvr 'm tango/analysis/$DBB.bvr'
+
+
+alias cfg 'm tango/cmd/$DBB.cfg'
+alias ncfg 'nedit tango/cmd/$DBB.cfg&'
+alias make_slope 'm tango/analysis/$DBB.report.gz | item 1 2 5 | sort -rk 1 | egv "N/A" > slopes_rep'
+alias pmake_slope 'm tango/analysis/previous_run/$DBB.slopes.report.gz | item 1 2 5 | sort -rk 1 | egv "N/A" > slopes_rep_old'
+alias make_int_slopes '~ahaimovi/scripts/internal_slopes.csh \!:*'
+alias slopes 'zgrep -v "N/A" tango/analysis/$DBB.slopes.report.gz | sort -nr | m'
+alias max 'gzcat tango/analysis/$DBB.max.err.gz | m'
+alias pmax 'gzcat tango/analysis/previous_run/$DBB.max.err.gz | m'
+alias max_int 'max | egv "$DBB%" | m'
+alias min 'gzcat tango/analysis/$DBB.min.err.gz | m'
+alias pmin 'gzcat tango/analysis/previous_run/$DBB.min.err.gz | m'
+alias min_int 'min | egv "$DBB%" | m'
+alias pv_checkin 'pvci -cell $DBB'
+alias pv_tsl_ci '$PVCI/pvci.tcl -cell $DBB -ebb_block $DBB -work_area $WARD -tsl_ci'
+
+alias make_margin_slope_rep  'echo "Net name           transition      slope  margin \n -------------------------------------------------------" >margin_slope_rep; gzcat tango/analysis/$DBB.valid_report.gz | grep -v "\-\->" | grep -i max | sort -r -k 6 | item 1 2 6 7 | sort -rk 3 >>margin_slope_rep'
+alias maxset 'gzcat tango/analysis/$DBB.setup.report.gz | m'
+alias maxset_int 'maxset | egv "\-E|E\-" | m'
+alias minset 'gzcat tango/analysis/$DBB.hold.report.gz | m'
+alias minset_int 'minset | egv "\-E|E\-" | m'
+alias pmaxset 'gzcat tango/analysis/previous_run/$DBB.setup.report.gz | m'
+alias pminset 'gzcat tango/analysis/previous_run/$DBB.hold.report.gz | m'
+alias valid 'gzcat tango/analysis/$DBB.valid_report.gz | m'
+alias pvalid 'gzcat tango/analysis/previous_run/$DBB.valid_report.gz | m'
+
+alias maxcap 'gzcat tango/analysis/$DBB.max.caprep.gz | m'
+alias pmaxcap 'gzcat tango/analysis/previous_run/$DBB.max.caprep.gz | m'
+alias maxcap_search 'maxcap | egrep -i'
+alias pv_arch 'realpath /nfs/site/proc/projects/gsrcore/central_data/pv/a0/fubs/all/$DBB/tango/analysis/'
+
+alias mevr 'm $FCT_MODEL/section_models/latest_${TOP_DIE}_fe/tango/evrbvr/$DBB.full_slack.evr'
+alias mhvevr 'm $FCT_MODEL/section_models/latest_${TOP_DIE}_fe/cornet/highv/tango/evrbvr/$DBB.full_slack.evr'
+alias mlvevr 'm $FCT_MODEL/section_models/latest_${TOP_DIE}_fe/cornet/lowv/tango/evrbvr/$DBB.full_slack.evr'
+alias db_evr 'm $DB_ROOT/${PROJECT}/${DBB}_${PROJECT}/tdc/latest/${DBB}_${PROJECT}_tdc/${DBB}_nominal/${DBB}_nominal.evr'
+
+alias copy_snc_fe_model_evr 'cp $FCT_MODEL/section_models/latest_${TOP_DIE}_fe/tango/evrbvr/$DBB.full_slack.evr tango/evrbvr/$DBB.nominal.evr;cp $FCT_MODEL/section_models/latest_${TOP_DIE}_fe/cornet/highv/tango/evrbvr/$DBB.full_slack.evr tango/evrbvr/$DBB.highv.evr;cp $FCT_MODEL/section_models/latest_${TOP_DIE}_fe/cornet/lowv/tango/evrbvr/$DBB.full_slack.evr tango/evrbvr/$DBB.lowv.evr;'
+alias tglog 'm tango/analysis/$DBB.tg_ta.log*'
+alias ptglog 'm tango/analysis/previous_run/$DBB.tg_ta.log.gz'
+
+####HighV
+alias himaxset 'gzcat  cornet/$DBB/mbllp_1v/tango/analysis/$DBB.setup.report.gz | m'
+alias himaxset_int 'himaxset | egv "\-E|E\-" | m'
+alias himinset 'gzcat cornet/$DBB/mbllp_1v/tango/analysis/$DBB.hold.report.gz | m'
+alias himinset_int 'himinset | egv "\-E|E\-" | m'
+alias hipmaxset 'gzcat cornet/$DBB/mbllp_1v/tango/analysis/previous_run/$DBB.setup.report.gz | m'
+alias hipminset 'gzcat cornet/$DBB/mbllp_1v/tango/analysis/previous_run/$DBB.hold.report.gz | m'
+alias hvtglog 'm cornet/$DBB/highv/tango/analysis/$DBB.tg_ta.log*'
+
+###LowV
+alias lomaxset 'gzcat cornet/$DBB/xlt_055v/tango/analysis/$DBB.setup.report.gz | m'
+alias lomaxset_int 'lomaxset | egv "\-E|E\-" | m'
+alias lominset 'gzcat cornet/$DBB/xlt_055v/tango/analysis/$DBB.hold.report.gz | m'
+alias lominset_int 'lominset | egv "\-E|E\-" | m'
+alias lopmaxset 'gzcat cornet/$DBB/xlt_055v/tango/analysis/previous_run/$DBB.setup.report.gz | m'
+alias lopminset 'gzcat cornet/$DBB/xlt_055v/tango/analysis/previous_run/$DBB.hold.report.gz | m'
+alias lvtglog 'm cornet/$DBB/lowv/tango/analysis/$DBB.tg_ta.log*'
+
+####0.7 Corner 
+
+alias xlsetrep 'gzcat cornet/$DBB/xlt_07v/tango/analysis/$DBB.setup.report.gz | m'
+alias xlsetrep_int 'lomaxset | egv "\-E|E\-" | m'
+alias xltglog 'm cornet/$DBB/xlt_07v/tango/analysis/$DBB.tg_ta.log*'
+alias xlvalid 'gzcat cornet/$DBB/xlt_07v/tango/analysis/$DBB.valid_report.gz | m'
+
+alias get_pvtime '$PTT/utils/progress_summary.tcl -cell $DBB -work .'
+
+
+
+#### RF Files
+alias rambo_ovr 'm parade/sav/$DBB.rambo_ovr'
+
+#alias xcfg
+
+#######Frz commands
+#--------
+
+alias txres 'set t = \!:1 ; echo "tg_restart -info -file \!:1" > ${t}_xres.tcl;  xterm -T \!:1 -geometry 150x50 -bg black -fg white -hc white -e $TANGO/bin/tango -file ${t}_xres.tcl &'
+alias tres  'echo "tg_restart -info -file \!:1" > tres.tcl;  $TANGO/bin/tango -file tres.tcl'
+
+alias  ghack    'grep -e "FUB: " -e \!:1 ${FE_APV_LATEST}/tango/cmd/fe_hack_bvr.ovr ${FE_APV_LATEST}/tango/cmd/include/fe_*_hack_bvr.ovr | rmpa | grep -i -B1 \!:1  '
+alias fpphv  '/nfs/site/proj/mpg/proc/data/fct/mrm/sec_models/fe/lior/afraiman/perly/slahav/myfindPath1.pl -p $PROJECT -corner highv    -pin \!:1 | m'
+alias fpp    '/nfs/site/proj/mpg/proc/data/fct/mrm/sec_models/fe/lior/afraiman/perly/slahav/myfindPath1.pl -p $PROJECT -corner nominal    -pin \!:1 | m'
+
+## misc DP
+#--------------
+alias lez_eden 'printf " loading Eden with Ezqb: `\ls -ltr parade/sav/*.ezqb |tail -1 | item 9` \n" ; eden -ezqb `ls -ltr parade/sav/*.ezqb |tail -1 | item 9`'
+#alias mega_pvc '$FUBPV_SCRIPTS/mega_pvc.csh \!*'
+alias sig_gr 'perl ~afraiman/perly/sig_gr.pl'
+alias wa_copy '~ahaimovi/scripts/wa_copy'
+
+
+#######ARCHIVE REPORTS
+######################
+alias fpp          '/nfs/site/proj/mpg/proc/data/fct/mrm/sec_models/fe/lior/afraiman/perly/slahav/myfindPath1.pl -p $PROJECT -corner nominal -pin  \!:1 | m'
+alias fpph         '/nfs/site/proj/mpg/proc/data/fct/mrm/sec_models/fe/lior/afraiman/perly/slahav/myfindPath1.pl -p $PROJECT -corner nominal -hold  -pin \!:1 | m'
+alias fpphv        '/nfs/site/proj/mpg/proc/data/fct/mrm/sec_models/fe/lior/afraiman/perly/slahav/myfindPath1.pl -p $PROJECT -corner highv    -pin \!:1 | m'
+alias fppd         '/nfs/site/proj/mpg/proc/data/fct/mrm/sec_models/fe/lior/afraiman/perly/slahav/myfindPath1.pl -p $PROJECT -corner nominal -debug -pin  \!:1 | m'
+alias afp         'set tmp1=\!:1 ; set tmp=`echo $tmp1 |replace '"'"'__'"'"' '"'"'%'"'"'` ; set tmpfub=`echo $tmp | perl -ne '"'"' $a=$_; $a=~s/fe\/// ; $a=~s/bpglb(.).m%/bpglobalm%/; $a=~s/bpminiglb(.).m%/bpminiglobalm%/; $a=~s/bpindirect(.)m%/bpindirectm%/; $a=~s/bptarget(...)(sl|)[eo]m%/bptarget\1\2m%/; print $a'"'"' | cut -f1 -d '%'`; set tmppin=`echo $tmp | cut -f2 -d '%' `;fbvr    $tmpfub | sig_gr "$tmppin" '
+# 
+alias  fmax       'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/$tmpfub.max.err.gz | m'
+alias  fpmax      'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/previous_run/$tmpfub.max.err.gz | m'
+alias  fmin       'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/$tmpfub.min.err.gz | m'
+alias  fpmin      'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/previous_run/$tmpfub.min.err.gz | m'
+alias  fmaxs      'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/$tmpfub.setup.report.gz | m'
+alias  gfmaxs      'set tmpfub="\!:1" ; m $fctg/collateral/tango/analysis/$tmpfub.setup.report.gz | m'
+alias  gfmins      'set tmpfub="\!:1" ; m $fctg/collateral/tango/analysis/$tmpfub.hold.report.gz | m'
+alias  fpmaxs     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/previous_run/$tmpfub.setup.report.gz | m'
+alias  fmins      'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/$tmpfub.hold.report.gz | m'
+alias  fpmins     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/previous_run/$tmpfub.hold.report.gz | m'
+alias  fmaxsnom   'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/nominal/tango/analysis/$tmpfub.setup.report.gz | m'
+alias  fmaxshv    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/highv/tango/analysis/$tmpfub.setup.report.gz | m'
+alias  fminshv    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/highv/tango/analysis/$tmpfub.hold.report.gz  | m'
+alias  fmaxslv    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/lowv/tango/analysis/$tmpfub.setup.report.gz | m'
+alias  fminslv    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/cornet/\!:1/lowv/tango/analysis/$tmpfub.hold.report.gz  | m'
+alias  fbvrlv     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/cornet/\!:1/lowv/tango/analysis/$tmpfub.bvr.gz'
+alias  ftlog      'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/analysis/$tmpfub.tg_ta.log.gz '
+alias  fcons      'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/lay/$tmpfub.cons.gz | sort  | m'
+alias  fevr       'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/evrbvr/$tmpfub.nominal.evr.gz'
+alias  fevrhv     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/evrbvr/$tmpfub.highv.evr.gz'
+alias  fevrlv     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/evrbvr/$tmpfub.lowv.evr.gz'
+alias  fbvr       'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/analysis/$tmpfub.bvr.nominal.gz'
+# 
+alias  fbvrhv     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/analysis/$tmpfub.bvr.highv.gz'
+alias  fbvrlv     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/analysis/$tmpfub.bvr.lowv.gz'
+alias  fbvrd      'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/tango/analysis/$tmpfub.bvr_debug_info*'
+alias  fbvrdhv    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/cornet/\!:1/highv/tango/analysis/$tmpfub.bvr_debug_info*'
+alias  fbvrdlv    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/$tmpfub/cornet/\!:1/lowv/tango/analysis/$tmpfub.bvr_debug_info*'
+# alias  fp         'set tmp1=\!:1 ; set tmp=`echo $tmp1 |replace '"'"'__'"'"' '"'"'%'"'"'` ; set tmpfub=`echo $tmp | perl -ne '"'"'$a=$_; $a=~s/bpglb(.).m%/bpglobalm%/; $a=~s/bpminiglb(.).m%/bpminiglobalm%/; $a=~s/bpindirect(.)m%/bpindirectm%/; $a=~s/bptarget(...)[eo]m%/bptarget\1m%/; print $a'"'"' | cut -f1 -d '%'`; set tmppin=`echo $tmp | cut -f2 -d '%' `;fbvr    $tmpfub | sig_gr "$tmppin" '
+
+alias  fvalid     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.valid_report.gz | m'
+alias  fvalidhv   'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/highv/tango/analysis/\!:1.valid_report.gz | m'
+alias  fvalidlv   'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/cornet/\!:1/lowv/tango/analysis/\!:1.valid_report.gz | m'
+
+alias  fv         'm $FUB_PV_ARCHIVE/$tmpfub/tango/analysis/$tmpfub.valid_report.gz | gi $tmpfub | egi "%[rdeo]" | g MAX | gi nominal| gi \!:1 '
+alias  fvhv       'm $FUB_PV_ARCHIVE/$tmpfub/cornet/$tmpfub/highv/tango/analysis/$tmpfub.valid_report.gz | gi $tmpfub | egi "%[rdeo]" | g MAX | gi \!:1 '
+alias  fvlv       'm $FUB_PV_ARCHIVE/$tmpfub/cornet/$tmpfub/lowv//tango/analysis/$tmpfub.valid_report.gz | gi $tmpfub | egi "%[rdeo]" | g MAX | gi \!:1 '
+alias  fsch       'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/netlists/snet/\!:1.sch.gz'
+alias  fmaxcap    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.max.caprep.gz | m'
+alias  fmaxcapnet 'set tmpfub="\!:2" ; m $FUB_PV_ARCHIVE/\!:2/tango/analysis/\!:2.max.caprep.gz |egi "Source|\!:1" |m'
+alias  fcfg       'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/cmd/\!:1.cfg.gz'
+alias  frupcfg    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.rollup.cfg.gz'
+alias  fslopes    'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.slopes.report.gz | grep -v "N/A" | sort -nr | m '
+alias  fclktr     'set tmpfub="\!:1" ; m $FUB_PV_ARCHIVE/\!:1/tango/analysis/\!:1.clk_node_trace.rep.gz '
+
+
+
+
+
+#------------------------------------
+alias get_rtl_interface 'm \!* | egrep "input|output|ioput" | item 2 | replace "[" " " | item 1 | uniq | sort | grep . | m'
+alias get_rtl_interface_bit 'm \!* | egrep "input|output|ioput" | item 2 | replace "[" " " | item 1 | uniq -c | sort | grep . | sort -r| m'
+alias setSKL  'source /p/skl/rtl/proj_bin_a/setSKL.csh \!:*'
+alias setCNL  'source /p/cnl/rtl/proj_bin_a/setCNL.csh \!:*'
+alias setSKLb  'source /p/skl/rtl/proj_bin_b/setSKLb.csh \!:*'
+alias setSKLj  'source /p/skl/rtl/proj_bin_j/setSKLj.csh \!:*'
+alias setSKLq  'source /p/skl/rtl/proj_bin_q/setSKLq.csh \!:*'
+alias setSKLx  'source /p/skl/rtl/proj_bin_x/setSKLx.csh \!:*'
+alias setSNC  'source  /p/cnl/rtl/proj_bin_a/setSNC.csh \!:*'
+alias setGLC 'source /p/cnl/rtl/proj_bin_snc/setGLC.csh \!:*'
+alias setLNC 'source /p/hdk/rtl/hdk.rc -cfg xhdk74 -model_shell -org cdg -m core -s lnc-a0 \!:* ' 
+alias const_def 'grep -ri --include \*.vh \!* /p/cnl/rtl/models/core/core-glc-a0-latest//core/fe/rtl/ ; grep -ri --include \*.vh \!* /p/cnl/rtl/models/core/core-glc-a0-latest//src/common/ ; grep -i --include \*.vh \!* /p/cnl/rtl/models/core/core-glc-a0-latest//core/*/rtl/  ; grep -i --include \*.vh \!* /p/cnl/rtl/models/core/core-glc-a0-latest//core/common/rtl/global/ ; '
+
+set RTL_LNC = "/p/hdk/rtl/models/xhdk74/lnc/core/core-lnc-a0-latest/"
+ 
+# alias rtl_param 'grep \!:* $RTL_LNC/src/common/global/*_macros.vh;grep \!:* $RTL_LNC/src/common/global/*_pkg.vs;grep \!:* $RTL_LNC/core/ooo/rtl/*.vh;grep \!:* $RTL_LNC/core/ooo/rtl/*_pkg.vs; grep \!:* $RTL_LNC/core/common/rtl/*_pkg.vs;grep \!:* $RTL_LNC/core/common/rtl/*.vh;grep \!:* $RTL_LNC/core/common/rtl/global/*.vh;grep \!:* $RTL_LNC/core/common/rtl/global/*.vs;'
+alias rtl_param 'grep \!:* $MODEL_ROOT/src/commo/dsbsortfastdatam1n/global/*_macros.vh;grep \!:* $MODEL_ROOT/src/common/global/*_pkg.vs;grep \!:* $MODEL_ROOT/core/ooo/rtl/*.vh;grep \!:* $MODEL_ROOT/core/ooo/rtl/*_pkg.vs; grep \!:* $MODEL_ROOT/core/common/rtl/*_pkg.vs;grep \!:* $MODEL_ROOT/core/common/rtl/*.vh;grep \!:* $MODEL_ROOT/core/common/rtl/global/*.vh;grep \!:* $MODEL_ROOT/core/common/rtl/global/*.vs;'
+setenv rtl_latest_cnl_mlc_model "/p/cnl/rtl/models/mlc/mlc-cnl-a0-latest/core/mlc/rtl/"
+setenv rtl_latest_skl_mlc_model "/p/cnl/rtl/models/core/core-ertl-skl-a0-latest/src/core/mlc/"
+setenv rtl_latest_cnl_core_model "/p/cnl/rtl/models/core/core-cnl-a0-latest/core/mlc/rtl/"
+setenv rtl_latest_snc_fe_model "/p/cnl/rtl/models/fe/fe-snc-a0-latest/core/fe/rtl/"
+setenv rtl_latest_mlc_model "/p/cnl/rtl/models/mlc/mlc-snc-a0-latest/core/mlc/rtl/"
+setenv rtl_latest_ooo_model "/p/cnl/rtl/models/ooo/ooo-snc-a0-latest/core/ooo/rtl/"
+setenv rtl_latest_core_model "/p/cnl/rtl/models/core/core-glc-a0-latest/core/mlc/rtl/"
+setenv rtl_latest_fe_model "/p/cnl/rtl/models/fe/fe-glc-a0-latest/core/fe/rtl/"
+if ( $?PROJ_FAMILY  ) then
+setenv rtl_latest_fe_model "/p/cnl/rtl/models/fe/fe-${PROJ_FAMILY}-${STEP_DASH}-latest/core/fe/rtl/"
+setenv rtl_latest_core_model "/p/cnl/rtl/models/core/core-${PROJ_FAMILY}-${STEP_DASH}-latest/"
+setenv lnccoremodel "/p/cnl/rtl/models/core/core-lnc-a0-latest"
+endif
+if ( $?PRODUCT_STEP  ) then
+setenv pnccoremodel "/p/hdk/rtl/models/xhdk74/pnc/core/core-pnc-`echo $PRODUCT_STEP |tr A-Z a-z`-master-latest"
+setenv fitpnccoremodel "/p/hdk/rtl/models/xhdk74/pnc/core/core-pnc-`echo $PRODUCT_STEP |tr A-Z a-z `-pnc-a0-fit-latest/"
+endif
+setenv gfccoremodel "/p/hdk/rtl/models/xhdk74/gfc/core/core-gfc-a0-master-latest/"
+setenv fitgfccoremodel "/p/hdk/rtl/models/xhdk74/gfc/fit/fit-gfc-a0-master-latest/"
+
+# 
+
+#FEV
+#-------------------------------------
+alias runFEV "/nfs/site/proj/mpg/proc/data/fev/tools.rev/ftv_latest/run_fev.pl \!*"
+alias fev_audit_script  "/nfs/iil/disks/home01/mraichma/scripts/fevatf"
+alias pandora '/p/dt/sde/bin/pandora'
+
+
+
+#Nosie
+#---------------------------
+alias open_noise_gui_on_dbb 'xenon_db -cell $DBB -cmd cout -data all -ver latest -force; xenon -cell $DBB -cnt fub -restore gui&'
+alias run_noise_fcm 'fcm submit -flow noise -inst $DBB &'
+alias noise_rep 'm /p/mpg/proc/projects/$PROJECT/central_data/noise/archive/fubs/$DBB/latest/xenon/report/$DBB.xstat.gz'
+alias noise_father_rep 'source ~gasheri/bin/noise_father_rep.csh'
+alias noise_cfg 'm /p/mpg/proc/projects/$PROJECT/central_data/noise/archive/fubs/$DBB/latest/xenon/cfg/$DBB.xcfg.gz'
+
+
+#RV
+#---------------------------
+alias drive_cfg 'm /p/mpg/proc/projects/$PROJECT/central_data/rv/fubs/$DBB/latest/drive/cfg/$DBB.dcfg.gz'
+alias drive_af  'm /p/mpg/proc/projects/$PROJECT/central_data/rv/fubs/$DBB/latest/drive/cfg/$DBB.af.dcfg.gz'
+alias drive_slopes 'm /p/mpg/proc/projects/$PROJECT/central_data/rv/fubs/$DBB/latest/drive/cfg/$DBB.slopes.dcfg.gz'
+alias drive_auto '$RV_CENTRAL/run_auto_drive -cell $DBB -dcfg db'
+
+
+#Misc
+#------------------------------------
+
+alias cur_gal '/nfs/iil/proj/mpg/cad_suse/em64t_linux26/gallery/latest/bin/gallery -p $PROJECT -b $DBB'
+alias settitle 'echo -n "\033]2;\!* \07"'
+alias setRCG 'source /nfs/iil/proj/mpg/rcgcamp02/ertl/proj_bin/setRCG.csh \!:*'
+alias rcg_setup uesetup -p rcgcamp -pr 1272.4 -w rcgcamp -mi cdr0b -t eden
+alias rcgFEV " /p/mpg/proc/data/fev/develop/fev_bundles/p11.ww34.1_rcgcamp/ftv_rev/setup/cff_launcher/cff_launcher_wrapper.pl -p rcgcamp -p rcgcamp \!*"
+alias eali 'kate ~/.aliases &'
+alias neali 'nedit ~/.aliases &'
+alias sali 'source ~/.aliases'
+alias egv 'grep -ve'
+alias item ~ahaimovi/bin/item
+alias kama 'awk "BEGIN{print \!* }"'
+alias wa_copy '~ahaimovi/scripts/wa_copy'
+alias ocell ~ahaimovi/bin/open_cell.tcl
+alias gzmeld ~ahaimovi/bin/gzmeld.csh
+alias mrp "\ls -l \!* | item NF | awk -v pwd="$PWD" '{print pwd"/"$0}'"
+alias mail_me "mail $USER &"
+alias libra "/nfs/site/proj/gsr/common/da_utils/library/libra/latest/libra&"
+alias remove_color "sed 's/[^m]*m//g'"
+
+#alias fix_setup "unsetenv SETUP_REV"
+alias rmpa        'sed '"'"'s/:/: /'"'"' | perl -ne '"'"'s#^[^ ]*/(.*[:-])#\1#; print'"'"' '  #  removes file paths when greping:  (use as    'grep mlirrdatra *vs | rmpa')
+alias reload_bvr_sec '/nfs/iil/home/drecher/reload_bvr -sec \!*'
+alias get_win_path 'set x =  `realpath \!:*`;echo "//sc8-samba.sc.intel.com$x" | tr "/" "\\" | xclip ; xclip -o '
+
+
+####################VNC#########
+##################################################
+
+alias vncconfig 'vncconfig -display=:`echo $DISPLAY | sed -e "s/.*://"`'
+
+alias changeres 'vncconfig -set randr=\!*; /usr/bin/xrandr -s \!*'
+
+alias xl  'xrandr 1368x768'
+alias xd  'xrandr 1920x1200'
+alias xr1 'xrandr 1368x768'
+alias xr_1200 'xrandr 1920x1200'
+alias xr_1080 'xrandr 1920x1080'
+alias xr_1440 'xrandr 2650x1440'
+alias xr4 'xrandr 1400x1050'
+alias xr5 'xrandr 1280x1024'
+alias xr6 'xrandr 1600x900'
+alias color_blue     'xtermset -bg darkblue      -fg white'
+alias color_green    'xtermset -bg forestgreen   -fg white'
+alias color_red      'xtermset -bg darkred       -fg white'
+alias color_magenta  'xtermset -bg magenta4      -fg white'
+alias color_black    'xtermset -bg black      -fg white'
+alias color_1        'xtermset -bg DarkSeaGreen4 -fg white'
+alias color_2        'xtermset -bg CadetBlue4    -fg white'
+alias color_3        'xtermset -bg coral4        -fg white'
+alias color_4        'xtermset -bg DarkOrchid4   -fg white'
+alias title          'xtermset -title'
+
+alias fix_vnc_1200 'xr_1200;killall plasmashell ; kstart5 plasmashell &'
+alias fix_vnc_1080 'xr_1080;killall plasmashell ; kstart5 plasmashell &'
+
+# ### Sles12 issues
+# ##############################################
+
+alias my_xlaunch 'cp ~ahaimovi/scripts/.xlaunch.cf ~/; perl /nfs/site/gen/adm/netbatch/ION/interactive/bin/xlaunch.pl'
+alias my_gallery '/nfs/iil/proj/mpg/cad_suse/em64t_linux26/gallery/latest/bin/gallery \!*' 
+
+# ### wash commands
+# ##############################################
+
+alias wash_lnc 'wash -n mpgall n3 i1278 sklall n3fe lionc tyc78 gsrall soc skl_rtl c2dgusers hdk7nmproc i1278proc cl_dev tyc78proc'
+
+
+# ### Gallery Checklist
+# ##############################################
+#setenv GALLERY_SKLPF /nfs/iil/proj/mpg/proc/data/gallery/sklpf/gallery_data/chklsts/
+#setenv GALLERY_SKL /nfs/iil/proj/mpg/proc/data/gallery/sklcore0b/gallery_data/chklsts/
+#setenv GALLERY_IVB /nfs/iil/proj/mpg/proc/data/gallery/ivbcore0c/gallery_data/chklsts/
+#setenv GALLERY_CNL /nfs/iil/proj/mpg/proc/data/gallery/cnlcore/gallery_data/chklsts/
+setenv GALLERY_SNC /nfs/iil/proj/mpg/proc/data/gallery/snc/gallery_data/chklsts/
+setenv GALLERY_GLC /nfs/iil/proj/mpg/proc/data/gallery/glc/gallery_data/chklsts/
+
+### chmod 775 for all the files
+### /p/mpg/proc/w/snassar/scripts/copyToCl.pl <source> <destination> 
+#alias gallery_cp2 '/p/mpg/proc/w/snassar/scripts/copyToCl.pl \!* /nfs/site/proj/mpg/proc/data/gallery/sklcore/gallery_data/chklsts/CDRF/; echo \"\!* copied to /nfs/site/proj/mpg/proc/data/gallery/sklcore/gallery_data/chklsts/CDRF/\"'
+alias gallery_cp '/p/mpg/proc/w/snassar/scripts/copyToCl.pl'
+alias gallery_rm '/p/mpg/proc/common2/proj_skill/2.0/gallery/bin/removeItem.pl \!*'
+
+#alias gal '/p/mpg/proc/cad/em64t_linux26/gallery/10.3.1/bin/gallery -b dbtry -p sklcore'
+## Gallery NOTE Template: /p/mpg/proc/data/gallery/sklcore/gallery_data/data/Notes/mco_template.txt
+
+
+if ( $?PROJ_FAMILY  ) then
+setenv GALLERY_DATA "/nfs/iil/proj/mpg/proc/data/gallery/${PROJECT}/gallery_data/chklsts/"
+#setenv rtl_latest_core_model "/p/cnl/rtl/models/core/core-${PROJ_FAMILY}-${STEP_DASH}-latest/core/fe/rtl/"
+endif
+
+
+
+###########CD#########
+######################
+alias sadl 'source /p/pert/cd/adl/central/docs/adl_uesetup_aliases'
+alias space '/nfs/iil/proj/pert/cd/common_tools/Space/Space.csh \!* &'
+alias jasper '/nfs/iil/proj/pertwork/work/users/edago/dist/jasper &'
+
+
+
+#########
+#########mock scripts
+#alias lnc_mock_csv /nfs/iil/disks/home01/gasheri/bin/mockdata/release/make_mock_table.pl $fub_name ./${fub_name}_${ip_proj}.csv /nfs/iil/stod/stod180/w.oarbely.101/par_fit_ww23_shrink_msroms_20ww24a/rtl_model_20ww24a_ifc_for_ebbs/${fub_name}.ifc ${ip_proj}
+
+###########Net Batch tools#########
+######################
+alias check_nbjobs 'nbqstat \!* -P sc8_express user=$USER'
+alias nbqstate 'nbqstat -j -P iil_short user=$USER ; nbqstat -j -P sc8_express user=$USER ; nbqstat -j -P iil_normal user=$USER ; nbqstat -j -P iil_express user=$USER'
+alias nb_remove 'echo "nbjob --target sc8_express remove Jobid==971483143"'
+alias hpctoolkit_status "/usr/intel/bin/hpctoolkit -d 0 -u \!:1&"
+alias nbstat_gui "/usr/intel/bin/hpctoolkit -d 0 -u $USER &"
+ 
+ 
+#  source /nfs/iil/disks/home12/gcohen6/dp_aliases
+# source ~/dp_aliases
+
+
+
+
+##########SIO##########
+########################
+
+if ( $?tech ) then 
+    if  ($tech == "1278.6"  ) then
+#         set run_corner="spec.max_high.ttttcmaxtttt_100.tttt"
+        set run_corner="func.max_high.ttttcmaxtttt_100.tttt"
+        alias set_hv_crnr 'set run_corner="func.max_high.ttttcmaxtttt_100.tttt";disp_run_corner'
+        alias set_med_crnr 'set run_corner="func.max_med.ttttcmaxtttt_100.tttt";disp_run_corner'
+        alias set_nom_crnr 'set run_corner="func.max_nom.ttttcmaxtttt_100.tttt";disp_run_corner'
+#         echo "tech is pnc"
+    else 
+        set run_corner="func.max_high.T_85.typical"
+        alias set_hv_crnr 'set run_corner="spec.max_high.T_85.typical";disp_run_corner'
+        alias set_med_crnr 'set run_corner="spec.max_med.T_85.typical";disp_run_corner'
+        alias set_nom_crnr 'set run_corner="spec.max_nom.T_85.typical";disp_run_corner'
+#         echo "tech is else"
+    endif
+endif
+alias disp_run_corner 'echo "Active scenraio for reporting is :$run_corner"'
+
+
+
+
+
+alias ssynal 'source ~/synopsis.aliases'
+alias maple '/p/hdk/cad/maple/latest/maple &'
+alias get_run_rtl 'grep "set ::CORE_ROOT " \!:1/runs/par_fe/${tech}/release/latest/fe_collateral/par_fe.hier_f.tcl'
+alias comprs      'sed -e '"'"'s/\[[0-9]*\]/\[\*\]/g'"'"' | sed -e '"'"'s/_[0-9]*_/_\*_/g'"'"'  '
+alias bus_compress_Full "sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*\//_*\//g' | sed -e 's/\[[0-9]*\]/\[*\]/g' | sed -e 's/\/d[0-9]/\/d*/g' | sed -e 's/\/D[0-9]/\/D*/g' "
+alias spec_compress "python /nfs/site/disks/home_user/baselibr/PNC_script/compress_ports.py"
+# alias loadptnb_cth 'nbq -P iil_express -Q /c2dg/BE_BC/lnc/sd/sles12_sd_64G_4C -C "SLES12SP5&&128G&&4C" /p/hdk/pu_tu/prd/fct_alias/rshahav_sbox/utils/load_session_cth.csh \!:1 -title \!:2'
+alias loadptnb_cth 'nbjob run  --class "SLES15SP4&&256G&&2C" --qslot bc15_gfc_fct --target sc8_express /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+alias loadptnb_cth_pnc 'nbjob run  --class "SLES12SP5&&256G&&2C" --qslot /c2dg/BE_BigCore/pnc/sd/sles12_sd --target sc8_express /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+alias loadptnb_cth_gfc 'nbjob run  --class "SLES15SP4&&350G&&4C" --qslot bc15_gfc_fct --target sc8_express /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+alias loadptnb_cth_1c 'nbjob run  --class "SLES15SP4&&256G&&1C" --qslot bc15_gfc_fct  --target sc8_express /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+alias loadptnb_cth_crt 'nbq run --target sc8_normal --qslot bc15_gfc_fct --class "SLES12&&2C&&96G" /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+
+
+alias n3setup '/p/hdk/bin/cth_psetup -proj lnc_n3_client/2021.12.16.a0 -cfg lncn3a0.cth -ward $my_stod -x '"'"'$SETUP_R2G -w \!:1 -b \!:2'"'"''
+alias pncsetup '/p/hdk/bin/cth_psetup -proj pnc_78_server/TS2023.3 -cfg pnc78servera0.cth  -ward $my_stod -x '"'"'$SETUP_R2G -w \!:1 -b \!:2'"'"''
+
+alias fcs 'nbjob run  --class "SLES12SP5&&128G&&2C" --qslot bc15_gfc_fct --target sc8_express Ifc_shell -B $block -F apr_fc -P -I -N -BG CadetBlue4'
+# alias BU 'set bu_path=`realpath ~gilkeren/lnc_links/latest_lnc0a_n3_bu_post`;set model_name=`basename $bu_path`; loadptnb_cth ~gilkeren/lnc_links/latest_lnc0a_n3_bu_post/runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/outputs/${MODEL_BLOCK}.pt_session.${run_corner}/ "latest BU: $model_name"'
+alias lncBU 'loadptnb_cth $FCT_MODEL/latest_lnc0a_n3_bu_postcts/runs/lnc_client/h169p45_80nm_tsmc_m18/sta_pt/func.max_turbo.T_85.typical/outputs/lnc_client.pt_session.func.max_turbo.T_85.typical/ Lnc_BU'
+alias BU 'loadptnb_cth $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/outputs/${MODEL_BLOCK}.pt_session.${run_corner}/ BU'
+alias nextBU 'set bu_path=`realpath $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts`;set model_name=`basename ${bu_path}`; loadptnb_cth $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/outputs/${MODEL_BLOCK}.pt_session.${run_corner}/ next_BU_${model_name}'
+# alias nextBU 'loadptnb_cth $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"`0a_1278_icore_bu_postcts/runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/outputs/${MODEL_BLOCK}.pt_session.${run_corner}/ nextBU'
+alias nextBUcr 'loadptnb_cth_crt $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/outputs/${MODEL_BLOCK}.pt_session.${run_corner}/ nextBU'
+alias BUtag 'm  $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/runs/${MODEL_BLOCK}/${tech}/sta_pt/scripts/user_fct_vars.tcl | g par_tags_ovr | sed -e '"'"'s/^.*ovr,/ /'"'"' | replace '"'"')'"'"' '"'"''"'"' | align'
+alias nextBUtag 'm  $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/runs/${MODEL_BLOCK}/${tech}/sta_pt/scripts/user_fct_vars.tcl | g par_tags_ovr | sed -e '"'"'s/^.*ovr,/ /'"'"' | replace '"'"')'"'"' '"'"''"'"' | align'
+# alias dBUtag 'm  $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"`0a_1278_icore_bu_postcts/runs/icorewab/${tech}/sta_pt/scripts/user_fct_vars.tcl | g par_tags_ovr | sed -e '"'"'s/^.*ovr,/ /'"'"' | replace '"'"')'"'"' '"'"''"'"' | align'
+alias dBU 'set mode=\!:1 ;set mn_mx=\!:2;set scenario=\!:3 ; set ww=`/usr/intel/bin/workweek -f WW%02IW.%w` ; loadptnb_cth_gfc $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/runs/icore/${tech}/sta_pt/${mode}.${mn_mx}_${scenario}.*/outputs//outputs/icore.pt_session.${mode}.${mn_mx}_${scenario}..pt_session.${mode}.${mn_mx}_${scenario}.*/ daily_BU_${block}_${ww}_${mode}_${mn_mx}_${scenario}'
+alias dcmBU 'set mode=\!:1 ;set mn_mx=\!:2;set scenario=\!:3 ; set ww=`/usr/intel/bin/workweek -f WW%02IW.%w` ; loadptnb_cth_gfc $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`*_${block}_bu_postcts/runs/${block}/${tech}/sta_pt/${mode}.${mn_mx}_${scenario}.*/outputs/${block}.pt_session.${mode}.${mn_mx}_${scenario}.*typical/ Latest_DCM_BU_${block}_${ww}_${mode}_${mn_mx}_${scenario}'
+alias dcmBUtag 'm  $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_${block}_bu_postcts/runs/${block}/${tech}/sta_pt/scripts/user_fct_vars.tcl | g par_tags_ovr | sed -e '"'"'s/^.*ovr,/ /'"'"' | replace '"'"')'"'"' '"'"''"'"' | align'
+alias ddcmBU 'set mode=\!:1 ;set mn_mx=\!:2;set scenario=\!:3 ; set ww=`/usr/intel/bin/workweek -f WW%02IW.%w` ; loadptnb_cth_gfc $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`*_${block}_bu_postcts/runs/${block}/${tech}/sta_pt/${mode}.${mn_mx}_${scenario}.*/outputs/${block}.pt_session.${mode}.${mn_mx}_${scenario}.*typical/ Daily_DCM_BU_${block}_${ww}_${mode}_${mn_mx}_${scenario}'
+alias ddcmBUtag 'm  $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_${block}_bu_postcts/runs/${block}/${tech}/sta_pt/scripts/user_fct_vars.tcl | g par_tags_ovr | sed -e '"'"'s/^.*ovr,/ /'"'"' | replace '"'"')'"'"' '"'"''"'"' | align'
+# alias lBU 'loadptnb_cth runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/outputs/${MODEL_BLOCK}.pt_session.${run_corner}/ Local_BU'
+
+# alias lBU 'set mode=\!:1 ;set mn_mx=\!:2;set scenario=\!:3 ; set ww=`/usr/intel/bin/workweek -f WW%02IW.%w` ; loadptnb_cth runs/${MODEL_BLOCK}/${tech}/sta_pt/${mode}.${mn_mx}_${scenario}.ttttc${mn_mx}tttt_100.tttt/outputs/${MODEL_BLOCK}.pt_session.${mode}.${mn_mx}_${scenario}.ttttc${mn_mx}tttt_100.tttt/ "local_${ww}_${mode}_${mn_mx}_${scenario}"'
+alias lBU 'set mode=\!:1 ;set mn_mx=\!:2;set scenario=\!:3 ; set ww=`/usr/intel/bin/workweek -f WW%02IW.%w` ; loadptnb_cth_gfc `realpath runs/${MODEL_BLOCK}/${tech}/sta_pt/${mode}.${mn_mx}_${scenario}.*/outputs/${MODEL_BLOCK}.pt_session.${mode}.${mn_mx}_${scenario}.*/` "local_${ww}_${mode}_${mn_mx}_${scenario}"'
+alias lBUcr 'loadptnb_cth_crt runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/outputs/${MODEL_BLOCK}.pt_session.${run_corner}/` Local_BU'
+alias lBUtag 'm  runs/${MODEL_BLOCK}/${tech}/sta_pt/scripts/user_fct_vars.tcl | g par_tags_ovr | sed -e '"'"'s/^.*ovr,/ /'"'"' | replace '"'"')'"'"' '"'"''"'"' | align'
+
+alias waicBU 'set bu_model=\!:1;loadptnb_cth_gfc $bu_model/runs/icore/${tech}/sta_pt/${run_corner}/outputs/icore.pt_session.${run_corner}/ BU_turbo_${bu_model}'
+alias wadcmBU 'set bu_model=\!:1;loadptnb_cth_gfc $bu_model/runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/outputs/${MODEL_BLOCK}.pt_session.${run_corner}/ DCM_${run_corner}_${bu_model}'
+alias waBUnom 'set bu_model=\!:1;loadptnb_cth_gfc $bu_model/runs/${MODEL_BLOCK}/${tech}/sta_pt/func.max_nom.T_85.typical/outputs/${MODEL_BLOCK}.pt_session.func.max_nom.T_85.typical/ BU_nom_${bu_model}'
+
+alias aligncsv '/p/mpg/proc/common2/da_utils/fct_skl42/bin//align.pl -id "," -od " "'
+
+######sio report handeling######
+
+alias create_carept_report 'set ww=`/usr/intel/bin/workweek -f WW%02IW.%w` ;grep "Port\|par_fe/\|par_msid" $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/runs/${MODEL_BLOCK}/${tech}/sta_pt/${run_corner}/logs/Port_Sum.report > Pars_port_sum_${ww}.report; echo "File created Pars_port_sum_${ww}.report"'
+
+
+#'/p/hdk/bin/cth_psetup -proj lnc_n3_client/2021.12.06 -cfg lncn3a0.cth -ward $my_stod -x '"'"'$SETUP_R2G -w \!:1 -b \!:2'"'"''
+alias open_ext_reports 'kate \!:1/runs/par_fe/${tech}/apr_fc/*\!:2*_*_reports/*reg*turbo.max.rpt'
+
+alias open_unit_reports 'kate \!:1/runs/par_fe/${tech}/apr_fc/*\!:3*_*_\!:2_reports/*turbo.max.rpt'
+
+alias sort_wns_w_head "awk \' NR == 1; NR > 1  {if ( \$4 < -29 ) print } \' "
+alias check_bu_recipe 'meld ~gilkeren/rep_fct_recipe_gfc.csh $my_stod/scripts/sio/my_fct_recipe_gfc.csh&'
+
+
+####### PT seisons
+alias fclTD 'set cur_proj=`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`;set title_name=`realpath $FCT_MODEL/latest_${cur_proj}*${block}_fcl | item -1 -d /`;loadptnb_cth_1c  `\ls -d $FCT_MODEL/latest_${cur_proj}*${block}_fcl/runs/${block}/${tech}/sta_pt/func.max_high.*/outputs/${block}.pt_session.func.max_high.*/| head -1` FCL_${title_name}'
+alias dfclTD 'set cur_proj=`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`;set title_name=`realpath $FCT_MODEL/daily_${cur_proj}*${block}_fcl | item -1 -d /`;loadptnb_cth_1c  `\ls -d $FCT_MODEL/daily_${cur_proj}*${block}_fcl/runs/${block}/${tech}/sta_pt/func.max_high.*/outputs/${block}.pt_session.func.max_high.*/| head -1` Daily_FCL_${title_name}'
+
+# alias Fe2beTD 'set title_name=`realpath $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_${block}_fe2be | item -1 -d /`;loadptnb_cth_1c  $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_${block}_fe2be/runs/${block}/${tech}/sta_pt/func.max_high.*/outputs/${block}.pt_session.func.max_high.*/ FE2BE_${title_name}'
+alias Fe2beTD 'set cur_proj=`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`;set title_name=`realpath $FCT_MODEL/latest_${cur_proj}*${block}_fe2be | item -1 -d /`;loadptnb_cth_1c  `\ls -d $FCT_MODEL/latest_${cur_proj}*${block}_fe2be/runs/${block}/${tech}/sta_pt/func.max_high.*/outputs/${block}.pt_session.func.max_high.*/| head -1` FE2BE_${title_name}'
+alias parPT 'set par=\!:1 ; loadptnb_cth_1c $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_icore_bu_postcts/runs/par_${par}/${tech}/sta_pt_${run_corner}/${run_corner}/outputs/par_${par}.pt_session.${run_corner}/ par_${par}' 
+alias nextparPT 'set par=\!:1 ; loadptnb_cth_1c $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_icore_bu_postcts/runs/par_${par}/${tech}/sta_pt_${run_corner}/${run_corner}/outputs/par_${par}.pt_session.${run_corner}/ par_${par}' 
+alias aparPT 'set par=\!:1 ;set tag=\!:2 ;set scenario=\!:3; loadptnb_cth_1c $PROJ_ARCHIVE/arc/${par}/sta_primetime/${tag}/${par}.pt_session.func.max_${scenario}.*/ ${par}_${scenario}_${tag}' 
+
+alias iotd    'set par=\!:1 ; m $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_${block}_fcl/runs/par_${par}/${tech}/release/latest/timing_collateral/func.max_high.*/par_${par}_io_constraints.tcl'
+alias iobu    'set par=\!:1 ; m $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_icore_bu_postcts/runs/par_${par}/${tech}/release/latest/timing_collateral/func.max_high.*/par_${par}_io_constraints.tcl'
+alias iotag    'set par=\!:1 ; m $PROJ_ARCHIVE/arc/par_${par}/sta_primetime/PNC78SERVERA0LATEST/timing_collateral/func.max_high.*/par_${par}_io_constraints.tcl'
+alias badio 'set par=\!:1 ; m $FCT_MODEL/latest_lnc0a_fcl/runs/lncserver/1276.31/sta_pt/${run_corner}/reports/par_${par}_bad_io.rpt'
+
+#####Specs and exeptions files #####
+# alias cospec 'set par=\!:1 ;cp -L $PROJ_ARCHIVE/arc/par_${par}/timing_specs/GOLDEN/par_${par}_spec*.csv ./ ; kate par_${par}*_spec*.csv '
+alias cospec 'set par=\!:1 ;meld  $PROJ_ARCHIVE/arc/par_${par}/timing_specs/GOLDEN/par_${par}_spec.csv /nfs/site/disks/ahaimovi_wa/scripts/sio/specs/`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"`/par_${par}_spec.csv & ;set par=\!:1 ;meld -n $PROJ_ARCHIVE/arc/par_${par}/timing_specs/GOLDEN/par_${par}_spec_ft.csv /nfs/site/disks/ahaimovi_wa/scripts/sio/specs/`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"`/par_${par}_spec_ft.csv & '
+alias coovr 'set par=\!:1 ;cp -L $PROJ_ARCHIVE/arc/${MODEL_BLOCK}/sio_timing_collateral/par_${par}_sio_ovr/par_${par}_sio_ovrs.tcl ./ ;chmod 775 ./par_${par}_sio_ovrs.tcl; kate par_${par}_*.tcl '
+alias covr 'set par=\!:1 ;cp -f runs/${MODEL_BLOCK}/$tech/sta_pt/scripts/spec/inputs/par* ./ ; chmod 775 ./par_${par}_sio_ovrs.tcl ;kate par_${par}_sio_ovrs.tcl'
+alias coiex 'set par=\!:1; cp -f $PROJ_ARCHIVE/arc/par_*/sio_timing_collateral/GOLDEN/par_${par}_internal_exceptions.tcl ./ ; kate par_${par}_internal_exceptions.tcl'
+alias cpovr2bu 'set par=\!:1; cp -f ./par_${par}_sio_ovrs.tcl runs/${MODEL_BLOCK}/${tech}/release/latest/sio_timing_collateral/include/'
+alias gspec  'grep -i \!:1 $PROJ_ARCHIVE/arc/par_*/timing_specs/GOLDEN/par_*_spec*.csv|awk -F/ '"'"'{ print $NF }'"'"' ;grep -H \!:1 $PROJ_ARCHIVE/arc/${block}/timing_specs/GOLDEN/dfx_spec.csv|awk -F/ '"'"'{ print $NF }'"'"' '
+alias govr  'grep -B1 \!:1 $PROJ_ARCHIVE/arc/par_*/sio_ovr/GOLDEN/par_*_sio_ovrs.tcl  |sed "'" s/\/nfs\/site\/.*GOLDEN\///"'" '
+
+alias ciex 'set par=\!:1 ; /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file par_${par}_internal_exceptions.tcl -par par_${par} -type internal_excep'
+alias cispec 'set par=\!:1 ; /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file par_${par}.tcl -par par_${par} -type spec'
+alias cift 'set par=\!:1 ; /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file par_${par}_ft.tcl -par par_${par} -type ft_spec'
+alias ciovr 'set par=\!:1 ; /nfs/site/disks/home17/baselibr/LNC_script/spec_ci_p4 -file par_${par}_sio_ovrs.tcl -par par_${par} -type bu_ovr'
+alias model_par_status 'source ~ahaimovi/scripts/sio/partition_spec_status.csh \!:1 \!:2 '
+######BU reports 
+
+
+###VRF0 Reports
+alias lvrf0 'm vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.0.rpt | awk -F '"'"'"'"'"' '"'"'{print  $4 " " $22" " $34}'"'"' |replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias lvrfint0 'm vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.0.rpt | awk -F '"'"'"'"'"' '"'"' {print  $2 " " $4 " " $14 " " $16}'"'"'| comprs | sort -u -k2,2 | sort -n|align| m'
+alias vrf0 'm $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.0.rpt | awk -F '"'"'"'"'"' '"'"'{print  $4 " " $22" " $34}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias vrfint0 'm $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.0.rpt | awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias nextvrf0 'm $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.0.rpt | awk -F '"'"'"'"'"' '"'"'{print $4 " " $22 " " $34}'"'"' |replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n| align|m'
+alias nextvrfint0 'm $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.0.rpt | awk -F '"'"'"'"'"' '"'"'{print $2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias dvrf0 'm $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.0.rpt | awk -F '"'"'"'"'"' '"'"'{print $4 " " $22 " " $34}'"'"' |replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n| align|m'
+alias dvrfint0 'm $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.0.rpt | awk -F '"'"'"'"'"' '"'"'{print $2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias dcmvrf0 'm $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_${block}_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.0.rpt | awk -F '"'"'"'"'"' '"'"'{print $4 " " $22 " " $34}'"'"' |replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n| align|m'
+alias dcmvrfint0 'm $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_${block}_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.0.rpt | awk -F '"'"'"'"'"' '"'"'{print $2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+
+###VRF30 Reports
+alias lvrf30 'm vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.30.rpt | awk -F '"'"'"'"'"' '"'"' {print  $2 " " $4 " " $34}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias lvrfint30 'm vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.30.rpt | awk -F '"'"'"'"'"' '"'"'{print  $2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias vrf30 'm $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.30.rpt | awk -F '"'"'"'"'"' '"'"'{print  $2 " " $4" " $34}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias vrfint30 'm $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.30.rpt | awk -F '"'"'"'"'"' '"'"'{print  $2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias nextvrf30 'm $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.30.rpt | awk -F '"'"'"'"'"' '"'"'{print $4 " " $22 " " $34}'"'"' |replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n| align|m'
+alias nextvrfint30 'm $FCT_MODEL/next_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.30.rpt | awk -F '"'"'"'"'"' '"'"'{$2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias dvrf30 'm $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.30.rpt | awk -F '"'"'"'"'"' '"'"'{print $4 " " $22 " " $34}'"'"' |replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n| align|m'
+alias dvrfint30 'm $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_icore_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.30.rpt | awk -F '"'"'"'"'"' '"'"'{print $2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias dcmvrf30 'm $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_${block}_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.ext.30.rpt | awk -F '"'"'"'"'"' '"'"'{print $4 " " $22 " " $34}'"'"' |replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n| align|m'
+alias dcmvrfint30 'm $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_${block}_bu_postcts/vrf_split_no_dfx/${run_corner}/par_\!:1/par_\!:1.int.30.rpt | awk -F '"'"'"'"'"' '"'"'{print $2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+
+alias vrfpors 'awk -F '"'"'"'"'"' '"'"'{print  $4 " " $34}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align| m'
+alias intvrfpors ' awk -F '"'"'"'"'"' '"'"'{print $2 " " $4 " " $14 " " $16}'"'"'|replace "icore1" "icore0" | comprs | sort -u -k2,2 | sort -n|align|m'
+
+
+alias fctxml ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'| replace icore1  icore0 |bus_compress_Full | awk '"'"'{if (a[$2" "$3]==0) {b[$2" "$3]=$1} ; a[$2" "$3] += $1 ; c[$2" "$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -nk 2 | awk '"'"'BEGIN {print "-WNS TNS Paths  startpoint  endpoint"} {print $1,$2,$3" "$4" "$5}'"'"' | column -t | m'
+alias fctxml_unco ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"' | awk '"'"'{if (a[$2" "$3]==0) {b[$2" "$3]=$1} ; a[$2" "$3] += $1 ; c[$2" "$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths  startpoint  endpoint"} {print $1,$2,$3" "$4" "$5}'"'"' | column -t | m'
+alias fctxml_start ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'| replace icore1  icore0|  bus_compress_Full | awk '"'"'{if (a[$2]==0) {b[$2]=$1} ; a[$2] += $1 ; c[$2] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -nk 1 | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint"} {print $1,$2,$3,$4}'"'"' | column -t | most'
+alias fctxml_end ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'| replace icore1  icore0|  bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1} ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -nk 1 | awk '"'"'BEGIN {print "-WNS TNS Paths endpoint"} {print $1,$2,$3,$4}'"'"' | column -t | most' 
+alias fctxml_port ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $22 " " $34}'"'"'|sort -nk1| replace icore1  icore0|bus_compress_Full | awk '"'"'{if (a[$3" "$NF]==0) {b[$3" "$NF]=$1} ; a[$3" "$NF] += $1 ; c[$3" "$NF] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint endpoint"} {print $1,$2,$3,$4,$5}'"'"' | column -t | m'
+alias fctxml_port_unco ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $22 " " $34}'"'"'| awk '"'"'{if (a[$3" "$NF]==0) {b[$3" "$NF]=$1} ; a[$3" "$NF] += $1 ; c[$3" "$NF] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint endpoint"} {print $1,$2,$3,$4,$5}'"'"' | column -t | m'
+alias fctxml_port_start ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $34}'"'"'|  replace icore1  icore0| bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1} ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint"} {print $1,$2,$3,$4}'"'"' | replace "{" "" "}" ""|column -t | most'
+alias fctxml_port_end ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $34}'"'"'| replace icore1  icore0|  bus_compress_Full | awk '"'"'{if (a[$NF]==0) {b[$NF]=$1} ; a[$NF] += $1 ; c[$NF] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths endpoint"} {print $1,$2,$3,$4}'"'"' | replace "{" "" "}" ""|column -t | most'
+#$FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`*_${block}_bu_postcts/runs/${block}/
+alias dcmxml 'set par=par_\!:1 ;cat $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_${block}_bu_postcts/vrf_split_no_dfx/${run_corner}/par_*/par_*.ext.0.rpt |grep $par| replace "icore1" "icore0"|sort -t '"'"'"'"'"' -nk4 | fctxml_port  |m'
+alias idcmxml 'set par=par_\!:1 ; cat $FCT_MODEL/daily_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_${block}_bu_postcts/vrf_split/${run_corner}/par_*/par_*.int.0.rpt |grep $par| replace "icore1" "icore0"|sort -t '"'"'"'"'"' -nk4 | fctxml |m'
+alias dcmxml10 'set par=par_\!:1 ;cat $FCT_MODEL/daily_`echo $PRODUCT_STEP | tr A-Z a-z |rev`_*_bu_postcts/vrf_split_no_dfx/${run_corner}/par_*/par_*.ext.10.rpt |grep $par| replace "icore1" "icore0"|sort -t '"'"'"'"'"' -nk4 | fctxml_port  |m'
+alias lfctxml 'set par=par_\!:1 ;cat vrf_split_no_dfx/${run_corner}/par_*/par_*.ext.0.rpt |grep $par| replace "icore1" "icore0"|sort -t '"'"'"'"'"' -nk4 | fctxml_port  |m'
+alias lfctxml10  'set par=par_\!:1 ;cat vrf_split_no_dfx/${run_corner}/par_*/par_*.ext.10.rpt |grep $par| replace "icore1" "icore0"|sort -t '"'"'"'"'"' -nk4 | fctxml_port  |m'
+alias ilfctxml  'set par=par_\!:1;cat vrf_split_no_dfx/${run_corner}/par_*/par_*.int.0.rpt |grep $par| replace "icore1" "icore0"|sort -t '"'"'"'"'"' -nk4 | fctxml  |m'
+alias ilfctxml_start  'set par=par_\!:1;cat vrf_split_no_dfx/${run_corner}/par_*/par_*.int.0.rpt |grep $par| replace "icore1" "icore0"|sort -t '"'"'"'"'"' -nk4 | fctxml_start  |m'
+alias ilfctxml_end  'set par=par_\!:1;cat vrf_split_no_dfx/${run_corner}/par_*/par_*.int.0.rpt |grep $par| replace "icore1" "icore0"|sort -t '"'"'"'"'"' -nk4 | fctxml_end |m'
+
+
+
+
+
+######BU server
+
+alias userspec  'm /nfs/iil/home/gilkeren/lnc_links/latest_lnc0a_n3_fcl/runs/${MODEL_BLOCK}/${tech}/sta_pt/inputs/${MODEL_BLOCK}.${run_corner}_timing_specs.xml'
+
+alias load_server 'source /nfs/iil/proj/lnl/pt_server/cth2_ptserver/cth2_ptserver_root/aliases_for_pt_client; set prompt= "%{\033[1;31m%}pt_server_shell> %{\033[0m%}" '
+alias bu_max_tur lnca0bmturt085_ai
+alias fcl_max_tur lnca0lmturt085_a
+alias claim_auto_fct_run  'stodfs chown --options "-R $USER" --path /nfs/site/disks/ahaimovi_wa/auto_fct'
+# #####SIO GUI scripts
+alias sio_ci_gui 'source ~baselibr/LNC_script/spec_ci_p4.gui'
+alias sio_asstool 'source $LNC_FCT_SCRIPTS/sio_assistance_tool.main '
+
+alias get_latest_par_tag 'set par=par_\!:1 ; ll $PROJ_ARCHIVE/arc/${par}/sta_primetime/ | grep `ll $PROJ_ARCHIVE/arc/${par}/sta_primetime/ | grep -e  "PNC.*LATEST\|GFC.*LATEST" | item -1| tail -1` | item -3 | grep -ve "PNC78.*LATEST" -ve "GFC.*LATEST" -ve SC8_VER -ve RV_R -ve GOLDEN'
+#alias draw_port_latest 'source /nfs/site/disks/home_user/baselibr/PNC_script/draw_ports_from_def.tcsh <port> <par> PNC78SERVERA0LATEST > temp.rpt &'
+# alias draw_port_latest 'source /nfs/site/disks/home_user/baselibr/PNC_script/draw_ports_from_def.tcsh \!:2 \!:1 PNC78SERVERA0LATEST > temp.rpt &; echo " X  Y" ;cat path.location'
+alias draw_port_latest 'source ~ahaimovi/scripts/sio/draw_ports_from_def.tcsh \!:2 \!:1  ${PROJECT_STEPPING}LATEST|tee  temp.rpt '
+
+#####Carpet
+# # alias run_local_carpet 'set ww=`/usr/intel/bin/workweek -f WW%02IW.%w` ;/nfs/site/disks/ayarokh_wa/tools/sio_mow/carpet.run -out_file par_fe_sio_mow.log  -pt_server_address \!:1 -pt_server_port \!:2 -new_file par_fe_port_tns -title "private par_fe_${ww}" -old $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"`0a_1278_${block}_bu_postcts/runs/${block}/1278.6/sta_pt/${run_corner}/logs/sio_mow_port_tns.csv&'
+alias run_local_carpet 'set ww=`/usr/intel/bin/workweek -f WW%02IW.%w` ;/nfs/site/disks/ayarokh_wa/tools/sio_mow/carpet.run -out_file par_fe_sio_mow.log  -pt_server_address \!:1 -pt_server_port \!:2 -new_file par_fe_port_tns -title "private par_fe_${ww}" -old $FCT_MODEL/latest_`echo $PROJECT |sed "'"s/^\(.\{3\}\).*/\1/"'"``echo $PRODUCT_STEP | tr A-Z a-z |rev`_1278_${block}_bu_postcts/runs/${block}/1278.6/sta_pt/${run_corner}/logs/sio_mow_port_tns.csv&'
+
+###### Release reports 
+alias dparslack 'set par=par_\!:1 ;m $FCT_MODEL/daily_`echo $PROJECT |cut -c 1-3``echo $PRODUCT_STEP | tr A-Z a-z |rev`*${block}_bu_postcts/partition_reports/func.max_high.*/${par}/*.slack.csv'
+alias gdparslack 'set pin=\!:1 ;echo "#Partition/port,dir,pre_par_pt_slack,post_par_pt_slack,fct_bu_slack" | cat -  $FCT_MODEL/daily_`echo $PROJECT |cut -c 1-3``echo $PRODUCT_STEP | tr A-Z a-z |rev`*${block}_bu_postcts/partition_reports/func.max_high.*/*/*.slack.csv | grep -h "#Partition\|$pin"'
+
+###Cadance
+alias cheetah_apr_innovus_nb 'set block=par_\!:1;nbjob run --target sc8_normal --class "SLES15SP4&&128G&&2C" --qslot bc15_gfc_fct  Icdns_shell -R apr_cdns -F apr_innovus --bg darkslateblue -P -I -N -A -B $block -stylus &'
+
+
+#####CALIBER
+alias caliber_open_duet_on_par 'set par=par_\!:1 ;intel_caliber -B  $block -F  intel_caliber -R intel_caliber_all --design $par --extract_parent_fc core_client --extract_parent_tag GFCN2CLIENTA0LATEST;intel_caliber_duet -B  $par -O all -R intel_caliber_all -runstage extractfc -duetmode gui'
+alias caliber_create_dashb_html "sed '/<br><u><b>Comments:<\/b><\/u>/{N;N;N;N;d;}' \!:1 > /nfs/site/disks/ahaimovi_wa/scripts/sio/caliber/summary_mail/gfca0/Dash_board_mail.html"
+
+
+setenv TZ Asia/Jerusalem
+
+
+
+#source /nfs/iil/proj/lnl/pt_server/cth2_ptserver/cth2_ptserver_root//aliases_for_pt_client
+# create the same for sourcing ~baselibr/LNC_script/Server/bu_max_turbo.aliases
+

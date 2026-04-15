@@ -1,0 +1,34 @@
+To: Knopp, Kristine
+Cc: Basel
+Subject: JNC TIP — 111 tp files ready + need pin locations from FC
+
+Hi Kristine,
+
+I converted all 109 GFC tp files to JNC (Intel 1278.6) and added your 2 JNC-only signals (dsbbundlevalidsm123h, jeloaduarreqcm805h) — 111 files total.
+
+What's done:
+  ✅ Metal layers → m15 (vert) / m16 (horiz)
+  ✅ Buffer cell → lib786_i0m_180h_50pp_ds1_ulvt/i0mbfn000qa1n36x5
+  ✅ NDR → m15_m16_2x_2w (with full routing rule widths/spacings)
+  ✅ Headers → NLIB, BUILD_DIR, CTH_SETUP from your TIP ward
+  ✅ Geometry (bbox%, origins, repeaters) scaled from GFC using
+     JNC/GFC partition bounding box ratios
+
+Files are at:
+  /nfs/site/disks/sunger_wa/fc_data/my_learns/tp_file_to_JNC/jnc_converted_scaled/
+
+Note on geometry accuracy:
+The scaling is approximate — I compared our scaled values against your 14 original
+tp files and see ~3-11% deviation in bbox_percentage (due to the non-rectangular
+partition shapes). The files should work as a starting point, but pin positions
+will be more accurate if extracted directly from FC.
+
+If you can spare 30 seconds in your FC session (with core_server.nlib open):
+
+  source /nfs/site/disks/sunger_wa/fc_data/my_learns/tp_file_to_JNC/extract_pin_locations.tcl
+
+This dumps all cross-partition pin locations to a CSV, and I'll update
+all 111 files with exact JNC coordinates.
+
+Thanks!
+Shachar

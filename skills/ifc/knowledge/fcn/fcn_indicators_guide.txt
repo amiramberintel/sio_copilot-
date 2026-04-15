@@ -1,0 +1,134 @@
+================================================================================
+  FCN INDICATORS GUIDE — How to Read Release Reports
+================================================================================
+
+=== OVERVIEW ===
+
+  FCN generates 3 key indicator tables comparing TST (new) vs REF (previous).
+  These are in: $WA/fcn_reports/csv_latest/*.compare.csv
+  Also sent in the release email (mail.html).
+
+================================================================================
+  INDICATOR 1: fdr_cnt (FDR Exception Counts)
+================================================================================
+
+  Columns:
+    part                    — Partition name
+    MODEL                   — TST (new run) or REF (reference run)
+    fdr_exceptions          — Number of FDR timing exceptions
+    arrays_mcp              — Multi-cycle path array count (should be 0)
+    fdr_exceptions_log_errors — Errors during FDR exception generation
+
+  What to check:
+    1. TST vs REF fdr_exceptions delta per partition
+       - Delta of 1-2 is normal (clock/IO tag changes)
+       - Delta > 5 = INVESTIGATE — something changed in synthesis
+    2. arrays_mcp should ALWAYS be 0
+    3. fdr_exceptions_log_errors should match between TST and REF
+
+  Example (WW14_4):
+    par_meu  TST  2003  vs  REF  2009  -> delta = -6 (TST has fewer = good)
+    par_pm   TST  343210 vs REF  343223 -> delta = -13 (par_pm always huge)
+
+  Root cause for deltas: Missing FDRs are typically in ssh_ijtag <-> ijtag_tck
+  paths — affected by clock tag changes.
+
+  FDR reports per partition:
+    runs/<PAR>/n2p_htall_conf4/apr_fc/reports/setup_timing2/<PAR>.fdr.rpt
+
+================================================================================
+  INDICATOR 2: seq_and_cell (Cell & Sequential Counts)
+================================================================================
+
+  Columns:
+    part       — Partition name
+    MODEL      — TST or REF
+    cdns_cell  — Cadence Genus total cell count
+    cdns_seq   — Cadence Genus sequential (FF) count
+    snps_cell  — Synopsys FC total cell count
+    snps_seq   — Synopsys FC sequential (FF) count
+    promote    — Which tool's netlist is promoted (always "cdns" for us)
+
+  What to check:
+    1. cdns_cell TST vs REF delta
+       - Small delta (<1%) = normal RTL/synthesis noise
+       - >1% delta = RTL change or synthesis option changed, investigate
+    2. cdns_seq should be very stable (FF count = design intent)
+       - Seq change means RTL change (new/removed registers)
+    3. cdns vs snps should be in same ballpark
+       - Large divergence means one tool is struggling
+
+  Example (WW14_4) — notable change:
+    par_meu TST: 1,773,284 cells vs REF: 1,827,494 = -54K (-3%)
+    par_meu TST: 405,517 seq   vs REF: 411,319    = -5.8K seq
+    -> Significant! Could be RTL change or synthesis mapping change
+
+  Why cdns is promoted over snps:
+    Cadence Genus generally produces better QoR (Quality of Results)
+    for this design. The "promote" column confirms which is used.
+
+================================================================================
+  INDICATOR 3: hips_cnt (Hard IP Instance Counts)
+================================================================================
+
+  Columns:
+    Block        — Partition name
+    MODEL        — TST or REF
+    hip_count    — HIPs found in synthesis output
+    rtl_hip_cnt  — HIPs expected from RTL model
+    xml_only     — HIPs in XML but not in RTL (should be 0)
+    rtl_only     — HIPs in RTL but not in XML (should be 0)
+
+  What to check:
+    1. hip_count should EQUAL rtl_hip_cnt
+    2. xml_only = 0 (no phantom HIPs)
+    3. rtl_only = 0 (no missing HIPs)
+
+  Known waivers:
+    par_msid: rtl_only=1 (known, accepted)
+
+  If xml_only or rtl_only > 0 (besides waivers):
+    -> Check hip_tags.xml for version mismatches
+    -> Run: fcn_xml_hips_vs_rtl_diff <HIP_TAG> <RTL_MODEL>
+
+================================================================================
+  OTHER REPORTS TO CHECK
+================================================================================
+
+  fcn_reports/run_check_latest/upf_diffs.log
+    -E- lines = UPF container differences between TST and REF
+    Expected: Some diffs when RTL changes (new power domains)
+    Action: Review each -E- line, confirm changes are intended
+
+  fcn_reports/run_check_latest/attribute_xml.log
+    -W- lines = Port attribute mismatches
+    Expected: Some warnings for power ports (vcccore, vss, etc.)
+    Action: Confirm extra ports are in updated attribute XML
+
+  fcn_reports/run_check_latest/rails_vs_upf.log
+    Power rail vs UPF consistency check
+    Should be clean
+
+  fcn_reports/run_check_latest/hips_insts_compare_only_with_diff.csv
+    Only shows HIPs that changed between TST and REF
+    Quick way to see what's different
+
+================================================================================
+  QUICK CHECK COMMANDS
+================================================================================
+
+  # View all indicators
+  cat $WA/fcn_reports/csv_latest/fdr_cnt.compare.csv
+  cat $WA/fcn_reports/csv_latest/seq_and_cell.compare.csv
+  cat $WA/fcn_reports/csv_latest/hips_cnt.compare.csv
+
+  # Check for errors (must be clean before commit)
+  grep -- "-E-" $WA/fcn_reports/run_check_latest/*
+  grep -- "-E-" $WA/fcn_reports/csv_latest/*
+  grep -- "-E-" $WA/fcn_promote.log
+
+  # Check for warnings (should be clean by end of project)
+  grep -- "-W-" $WA/fcn_reports/run_check_latest/*
+  grep -- "-W-" $WA/fcn_promote.log
+
+================================================================================

@@ -1,0 +1,457 @@
+================================================================================
+  CROSS-PARTITION TIMING PATH FIX GUIDELINE
+  A reference for timing closure techniques on paths crossing partition boundaries
+  Author: sunger | Date: Feb 25, 2026
+================================================================================
+
+OVERVIEW
+========
+Cross-partition paths (par_msid ↔ par_fe, par_msid ↔ par_be, etc.) are harder
+to close than internal paths because:
+  - Physical distance is large (hundreds of μm across the die)
+  - Buffer trees are needed for long wires (adds delay + area)
+  - Two different PnR teams own each side — no single owner can optimize end-to-end
+  - Partition boundary adds hierarchy overhead (ports, diodes, repeaters)
+
+This guide covers ALL techniques to fix cross-partition timing violations,
+ordered from easiest (no RTL change) to hardest (architecture change).
+
+
+================================================================================
+TECHNIQUE 1: CELL SIZING (PnR fix — no RTL change)
+================================================================================
+  What: Upsize weak cells in the path to stronger drive strengths
+  Where: Both sides of the partition boundary
+  
+  Examples:
+    INVD3 (LVT)  → INVD8 (ULVT)     — stronger drive + faster Vt
+    BUFFD2 (LVT) → BUFFD6 (ULVT)     — more current drive
+    D2 drive      → D6 or D8 drive    — standard upsizing
+  
+  When to use:
+    - Path has weak cells (D1, D2, D3) especially with LVT instead of ULVT
+    - Slack violation is small (-10 to -40ps)
+    - Buffer chain exists with room to upsize
+  
+  Typical gain: 2-5ps per cell upsized, 10-40ps total
+  Cost: Slightly more area and leakage power per upsized cell
+  Owner: PnR engineer (each partition owner sizes their own side)
+  
+  PT command to identify weak cells:
+    report_timing -nosplit -input_pins -nets -transition_time -capacitance
+
+
+================================================================================
+TECHNIQUE 2: BUFFER CHAIN OPTIMIZATION (PnR fix — no RTL change)
+================================================================================
+  What: Restructure the buffer/repeater chain between source and boundary
+  
+  Approaches:
+    a) Remove unnecessary buffers (reduce stages)
+    b) Replace SR2BFY (slow slew-rate) buffers with fast BUFF/INV
+    c) Add buffers where fanout is too high at a single point
+    d) Balance buffer chain (even spacing for optimal delay)
+  
+  When to use:
+    - Path has SR2BFY buffers (intentionally slow for SI) that may not be needed
+    - Buffer chain has uneven spacing (some long wires, some short)
+    - Too many buffer stages between source FF and boundary port
+  
+  Typical gain: 10-30ps per unnecessary buffer removed
+  Cost: May need SI (signal integrity) re-verification
+  Owner: PnR engineer
+
+
+================================================================================
+TECHNIQUE 3: PORT LOCATION OPTIMIZATION (PnR fix — no RTL change)
+================================================================================
+  What: Move the partition boundary port to a better physical location
+  
+  Approaches:
+    a) Move port closer to the source (reduces par_msid side delay)
+    b) Move port closer to the destination (reduces par_fe side delay)
+    c) Move port to minimize total wire length (sweet spot)
+  
+  When to use:
+    - Port is placed far from both source and destination
+    - One side has much more delay than the other (unbalanced)
+    - port_location_outside_bbox.csv shows port is far from optimal
+  
+  Typical gain: 10-50ps (depends on how far port moves)
+  Cost: May affect other paths through same port region
+  Owner: Integration/floorplan engineer
+  
+  Check current port location:
+    grep "port_name" $links/$model/runs/$block/$tech/sta_pt/func.max_high.*/reports/port_location_outside_bbox.csv
+
+
+================================================================================
+TECHNIQUE 4: PIN/PORT DUPLICATION (PnR + minor RTL change)
+================================================================================
+  What: Duplicate a partition boundary port to split fanout on the
+        receiving side
+  
+  BEFORE:
+    source → port_A → [534 sinks in par_fe]  (overloaded)
+  
+  AFTER:
+    source → port_A     → [267 sinks - group 1]
+          → port_A_dup  → [267 sinks - group 2]
+  
+  When to use:
+    - Boundary port has very high fos_count (>100 fanout sinks)
+    - Receiving partition has massive buffer tree to distribute the signal
+    - The enablestage102to103 case: fos_count=534, split into 2 ports
+  
+  Typical gain: 20-40ps (halves the buffer tree depth)
+  Cost: One extra port + routing, negligible area
+  Owner: Partition integration engineer (port definition) + design team (RTL)
+  
+  Example (from HSD): Duplicate enablestage102to103 port (MSID→FE) to split
+  fanout — one port drives IfqRdPtr FFs, other drives remaining FFs
+
+
+================================================================================
+TECHNIQUE 5: FF DUPLICATION (RTL change)
+================================================================================
+  What: Duplicate source flip-flops so internal paths and external paths
+        have separate FF copies with independent fanout
+  
+  BEFORE:
+                    ┌─→ internal par_msid logic
+    FF_reg/Q ───────┤
+                    └─→ buffer tree → boundary → par_fe (heavy load)
+  
+  AFTER:
+    FF_reg/Q ─────────→ internal par_msid logic ONLY (light load)
+    FF_dup_reg/Q ─────→ boundary → par_fe ONLY (placed near boundary)
+  
+  When to use:
+    - Source FF fans out to BOTH internal and external paths
+    - The combined fanout creates big buffer trees with slow repeaters
+    - Multiple paths from same FF group all fail (batch fix)
+    - Slack violation is medium-large (-50 to -120ps)
+  
+  Typical gain: 40-70ps (eliminates long-wire buffer chain)
+  Cost: ~2 μm² per duplicated FF, negligible power (often saves buffer power)
+  Owner: Design/RTL team (adds duplicate registers in RTL)
+  
+  Example (from HSD): Duplicate all M107H IFC FFs going to par_fe:
+    ILCycleValidM107H_reg, *FinalAttrM107H*, *FinalAttr2M107H*
+
+
+================================================================================
+TECHNIQUE 6: RETIMING — BORROW MARGIN FROM NEIGHBOR STAGES (RTL change)
+================================================================================
+  What: Move combinational logic across the FF boundary to borrow time
+        from a neighboring stage that has positive slack (margin).
+        NO new FFs are added — just redistributing logic between stages.
+  
+  BEFORE:
+    Stage A: FF_A → [light logic] → FF_B     (slack: +50ps, has margin!)
+    Stage B: FF_B → [heavy logic] → FF_C     (slack: -80ps, FAILS)
+  
+  AFTER (retiming — pull logic backward from B into A):
+    Stage A: FF_A → [light + some of B's logic] → FF_B  (slack: ~0ps, ok)
+    Stage B: FF_B → [remaining logic] → FF_C             (slack: ~-30ps, improved!)
+  
+  Key principle:
+    - Check slack of stage BEFORE the failing path (feeding into source FF)
+    - Check slack of stage AFTER the failing path (from endpoint FF onward)
+    - If either has positive slack = margin you can borrow
+    - Move logic from the tight stage into the stage with margin
+  
+  How to check neighbor slack in pt_shell:
+    # Stage before (what feeds into the source FF)
+    report_timing -to [get_pins <source_FF>/D] -max_paths 5
+    
+    # Stage after (where endpoint FF drives next)
+    report_timing -from [get_pins <endpoint_FF>/Q] -max_paths 5
+  
+  When to use:
+    - Neighbor stage has positive slack (margin available)
+    - Logic can be cleanly moved across FF boundary
+    - No feedback loops or shared signals prevent the move
+  
+  When NOT to use (too expensive):
+    - Both neighbor stages also have negative slack (nothing to borrow)
+    - Logic move requires adding FFs to maintain other paths
+    - Shared signals make it impossible to move logic for one path
+      without breaking other paths
+    - RTL change is too complex or risky
+  
+  Typical gain: Up to the neighbor's margin (e.g., neighbor has +50ps → can gain ~50ps)
+  Cost: RTL change, but NO new FFs — just logic redistribution
+  Owner: RTL/design team
+  
+  IMPORTANT: Always check both neighbors — sometimes combining retiming
+  with cell sizing (technique 1) is enough to close the path without
+  more invasive changes.
+
+
+================================================================================
+TECHNIQUE 7: PIPELINE STAGE INSERTION (RTL + architecture change — LAST RESORT)
+================================================================================
+  What: Add an extra pipeline stage (FF) in the middle of a long path
+        to split it into two shorter paths, each meeting timing
+  
+  BEFORE:
+    FF_M107H → [long combinational path] → FF_M108H  (1 cycle, fails)
+  
+  AFTER:
+    FF_M107H → [shorter path] → FF_M107.5H → [shorter path] → FF_M108H
+    (each half-path meets timing individually)
+  
+  When to use:
+    - Path is fundamentally too long for one clock cycle
+    - Slack violation is very large (>100ps, more than half the period)
+    - No amount of sizing/buffering can close the gap
+    - Retiming not possible (no margin in neighbors)
+    - Architecture allows adding latency (pipeline bubble acceptable)
+  
+  Typical gain: Splits path in half — effectively doubles the timing budget
+  Cost: +1 cycle latency, area for new pipeline stage FFs, HIGH RTL impact
+  Owner: Architect + RTL team (changes pipeline depth, affects all paths)
+  
+  WARNING: This changes cycle-level behavior — needs architecture approval
+           and may require changes to pipeline control logic.
+           This is the LAST RESORT — try all other techniques first.
+
+
+================================================================================
+TECHNIQUE 7b: CLOCK ADJUSTMENT / BORROWING (STA + PLL change)
+================================================================================
+  What: Adjust the clock relationship between partitions to give more
+        time to the cross-partition path
+  
+  Approaches:
+    a) Useful skew: intentionally skew destination clock later
+       → gives more setup time to cross-partition path
+       → but steals from the NEXT stage (check hold + next path)
+    
+    b) Multi-cycle path (MCP): if the path doesn't need to be 1-cycle,
+       declare it as 2-cycle or more in SDC constraints
+       → doubles/triples the timing budget
+       → requires design confirmation that data is sampled correctly
+    
+    c) Clock domain adjustment: move the boundary between clock domains
+       → e.g., if mclk_msid and mclk_fe have different insertion delays,
+         adjust the PLL phase to balance them
+  
+  When to use:
+    - Path is already close but clock skew is unfavorable
+    - Path is architecturally multi-cycle (data valid for 2+ cycles)
+    - Clock insertion delay difference is large between partitions
+  
+  Typical gain: Up to full clock period (186ps) for MCP declaration
+  Cost: Complexity — wrong MCP declaration causes silicon bugs
+  Owner: STA engineer (skew), architect (MCP), PLL team (phase)
+  
+  PT commands:
+    report_timing -from [source] -to [dest]   # check current clock relationship
+    set_multicycle_path 2 -from [source]       # declare 2-cycle (if confirmed)
+
+
+================================================================================
+TECHNIQUE 8: ADJUST PORT SPEC / BUDGET BETWEEN PARTITIONS (STA change)
+================================================================================
+  What: Change the timing spec (budget) allocated to a boundary port.
+        Each port has a spec that divides the total clock period between
+        the source and destination partitions. Adjusting it gives one side
+        more time at the expense of the other.
+  
+  Example:
+    Port spec = 24ps (source partition gets 24ps of the total budget)
+    Source side path delay = 38ps → fails by -14ps
+    Destination side has +30ps margin on its paths through this port
+    
+    Fix: Increase port spec to 40ps
+    → Source side now has 40ps budget → meets timing (+2ps margin)
+    → Destination side loses 16ps → still has +14ps margin → still meets
+  
+  BEFORE:
+    Source budget: 24ps | Source delay: 38ps | Source slack: -14ps
+    Dest budget:   162ps | Dest delay: 132ps | Dest slack: +30ps
+  
+  AFTER (spec changed to 40ps):
+    Source budget: 40ps | Source delay: 38ps | Source slack: +2ps  ✓
+    Dest budget:   146ps | Dest delay: 132ps | Dest slack: +14ps  ✓
+  
+  When to use:
+    - One side has margin while the other side is failing
+    - The spec was set conservatively or based on an older model
+    - Quick fix that doesn't require any RTL or PnR change
+    - Carpet data shows spec_port budget is tight vs the actual delay
+  
+  When NOT to use:
+    - Both sides are tight (no margin to redistribute)
+    - Moving spec would cause the other side to fail
+    - Port has many paths — changing spec affects ALL paths through it
+  
+  How to check:
+    - From carpet: compare calculated_slack on both sides of the port
+    - In PT: report_timing to the port (source side) AND from the port (dest side)
+    - If one side has margin, the spec can be shifted
+  
+  Typical gain: Variable — up to the margin available on the other side
+  Cost: LOW — just a spec/constraint change, no physical change
+  Owner: STA/timing team (updates SDC constraints or spec file)
+  
+  IMPORTANT: Changing spec affects ALL paths through that port.
+  Check all paths through the port before requesting a spec change.
+
+
+================================================================================
+TECHNIQUE 9: ASK PO TO PLACE FF IN BOUNDING BOX NEAR PIN (PnR constraint)
+================================================================================
+  What: Ask the Partition Owner (PO) of the receiving partition to add a
+        placement constraint that forces the endpoint FF near the boundary pin
+  
+  BEFORE:
+    boundary pin (1491K,199K) → buffer chain 265μm → endpoint FF (1507K,376K)
+    (FF is far from pin, needs long buffer chain = big delay)
+  
+  AFTER:
+    boundary pin (1491K,199K) → short wire → endpoint FF (nearby)
+    (FF placed in bounding box near pin, minimal buffer chain)
+  
+  How to request:
+    - Identify the boundary pin location from timing report
+    - Identify the endpoint FF and its current location
+    - Ask the PO of the receiving partition to add a placement bound/region
+      that constrains the FF (or its MBIT group) near the pin
+    - PO adds: create_bounds -name <name> -coordinate {x1 y1 x2 y2} <cells>
+  
+  When to use:
+    - The receiving partition side has large delay due to long wire
+    - Endpoint FF is physically far from the boundary pin
+    - The PO has placement flexibility (not congested near the pin)
+    - This is the FIRST thing to try for par_fe side delay
+  
+  Typical gain: 30-80ps (eliminates long buffer chain on receiving side)
+  Cost: Low — just a placement constraint, no RTL change
+  Owner: Partition Owner of the RECEIVING partition (e.g., par_fe PO)
+  
+  Example from this path:
+    Pin location:  (1491K, 199K)
+    FF location:   (1507K, 376K) — 177μm away!
+    Ask par_fe PO: place BrDispNotSignedM108H FFs near brdispnotsignedm107h pins
+
+
+================================================================================
+DECISION FLOWCHART: WHICH TECHNIQUE TO USE?
+================================================================================
+
+  Path fails timing across partition boundary
+  │
+  ├─ Slack > -40ps (small violation)?
+  │   ├─ YES → Try TECHNIQUE 1 (cell sizing) + TECHNIQUE 2 (buffer opt)
+  │   └─ NO ↓
+  │
+  ├─ Other side of port has margin (spec can be shifted)?
+  │   ├─ YES → Try TECHNIQUE 8 (adjust port spec budget) — quickest fix!
+  │   └─ NO ↓
+  │
+  ├─ Neighbor stage has positive slack (margin)?
+  │   ├─ YES → Try TECHNIQUE 6 (retiming — borrow margin, no new FFs)
+  │   │         Can combine with techniques 1-2 for remaining gap
+  │   └─ NO ↓
+  │
+  ├─ Endpoint FF far from boundary pin?
+  │   ├─ YES → Try TECHNIQUE 9 (ask PO to place FF near pin)
+  │   └─ NO ↓
+  │
+  ├─ Port has high fanout (fos_count > 100)?
+  │   ├─ YES → Try TECHNIQUE 4 (port duplication)
+  │   └─ NO ↓
+  │
+  ├─ Source FF fans out to both internal + external paths?
+  │   ├─ YES → Try TECHNIQUE 5 (FF duplication)
+  │   └─ NO ↓
+  │
+  ├─ Port location is far from optimal?
+  │   ├─ YES → Try TECHNIQUE 3 (port relocation)
+  │   └─ NO ↓
+  │
+  ├─ Path is architecturally multi-cycle?
+  │   ├─ YES → Try TECHNIQUE 7b (MCP declaration)
+  │   └─ NO ↓
+  │
+  ├─ Slack > -100ps (medium violation)?
+  │   ├─ YES → Combine TECHNIQUES 1-6, 8-9 above
+  │   └─ NO ↓
+  │
+  ├─ Path fundamentally too long for 1 cycle?
+  │   ├─ YES → Try TECHNIQUE 7 (pipeline stage insertion — LAST RESORT)
+  │   └─ NO ↓
+  │
+  └─ Still failing?
+      └─ Combine multiple techniques, escalate to architect
+
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+
+  #   Technique              Gain      Cost        RTL?  Owner
+  --- ---------------------- --------- ----------- ----- ---------------------
+  1   Cell sizing            10-40ps   Low         No    PnR engineer
+  2   Buffer optimization    10-30ps   Low         No    PnR engineer
+  3   Port relocation        10-50ps   Low-Med     No    Floorplan engineer
+  4   Port duplication       20-40ps   Low         Minor Integration + RTL
+  5   FF duplication         40-70ps   Low         Yes   RTL team
+  6   Retiming (borrow)      Variable  Medium      Yes   RTL team (no new FFs)
+  7   Pipeline insertion     ~1 period High        Yes   Architect + RTL (LAST RESORT)
+  7b  Clock adjustment       Variable  Med-High    No    STA/PLL team
+  8   Port spec adjustment   Variable  Low         No    STA/timing team
+  9   FF placement near pin  30-80ps   Low         No    Receiving partition PO
+
+  General rule: Try low-cost PnR/STA fixes first (1-3, 8-9), then escalate
+  to RTL changes (4-6), then architecture changes (7, 7b) only if needed.
+  ALWAYS check neighbor stage slack (technique 6) — retiming is free if
+  margin exists, and avoids adding any new FFs.
+
+
+================================================================================
+MAXIMUM RUN TIME LIMIT
+================================================================================
+  When analyzing a cross-partition timing path, the TOTAL analysis run time
+  must NOT exceed 5 minutes.
+
+  Rules:
+    - Set a strict 5-minute wall-clock limit for the entire path analysis
+    - If the analysis is not complete within 5 minutes, STOP and report
+      whatever findings are available so far
+    - Prioritize the most impactful checks first (decision flowchart order)
+      so that partial results are still useful
+    - Do NOT spend more than 5 minutes trying different techniques —
+      summarize progress, present findings, and let the user decide next steps
+
+  STAGE 0 — ANALYSIS ONLY (ALWAYS FIRST):
+    - The FIRST stage of any path investigation is ANALYSIS ONLY
+    - Do NOT try to solve or fix the path — just report what you see
+    - Report: path details, slack, failing cells, boundary ports, delays,
+      fanout, FF locations, neighbor stage slack, and any obvious issues
+    - Present the analysis to the user and STOP
+    - Let the user decide which fix technique to pursue based on the data
+    - Only after the user asks to fix/solve should you move to fix stages
+
+  INTERACTIVE CHECKPOINT RULE (MANDATORY):
+    - After completing EACH stage/technique of the analysis, STOP and
+      report the findings for that stage to the user
+    - ASK the user if they want to continue to the next stage before
+      proceeding
+    - Do NOT automatically chain multiple stages together — always pause
+      and get user confirmation between stages
+    - This prevents runaway analysis that runs for hours without feedback
+    - The user is in control: they decide when to stop or continue
+
+  Rationale: Long unfinished runs waste time. A partial answer delivered
+  in 5 minutes is more useful than a complete answer that never finishes.
+  Stopping at each stage keeps the user informed and in control.
+
+
+================================================================================
+  File: cross_partition_timing_fix_guideline.txt
+  Location: /nfs/site/disks/sunger_wa/fc_data/my_learns/
+================================================================================

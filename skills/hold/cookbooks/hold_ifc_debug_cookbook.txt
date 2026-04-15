@@ -1,0 +1,526 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  HOLD IFC DEBUG COOKBOOK                                                    ║
+║  Step-by-step methodology for debugging cross-partition hold violations     ║
+║                                                                            ║
+║  Script: /nfs/site/disks/sunger_wa/sio_scripts/debug_hold_ifc.py          ║
+║  Author: sunger / copilot                                                  ║
+║  Based on: DCU L1 Databank hold analysis (WW13), Alex PTECO WW12A run     ║
+║  Updated: WW13                                                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+TABLE OF CONTENTS
+─────────────────
+  1.  Overview — What is Hold IFC Debug?
+  2.  The 6-Step Debug Flow
+  3.  Data Sources (where to find what)
+  4.  Step 1: EXTRACT — Pull hold violations
+  5.  Step 2: CATEGORIZE — Rank by severity
+  6.  Step 3: CLOCK ANALYSIS — Skew + voltage scaling
+  7.  Step 4: BUDGET CHECK — Setup slack on same paths
+  8.  Step 5: FIX STRATEGY — What to recommend
+  9.  Step 6: IMPACT ESTIMATE — Quantify fix effectiveness
+  10. PTECO Integration — Using Alex's ECO data
+  11. Script Usage Reference
+  12. Real Example: DCU L1 Databank (par_meu)
+  13. Key Formulas & Rules of Thumb
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 1.  OVERVIEW — WHAT IS HOLD IFC DEBUG?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Hold violations on cross-partition (IFC) paths are the HARDEST timing
+  issues to close because:
+
+  • Each partition runs CTS independently — no coordination at boundary
+  • Hold = data must be STABLE after launch clock → needs DELAY
+  • But adding delay hurts setup → hold/setup tradeoff
+  • PTECO can insert hold buffers, but often fails due to density (L)
+    or timing too tight (T) at partition boundaries
+  • Clock skew between partitions is the #1 root cause
+
+  This cookbook captures the methodology used to debug the DCU L1
+  Databank hold issue (1,230 unfixable PTECO paths, par_pmh→par_meu)
+  and generalizes it into a repeatable flow.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2.  THE 6-STEP DEBUG FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                                                                     │
+  │  Step 1: EXTRACT                                                    │
+  │    Pull hold violations from ext_bottleneck.csv or PTECO report     │
+  │    Group by interface family (port name pattern)                    │
+  │                     ↓                                               │
+  │  Step 2: CATEGORIZE                                                 │
+  │    Rank by WNS (worst first), TNS, path count                      │
+  │    Identify cross-partition vs internal                             │
+  │    Flag which receiving partition owns the fix                      │
+  │                     ↓                                               │
+  │  Step 3: CLOCK ANALYSIS                                             │
+  │    For top interfaces: measure capture vs launch clock latency      │
+  │    Calculate clock skew at BOTH hold and setup corners              │
+  │    Compute voltage scaling ratio (min_low / max_high)              │
+  │                     ↓                                               │
+  │  Step 4: BUDGET CHECK                                               │
+  │    Check setup slack on the SAME paths                              │
+  │    Determine the hold+setup feasibility window:                     │
+  │      Can fix with buffer? (hold + setup >= 0)                       │
+  │      How much clock skew change is safe?                            │
+  │                     ↓                                               │
+  │  Step 5: FIX STRATEGY                                               │
+  │    Choose fix based on skew, budget, and leverage ratio:            │
+  │    • useful_skew on capture (immediate, par_meu PO)                │
+  │    • useful_skew on launch (par_pmh PO, no EP setup cost)          │
+  │    • ICG bypass/merge (if auto-inserted CG_RC found)               │
+  │    • CTS buffer reduction (if cclk_scaling > 3x)                   │
+  │    • SIO2PO departure bound (if clock fix insufficient)            │
+  │                     ↓                                               │
+  │  Step 6: IMPACT ESTIMATE                                            │
+  │    For each fix: how many paths close? what's the setup cost?       │
+  │    Build cumulative fix table                                       │
+  │                                                                     │
+  └─────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 3.  DATA SOURCES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  A. DAILY BUILD (primary — always available)
+     Path: <daily_wa>/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/reports/csv/
+
+     ext_bottleneck.csv
+       Columns: tag, num_paths, start, end, slack(WNS), tns, num_comp,
+                lclk_latency, cclk_latency, drv_par, rcv_par, port_regex
+       Tags: TST (current PO), REF (reference baseline)
+       → PRIMARY source for hold interface ranking
+
+     check_clk_latency.csv
+       Columns: tag, clk_name, avg_network_latency, avg_source_latency
+       → Average clock latency per partition clock (useful for sanity check)
+
+     timing_summary.xml.filtered.csv
+       → Individual worst paths with clock skew, latencies, manhattan distance
+       → Use for path-level detail on top violators
+
+  B. PTECO REPORT (when PTECO run available — from Alex or future runs)
+     Path: <pteco_wa>/runs/core_client/n2p_htall_conf4/pt_eco/reports/
+
+     core_client.path_margin_hold.eco.rpt
+       Pipe-delimited: Id | Worst_min_Slack | Best_max_Slack |
+                       ClkLatencyDiff | HoldTime | PathMargin |
+                       StartPoint | StartClock | EndPoint | EndClock
+       → DETAILED per-path data with BOTH hold AND setup slacks
+       → Much richer than ext_bottleneck (has setup budget per path)
+       → Current PTECO location (Alex WW12A run):
+         /nfs/site/disks/ayarokh_wa/pteco/runs/GFC/core_client_260315_ww11/
+         runs/core_client/n2p_htall_conf4/pt_eco/reports/
+
+     core_client.unfixable_hold_eco_tim.csv
+       → Per-path violation codes: L(area), T(tight), S(size), B(small),
+         V(dont_touch), W(DRC)
+       → Shows WHY PTECO couldn't fix each path
+
+  C. PT SERVER (optional — for detailed clock tree breakdown)
+     Client: /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/
+             cth2_ptserver_root/pt_client.pl
+     Models: modelb_gfcn2clienta0_bu_prp_<corner>
+     Usage:  sg soc -c "$PT_CLIENT -m <model> -c '<command>'"
+
+     Key commands:
+       report_timing -to <pin> -delay min -path_type full_clock_expanded
+         → Full clock tree detail with every ICG and CTS stage
+       report_timing -to <pin> -delay max
+         → Setup path for same endpoint
+       report_clock_timing -type latency -to <pin>
+         → Clock latency breakdown
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 4.  STEP 1: EXTRACT — Pull hold violations
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  AUTOMATED:
+    debug_hold_ifc.py --daily <daily_wa>
+
+  MANUAL:
+    cat <daily>/runs/.../sta_pt/func.min_low.T_85.typical/reports/csv/ext_bottleneck.csv
+
+  WHAT TO LOOK FOR:
+  - Each row = one interface family (port group between two partitions)
+  - WNS = worst negative slack (most negative = worst)
+  - TNS = total negative slack (largest magnitude = most paths affected)
+  - lclk = launch clock latency, cclk = capture clock latency
+  - skew = cclk - lclk (positive = capture AFTER launch = BAD for hold)
+
+  FROM PTECO:
+    The eco.rpt has per-PATH data (thousands of paths vs dozens of interfaces).
+    Use ext_bottleneck for the overview, PTECO for deep dive on specific groups.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 5.  STEP 2: CATEGORIZE — Rank by severity
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  RANKING CRITERIA (in order of importance):
+  1. WNS × path_count = "fix difficulty score" (worst × many = hardest)
+  2. TNS (total negative slack — measures total work needed)
+  3. WNS alone (severity of worst single path)
+  4. Path count (scale of the problem)
+
+  SEVERITY TIERS:
+    CRITICAL:  WNS < -50ps AND paths > 500    → needs clock tree work
+    HIGH:      WNS < -30ps AND paths > 100    → needs useful_skew + SIO2PO
+    MEDIUM:    WNS < -15ps OR paths > 50      → useful_skew may suffice
+    LOW:       WNS > -15ps AND paths < 50     → buffer insertion or ECO
+
+  CROSS-PARTITION vs INTERNAL:
+    Cross-partition (drv_par ≠ rcv_par): harder to fix, needs coordination
+    Internal (drv_par == rcv_par): easier, PO can fix independently
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 6.  STEP 3: CLOCK ANALYSIS — Skew + voltage scaling
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  FOR EACH TOP INTERFACE, EXTRACT:
+
+  A. Clock skew at hold corner (min_low):
+     skew = capture_clock_latency - launch_clock_latency
+     Available directly from ext_bottleneck.csv (cclk - lclk columns)
+
+  B. Clock skew at setup corner (max_high):
+     Same calculation from max_high ext_bottleneck
+     IMPORTANT: skew direction often FLIPS between corners!
+     (e.g., +191ps at min_low but -18ps at max_high)
+
+  C. Voltage scaling ratio:
+     cclk_scaling = cclk_min_low / cclk_max_high
+     lclk_scaling = lclk_min_low / lclk_max_high
+
+     WHAT IT TELLS YOU:
+     • Normal: 2.0-2.5x (typical CTS with 6-8 stages)
+     • High:   3.0-4.0x (too many CTS stages)
+     • Extreme: >4.0x (excessive stages, likely extra ICGs)
+
+     WHY IT MATTERS:
+     If cclk scales 4x and lclk scales 2x, then at min_low the
+     capture clock gets disproportionately slower → skew GROWS at
+     the exact corner where hold matters most.
+
+     THE LEVERAGE TRICK:
+     Removing 1 CTS buffer stage saves Nps at min_low but only N/4ps
+     at max_high. So you get 4x more hold benefit than setup cost!
+     This asymmetry is the KEY to fixing hold without destroying setup.
+
+  D. Deep dive (PT server):
+     For worst interface, query full clock tree with full_clock_expanded.
+     Count ICGs and CTS stages in both launch and capture paths.
+     Identify which ICGs are architectural vs auto-inserted (CG_RC).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 7.  STEP 4: BUDGET CHECK — Setup slack on same paths
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Any hold fix that reduces clock skew (or adds data delay) will
+  DEGRADE setup on the same paths. You need to know the budget.
+
+  FROM ext_bottleneck (same interface, max_high corner):
+    setup_wns = WNS from max_high ext_bottleneck for same interface
+    → This is the setup budget before your fix
+
+  FROM PTECO eco.rpt (per-path, much more detailed):
+    Each row has BOTH hold_slack (column 1) AND setup_slack (column 2)
+    → Can compute per-path: "fixable by buffer if hold + setup >= 0"
+    → Can find paths that fail BOTH hold AND setup (unfixable by clock)
+
+  KEY CALCULATIONS:
+
+    "Feasibility window" per path:
+      Need: hold_slack + fix_delta >= 0 (hold met after fix)
+      Need: setup_slack - fix_delta >= 0 (setup still met after fix)
+      → fix_delta must be between -hold_slack and setup_slack
+      → If -hold_slack > setup_slack: path CANNOT be fixed by skew alone
+
+    "Fix by buffer" paths: hold + setup >= 0
+      These paths have enough combined budget — adding delay on data path
+      fixes hold without violating setup.
+
+    "Fail both" paths: hold < 0 AND setup < 0
+      These paths have NO feasible operating point — need RTL retime
+      or clock domain change.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 8.  STEP 5: FIX STRATEGY — What to recommend
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  FIX OPTIONS (ordered by implementation ease):
+
+  ┌─── A. USEFUL SKEW on capture registers (rcv_par PO) ────────────────┐
+  │  WHAT: set_clock_latency -offset -Nps [get_pins */registers/CP]     │
+  │  EFFECT: CTS targets lower latency for these registers              │
+  │  HOLD: improves by N × (scaling_ratio) ps at min_low               │
+  │  SETUP: degrades by N / (scaling_ratio) ps at max_high             │
+  │  WHEN: First thing to try, always. Low risk.                        │
+  │  LIMIT: Don't exceed setup budget on same paths                     │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─── B. USEFUL SKEW on launch registers (drv_par PO) ─────────────────┐
+  │  WHAT: set_clock_latency -offset +Nps on launch partition's regs    │
+  │  EFFECT: Launch clock arrives LATER → data stable longer            │
+  │  HOLD: improves by N ps (direct)                                    │
+  │  SETUP: NO cost at endpoint (capture clock unchanged!)              │
+  │  SETUP RISK: only on drv_par INTERNAL paths into those launch regs  │
+  │  WHEN: Best option if drv_par has internal setup budget             │
+  │  LIMIT: Need drv_par PO cooperation                                 │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─── C. ICG BYPASS / MERGE (rcv_par PO + clock-arch) ─────────────────┐
+  │  WHAT: Remove or bypass auto-inserted ICGs (CG_RC_CG_HIER)         │
+  │  EFFECT: Reduces capture clock latency by ~20-25ps per ICG          │
+  │  HOLD: +20-25ps at min_low (huge win)                               │
+  │  SETUP: -5-7ps at max_high (moderate cost due to leverage)          │
+  │  WHEN: cclk_scaling > 3.5x AND PT shows CG_RC ICG in capture path  │
+  │  RISK: Increases power (gating disabled), need power team sign-off  │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─── D. CTS BUFFER REDUCTION (rcv_par PO) ────────────────────────────┐
+  │  WHAT: Constrain max_insertion_delay or reduce CTS stage count      │
+  │  EFFECT: Fewer buffer stages = lower latency                        │
+  │  HOLD: +15-20ps per stage removed at min_low                        │
+  │  SETUP: -4-6ps per stage at max_high                                │
+  │  WHEN: capture has >10 CTS stages (visible in scaling ratio)        │
+  │  RISK: DRC violations (transition, capacitance), need to verify     │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─── E. SIO2PO DEPARTURE BOUND (file HSD) ────────────────────────────┐
+  │  WHAT: Constrain drv_par to guarantee minimum data departure time   │
+  │  EFFECT: Forces data path delay increase at partition boundary      │
+  │  HOLD: direct improvement equal to departure bound increase         │
+  │  SETUP: direct cost equal to departure bound increase               │
+  │  WHEN: Clock fixes insufficient, need data path delay               │
+  │  PROCESS: File SIO2PO HSD, drv_par PO implements                   │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  DECISION TREE:
+
+    Is WNS < -50ps?
+    ├── YES → Clock tree work needed (C, D, then A+B)
+    │         Check cclk_scaling: if >3.5x → D first, then C
+    │         Also: B (launch skew) for no-cost hold gain
+    └── NO  → Is WNS < -20ps?
+              ├── YES → Combined A+B, consider E (SIO2PO)
+              └── NO  → A alone (useful skew) likely sufficient
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 9.  STEP 6: IMPACT ESTIMATE — Quantify fix effectiveness
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Build a FIX IMPACT TABLE:
+
+  For each proposed fix amount (5ps, 10ps, 15ps, etc.):
+    paths_fixed = count(paths where hold_slack + fix_amount >= 0)
+    paths_remaining = total - paths_fixed
+    setup_cost = fix_amount / leverage_ratio (at max_high)
+
+  Example (from DCU L1 analysis, OLD model):
+    +5ps:  692/1230 (56.3%) fixed, setup cost ~2ps
+    +10ps: 1051/1230 (85.4%), setup cost ~4ps
+    +15ps: 1177/1230 (95.7%), setup cost ~7ps
+
+  FROM PTECO DATA:
+    PTECO eco.rpt has individual path slacks → exact distribution.
+    Can compute exactly how many paths each skew change fixes.
+    This is MORE ACCURATE than estimating from ext_bottleneck WNS alone.
+
+  CUMULATIVE FIX PLAN:
+    Build a table showing each fix step cumulatively:
+    Step 1: useful_skew -10ps → WNS improvement, setup cost
+    Step 2: + ICG bypass      → additional WNS improvement
+    Step 3: + launch skew     → additional improvement
+    Total: WNS from -Xps to ~0 or positive
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 10.  PTECO INTEGRATION — Using Alex's ECO data
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Alex's PTECO run (WW12A) is the gold standard for unfixable path data:
+
+  LOCATION:
+    /nfs/site/disks/ayarokh_wa/pteco/runs/GFC/core_client_260315_ww11/
+    runs/core_client/n2p_htall_conf4/pt_eco/reports/
+
+  KEY FILES:
+    core_client.path_margin_hold.eco.rpt   — main report (pipe-delimited)
+    core_client.unfixable_hold_eco_tim.csv — violation codes per path
+
+  PTECO RUN PARAMETERS (from Alex's mail):
+    DCM: FCT26WW12A
+    External only, Physical aware, MIM (module-in-module)
+    Margins: Hold +5ps (fix target), Setup +5ps (no-degrade)
+    9 scenarios: 4 MAX + 5 MIN
+    Results: 39,389 buffers inserted, 55,186→1,867 hold paths
+    Runtime: 32 hours
+
+  HOW TO USE WITH debug_hold_ifc.py:
+    debug_hold_ifc.py --daily <daily> --pteco /nfs/site/disks/ayarokh_wa/\
+      pteco/runs/GFC/core_client_260315_ww11/runs/core_client/\
+      n2p_htall_conf4/pt_eco/reports --par par_meu
+
+  VIOLATION CODES (from PTECO):
+    L = Physical area limits lib cells (MBIT regions too dense)
+    T = Timing margin too tight (hold+setup window too small)
+    S = Cell sizing cannot fix
+    B = Delay improvement too small
+    V = Dont_touch attribute blocks ECO
+    W = Fix might degrade DRC violations
+
+  USING PTECO DATA FOR FIX ESTIMATION:
+    The eco.rpt has BOTH hold_slack AND setup_slack per path.
+    This lets you compute the EXACT feasibility window per path:
+    - "fix by buffer": hold + setup >= 0 → can add data delay
+    - "fail both": hold < 0 AND setup < 0 → needs RTL/clock change
+    - Distribution analysis: how many paths fix with Nps skew reduction
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 11.  SCRIPT USAGE REFERENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  SCRIPT: /nfs/site/disks/sunger_wa/sio_scripts/debug_hold_ifc.py
+
+  BASIC ANALYSIS:
+    debug_hold_ifc.py --daily /path/to/daily
+
+  SINGLE PARTITION:
+    debug_hold_ifc.py --daily /path/to/daily --par par_meu
+
+  WITH PTECO DATA:
+    debug_hold_ifc.py --daily /path/to/daily \
+      --pteco /path/to/pteco/reports --par par_meu
+
+  COMPARE TWO BUILDS:
+    debug_hold_ifc.py --compare /path/to/old /path/to/new --par par_meu
+
+  SAVE TO FILE:
+    debug_hold_ifc.py --daily /path/to/daily -o report.txt
+
+  ALL OPTIONS:
+    --daily <PATH>      Path to daily/BU build workspace
+    --par <NAME>        Filter by receiving partition
+    --pteco <PATH>      Path to PTECO reports directory
+    --compare OLD NEW   Compare two builds side by side
+    --top N             Show top N interfaces (default: 20)
+    --pt-query          Include PT server queries (slow)
+    --pt-model <NAME>   PT server model prefix override
+    -o, --output FILE   Save report to file
+    --no-color          Disable ANSI colors
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 12.  REAL EXAMPLE: DCU L1 DATABANK (par_meu)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  This example traces the actual debug of the worst hold interface:
+  par_pmh/DcL1RdDataIntM408H → par_meu/WSBDataArrayMnnnH
+
+  Step 1 EXTRACT:
+    From ext_bottleneck.csv (min_low):
+      3,149 paths, WNS=-111ps, TNS=-168,794ps
+      lclk=142ps, cclk=333ps → skew=+191ps
+
+  Step 2 CATEGORIZE:
+    CRITICAL: WNS < -50 AND paths > 500 ✓
+    Cross-partition: par_pmh → par_meu ✓
+    This is the #1 worst hold interface in the entire design
+
+  Step 3 CLOCK ANALYSIS:
+    At min_low: capture=333ps, launch=142ps, skew=+191ps
+    At max_high: capture=73ps, launch=91ps, skew=-18ps
+    cclk_scaling = 333/73 = 4.56x (EXTREME — normal is 2.0-2.5x)
+    Capture clock has 3 ICGs + 12 CTS stages (from PT server query)
+    Launch has only 2 ICGs + 6 CTS stages
+
+  Step 4 BUDGET CHECK:
+    From PTECO eco.rpt: 1,230 unfixable paths
+    Setup worst: -12.5ps (already failing!)
+    184 paths fail BOTH hold AND setup (15%)
+    698 paths fixable by buffer alone (56.7%)
+
+  Step 5 FIX STRATEGY:
+    Combined approach needed (WNS=-111ps, CRITICAL tier):
+    A. Useful skew -10ps on capture → +30-40ps hold, -5-7ps setup
+    B. Launch skew +15ps on par_pmh → +15ps hold, 0ps EP setup cost
+    C. Bypass CG_RC_CG_HIER ICG → +22ps hold, -7ps setup
+    D. CTS buffer reduction (12→9) → +45ps hold, -12ps setup
+
+  Step 6 IMPACT ESTIMATE:
+    Fix table from PTECO data (1,230 paths):
+      +5ps:  56.3% fixed     +20ps: 99.0% fixed
+      +10ps: 85.4% fixed     +30ps: 100% fixed
+    Combined fix (A+B+C+D) = ~100ps total → all paths fixed
+    Setup cost: ~24ps at max_high (from -52 → -76ps)
+
+  REPORTS GENERATED:
+    ww13_3/dcu_l1_databank_hold_analysis.txt  — 728-line analysis
+    ww13_3/par_meu_clock_fix_for_dcu_l1_hold.txt — 475-line clock fix guide
+    ww13_3/path13_RSIsI2VM303H_hold_analysis.txt — 167-line PT path detail
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 13.  KEY FORMULAS & RULES OF THUMB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  HOLD SLACK EQUATION:
+    hold_slack = data_arrival - data_required
+    data_arrival = launch_clock_latency + Tck2q + data_path_delay
+    data_required = capture_clock_latency + hold_time + uncertainty
+
+    → hold_slack = (data_delay + launch_lat) - (capture_lat + hold_time + uncert)
+    → POSITIVE skew (capture late) HURTS hold
+    → MORE data path delay HELPS hold
+
+  SETUP SLACK EQUATION:
+    setup_slack = data_required - data_arrival
+    → POSITIVE skew (capture late) HELPS setup
+    → MORE data path delay HURTS setup
+    → Hold and setup are OPPOSITE in their clock skew preference
+
+  VOLTAGE SCALING LEVERAGE:
+    leverage = cclk_scaling / lclk_scaling
+    If leverage = 3x: removing 1 CTS stage from capture saves
+      3ps hold per 1ps setup cost → very efficient tradeoff
+
+  BUFFER INSERTION FEASIBILITY:
+    If hold_slack + setup_slack >= 0 → feasible
+    Optimal delay to add = -hold_slack (exactly fixes hold)
+    Remaining setup margin = setup_slack + hold_slack
+
+  USEFUL SKEW SIZING:
+    Safe capture-side skew = min(10ps, |setup_wns / 2|)
+    Launch-side skew = no EP setup limit (check drv_par internal)
+    Combined: capture(-10ps) + launch(+15ps) = ~25ps total
+
+  CTS STAGE ESTIMATION:
+    Typical CTS buffer: ~15-25ps at min_low, ~5-7ps at max_high
+    Typical ICG: ~20-30ps at min_low, ~7-10ps at max_high
+    If cclk_scaling > 3.5x → likely 2+ extra ICGs or 4+ extra CTS stages
+
+  HOLD FIX PRIORITY:
+    Buffer insertion is EASY (PTECO can do it for internal paths)
+    Clock tree changes are HARD but fix MANY paths at once
+    SIO2PO is SLOW (HSD process) but forces drv_par cooperation
+    RTL retime is LAST RESORT (arch change, next stepping)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ END OF COOKBOOK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

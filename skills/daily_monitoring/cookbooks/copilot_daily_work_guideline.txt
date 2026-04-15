@@ -1,0 +1,663 @@
+
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║     COPILOT DAILY WORK GUIDELINE — GFC CLIENT A0 TIMING CLOSURE           ║
+  ║     Master reference for all cookbooks, scripts, and tools                 ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Last updated: 2026-03-23
+  Author: sunger + Copilot
+
+  ════════════════════════════════════════════════════════════════════════════════
+  TABLE OF CONTENTS
+  ════════════════════════════════════════════════════════════════════════════════
+
+  1. PROJECT CONTEXT
+  2. KEY PATHS & ENVIRONMENT
+  3. DAILY WORKFLOW (step-by-step)
+  4. TOOL REFERENCE — SCRIPTS
+  5. TOOL REFERENCE — COOKBOOKS
+  6. TOOL REFERENCE — PT_CLIENT (live queries)
+  7. TOOL REFERENCE — ALIASES
+  8. REFERENCE FILES (learning docs)
+  9. COMMON TASKS & WHICH TOOL TO USE
+  10. PARTITION LIST & OWNERS
+
+  ════════════════════════════════════════════════════════════════════════════════
+  1. PROJECT CONTEXT
+  ════════════════════════════════════════════════════════════════════════════════
+
+  Project      : GFC Client A0 (Granite Falls Client)
+  Process      : TSMC N2P
+  Frequency    : 5.4 GHz (mclk period = 186ps)
+  Partitions   : 11 (par_meu, par_ooo_int, par_ooo_vec, par_exe, par_fe,
+                      par_pmh, par_mlc, par_fmav0, par_fmav1, par_msid, par_pm)
+  STA Tool     : PrimeTime (Synopsys)
+  P&R Tool     : ICC2 (Synopsys)
+  Corners      : func.max_high.T_85.typical (worst setup)
+                 func.min_low.T_85.typical  (worst hold)
+  Key metric   : SIO WNS (cross-partition interface slack)
+
+  ════════════════════════════════════════════════════════════════════════════════
+  2. KEY PATHS & ENVIRONMENT
+  ════════════════════════════════════════════════════════════════════════════════
+
+  SCRIPTS (executable, add to PATH):
+    /nfs/site/disks/sunger_wa/sio_scripts/
+      run_daily_update.py              — automated daily pipeline
+      check_daily_vs_po.py             — daily vs PO version comparison
+      check_spec_vs_constraints.py     — spec CSV vs io_constraints gap analysis
+
+  COOKBOOKS:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/
+
+  LEARNING / REFERENCE:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/
+
+  OUTPUT (weekly work dirs):
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/ww<WW>_<day>/
+
+  DAILY BUILDS:
+    /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_*
+
+  RELEASE BUILDS:
+    /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_*
+
+  PO WORKSPACES (per partition owner):
+    /nfs/site/disks/mfeldma1_wa/gfc/par_meu_ww*/
+    (varies per partition — check manifests)
+
+  ARC (spec CSVs, manifests):
+    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<par>/timing_specs/GFCN2CLIENTA0LATEST/
+    /nfs/site/disks/gfc_n2_client_arc_transaction_*/
+
+  PT SERVER (live queries):
+    /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl
+
+  ALIASES:
+    /nfs/site/disks/sunger_wa/fc_data/my_learns/my.aliases
+
+  ════════════════════════════════════════════════════════════════════════════════
+  3. DAILY WORKFLOW (step-by-step)
+  ════════════════════════════════════════════════════════════════════════════════
+
+  When a new daily build arrives, follow this sequence:
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  STEP 0: IDENTIFY THE NEW DAILY BUILD                                     │
+  │                                                                           │
+  │  ls -ltr /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_*     │
+  │  → pick the latest *_dcm_daily-CLK*.bu_postcts                           │
+  │                                                                           │
+  │  Cookbook: daily_update_cookbook.txt (Step 0)                               │
+  └─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  STEP 1: AUTOMATED DAILY UPDATE (recommended)                             │
+  │                                                                           │
+  │  cd /nfs/site/disks/sunger_wa/fc_data/my_learns                          │
+  │  /nfs/site/disks/sunger_wa/sio_scripts/run_daily_update.py               │
+  │                                                                           │
+  │  This runs Steps 1-7 automatically:                                       │
+  │    • Creates ww<WW>_<day>/ output directory                              │
+  │    • Generates par_*_status.txt for all 11 partitions                    │
+  │    • Generates diff vs previous build                                     │
+  │    • Runs version comparison (daily vs PO)                               │
+  │                                                                           │
+  │  Script: sio_scripts/run_daily_update.py                                  │
+  │  README: sio_scripts/README_run_daily_update.txt                          │
+  │  Cookbook: daily_update_cookbook.txt (full manual steps)                    │
+  └─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  STEP 2: CHECK SPEC vs CONSTRAINTS                                        │
+  │                                                                           │
+  │  /nfs/site/disks/sunger_wa/sio_scripts/check_spec_vs_constraints.py \    │
+  │     --par all                                                             │
+  │                                                                           │
+  │  Shows per-partition:                                                      │
+  │    ✓ Spec + constraint exist (OK)                                        │
+  │    ✗ Spec exists, NO delay (REAL GAP — unconstrained!)                   │
+  │    ? Spec, port not in model (bus mismatch / new RTL)                    │
+  │    FAILING: gap ports that are also failing in IFC                       │
+  │                                                                           │
+  │  For single partition detail with bit-level WNS:                         │
+  │    check_spec_vs_constraints.py --par par_meu                            │
+  │                                                                           │
+  │  Script: sio_scripts/check_spec_vs_constraints.py                         │
+  │  README: sio_scripts/README_check_spec_vs_constraints.txt                 │
+  │  Cookbook: spec_status_cookbook.txt                                         │
+  └─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  STEP 3: INVESTIGATE WORST SIGNALS (as needed)                            │
+  │                                                                           │
+  │  For cross-partition failing paths:                                        │
+  │    → cross_partition_debug_playbook.txt (5-min checklist)                 │
+  │    → cross_partition_debug_with_pt_client_cookbook.txt (live PT queries)   │
+  │                                                                           │
+  │  For timing fix techniques:                                               │
+  │    → master_timing_fix_cookbook.txt (Mode 1-8, Techniques C/E/D/R)        │
+  │    → cross_partition_timing_fix_guideline.txt (Techniques 1-6)           │
+  │    → icc2_eco_fix_cookbook.txt (cell sizing, Vt swap ECOs)               │
+  │                                                                           │
+  │  For live PT queries:                                                      │
+  │    → Section 6 below (PT_CLIENT reference)                               │
+  └─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  STEP 4: COMPARE TST vs REF (when comparing two models)                  │
+  │                                                                           │
+  │  → compare_tst_ref_cookbook.txt                                           │
+  │    Generates: ifc_tst_vs_ref.txt, deepdive, combined_analysis            │
+  │                                                                           │
+  │  → check_daily_vs_po.py (version comparison)                             │
+  │    Shows which partitions are DAILY_AHEAD / DAILY_BEHIND / MATCH         │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ════════════════════════════════════════════════════════════════════════════════
+  4. TOOL REFERENCE — SCRIPTS
+  ════════════════════════════════════════════════════════════════════════════════
+
+  All scripts in: /nfs/site/disks/sunger_wa/sio_scripts/
+  All are executable (chmod +x, shebang #!/usr/bin/env python3)
+
+  ─── run_daily_update.py ──────────────────────────────────────────────────────
+
+  PURPOSE: Automate the entire daily update flow (Steps 0-7 of cookbook)
+
+  USAGE:
+    ./run_daily_update.py                      # auto-detect latest daily
+    ./run_daily_update.py --tag ww13_2         # custom output dir name
+    ./run_daily_update.py --dry-run            # preview without executing
+
+  WHAT IT DOES:
+    1. Finds the latest daily build automatically
+    2. Creates output directory (ww<WW>_<day>/)
+    3. Copies par_status.py from daily, patches it
+    4. Generates par_*_status.txt for all 11 partitions
+    5. Generates diff vs previous output
+    6. Runs check_daily_vs_po.py for version comparison
+    7. Prints executive summary
+
+  OUTPUT FILES:
+    ww<WW>_<day>/par_meu_status.txt
+    ww<WW>_<day>/par_ooo_int_status.txt
+    ...  (11 files)
+    ww<WW>_<day>/diff_report.txt
+    ww<WW>_<day>/version_check.txt
+
+  README: sio_scripts/README_run_daily_update.txt
+
+  ─── check_daily_vs_po.py ────────────────────────────────────────────────────
+
+  PURPOSE: Compare daily build vs PO (partition owner) workspace versions
+
+  USAGE:
+    ./check_daily_vs_po.py                     # auto-detect latest daily
+    ./check_daily_vs_po.py --daily /path/to/daily
+    ./check_daily_vs_po.py -o report.txt       # save to file
+
+  WHAT IT SHOWS:
+    Per partition: daily VER_NNN vs PO LATEST VER_NNN
+    Status: MATCH / DAILY_AHEAD / DAILY_BEHIND
+
+  WHY IT MATTERS:
+    If daily is behind PO → fixes exist but aren't in the daily yet
+    If daily matches PO → what you see is what PO delivered
+
+  README: sio_scripts/README_check_daily_vs_po.txt
+
+  ─── check_spec_vs_constraints.py ────────────────────────────────────────────
+
+  PURPOSE: Find gaps between SIO spec budgets and io_constraints.tcl
+
+  USAGE:
+    ./check_spec_vs_constraints.py --par par_meu       # single partition
+    ./check_spec_vs_constraints.py --par all            # all partitions summary
+    ./check_spec_vs_constraints.py --par par_meu --use-po  # check PO workspace
+    ./check_spec_vs_constraints.py --par par_meu -o report.txt
+
+  WHAT IT CHECKS:
+    Spec CSV (par_*_spec.csv from arc LATEST):
+      - Contains port names, spec budgets (ps), clock, direction
+    io_constraints.tcl (from daily FCL or PO):
+      - Contains set_load, set_output_delay, set_input_delay
+    IFC report (par_*_ifc.rpt from daily):
+      - Contains WNS per port from chip-level STA
+
+  OUTPUT CATEGORIES:
+    ✓ Spec + constraint exist   → working correctly
+    ✗ Spec, NO delay            → REAL GAP (PO can't optimize this path!)
+    ? Spec, port not in model   → bus mismatch or new RTL
+    FAILING & UNCONSTRAINED     → gap ports with negative WNS in IFC
+
+  HOW THE FLOW WORKS:
+    par_*_spec.csv ──▶ FCT model gen ──▶ io_constraints.tcl ──▶ PO STA (PT)
+    (spec budget)      (by ayarokh)     (set_output_delay)     (times path)
+
+    set_load ALONE = PT knows cap, but has NO timing target
+    set_output_delay = PT creates budget → reports violations → optimizes
+
+  COMMON FINDING:
+    io_constraints.tcl not regenerated after spec CSV update
+    → new specs exist but PO never sees them → ports are UNCONSTRAINED
+
+  README: sio_scripts/README_check_spec_vs_constraints.txt
+
+  ════════════════════════════════════════════════════════════════════════════════
+  5. TOOL REFERENCE — COOKBOOKS
+  ════════════════════════════════════════════════════════════════════════════════
+
+  All cookbooks in: /nfs/site/disks/sunger_wa/fc_data/my_learns/cookbooks/
+
+  ─── DAILY WORK ───────────────────────────────────────────────────────────────
+
+  daily_update_cookbook.txt
+    Full manual procedure for daily build analysis (Steps 0-7e)
+    Use when: run_daily_update.py isn't enough, need manual control
+
+  par_status_cookbook.txt
+    Per-partition health: IFC WNS, HSD cross-reference, fix status
+    Categories: UNTRACKED, FIX_PENDING, FIX_LANDED, CLEAN
+
+  par_status_diff_cookbook.txt
+    Compare two par_status reports: what improved, regressed, new, closed
+
+  spec_status_cookbook.txt
+    Manual procedure for spec vs io_constraints gap check
+    (Now automated by check_spec_vs_constraints.py)
+
+  ─── DEBUG & ANALYSIS ─────────────────────────────────────────────────────────
+
+  cross_partition_debug_playbook.txt
+    THE MAIN DEBUG TOOL — 5-min interactive checklist
+    Stage 0: analyze (extract path, identify partitions, flag contributors)
+    Stage 1-5: progressive debug & fix
+    USE: When analyzing any failing cross-partition path
+
+  cross_partition_debug_with_pt_client_cookbook.txt
+    Live PrimeTime debugging via pt_client.pl (no PT GUI needed)
+    USE: When you need instant timing answers (5-10 sec per query)
+
+  path_analysis_procedure.txt
+    Manual PrimeTime report_timing decoding reference
+    Includes: coordinate conversion (DBU→μm), Vt/drive mapping, cell delays
+
+  ─── TIMING FIXES ─────────────────────────────────────────────────────────────
+
+  master_timing_fix_cookbook.txt
+    MASTER REFERENCE for ALL fix techniques
+    Mode 1: ECO (cell sizing, Vt swap)
+    Mode 2: ECO + Clock (push clock edges)
+    Mode 3: SIO2PO (rebalance budgets)
+    Mode 4: Physical (TIP, buffer chains)
+    Mode 5: RTL changes
+    Mode 8: All techniques combined
+    Techniques: C1-C7 (cell), E1-E3 (clock), D1-D7 (SIO), R1-R5 (RTL)
+
+  cross_partition_timing_fix_guideline.txt
+    Ordered techniques easiest → hardest:
+    1. Cell sizing (D1→D8)
+    2. Buffer chain optimization
+    3. Vt swaps (ULVT, ULVTLL)
+    4. Insert/remove buffers
+    5. Push clock
+    6. FF duplication
+    7. RTL architecture changes
+
+  icc2_eco_fix_cookbook.txt / .sh
+    ICC2 ECO commands: size_cell, change_cell, route_eco
+    USE: When you have a specific fix to apply in P&R
+
+  ─── MODEL COMPARISON ─────────────────────────────────────────────────────────
+
+  compare_tst_ref_cookbook.txt
+    Compare two BU models (TST vs REF): IFC diff, signal-by-signal
+    Generates: ifc_tst_vs_ref.txt, deepdive, combined_analysis
+
+  rtl_model_compare_cookbook.txt / .sh
+    Compare RTL between two models: find which RTL4BE fixes landed
+
+  lvt_ulvt_ulvtll_analysis_cookbook.txt
+    VT distribution analysis: leakage vs timing tradeoff
+
+  ─── RISK & TRACKING ──────────────────────────────────────────────────────────
+
+  sio_risk_assessment_cookbook.txt
+    Project-wide risk categorization:
+    NO_SOLUTION | HIGH_RISK | MEDIUM_RISK | NO_RISK
+
+  ─── TIP / TOPOLOGY ──────────────────────────────────────────────────────────
+
+  TIP_tp_creation_cookbook.txt
+    Creating .tp files for cross-partition signal routing
+    Defines: nodes, edges, repeaters, RTLFP plan
+
+  ─── UTILITIES ────────────────────────────────────────────────────────────────
+
+  clean_home_dir_cookbook.txt
+    Home directory cleanup when disk is full
+
+  pt_client_cookbook.txt / .sh
+    Setup and usage of pt_client.pl (live PT server)
+
+  ════════════════════════════════════════════════════════════════════════════════
+  6. TOOL REFERENCE — PT_CLIENT (live timing queries)
+  ════════════════════════════════════════════════════════════════════════════════
+
+  The pt_client.pl tool sends PrimeTime commands to a live server.
+  Results in 5-10 seconds (vs 2+ hours to open PT GUI).
+
+  SETUP:
+    source /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/aliases_for_pt_client
+
+  ALIASES (after setup):
+    pt  '<command>'     → worst setup corner (func.max_high.T_85.typical)
+    pth '<command>'     → worst hold corner  (func.min_low.T_85.typical)
+
+  DIRECT USAGE:
+    sg soc -c "/nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/pt_client.pl \
+      -m latest_gfcn2clienta0_bu_prp_func.max_high.T_85.typical \
+      -c '<PT_COMMAND>'"
+
+  COMMON QUERIES:
+
+    Report timing through a port:
+      pt 'report_timing -through [get_pins icore0/par_meu/<portname>] -max_paths 3'
+
+    Report timing from FF to FF:
+      pt 'report_timing -from [get_pins icore0/par_meu/<startFF>/CP] \
+          -to [get_pins icore0/par_fmav1/<endFF>/D] -max_paths 1'
+
+    Check if port is constrained:
+      pt 'report_port [get_ports icore0/par_meu/<portname>]'
+
+    Get clock latency:
+      pt 'report_clock_timing -type latency [get_clocks mclk_meu]'
+
+    Check path groups:
+      pt 'report_timing -path_group <group> -max_paths 5'
+
+  IMPORTANT:
+    • Always use icore0/ prefix for cell/pin paths
+    • Use get_pins for internal pins, get_ports for top-level ports
+    • Escape brackets: \[0\] or use {portname[0]}
+    • Read-only tool — cannot apply ECOs
+
+  COOKBOOK: cross_partition_debug_with_pt_client_cookbook.txt
+  TOOL REF: pt_client_cookbook.txt
+
+  ════════════════════════════════════════════════════════════════════════════════
+  7. TOOL REFERENCE — ALIASES
+  ════════════════════════════════════════════════════════════════════════════════
+
+  File: /nfs/site/disks/sunger_wa/fc_data/my_learns/my.aliases
+
+  KEY ALIASES:
+    l          → less -S (side-scroll viewer)
+    ll         → ls -ltr --color
+    align      → ~baselibr/bin/align.pl (column alignment)
+    strip      → tr -s ' ' (compress spaces)
+    PVT        → view pvt.tcl for current model
+    fctxml     → parse FCT timing_specs.xml
+    fct_xls    → list timing report spreadsheets
+
+  COLLECTIONS (from other team members):
+    aliases/ahaimovi_aliases
+    aliases/baselibr_aliases
+    aliases/hmuhsen_aliases
+    aliases/mburak_aliases
+    aliases/sunger_aliases
+
+  ════════════════════════════════════════════════════════════════════════════════
+  8. REFERENCE FILES (learning docs)
+  ════════════════════════════════════════════════════════════════════════════════
+
+  All in: /nfs/site/disks/sunger_wa/fc_data/my_learns/
+
+  ─── GENERAL TIMING CONCEPTS ──────────────────────────────────────────────────
+
+  pvt_tcl_overview.txt
+    PVT configuration: voltage rails, scenario naming, RC corners, temperature
+    Scenario format: <mode>.<voltage>.<temp>.<rc_corner>
+    Vt types: ULVT (fastest) > LVT > SVT (slowest)
+    Drive strengths: D1 (weakest) < D2 < D3 < D6 < D8 (strongest)
+
+  path_analysis_procedure.txt
+    PrimeTime report decoding: DBU→nm (÷1000), DBU→μm (÷1,000,000)
+    Typical N2P cell delays: INV 2-15ps, BUFF 4-25ps, clk-to-Q 12-18ps
+
+  sta_primetime_GOLDEN_file_reference.txt
+    File structure of a PrimeTime GOLDEN release (72GB, 5880 files)
+    Key dirs: clock_collateral, constraints_mapping, fe_collateral
+
+  FC_VCLP_explanation.txt
+    Voltage Corner Limit Point analysis: where timing passes/fails vs voltage
+
+  SPEF_explanation.txt
+    Parasitic data format: R (resistance), C (capacitance), Cc (coupling)
+    RC delay: time = 0.693 × R × C
+
+  global_mbist_constraints_summary.txt
+    MBIST timing exceptions: multicycle_path for BISR clock mux
+
+  ─── PARTITION-SPECIFIC ANALYSIS ──────────────────────────────────────────────
+
+  par_exe_unconstrained_reports_explanation.txt
+    par_exe: 247 unconstrained output ports (missing set_output_delay)
+
+  par_exe_unconstrained_without_waiver_detailed.txt
+    Detailed breakdown: rsvec (144), spec (32), MI2 (17), etc.
+
+  par_msid_RTL_issues_unconstrained.txt
+    par_msid: 54 port direction mismatches, 434 no driving cell
+
+  par_msid_unconstrained_endpoints_analysis.txt
+    par_msid: 370 unconstrained outputs by signal family
+
+  par_msid_unconstrained_signals_report.txt
+    par_msid: 820 total (370 no output_delay + 450 no input_delay)
+
+  in_flight_valid_brM112H_ff_duplication_proposal.txt
+    Fix proposal: FF duplication for brM112H (par_msid→par_fe, -61ps)
+
+  ─── TOOL REFERENCES ──────────────────────────────────────────────────────────
+
+  eouMGR_command_summary.txt
+    Archive tool: --block, --bundle, --tag, --populate, --force
+
+  contour_tag_summary.txt
+    Contour meta-tagging: symlink → versioned archive dir
+
+  ════════════════════════════════════════════════════════════════════════════════
+  9. COMMON TASKS & WHICH TOOL TO USE
+  ════════════════════════════════════════════════════════════════════════════════
+
+  ┌────────────────────────────────────────────┬────────────────────────────────┐
+  │ TASK                                       │ TOOL / COOKBOOK                │
+  ├────────────────────────────────────────────┼────────────────────────────────┤
+  │ New daily build arrived                    │ run_daily_update.py            │
+  │ Compare daily vs PO versions               │ check_daily_vs_po.py           │
+  │ Check spec-to-constraint coverage          │ check_spec_vs_constraints.py   │
+  │ Analyze a failing cross-partition path     │ cross_partition_debug_playbook  │
+  │ Query live PT for timing                   │ pt_client.pl (Section 6)       │
+  │ Find the right fix technique               │ master_timing_fix_cookbook      │
+  │ Apply ECO fix in ICC2                      │ icc2_eco_fix_cookbook           │
+  │ Compare two daily builds                   │ par_status_diff_cookbook        │
+  │ Compare two BU models (TST vs REF)         │ compare_tst_ref_cookbook        │
+  │ Check which RTL fixes landed               │ rtl_model_compare_cookbook      │
+  │ Assess project-wide risk                   │ sio_risk_assessment_cookbook    │
+  │ Check VT distribution / leakage            │ lvt_ulvt_analysis_cookbook      │
+  │ Create TIP topology plan                   │ TIP_tp_creation_cookbook        │
+  │ Understand par_status categories           │ par_status_cookbook             │
+  │ Understand PVT / corners / Vt              │ pvt_tcl_overview.txt           │
+  │ Decode PrimeTime report_timing             │ path_analysis_procedure.txt    │
+  │ Understand SPEF parasitic data             │ SPEF_explanation.txt           │
+  │ Archive / eouMGR usage                     │ eouMGR_command_summary.txt     │
+  │ Clean home dir when full                   │ clean_home_dir_cookbook         │
+  └────────────────────────────────────────────┴────────────────────────────────┘
+
+  ════════════════════════════════════════════════════════════════════════════════
+  10. PARTITION LIST & KEY DATA LOCATIONS
+  ════════════════════════════════════════════════════════════════════════════════
+
+  For each partition, these files exist in the daily build:
+
+  IFC report:
+    <daily>/par_<name>_ifc.rpt
+
+  IO constraints (from FCL):
+    <daily>/fcl/runs/<par>/n2p_htall_conf4/release/latest/
+      timing_collateral/func.max_high.T_85.typical/<par>_io_constraints.tcl
+
+  Spec CSV (from arc LATEST):
+    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<par>/
+      timing_specs/GFCN2CLIENTA0LATEST/<par>_spec.csv
+
+  Spec manifest (version, user, date):
+    /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<par>/
+      timing_specs/GFCN2CLIENTA0LATEST/<par>.timing_specs.manifest.gz
+
+  BU-level timing_specs.xml:
+    <daily>/runs/core_client/n2p_htall_conf4/sta_pt/
+      func.max_high.T_85.typical/inputs/
+      core_client.func.max_high.T_85.typical_timing_specs.xml
+
+  SIO MOW CSV (all ports with slack):
+    <daily>/runs/core_client/n2p_htall_conf4/sta_pt/
+      func.max_high.T_85.typical/logs/sio_mow_port_tns.csv
+
+  STA session (for pt_client):
+    <daily>/runs/core_client/n2p_htall_conf4/sta_pt/
+      func.max_high.T_85.typical/outputs/
+      core_client.pt_session.func.max_high.T_85.typical
+
+  ════════════════════════════════════════════════════════════════════════════════
+  11. GIL'S COPILOT TOOLS (gilkeren)
+  ════════════════════════════════════════════════════════════════════════════════
+
+  Location: /nfs/site/disks/gilkeren_wa/copilot/
+  Cookbooks: /nfs/site/disks/gilkeren_wa/copilot/cookbook/  (6 markdown guides)
+  Scripts:   /nfs/site/disks/gilkeren_wa/copilot/scripts/  (8 scripts)
+  Data:      /nfs/site/disks/gilkeren_wa/copilot/buffer_cell_database_all_corners.csv
+
+  ─── COOKBOOKS (Gil) ──────────────────────────────────────────────────────────
+
+  external_path_spec_analysis.md
+    Parse .ext.0.rpt XML files to find per-partition spec budget misses
+    Key: blocks_impacted = "{icore0/par_meu(130.35,21.0)}" → data_delay vs spec
+    Overshoot = data_delay - spec → MISS if positive
+    Generates CSV: all_partitions_ext_spec_misses.csv
+
+  hold_path_fixability_analysis.md
+    Given a hold-violating endpoint, check setup slack at EVERY point
+    along the path across 8 corners (4 hold + 4 setup)
+    Determines: FIXABLE (room for delay) or UNFIXABLE (setup-limited)
+    Shows per-corner validation (critical: a fix at one corner may fail another)
+
+  pt_server_query.md
+    Comprehensive PT server reference (more detailed than our pt_client_cookbook)
+    Key additions:
+    • Model naming: modelb/modela/latest/prev × bu_prp/fcl × corner
+    • Alias convention: gfcn2clienta0bm/bn/lm + corner + _b/_a/0
+    • Server status page: file://sc8-samba...report.html
+    • Gotchas: \r in output, no curly brace filters, no source command
+    • MBIT registers use D1/D2 not D
+    • report_delay_calculation for per-net RC
+
+  sta_corner_monitoring.md
+    Monitor PrimeTime STA corner run progress
+    Done check: "Thank you for using pt_shell!" in PT log
+    Current stage: proc_time.log (completed stages) + PT log tail (live activity)
+    Runtime breakdown: -fct_reports dominates (51%), update_timing (29%)
+    Nworst XML generation = 70% of gen_sta_report time
+
+  net_and_cell_analysis.md
+    Net routing analysis: metal layers, wire length, RC, delay
+    Buffer cell database: all buffer/delay cells with per-corner delays
+    Partition input constraint checker (inside PT session)
+    Feedthrough path analysis workflow
+
+  timing_report_compression.md
+    Compress timing XML (61MB → 0.1MB, 99.9% reduction)
+    Simplifies register names, deduplicates by SP/EP, adds TNS
+    Optional PBA detailed timing from PT server
+    TNS vs WNS prioritization for fix impact
+
+  ─── SCRIPTS (Gil) ────────────────────────────────────────────────────────────
+
+  hold_analysis_with_fixes.sh  (679 lines, latest Mar 22)
+    THE MAIN HOLD FIX TOOL
+    USAGE: hold_analysis_with_fixes.sh <endpoint_pin> <buffer_db_csv>
+    Shows: hold/setup slack table across 8 corners
+    Recommends: smallest delay cell (LVT only) that fixes ALL corners
+    Validates: per-corner independently (hold fix + setup cost)
+    Uses: buffer_cell_database_all_corners.csv
+    Output: FIXABLE/UNFIXABLE verdict + cell recommendation
+
+  hold_analysis.sh  (253 lines)
+    Basic version: hold/setup slack table across 8 corners, no fix recommendation
+    USAGE: hold_analysis.sh <endpoint_pin>
+
+  net_analysis.sh  (278 lines)
+    Analyze net routing: metal layers, wire length, RC parasitics, delay
+    USAGE: net_analysis.sh <pin_name> [corner]
+    Parses DEF file (streaming awk for 200M+ lines)
+    Shows: layer usage, per-load delay, R/C summary
+
+  compress_timing_rpt.py  (335 lines)
+    Compress timing XML into summary + optional PBA detail
+    USAGE: compress_timing_rpt.py <input.rpt> [output.rpt] [--pba] [--slack N]
+    61MB → 0.1MB reduction, dedup by SP/EP pair
+
+  buffer_cell_database.tcl  (270 lines)
+    Generate buffer cell delay database (run inside PT session)
+    USAGE (in PT): source .../buffer_cell_database.tcl; build_buffer_database
+    Covers: BUFF*, INV*, CKB*, CKN*, DCCK*, DEL[A-G]*
+
+  check_partition_inputs.tcl  (366 lines)
+    Check all partition input pins for constraint status (inside PT)
+    USAGE (in PT): source .../check_partition_inputs.tcl; check_partition_inputs
+    Output: CSV with status: CONSTRAINED/UNCONSTRAINED/CLOCK/SKIPPED_NO_SINK
+
+  merge_buffer_database.sh  (113 lines)
+    Merge per-corner buffer databases into single CSV
+    Output: buffer_cell_database_all_corners.csv (1008 cells × 26 corners)
+
+  sta_corner_monitor.sh  (119 lines)
+    Quick STA corner status: DONE/RUNNING, runtime, current stage
+    USAGE: sta_corner_monitor.sh [work_area_path]
+
+  ─── BUFFER CELL DATABASE ─────────────────────────────────────────────────────
+
+  File: /nfs/site/disks/gilkeren_wa/copilot/buffer_cell_database_all_corners.csv
+  Size: 1008 cells × 26 PVT corners
+  Contains: ref_name, func, type, vt_class, drive_strength, instance_count,
+            + average delay (ps) per corner
+  Used by: hold_analysis_with_fixes.sh for fix recommendation
+  Corners: func.max_high/med/nom/low, func.max_turbo, func.max_slow*,
+           func.min_high/low/nom/turbo, fresh.min_fast/fast_cold/hvqk/slow*
+
+  ─── WHEN TO USE GIL'S TOOLS ─────────────────────────────────────────────────
+
+  ┌────────────────────────────────────────────┬────────────────────────────────┐
+  │ TASK                                       │ GIL'S TOOL                    │
+  ├────────────────────────────────────────────┼────────────────────────────────┤
+  │ Hold violation → find fix cell             │ hold_analysis_with_fixes.sh   │
+  │ Hold violation → just see slack table      │ hold_analysis.sh              │
+  │ Check net routing / RC / metal layers      │ net_analysis.sh               │
+  │ Compress huge timing XML for review        │ compress_timing_rpt.py        │
+  │ Check which partition inputs unconstrained │ check_partition_inputs.tcl    │
+  │ Monitor STA corner run progress            │ sta_corner_monitor.sh         │
+  │ Spec budget miss per partition (ext paths) │ external_path_spec_analysis   │
+  │ PT server aliases & model naming           │ pt_server_query.md            │
+  │ Per-corner buffer cell delays              │ buffer_cell_database_all*.csv │
+  └────────────────────────────────────────────┴────────────────────────────────┘
+
+  ═══════════════════════════════════════════════════════════════════════════════
+  END OF GUIDELINE
+  ═══════════════════════════════════════════════════════════════════════════════

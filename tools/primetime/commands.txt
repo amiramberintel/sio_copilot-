@@ -1,0 +1,48 @@
+# PrimeTime -- Command Reference
+
+# --- TIMING REPORTS ---
+report_timing -through <path> -max_paths N
+report_timing -from <start> -to <end>
+report_timing -from <start> -to <end> -pba_mode path
+report_timing -through <signal> -path_type full_clock_expanded
+report_timing -group <clock> -max_paths N -nworst N
+
+# --- TIMING PATH OBJECTS ---
+get_timing_paths -through <signal> -max_paths N
+get_timing_paths -from <start> -to <end> -nworst N
+get_attribute [get_timing_paths ...] slack
+get_attribute [get_timing_paths ...] startpoint
+get_attribute [get_timing_paths ...] endpoint
+
+# --- CELL QUERIES ---
+get_cells <pattern>
+get_attribute [get_cells <cell>] ref_name
+get_attribute [get_cells <cell>] threshold_voltage_group
+get_attribute [get_cells <cell>] area
+get_attribute [get_cells <cell>] is_sequential
+sizeof_collection [get_cells <pattern>]
+
+# --- NET QUERIES ---
+get_nets <pattern>
+get_attribute [get_nets <net>] total_capacitance
+get_attribute [get_nets <net>] wire_capacitance
+get_fanout -from [get_pins <pin>]
+
+# --- PIN QUERIES ---
+get_pins <pattern>
+get_attribute [get_pins <pin>] actual_rise_transition_max
+get_attribute [get_pins <pin>] max_capacitance
+
+# --- CLOCK ---
+report_clock_timing -type summary
+report_clock_timing -type latency -clock <clock>
+get_attribute [get_clocks <clk>] period
+
+# --- CONSTRAINTS ---
+report_constraints -all_violators -max_delay
+report_constraints -all_violators -min_delay
+report_analysis_coverage
+
+# --- DESIGN INFO ---
+get_designs
+report_design

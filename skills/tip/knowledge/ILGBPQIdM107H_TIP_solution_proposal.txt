@@ -1,0 +1,417 @@
+================================================================================
+  TIP TOPOLOGY REQUEST — ILGBPQIdM107H[0:5] (6-bit bus)
+  Cross-Partition: par_msid → par_fe
+  Date: 01-Mar-2026
+  WA: GFC_CLIENT_26ww06b_ww07_6_TIP_clockroute_RCOs-FCT26WW09G_dcm_daily-CLK039
+  Corner: func.max_high.T_85.typical | MCLK period: 186 ps
+================================================================================
+
+  TIP FILE: /nfs/site/disks/sunger_wa/fc_data/my_learns/TIP/icore.ilgbpqidm107h.tp
+
+  ============================================================================
+  .tp FILE CONTENT (icore.ilgbpqidm107h.tp)
+  ============================================================================
+
+  #|-------------------------------------------------------------------
+  #| FILENAME          : icore.ilgbpqidm107h.tp
+  #| USER              : sunger
+  #| TIMESTAMP         : Sat Mar 01 09:43:00 2026
+  #| BLOCK             : icore.design
+  #| COMMENT           : TIP topology plan for ILGBPQIdM107H[0:5] bus (6 bits)
+  #|                   : Cross-partition: par_msid → par_fe
+  #|                   : Based on RTLFP plan from icore_plans.tcl
+  #|-------------------------------------------------------------------
+  #
+  # KEY TOPOLOGY PLAN ELEMENTS:
+  #
+  #   Nets:       ILGBPQIdM107H_0_ through ILGBPQIdM107H_5_ (6-bit bus)
+  #   Pins:       par_msid/ilgbpqidm107h[0:5], par_fe/ilgbpqidm107h[0:5]
+  #   NER:        M17/M18 layers, BUFFSR2BFYD18 buffer, 170um spacing
+  #   Bundle:     ilgbpqidm107h_boundle (6 supernets)
+  #   Plan:       ilgbpqidm107h_tp (group: tip_repeater)
+  #
+  #   4 NODES:
+  #     NODE0:  par_fe   BOUND     bbox_percentage {50.000 50.605}
+  #     NODE1:  par_msid BOUND     bbox_percentage {50.000 50.000}
+  #     NODE2:  par_fe   PINS      bbox (no percentage)
+  #     NODE3:  par_msid PINS      bbox (no percentage)
+  #
+  #   3 EDGES:
+  #     EDGE0:  NODE2 → NODE0 (par_fe pins → par_fe bound),         M18
+  #     EDGE1:  NODE3 → NODE2 (par_msid pins → par_fe pins),        M18
+  #     EDGE3:  NODE1 → NODE3 (par_msid bound → par_msid pins),     M17+M18
+  #
+  #   4 REPEATERS (all BUF D18):
+  #     EDGE0: CORNER_NODE0  BUF  offset=  5.646 um  (par_fe side corner)
+  #     EDGE0: REPEATER0     BUF  offset=110.802 um
+  #     EDGE3: REPEATER1     BUF  offset= 34.936 um
+  #     EDGE3: CORNER_NODE1  BUF  offset=145.936 um  (par_msid side corner)
+  #
+  #   Repeater sizing: 1.5x height, 1.5x width multiplier
+  #   Shielding:  half_shield_1w on M17/M18, spread=3um (6-bit bus)
+  #   Route path: (1632.024, 308.256) → (809.856, 308.256) → (809.856, 302.328)
+  #
+  ============================================================================
+
+  NODE LOCATION VERIFICATION (from port_location_outside_bbox.csv)
+  ================================================================
+
+  Pin coordinates per bit (nm):
+    Bit | par_msid pin (X, Y)       | par_fe pin (X, Y)
+    ----+---------------------------+---------------------------
+    [0] | (1440672, 245784)         | (1441248, 245784)
+    [1] | (1440672, 246164)         | (1441248, 246164)
+    [2] | (1440672, 246316)         | (1441248, 246316)
+    [3] | (1440672, 240616)         | (1441248, 240616)
+    [4] | (1440672, 245708)         | (1441248, 245708)
+    [5] | (1440672, 245556)         | (1441248, 245556)
+
+  par_msid pins: X = 1440.672 um (all same), Y = 240.6–246.3 um (span 5.7 um)
+  par_fe   pins: X = 1441.248 um (all same), Y = 240.6–246.3 um (span 5.7 um)
+  X gap between partitions: 0.576 um
+
+  Node-to-coordinate mapping:
+    NODE0 (par_fe BOUND):   route start   X = 1632.024 um, Y = 308.256 um
+    NODE2 (par_fe PINS):    par_fe pins   X = 1441.248 um, Y_avg = 245.024 um
+                            ─── EDGE1 crosses partition boundary (0.576 um gap) ───
+    NODE3 (par_msid PINS):  par_msid pins X = 1440.672 um, Y_avg = 245.024 um
+    NODE1 (par_msid BOUND): route end     X =  809.856 um, Y = 302.328 um
+
+  Edge distances (approximate):
+    EDGE0 (NODE2→NODE0): ~191 um  (par_fe pins to par_fe bound)
+    EDGE1 (NODE3→NODE2):  ~0.6 um (partition crossing)
+    EDGE3 (NODE1→NODE3): ~631 um  (par_msid bound to par_msid pins)
+
+
+  TIP TOPOLOGY PLAN OVERVIEW
+  ==========================
+
+  CURRENT PATH (NO TIP) — ILGBPQIdM107H[3] worst bit, slack = -34.7 ps
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  par_msid (output)                                                    par_fe (input)
+       |                                                                    |
+   FF(ilgenstrvd)                                                      FF(ilgctls)
+       |                                                                    |
+       9 logic gates         3 auto repeaters (RCO)        3 weak cells     |
+       131.8 ps              31.2 ps                       51.0 ps          |
+       |                     |                             |                |
+       |    7.2ps   3.3ps   1.2ps  4.1ps   7.8ps  7.6ps  16.7ps 9.7ps  8.7ps 8.3ps  7.0ps
+       |    wire    cell    wire   cell    wire   cell    wire   cell   wire  cell   cell
+       |      |       |       |      |       |      |       |      |      |     |      |
+       +------INV-----+-------INV----+-------BUF----+-------INV---+------INV---+--MUX--+
+              D8               D12            D12           D2          D1!       D1!
+              (auto)           (auto)         (auto)        (weak)      (weak)   (weak)
+       |                                     |                                         |
+       |<-------- par_msid: 163 ps --------->|<----------- par_fe: 51 ps ------------->|
+       |           (spec 108, OVER 55ps)     |             (spec 59, UNDER 8ps)        |
+       |                                     |                                         |
+  (1368792,109844)                   (1440672,240616)                          (1552104,265939)
+   source FF                          boundary                                 endpoint FF
+
+
+  PROPOSED TIP TOPOLOGY — estimated slack ~ -2 ps (bit[3])
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  par_msid BOUND                                                           par_fe BOUND
+  (809.9, 302.3)                                                           (1632.0, 308.3)
+       |                                                                        |
+       |   EDGE3 (M17+M18, 631 um)                      EDGE0 (M18, 191 um)    |
+       |                                                                        |
+       |  ┌──────┐  ┌──────┐                          ┌──────┐  ┌──────┐       |
+       |  │ BUF  │  │ BUF  │     9 logic    EDGE1     │ BUF  │  │ BUF  │       |
+       +─►│ D18  │─►│ D18  │─►   gates    ─► 0.6um ─►│ D18  │─►│ D18  │─►─────+
+       |  │REP1  │  │CORNER│     131.8ps    crossing   │CORNER│  │REP0  │       |
+       |  │@34.9 │  │NODE1 │                           │NODE0 │  │@110.8│       |
+       |  │      │  │@145.9│     FF(ilgen              │@5.6  │  │      │       |
+       |  └──────┘  └──────┘     strvd)                └──────┘  └──────┘       |
+       |                         INV→INV→BUF                                    |
+       |                         (auto reps)                                    |
+       |                                                                        |
+       |◄──── TIP par_msid ────►|◄─ logic ─►|◄cross►|◄──── TIP par_fe ────────►|
+       |      ~15-18 ps          | 131.8 ps  | ~0 ps |      ~15-18 ps          |
+       |                                                                        |
+       NODE1                   NODE3       NODE2                          NODE0
+
+                                        Then par_fe internal (NOT TIP, PnR handles):
+                                        ┌──────┐  ┌──────┐  ┌──────┐
+                                   ────►│ INV  │─►│ INV  │─►│ MUX  │─► FF(ilgctls)
+                                        │ D8   │  │ D4!  │  │ D4!  │   (1552.1, 265.9)
+                                        │~5ps  │  │~4ps  │  │~4ps  │
+                                        └──────┘  └──────┘  └──────┘
+                                        (upsized from D2, D1!, D1!)
+                                        par_fe internal: ~21 ps, 113 um
+
+  half_shield_1w on M17/M18 — spread=3um for 6-bit bus
+
+
+  TIMING GAIN SUMMARY PER STAGE
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+       +--------------------+----------+-----------+----------+
+       | Stage              | Current  | With TIP  | Savings  |
+       +--------------------+----------+-----------+----------+
+       | par_msid logic     | 131.8 ps | 131.8 ps  |   0 ps   |
+       | par_msid TIP chain |  31.2 ps |  15-18 ps | 13-16 ps |
+       | par_fe data path   |  51.0 ps |  ~21 ps   | ~30 ps   |
+       |   (TIP port opt)   | (16.7 wire)|( ~6 wire)|  ~11 ps  |
+       |   (cell sizing)    | (25 cell) | (~13 cell)|  ~12 ps  |
+       |   (shield gain)    |    —      |   ~3-5 ps |  ~4 ps   |
+       | spec shift (+8ps)  |    —      |   +8 ps   |   8 ps   |
+       +--------------------+----------+-----------+----------+
+       | TOTAL path delay   | 214.0 ps | ~169 ps   | ~45 ps   |
+       | Slack              | -34.7 ps |  ~-2 ps   |          |
+       +--------------------+----------+-----------+----------+
+
+
+================================================================================
+
+1. PROBLEM SUMMARY
+==================
+Signal ILGBPQIdM107H[0:5] is a 6-bit bus crossing from par_msid to par_fe.
+ALL 6 bits are failing timing with slack range -24.6 ps to -34.7 ps.
+This signal has NEVER had TIP topology planning in any tag (WW02 through WW09).
+
+  Worst bit:  ILGBPQIdM107H[3]  slack = -34.7 ps
+  Best bit:   ILGBPQIdM107H[0]  slack = -24.6 ps
+
+  Current port spec:
+    par_msid budget: 108 ps  (actual delay: 163 ps → OVER by 55 ps)
+    par_fe   budget:  59 ps  (actual delay:  51 ps → under by  8 ps)
+    Total budget:    167 ps
+
+  Root cause: No TIP topology → suboptimal port placement, auto-placed
+  repeaters on lower metal layers, weak cell sizing on par_fe side.
+
+
+2. EVIDENCE — COMPARISON WITH TIP-PLANNED SIGNAL
+=================================================
+Signal ifhitextsnoopm105h uses the SAME par_msid → par_fe crossing
+with the SAME total budget (167 ps) and HAS TIP topology planning.
+
+  +---------------------------+-------------------+-------------------+
+  |                           | ifhitextsnoopm105h| ILGBPQIdM107H[3] |
+  |                           |   (WITH TIP)      |   (NO TIP)        |
+  +---------------------------+-------------------+-------------------+
+  | Crossing                  | par_msid → par_fe | par_msid → par_fe |
+  | Total spec budget         | 123+44 = 167 ps   | 108+59 = 167 ps   |
+  | Slack                     | +20.8 ps  PASS    | -34.7 ps  FAIL    |
+  | TIP topology planned      | YES               | NO                |
+  +---------------------------+-------------------+-------------------+
+  | Delta                     |         ~55 ps better with TIP         |
+  +---------------------------+-------------------+-------------------+
+
+  TIP file reference:
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/
+    GFCA0_26WW09_5_fp_change/icore.ifhitextsnoopm105h.tp
+
+  TIP features used by ifhitextsnoopm105h:
+    - Pin bbox constraint on both par_msid and par_fe
+    - M17/M18 layer assignment (100% upper metal)
+    - 5 planned repeaters with 1.5x sizing multiplier
+    - Defined topology edge between partitions
+
+
+3. CURRENT PATH ANALYSIS — ILGBPQIdM107H[3] (worst bit)
+========================================================
+
+  Slack: -34.7 ps | Norm slack: -0.19
+
+  3a. par_msid side (delay = 163.0 ps, spec = 108 ps, OVER by 55 ps)
+  --------------------------------------------------------------------
+  - Internal logic (ilgenstrvd → ilgctls): 131.8 ps (9 combo gates)
+    This is deep logic and NOT affected by TIP.
+
+  - TIP repeater chain (boundary crossing): 31.2 ps (3 repeaters)
+      INVREPM2P30ITLICMD8:  wire 7.2 + cell 3.3 = 10.5 ps
+      INVREPM2P30ITLICMD12: wire 1.2 + cell 4.1 =  5.3 ps
+      BUFFREPM2P30ITLICMD12: wire 7.8 + cell 7.6 = 15.4 ps (33.9fF!)
+    These repeaters are auto-placed with RCO routing — NOT optimized.
+
+  - Port location: (1440672, 240616)
+    Logic source at Y ~ 123727 → ~250 um Manhattan distance to port
+
+  3b. par_fe side (delay = 51.0 ps, spec = 59 ps, UNDER by 8 ps)
+  ----------------------------------------------------------------
+  - INVD2:     wire 16.7 + cell 9.7 = 26.4 ps  ← 16.7ps wire = bad port placement
+  - INVSKFOD1: wire  8.7 + cell 8.3 = 17.0 ps  ← D1 drive strength!
+  - MUX2D1:    wire  0.3 + cell 7.0 =  7.3 ps  ← D1 drive strength!
+  - To endpoint:                        0.2 ps
+
+  - Port location: (1441248, 240616)
+  - Endpoint FF at: (1552104, 265939)
+
+  3c. Port location data (all 6 bits from port_location_outside_bbox.csv)
+  -----------------------------------------------------------------------
+    Bbox: (1240152, 100735) to (1553470, 266148)
+
+    Bit  par_msid port        par_fe port          Port Y
+    [0]  (1440672, 245784)    (1441248, 245784)    245784
+    [1]  (1440672, 246164)    (1441248, 246164)    246164
+    [2]  (1440672, 246316)    (1441248, 246316)    246316
+    [3]  (1440672, 240616)    (1441248, 240616)    240616
+    [4]  (1440672, 245708)    (1441248, 245708)    245708
+    [5]  (1440672, 245556)    (1441248, 245556)    245556
+
+    All ports clustered at Y ~ 240K-246K — far from source logic at Y ~ 124K.
+    Port X separation: only 576 units (par_msid to par_fe boundary).
+
+
+4. PROPOSED FIX — THREE-PART APPROACH
+======================================
+
+  +--------+-------------------------------------+----------+-----------+
+  | Fix    | Description                         | Est Gain | Owner     |
+  +--------+-------------------------------------+----------+-----------+
+  | Fix A  | TIP topology planning               | 13-16 ps | TD team   |
+  | Fix A+ | Half-shield track blocking (M17/M18)| ~3-5 ps  | TD team   |
+  | Fix B  | Cell sizing on par_fe               | ~12 ps   | par_fe PnR|
+  | Fix C  | Spec rebalance (Technique 8)        | ~8 ps    | FCT/spec  |
+  +--------+-------------------------------------+----------+-----------+
+  | TOTAL  |                                     | 36-41 ps |           |
+  +--------+-------------------------------------+----------+-----------+
+
+  -----------------------------------------------------------------------
+  FIX A: TIP TOPOLOGY PLANNING (13-16 ps gain)
+  -----------------------------------------------------------------------
+  Request new TIP topology file: icore.ilgbpqidm107h.tp
+
+  Recommended TIP constraints (based on ifhitextsnoopm105h reference):
+
+    a) Pin bbox constraints:
+       - par_msid pin: bbox_percentage optimized for lower Y
+         (move port closer to source logic at Y ~ 124K)
+       - par_fe pin: bbox_percentage optimized toward endpoint at Y ~ 266K
+
+    b) Layer assignment:
+       - shape_layers: M17 100%, M18 100%
+       - Upper metals have ~2x lower sheet resistance
+
+    c) Repeater planning:
+       - 3-5 repeaters with 1.5x sizing multiplier
+       - Evenly spaced along topology edge
+       - repeater_group_constraints with M17/M18 layer cutting
+
+    d) Net estimation rule:
+       - Create bundle for all 6 bits [0:5]
+       - Single topology plan covering entire bus
+
+  Expected improvements:
+    - Port Y optimization:     saves ~5-8 ps wire delay
+    - M17/M18 layer routing:   saves ~5-8 ps (lower RC)
+    - Optimized repeater plan: saves ~3-5 ps
+    - par_msid TIP chain: from 31.2 ps → ~15-18 ps
+
+    e) Half-shield track blocking (half_shield_1w on M17/M18):
+       - Blocks adjacent tracks on both M17 and M18 to shield TIP wires
+       - Reduces crosstalk coupling capacitance → lower wire delay
+       - Uses pre.tip_implementation.tcl definitions:
+           M17_half_shield_1w = "{1.140 3.420} {0.200 0.200}"
+           M18_half_shield_1w = "{1.235 3.705} {0.450 0.450}"
+       - ivar entries to add to pre.tip_implementation.tcl:
+           set ivar(tip_block_track_for_pin_placment,M17,ilgbpqidm107h_tp) "$M17_half_shield_1w 1"
+           set ivar(tip_block_track_for_pin_placment,M18,ilgbpqidm107h_tp) "$M18_half_shield_1w 1"
+           set ivar(tip_block_track_for_route,M17,ilgbpqidm107h_tp) "$M17_half_shield_1w 1"
+           set ivar(tip_block_track_for_route,M18,ilgbpqidm107h_tp) "$M18_half_shield_1w 1"
+       - Estimated additional gain: ~3-5 ps (reduced coupling)
+
+  Nets to include in .tp file:
+    icore0/ILGBPQIdM107H_0_
+    icore0/ILGBPQIdM107H_1_
+    icore0/ILGBPQIdM107H_2_
+    icore0/ILGBPQIdM107H_3_
+    icore0/ILGBPQIdM107H_4_
+    icore0/ILGBPQIdM107H_5_
+
+  Pins:
+    par_msid/ilgbpqidm107h[0] through par_msid/ilgbpqidm107h[5]
+    par_fe/ilgbpqidm107h[0]   through par_fe/ilgbpqidm107h[5]
+
+  -----------------------------------------------------------------------
+  FIX B: CELL SIZING ON par_fe (12 ps gain)
+  -----------------------------------------------------------------------
+  Upsize weak D1/D2 cells in par_fe sideload path:
+
+    Current Cell         → Recommended      Cell Delay Savings
+    -------------------------------------------------------
+    INVD2 (9.7 ps)       → INVD8            ~5 ps
+    INVSKFOD1 (8.3 ps)   → INVD4 or INVD8   ~4 ps
+    MUX2D1 (7.0 ps)      → MUX2D4           ~3 ps
+    -------------------------------------------------------
+    Total cell savings:                      ~12 ps
+
+  Apply to ALL 6 bits — systematic bus-level ECO.
+
+  -----------------------------------------------------------------------
+  FIX C: SPEC REBALANCE — Technique 8 (8 ps gain)
+  -----------------------------------------------------------------------
+  par_fe has 8 ps margin (actual 51 ps vs spec 59 ps).
+  Shift 8 ps budget from par_fe to par_msid:
+
+    Current spec:  par_msid = 108 ps | par_fe = 59 ps
+    New spec:      par_msid = 116 ps | par_fe = 51 ps
+
+  This gives par_msid 8 ps more budget without hurting par_fe.
+
+
+5. PROJECTED RESULTS
+=====================
+
+  With combined gain of ~33 ps:
+
+  +------+---------------+----------------+--------+
+  | Bit  | Current Slack | Projected Slack| Status |
+  +------+---------------+----------------+--------+
+  | [3]  |   -34.7 ps    |    ~-2 ps      |  ~MET  |
+  | [2]  |   -32.0 ps    |    ~+1 ps      |  PASS  |
+  | [1]  |   -31.4 ps    |    ~+2 ps      |  PASS  |
+  | [5]  |   -29.3 ps    |    ~+4 ps      |  PASS  |
+  | [4]  |   -28.5 ps    |    ~+5 ps      |  PASS  |
+  | [0]  |   -24.6 ps    |    ~+8 ps      |  PASS  |
+  +------+---------------+----------------+--------+
+
+  5 of 6 bits fully closed. Bit [3] within ~2 ps — closeable with
+  minor PnR ECO (one additional buffer upsize or local placement tweak).
+
+
+6. ACTION ITEMS
+================
+  [ ] TD team: Create TIP topology file for ILGBPQIdM107H[0:5] bus
+      - Use ifhitextsnoopm105h.tp as template
+      - Include all 6 bits in single bundle + topology plan
+      - Assign M17/M18 layers, plan repeaters with 1.5x multiplier
+      - Optimize pin bbox to reduce wire distance to source logic
+
+  [ ] par_fe PnR owner: Upsize INVD2→D8, INVSKFOD1→D4, MUX2D1→D4
+      - Apply across all 6 bits (systematic ECO)
+
+  [ ] FCT/spec team: Evaluate spec shift of 8 ps from par_fe to par_msid
+      - Validate no hold impact from tighter par_fe spec
+
+  [ ] Validation: Rerun STA after TIP + cell sizing to confirm closure
+
+
+7. REFERENCE FILES
+===================
+  WA path:
+    /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/
+    GFC_CLIENT_26ww06b_ww07_6_TIP_clockroute_RCOs-FCT26WW09G_dcm_daily-CLK039.bu_postcts/
+    runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical
+
+  TIP reference (passing signal with same budget):
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/
+    GFCA0_26WW09_5_fp_change/icore.ifhitextsnoopm105h.tp
+
+  TIP files directory:
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/GFCA0_26WW09_5_fp_change/
+
+  Reports used:
+    - fct_level_slack_per_port.par_msid.*.attribute.rpt
+    - fct_level_slack_per_port.par_fe.*.attribute.rpt
+    - port_location_outside_bbox.csv
+    - check_clk_latency.func.max_high.T_85.typical.rpt
+    - core_client.*.annotated_parasitics.main.rpt
+
+================================================================================
+  END OF PROPOSAL
+================================================================================

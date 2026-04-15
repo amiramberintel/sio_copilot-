@@ -1,0 +1,394 @@
+================================================================================
+  HOW TO CREATE TIP TOPOLOGY DATA (.tp files)
+  Reference Guide for GFC RTLFP / FusionCompiler TIP Flow
+  Date: 01-Mar-2026
+================================================================================
+
+TIP (Top Interconnect Planning) creates topology plans that control how
+cross-partition signals are routed: pin placement, repeater insertion,
+metal layer assignment, and wire planning.
+
+================================================================================
+PART A: TIP CREATION FLOW OVERVIEW
+================================================================================
+
+The TIP flow runs inside FusionCompiler (fc_shell) in the RTLFP stage.
+The full flow pipeline is:
+
+  rtlfp_import_netlist
+       |
+  rtlfp_upf
+       |
+  rtlfp_init_floorplan
+       |
+  rtlfp_setup_timing
+       |
+  rtlfp_split_constraints
+       |
+  rtlfp_shape_blocks
+       |
+  rtlfp_floorplan
+       |
+  rtlfp_place_pins          ← TIP topology plans are created/committed HERE
+       |
+  rtlfp_healthcheck
+       |
+  rtlfp_write_collateral    ← .tp files are written out HERE
+       |
+  rtlfp_promote
+
+
+================================================================================
+PART B: HOW TO LAUNCH RTLFP (Interactive Session)
+================================================================================
+
+The rtlfp session is launched from the WA using Ifc_shell:
+
+  Step 1: Go to the run area
+  -------------------------
+    cd <ward>/runs/<design>/<tech>/rtlfp
+
+    Example:
+    cd /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/GFCCLIENTA0_TS25.12/runs/core_client/n2p_htall_conf4/rtlfp
+
+  Step 2: Launch fc_shell interactive session
+  -------------------------------------------
+    Ifc_shell -B <BLOCK> -F rtlfp -f view.tcl
+
+    This opens the design in fc_shell with the rtlfp environment loaded.
+    The view.tcl script loads the nlib, sets up libraries, and sources
+    all TIP utility procs.
+
+  Step 3: Verify design is loaded
+  --------------------------------
+    current_design
+    # Should show: icore (or core_client depending on hierarchy level)
+
+
+================================================================================
+PART C: CREATING A NEW TIP TOPOLOGY PLAN (Step-by-Step)
+================================================================================
+
+All commands below run inside fc_shell after launching the rtlfp session.
+
+  -----------------------------------------------------------------------
+  STEP 1: Identify the signal and its connectivity
+  -----------------------------------------------------------------------
+
+    # Find the top-level net
+    get_nets ILGBPQIdM107H_*
+
+    # Find the partition pins
+    get_pins {par_msid/ilgbpqidm107h[*] par_fe/ilgbpqidm107h[*]}
+
+    # Check connectivity segments
+    set nets [get_nets ILGBPQIdM107H_*]
+    rtlfp_get_nets_segments $nets
+
+  -----------------------------------------------------------------------
+  STEP 2: Create a supernet (groups related nets)
+  -----------------------------------------------------------------------
+
+    # Create supernet for the bus
+    create_supernet -name ilgbpqidm107h_supernet \
+      -nets [get_nets {ILGBPQIdM107H_0_ ILGBPQIdM107H_1_ \
+                       ILGBPQIdM107H_2_ ILGBPQIdM107H_3_ \
+                       ILGBPQIdM107H_4_ ILGBPQIdM107H_5_}]
+
+  -----------------------------------------------------------------------
+  STEP 3: Create a bundle (groups nets for topology planning)
+  -----------------------------------------------------------------------
+
+    create_bundle -name ilgbpqidm107h_boundle \
+      -objects [get_nets {ILGBPQIdM107H_0_ ILGBPQIdM107H_1_ \
+                          ILGBPQIdM107H_2_ ILGBPQIdM107H_3_ \
+                          ILGBPQIdM107H_4_ ILGBPQIdM107H_5_}]
+
+  -----------------------------------------------------------------------
+  STEP 4: Create net estimation rule
+  -----------------------------------------------------------------------
+
+    create_net_estimation_rule -name ilgbpqidm107h_ner
+
+  -----------------------------------------------------------------------
+  STEP 5: Create the topology plan
+  -----------------------------------------------------------------------
+
+    set _objLst_ [get_bundles ilgbpqidm107h_boundle]
+
+    create_topology_plan -name ilgbpqidm107h_tp \
+      -group tip_repeater \
+      -objects $_objLst_ \
+      -net_estimation_rule ilgbpqidm107h_ner \
+      -allow_feedthrough all
+
+    # Set repeater sizing multipliers (1.5x = larger, faster repeaters)
+    set_attribute [get_topology_plans ilgbpqidm107h_tp] \
+      -name repeater_height_multiplier -value {1.5}
+    set_attribute [get_topology_plans ilgbpqidm107h_tp] \
+      -name repeater_width_multiplier -value {1.5}
+
+    # Set repeater group constraints for M17/M18 layer cutting
+    set_attribute [get_topology_plans ilgbpqidm107h_tp] \
+      -name repeater_group_constraints \
+      -value {set_repeater_group_constraints -type insertion \
+              -layer_cutting_distance {{M18 0.5 0.5} {M17 0.5 0.5}}}
+
+  -----------------------------------------------------------------------
+  STEP 6: Create topology nodes (pin placement constraints)
+  -----------------------------------------------------------------------
+
+    # Node for par_fe side — constrain pin bbox
+    create_topology_node -plan ilgbpqidm107h_tp \
+      -name TOPOLOGY_NODE0 \
+      -objects [get_cells par_fe] \
+      -constrained_objects [get_pins {par_fe/ilgbpqidm107h[0] \
+                                      par_fe/ilgbpqidm107h[1] \
+                                      par_fe/ilgbpqidm107h[2] \
+                                      par_fe/ilgbpqidm107h[3] \
+                                      par_fe/ilgbpqidm107h[4] \
+                                      par_fe/ilgbpqidm107h[5]}] \
+      -constraint_type bbox \
+      -bbox_percentage {50.000 50.000}
+
+    # Node for par_msid side — constrain pin bbox
+    create_topology_node -plan ilgbpqidm107h_tp \
+      -name TOPOLOGY_NODE1 \
+      -objects [get_cells par_msid] \
+      -constrained_objects [get_pins {par_msid/ilgbpqidm107h[0] \
+                                      par_msid/ilgbpqidm107h[1] \
+                                      par_msid/ilgbpqidm107h[2] \
+                                      par_msid/ilgbpqidm107h[3] \
+                                      par_msid/ilgbpqidm107h[4] \
+                                      par_msid/ilgbpqidm107h[5]}] \
+      -constraint_type bbox \
+      -bbox_percentage {50.000 50.000}
+
+    NOTE: bbox_percentage {X Y} constrains pin placement to X% of width
+    and Y% of height centered on the optimal location. Smaller % = tighter
+    constraint. Adjust based on routing congestion and timing need.
+
+  -----------------------------------------------------------------------
+  STEP 7: Create topology edge (defines the routing path)
+  -----------------------------------------------------------------------
+
+    # Edge between par_fe and par_msid nodes
+    # Assign M17 and M18 layers (100% usage = all routing on upper metals)
+    create_topology_edge -plan ilgbpqidm107h_tp \
+      -name TOPOLOGY_EDGE0 \
+      -nodes {ilgbpqidm107h_tp/TOPOLOGY_NODE0 \
+              ilgbpqidm107h_tp/TOPOLOGY_NODE1} \
+      -shape_layers { {M18 100% 0.0000} {M17 100% 0.0000} }
+
+  -----------------------------------------------------------------------
+  STEP 8: Create topology repeaters along the edge
+  -----------------------------------------------------------------------
+
+    # Corner repeater near par_fe (offset from start of edge)
+    create_topology_repeater \
+      -edge ilgbpqidm107h_tp/TOPOLOGY_EDGE0 \
+      -name TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0 \
+      -type repeater -offset 1.970
+    set_attribute [get_topology_repeaters \
+      ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE0] \
+      -name corner_repeater -value true
+
+    # Intermediate repeaters (evenly spaced along edge)
+    create_topology_repeater \
+      -edge ilgbpqidm107h_tp/TOPOLOGY_EDGE0 \
+      -name TOPOLOGY_REPEATER0 -type repeater -offset 80.000
+    set_attribute -objects [get_topology_repeaters \
+      ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER0] \
+      -name index -value {0 1}
+
+    create_topology_repeater \
+      -edge ilgbpqidm107h_tp/TOPOLOGY_EDGE0 \
+      -name TOPOLOGY_REPEATER1 -type repeater -offset 160.000
+    set_attribute -objects [get_topology_repeaters \
+      ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER1] \
+      -name index -value {0 2}
+
+    # Corner repeater near par_msid
+    create_topology_repeater \
+      -edge ilgbpqidm107h_tp/TOPOLOGY_EDGE0 \
+      -name TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1 \
+      -type repeater -offset 240.000
+    set_attribute [get_topology_repeaters \
+      ilgbpqidm107h_tp/TOPOLOGY_EDGE0/TOPOLOGY_REPEATER_CORNER_TOPOLOGY_NODE1] \
+      -name corner_repeater -value true
+
+    NOTE: Repeater offsets are in microns along the edge.
+    Adjust spacing based on total edge length. Typical rule of thumb:
+    one repeater every ~150-170 um for M17/M18 routing.
+
+  -----------------------------------------------------------------------
+  STEP 9: Set visibility and user attributes
+  -----------------------------------------------------------------------
+
+    set_attribute -quiet [get_topology_plans ilgbpqidm107h_tp] \
+      is_visible true
+
+    # Optional: mark as TD-owned
+    define_user_attribute -quiet -classes topology_plan \
+      -type boolean -name is_td
+    set_attribute [get_topology_plans ilgbpqidm107h_tp] is_td true
+
+  -----------------------------------------------------------------------
+  STEP 10: Commit the topology plan
+  -----------------------------------------------------------------------
+
+    # This applies the topology plan to the design
+    # The flow runs step_commit_topology_plans which:
+    #   1. Gets all topology plans with edges and shape_layers
+    #   2. Creates bounds for topology nodes
+    #   3. Inserts repeater cells
+    #   4. Routes the topology edges
+
+    commit_topology_plans [get_topology_plans ilgbpqidm107h_tp]
+
+  -----------------------------------------------------------------------
+  STEP 11: Save / Write the .tp file
+  -----------------------------------------------------------------------
+
+    # The step_write_tip_collateral writes .tp files to:
+    #   <scratch_dir>/self_tip/<block_name>/
+
+    # The .tp file can then be copied to the TIP files directory:
+    #   /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/<tag>/
+
+    # To manually save the topology plan state:
+    save_block
+
+
+================================================================================
+PART D: USING THE TIP GUI (Interactive Method)
+================================================================================
+
+For visual/interactive TIP creation, use the GUI procs:
+
+  Step 1: Open the design in fc_shell GUI mode
+  ---------------------------------------------
+    Ifc_shell -B <BLOCK> -F rtlfp -f view.tcl
+    start_gui
+
+  Step 2: Select nets in the GUI schematic/layout view
+  ----------------------------------------------------
+    # Select the nets you want to plan, then:
+    ::tip_gui_procs::gui_create_bound_nodes
+    ::tip_gui_procs::gui_add_dummy_cells
+
+  Step 3: Use the FC GUI TIP planning panel
+  ------------------------------------------
+    # In the GUI: Plan > Topology Planning
+    # Draw topology edges, place repeaters, set layer assignments
+    # The GUI provides visual feedback on pin placement and routing
+
+
+================================================================================
+PART E: HOW .tp FILES ARE READ BACK (for BU/PnR flow)
+================================================================================
+
+When the BU (Build Unit) or PnR flow runs, it reads TIP collateral:
+
+  1. step_read_tip_collateral.tcl iterates over all blocks
+  2. For each block, it looks for .tp files in the tip_collateral_location
+  3. Each .tp file is sourced (it's a TCL script)
+  4. The .tp file:
+     a. Checks net/pin connectivity matches current netlist
+     b. Creates bundles, supernets, net estimation rules
+     c. Creates topology plan with nodes, edges, repeaters
+     d. Sets layer assignments and repeater sizing
+
+  The .tp files are sourced via:
+    source <tip_dir>/<block>.tp
+
+  Pre/post hooks:
+    pre.tip_implementation.tcl   — runs BEFORE .tp files (track/layer setup)
+    post.tip_implementation.tcl  — runs AFTER .tp files (cleanup)
+
+
+================================================================================
+PART F: QUICK REFERENCE — KEY FC_SHELL COMMANDS
+================================================================================
+
+  QUERY COMMANDS:
+    get_topology_plans -hierarchical         # List all TIP plans
+    get_topology_nodes -of_objects <tp>       # List nodes of a plan
+    get_topology_edges -of_objects <tp>       # List edges of a plan
+    get_topology_repeaters -of_objects <edge> # List repeaters on edge
+    get_bundles                              # List all bundles
+    get_supernets                            # List all supernets
+    report_topology_plans                    # Detailed report
+
+  CREATE COMMANDS:
+    create_bundle                            # Group nets
+    create_supernet                          # Group related nets
+    create_net_estimation_rule               # RC estimation rule
+    create_topology_plan                     # Main TIP plan
+    create_topology_node                     # Pin placement constraint
+    create_topology_edge                     # Routing path definition
+    create_topology_repeater                 # Repeater insertion point
+    commit_topology_plans                    # Apply plans to design
+
+  MODIFY COMMANDS:
+    set_attribute                            # Set plan properties
+    move_topology_repeaters                  # Adjust repeater positions
+    remove_topology_plans                    # Delete a plan
+    remove_topology_repeaters                # Delete repeaters
+
+  WRITE/READ COMMANDS:
+    save_block                               # Save design state
+    source <file>.tp                         # Read back a .tp file
+
+
+================================================================================
+PART G: KEY FILES AND LOCATIONS
+================================================================================
+
+  RTLFP Flow Scripts:
+    <TS_DIR>/c2dg_be/snps/rtlfp/
+
+  Key TIP Scripts:
+    tip_procs.tcl                 — Core TIP procedures
+    tip_gui_procs.tcl             — GUI interaction procs
+    tip_utils.tcl                 — Utility functions
+    step_commit_topology_plans.*  — Commit flow
+    step_write_tip_collateral.tcl — Write .tp files
+    step_read_tip_collateral.tcl  — Read .tp files in BU flow
+
+  TIP Data Files (project specific):
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/<tag>/
+      *.tp                        — Individual signal topology plans
+      pre.tip_implementation.tcl  — Pre-hook (track setup)
+      post.tip_implementation.tcl — Post-hook (cleanup)
+      manual_tip/                 — Manually created TIP files
+
+  RTLFP Run Area:
+    <ward>/runs/<design>/<tech>/rtlfp/
+      icore_plans.tcl             — Saved topology plans
+      core_client_plans.tcl       — Top-level plans
+      design_setup.tcl            — Design configuration
+      fc_output.txt               — FC shell log
+      collateral/                 — Written collateral
+
+
+================================================================================
+PART H: REFERENCE .tp FILE (ifhitextsnoopm105h — use as template)
+================================================================================
+
+  Location:
+    /nfs/site/disks/idc_gfc_fct_td/GFC_TIP_WA/tip_files/
+    GFCA0_26WW09_5_fp_change/icore.ifhitextsnoopm105h.tp
+
+  This file shows the complete structure:
+    1. Net/Pin/Port matching checks (safety)
+    2. Bundle + supernet + NER creation
+    3. Topology plan with repeater multipliers
+    4. Two topology nodes (one per partition, with bbox constraints)
+    5. One topology edge (M17+M18 layer assignment)
+    6. 5 repeaters + 2 corner repeaters
+    7. User attributes (is_visible, is_td, is_preroute)
+
+================================================================================
+  END OF GUIDE
+================================================================================

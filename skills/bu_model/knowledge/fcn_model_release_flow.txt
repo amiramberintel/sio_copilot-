@@ -1,0 +1,459 @@
+================================================================================
+  FCN MODEL RELEASE FLOW — COMPLETE OPERATIONAL GUIDE
+  For SIO: Understanding & Running the Netlist Release Pipeline
+  Created: 2026-04-12
+  Source: Amir Menashe (amenashe) handover + live WA analysis
+  Based on: FCN26WW14_4 release (rtl26ww12b_client_refresh)
+================================================================================
+
+=== WHAT IS FCN? ===
+
+  FCN = Front-end Collateral Netlist release.
+  It takes RTL -> synthesizes netlists for all 12 partitions -> compares
+  against a REF (reference) run -> generates quality indicators -> promotes
+  collaterals (Verilog, UPF, FDR, HIPs) for downstream BE (backend) use.
+
+  This is UPSTREAM of what you do as SIO. The FCN release produces the
+  netlists that Gil's daily builds (FCT) then use for timing closure.
+
+  Flow: RTL Model -> FCN (netlist) -> FCT (timing) -> SIO (closure)
+
+=== FCN vs FCT ===
+
+  FCN (Amir's flow)              FCT (Gil's flow)
+  -------------------------      -------------------------
+  RTL -> Netlist synthesis       Netlist -> Place & Route -> STA
+  Cadence Genus (partitions)     Synopsys FC (top) + PT (timing)
+  Synopsys FC (top/subfc)        PrimeTime for all corners
+  Produces .v, .upf, FDR, HIPs  Produces timing XMLs, IFC reports
+  ~20 min per partition          ~hours per corner
+  Owner: Amir (amenashe)         Owner: Gil
+
+=== REFERENCE WORK AREAS ===
+
+  GFC Client:
+    /nfs/site/disks/idc_bei_fcn/GFC/FCN/gfc_client_netlist_runs/
+
+  PNC Client:
+    /nfs/site/disks/idc_bei_fcn/PNC/FCN/pnc_netlist_runs/PNCB0_FCN_rtl25ww50b_client/
+
+  PNC Server:
+    /nfs/site/disks/pnc_dmr_fcl_fcn/PNCC0_FCN_rtl26ww14a_server/
+
+================================================================================
+  FULL FCN FLOW — STEP BY STEP
+================================================================================
+
+  --- STEP 0: SETUP ---
+
+  Setup command:
+    /nfs/site/proj/hdk/pu_tu/prd/liteinfra/1.19.p1/commonFlow/bin/cth_psetup \
+      -proj gfc_n2_client/GFC_TS2025.17 -nowash -cfg gfcn2clienta0.cth \
+      -ward <your_WA> -x '$SETUP_R2G'
+
+  To see setup command from existing WA:
+    cat $WA/sd.reopen
+
+  --- STEP 1: PREPARE NEW RUN ---
+
+  1a. Copy scripts from REF WA:
+      cp -rf $REF_WA/fcn_scripts/ .
+
+  1b. Edit fcn_scripts/fcn_user_vars.tcl — update these key ivars:
+      - RTL model       -> from Basel's mail
+      - HIP tags        -> from Maxim's mail
+      - Clock tag       -> from GFC TD daily mail (Haya releases)
+                           *** Take latest BU_FCN clock tag (NOT prop) ***
+      - Top IO tag      -> from timing collateral, take latest top IO
+
+  1c. Generate Black Box list:
+      fcn_xml_hips_vs_rtl_diff <HIPs_TAG> <RTL_MODEL>
+
+      Example:
+        fcn_xml_hips_vs_rtl_diff GFCN2SERVERA0V20_25ww24_Wed \
+          /nfs/site/proj/gfc/gfc.models.41/core/core-gfc-a0-master-25ww26c \
+          | l > fcn_xml_hips_vs_rtl_diff_output.rpt
+
+      Extract BB list:
+        l fcn_xml_hips_vs_rtl_diff_output.rpt | g "EBB not in XML" \
+          | sed 's/EBB not in XML://' | sort | sed 's/$/\\/' | l
+
+  1d. Change REF symlink if needed:
+      rm ref
+      ln -s <ref_wa> ref
+
+  --- STEP 2: fcn_prepare -run ---
+
+  What it does:
+    - Runs prepare_hip at core level (generates hip_ivar.tcl)
+    - Brings all data required for synthesis (under release/latest/)
+    - Submits farm jobs for all 12 partitions (Cadence Genus)
+    - Also submits Synopsys FC jobs for top-level (icore, core_client)
+
+  Logs: fcn_logs/prepare.log*
+  Check: Search for "does not exist" in prepare.log
+
+  Then run: $ward/run.all.csh (or use -run flag)
+  Result: Netlists WITHOUT FDRs
+
+  --- STEP 3: MONITOR ---
+
+  Monitor status:
+    fcn_status -wait
+
+  Mid-run checkers:
+    CDNS: fcn_cdns_check_genus_map
+          (checks all partitions finished genus_map)
+    SNPS: fcn_snps_check_init_floorplan
+          (checks all partitions finished init_floorplan)
+
+  All logs under: fcn_logs/job.*.<cdns/snps>.log
+
+  --- STEP 4: fcn_prepare -run_fdr ---
+
+  What it does:
+    - Runs core_client job: builds top flat timing model,
+      generates IO constraints for partitions
+    - IO constraints file: release/latest/sio_timing_collateral/
+    - Then runs 12 jobs (one per partition) of setup_timing (apr_fc)
+      consuming the IO constraints
+    - FDRs are ready after this step
+
+  FDR reports:
+    runs/<PAR>/n2p_htall_conf4/apr_fc/reports/setup_timing2/<PAR>.fdr.rpt
+
+  --- STEP 5: fcn_promote -no_check -tag <TAG> ---
+
+  What it does:
+    - Copies synthesized netlists to release/latest/fe_collateral/
+    - Creates $ward/fcn_commit.csh for final commit
+    - Generates comparison reports (TST vs REF)
+
+  Logs: fcn_logs/promote.log*
+
+  --- STEP 6: REVIEW ---
+
+  6a. Send summary email:
+      fcn_mail_summary (alias)
+      -> Sends FCN summary to your mail — review before proceeding
+
+  6b. Generate ports diff report:
+      fcn_model_comp_tst_vs_ref_client
+      -> Results under $WA/core...
+      -> Add report + table to the release email
+
+  6c. Run FEV check:
+      fcn_promote -run_fev
+      Log: fcn_logs/job.core_client.fev.log
+      Debug: debug_fev $ward/runs/core_client/1278.6/fev_conformal/fev_fcl/checkpt_flat.lec
+
+  --- STEP 7: PRE-COMMIT CHECKS ---
+
+  Must be clean before committing:
+    g -- -E- fcn_promote.log
+    g -- -W- fcn_promote.log
+    g -- -W- fcn_reports/run_check_latest/*
+    g -- -E- fcn_reports/run_check_latest/*
+    g -- -E- fcn_reports/csv_latest/*
+
+  -E- (errors) in fcn_promote.log = FATAL, must fix
+  -W- (warnings) = not fatal but should be clean by end of project
+
+  --- STEP 8: COMMIT ---
+
+  $ward/fcn_commit.csh
+    -> Commits fe_collateral/ and fdr_collateral/ to $PROJ_ARCHIVE
+
+  --- FULL RUN COMMAND (ONE-LINER) ---
+
+  fcn_prepare -run ; \
+  self_mail fcn_GFC_client_started ; \
+  fcn_status -wait ; \
+  self_mail fcn_client_finished ; \
+  fcn_prepare -run_fdr ; \
+  fcn_status -wait ; \
+  self_mail fcn_client_FDR_finished ; \
+  fcn_scripts/fcn_check_runs.tcl ; \
+  fcn_promote -no_check -tag GFCA0_FCN_rtl26ww12b_client_refresh ; \
+  fcn_mail_summary ; \
+  fcn_promote -no_check -run_fev ; \
+  fcn_status -wait ; \
+  self_mail fcn_client_FEV_finish
+
+  Then after review: $ward/fcn_commit.csh
+
+================================================================================
+  SPECIAL FLOWS
+================================================================================
+
+  --- HIP WRITER ONLY (update HIP tag without full re-run) ---
+
+  When: Only HIP tag changed, no RTL/clock/IO changes needed.
+  Steps:
+    1. Update hip tag in fcn_scripts/fcn_user_vars.tcl
+    2. fcn_prepare -sd_task \
+         $ward/design_class/c2dg_be/core/snps/fcn/run_fcn_genus_writer.tcl
+    3. Promote and commit
+
+  --- CONTOUR PILOT ---
+
+  Triggered by: Basel's mail
+  Ref models:
+    GFC:        .../rtl26ww10b_client_contour_pilot
+    PNC client: .../PNCB0_FCN_rtl25ww32a_client_contour_checker/
+
+  Steps:
+    1. Copy fcn_scripts
+    2. Edit user vars (tags from Basel's mail)
+    3. fcn_prepare -run
+    4. Run: $ward/fcn_scripts/fcn_check_runs.tcl
+    5. Review: fcn_reports/run_check_latest/td.log
+    6. Report to Basel any errors
+
+  GUI:
+    /nfs/site/disks/idc_bei_fcn/GFC/FCN/gfc_client_netlist_runs/
+      gfc_fcn_scripts_and_GUIs/contour_pilot_gui.py
+
+  --- XPV FDR EXCEPTIONS FOR PAR_PM ---
+
+  When: Need FDR exceptions for additional corner (func.max_lo_hi_hi)
+  Steps:
+    1. Run full FCN with corner: func.max_lo_hi_hi.T_85.typical
+       (same collaterals as max_nom, just different corner)
+    2. Merge FDR exceptions from both corners:
+       Edit vars NOM, LO_HI_HI, OUT in:
+         .../gfc_fcn_scripts_and_GUIs/fdr_exceptions_merged.py
+    3. Add min expressions:
+       Edit vars INPUT_PATH, OUTPUT_PATH in:
+         .../gfc_fcn_scripts_and_GUIs/fdr_exceptions_min.py
+
+  --- FIX BUGGY RTL FILE ---
+
+  When: RTL model has non-synthesizable code or syntax errors.
+  Steps:
+    1. Copy .vs file from RTL to local dir:
+       RTL:   /nfs/.../core/mlc/rtl/mleccred.vs
+       Local: /nfs/.../rtl_fixes/rtl25ww17a/mleccred.vs
+    2. Remove content, keep interface only (make it a black box)
+    3. Edit release/latest/fe_collateral/<par>.f:
+       - Search for the file path (e.g., core/mlc/rtl/mleccred.vs)
+       - Add the local fixed file path BEFORE the original line
+       - Synthesis will read the fixed file first
+
+  Note: Adding to BB list in fcn_user_vars.tcl does NOT work for
+  parametric units. For those, each instance must be blackboxed separately.
+
+================================================================================
+  FCN GUI
+================================================================================
+
+  Full-flow GUI (runs everything + shows errors):
+    /nfs/site/disks/idc_bei_fcn/GFC/FCN/gfc_client_netlist_runs/
+      gfc_fcn_scripts_and_GUIs/fcn_gui.py
+
+  Contour pilot GUI:
+    /nfs/site/disks/idc_bei_fcn/GFC/FCN/gfc_client_netlist_runs/
+      gfc_fcn_scripts_and_GUIs/contour_pilot_gui.py
+
+================================================================================
+  KEY INDICATORS — WHAT TO LOOK AT
+================================================================================
+
+  1. fdr_cnt (FDR = Formal Design Rule)
+  --------------------------------------
+  Compares TST vs REF FDR exception counts per partition.
+
+  What to check:
+    - fdr_exceptions: Should be CLOSE between TST and REF
+    - Small delta (1-2) is normal (new clock/IO tag changes)
+    - Large delta = something changed in synthesis -> investigate
+    - arrays_mcp: Should be 0 (multi-cycle path arrays)
+    - fdr_exceptions_log_errors: Should match TST vs REF
+
+  In WW14_4: All partitions show TST ~2 fewer FDRs than REF.
+  This is because new clock tag resolved some ssh_ijtag/ijtag_tck paths.
+
+  2. seq_and_cell (Sequential & Cell counts)
+  -------------------------------------------
+  Compares Cadence Genus vs Synopsys FC synthesis results.
+
+  What to check:
+    - cdns_cell / cdns_seq: Cadence cell and sequential counts
+    - snps_cell / snps_seq: Synopsys cell and sequential counts
+    - promote: Which tool's netlist gets promoted (always "cdns" here)
+    - Large delta between TST/REF = RTL change or synthesis option change
+
+  In WW14_4: par_meu shows biggest change:
+    TST: 1,773,284 cells vs REF: 1,827,494 (-54K cells, -3%)
+    This is significant — worth investigating.
+
+  3. hips_cnt (HIP = Hard IP instances)
+  ---------------------------------------
+  What to check:
+    - hip_count should match rtl_hip_cnt
+    - xml_only=0, rtl_only=0 (no mismatches)
+    - par_msid has rtl_only=1 — known waiver
+
+  Check hips_paths: fcn_report_csv.tcl
+  EBB pins reference:
+    /nfs/site/proj/gfc/gfc.gk.workarea.44/core/integrate_bundle42032/
+      target/core/RTP/client_n2/par_msid/par_msid/syn/n2/original_ebbs_pins
+
+================================================================================
+  KEY COLLATERALS (INPUTS)
+================================================================================
+
+  Collateral         What it is                          Where it comes from
+  -----------        -----------                         -------------------
+  RTL Model          Source Verilog (design intent)       Basel's mail
+  Clock Tag          Clock defs & constraints             Haya's daily mail (BU_FCN, NOT prop)
+  HIP WA             Hard IP placement & config           Maxim's mail
+  TOP IO Tag         Top-level IO constraints             Timing collateral (latest)
+  ctech              Cell technology libraries (N2P)      gfc_n2_2025ww12/ctech_exp/
+  UPF                Power intent (domains, isolation)    Per-partition .upf files
+  hip_tags.xml       HIP version mapping                  Updated per release
+  attribute.xml      Port attributes for core_client      fnaseral_wa/drops_GFC/
+
+================================================================================
+  DIRECTORY STRUCTURE
+================================================================================
+
+  /nfs/site/disks/idc_bei_fcn/GFC/FCN/gfc_client_netlist_runs/
+    <run_name>/                           -- e.g., rtl26ww12b_client_refresh
+      sd.reopen                           -- Setup command to reopen WA
+      run.all.csh                         -- Master run script
+      fcn_commit.csh                      -- Generated by promote, runs commit
+      fcn_scripts/                        -- Flow scripts
+        fcn_user_vars.tcl                 -- *** KEY CONFIG FILE ***
+        fcn_prepare.tcl                   -- Prepare + submit jobs
+        fcn_promote.tcl                   -- Promote + check + FEV
+        fcn_check_runs.tcl                -- Run quality checks
+        fcn_report_csv.tcl                -- Generate CSV reports
+        fcn_mail                          -- Email generation
+        modes_corners_scenarios.tcl       -- PVT corner setup
+        por_hips.csv                      -- POR HIP list
+        fev_setup_commands.tcl            -- FEV configuration
+      fcn_logs/                           -- Per-partition job logs
+        job.<par>.cdns.log                -- Cadence Genus log
+        job.<par>.cdns.tsk.log            -- Cadence task log
+        job.<par>.snps.log                -- Synopsys FC log
+        job.<par>.fdr.log                 -- FDR check log
+        job.core_client.fev.log           -- FEV log
+      fcn_reports/
+        csv_latest/                       -- Indicator CSVs
+          fdr_cnt.csv                     -- FDR counts
+          fdr_cnt.compare.csv             -- TST vs REF comparison
+          seq_and_cell.csv                -- Cell/seq counts
+          seq_and_cell.compare.csv        -- TST vs REF comparison
+          hips_cnt.csv                    -- HIP counts
+          hips_cnt.compare.csv            -- TST vs REF comparison
+          inputs.csv / inputs.compare.csv -- Input pin comparison
+          fcn_status.html / .xlsx         -- Status dashboard
+          mail.html                       -- Email content
+        run_check_latest/                 -- Detailed check reports
+          summary_check_report.log        -- Overall summary
+          upf_diffs.log                   -- UPF changes (-E- if diff)
+          attribute_xml.log               -- Attribute consistency
+          hips_insts_compare.csv          -- HIP instance detail
+          rails_vs_upf.log                -- Rails vs UPF check
+          units.log                       -- Unit summary
+      runs/
+        <partition>/n2p_htall_conf4/
+          apr_cdns/outputs/               -- Cadence synthesis outputs
+            <par>_shell.v.gz              -- Synthesized netlist
+            soc_hier.partial.csv          -- Hierarchy info
+          apr_fc/reports/setup_timing2/
+            <par>.fdr.rpt                 -- FDR report
+          release/latest/
+            fe_collateral/                -- Promoted netlists + UPF
+            sio_timing_collateral/        -- IO constraints for SIO
+            fdr_collateral/               -- FDR exceptions
+      ref/                                -- Symlink to reference WA
+      fe_model/                           -- RTL model link
+      project/                            -- Project config
+      hip_wa/                             -- HIP work area link
+
+================================================================================
+  FCN SCRIPTS NOTES
+================================================================================
+
+  Scripts in fcn_scripts/ were edited over time by Ameen, Rabin (PNC days),
+  and Amir (GFC). To find the original project/design_class version:
+    cth_find_file <script_name>.tcl
+
+  At end of PNCB0, Amir and Dana Lichten (FCN scripts owner) reviewed all
+  scripts — deleted unnecessary ones, updated global ones. Activity stopped
+  during pncb0/gfca0 race. Recommended to repeat cleanup when time allows.
+
+================================================================================
+  TOOLS & COMMANDS REFERENCE
+================================================================================
+
+  Tool/Command                 Purpose
+  ------------                 -------
+  Cadence Genus                Partition synthesis (Icdns_shell)
+  Synopsys FC                  Top-level synthesis (Ifc_shell)
+  nbjob/nbstatus               Farm job submission/monitoring
+  fcn_prepare                  Setup + submit synthesis jobs
+  fcn_prepare -run             Run synthesis
+  fcn_prepare -run_fdr         Run FDR generation
+  fcn_status -wait             Monitor job status
+  fcn_promote -no_check -tag   Promote outputs + generate commit script
+  fcn_promote -run_fev         Run formal equivalence verification
+  fcn_mail_summary             Send summary email
+  fcn_commit.csh               Commit to $PROJ_ARCHIVE
+  fcn_cdns_check_genus_map     Mid-check: all partitions finished genus_map
+  fcn_snps_check_init_floorplan Mid-check: all partitions finished init_floorplan
+  fcn_xml_hips_vs_rtl_diff     Compare HIPs XML vs RTL model
+  fcn_model_comp_tst_vs_ref_client  Generate ports diff report
+  debug_fev                    Debug FEV checkpoint
+  self_mail                    Send notification email to yourself
+  cth_find_file                Find original design_class script
+
+================================================================================
+  WHAT CHANGED IN WW14_4 (from Amir's email)
+================================================================================
+
+  Same RTL: core-gfc-a0-master-26ww12b (no RTL change)
+  Changed:
+    1. New clock tag: ..._26ww12B_ijtag_cdc_meu_unstamp_BU_FCN
+    2. New TOP IO tag: GFCA0_TOP_IO_26WW14.1
+    3. Updated hip_tags.xml
+
+  Issue found:
+    - Missing FDRs in ALL partitions are in ssh_ijtag <-> ijtag_tck paths
+    - Haya (Muhsen) asked to investigate clock tag change impact
+    - Test with only new TOP IO showed same FDR count as REF
+      -> Clock tag is the cause, not TOP IO
+
+================================================================================
+  HOW THIS CONNECTS TO YOUR SIO WORK
+================================================================================
+
+  1. FCN produces netlists -> Gil uses them for daily builds (FCT)
+  2. When FCN releases a new model, a new FCT daily build follows
+  3. FDR changes in FCN can cause new timing paths in FCT
+  4. Cell count changes (seq_and_cell) affect timing closure effort
+  5. The clock tag change (ijtag_cdc_meu_unstamp) may affect
+     your DFX timing paths (ssh_ijtag/ijtag_tck domain)
+
+  As SIO, you care about:
+    - Did cell counts change significantly? (impacts timing)
+    - Are there new FDR exceptions? (new unconstrained paths)
+    - Did HIPs change? (impacts physical timing)
+    - Clock tag changes -> check DFX and ijtag paths in next daily
+
+================================================================================
+  CONTACT PEOPLE
+================================================================================
+
+  Amir Menashe (amenashe)  — FCN flow owner, handover source
+  Dana Lichten             — FCN scripts owner in design class
+  Oleg Milter              — FDR flow help
+  Basel                    — RTL model drops, contour pilot triggers
+  Maxim                    — HIP tag drops
+  Haya Muhsen              — Clock tag releases (GFC TD daily mail)
+
+================================================================================
+  END OF FCN FLOW GUIDE
+================================================================================

@@ -1,0 +1,107 @@
+================================================================================
+  SIO COPILOT — SKILLS LIST (SHORT VERSION)
+  For: Saar | By: Shachar Unger | Date: 2026-04-09
+  Full version: SIO_SKILLS_LIST_FOR_SAAR.txt
+================================================================================
+
+  15 Skills | 243 Files | 10 Python | 26 Cookbooks | 21 TCL | 44 Knowledge docs
+
+================================================================================
+  PRIORITY 1 — DAY 1 SKILLS (every SIO must know)
+================================================================================
+
+  #1  DAILY BUILD MONITORING
+      par_status.py, par_status_diff.py, ifc_per_corner_report.py
+      -> Track partition health, detect regressions, compare vs PO
+
+  #2  CROSS-PARTITION TIMING DEBUG (IFC)
+      cross_partition_debug_playbook, master_timing_fix_cookbook
+      -> Trace failing paths across partition boundaries, find root cause
+
+  #3  PRIMETIME ANALYSIS
+      pt_client_cookbook, pt_client.pl, sta_primetime_GOLDEN_file_reference
+      -> Live PT queries, PBA analysis, path investigation
+
+  #8  PVT CORNER SYSTEM
+      pvt_tcl_overview, 29 IO constraint TCLs
+      -> Corner naming, voltage ranges, derate settings
+
+  #14 ENVIRONMENT SETUP
+      copilot_bootstrap.txt, aliases/, daily_work_guideline
+      -> Shell setup, team conventions, onboarding
+
+================================================================================
+  PRIORITY 2 — WEEK 1 SKILLS
+================================================================================
+
+  #4  HOLD TIMING ANALYSIS
+      hold_per_port_report.py, hold_daily_vs_pteco.py
+      -> Multi-corner hold debug, daily vs PTECO comparison
+
+  #5  ECO FIX IMPLEMENTATION
+      19 ECO scripts, icc2_eco_fix_cookbook
+      -> Buffer insertion, cell upsize, LVT/ULVT swap, clock rebalancing
+
+  #15 TCL FIXES FOR POs (BY TOOL)
+      18 ICC2 scripts, 8 FC scripts, 7 PT scripts
+      -> Ready-to-use fix TCLs for partition owners
+      *** GAP: 0 Cadence Innovus scripts ***
+
+  #12 SPECS MANAGEMENT
+      spec_status_cookbook, missing_specs_fix CSVs
+      -> Identify missing specs, compare budget vs actual
+
+  #13 PARTITION ANALYSIS
+      par_meu (7 files), par_exe (10 files), par_msid (4 files)
+      -> Deep-dive per partition: uarch, failing paths, HSD gaps
+
+================================================================================
+  PRIORITY 3 — MONTH 1 SKILLS
+================================================================================
+
+  #6  TIP TOPOLOGY         — .tp files, repeater planning (170-200um spacing)
+  #7  JNC CONVERSION       — GFC-to-JNC scripts, cross-project mapping
+  #9  DFX TIMING           — Test mode timing, BIST/BISR/JTAG domains
+  #10 CALIBER              — FC signoff rules (SlowSlope, MaxCap, etc.)
+  #11 FEV                  — Formal equivalence (Conformal LEC)
+
+================================================================================
+  KEY GAPS — WHAT WE NEED TO ADD
+================================================================================
+
+  CRITICAL:
+    - Cadence Innovus ECO scripts (POs have ZERO Innovus TCL)
+    - ICC2-to-Innovus command mapping cookbook
+    - Dual-tool ECO template (generates both ICC2 + Innovus TCL)
+
+  IMPORTANT:
+    - Missing partitions: par_pm, par_mlc, par_fmav0, par_fmav1 (no ECO TCL)
+    - HSD/bug tracking cookbook (RTL4BE, SIO2PO filing)
+    - Newcomer training plan (week 1-4 learning path)
+    - Power impact analysis tools
+    - Regression root-cause cookbook
+    - CDC (clock domain crossing) debug flow
+
+================================================================================
+  QUICK REFERENCE — FILE COUNTS
+================================================================================
+
+  scripts/        10   Python tools
+  cookbooks/      26   Step-by-step guides
+  knowledge/      44   Reference docs
+  tcl/            21   TCL + shell utilities
+  eco_fixes/      19   Signal-specific ECO scripts
+  pt_analysis/    48   PrimeTime reports
+  tip/            11   TIP topology files
+  jnc_conversion/ 11   GFC-to-JNC tools
+  io_constraints/ 29   Per-corner IO TCLs
+  dfx/             6   DFX knowledge
+  caliber/         3   Caliber knowledge
+  fev/             2   FEV knowledge
+  specs/           4   Missing specs fixes
+  aliases/         6   Shell aliases
+  root/            3   README, bootstrap, updater
+                 ---
+  TOTAL          243
+
+================================================================================

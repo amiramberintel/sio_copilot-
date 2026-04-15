@@ -1,0 +1,24 @@
+-WNS,WNS_norm,TNS,Paths
+-50,-0.27,-1405,378,par_mlc/dcreqvm404h_*_[*]
+-46,-0.25,-47516,2342,par_mlc/idic2ureqm5nnh_valid
+-31,-0.17,-91,8,par_mlc/dcreqadrm404h_*_*_*_[*]
+-26,-0.14,-790,50,par_mlc/ml2dcsnpreqvalidmnnnh_*_[*]
+-23,-0.13,-144,9,par_mlc/mlearlyalertfbidm505h_*_*_*_[*]
+-24,-0.13,-642,52,par_mlc/idic2udatam5nnh_data[*]
+-22,-0.12,-1356,94,par_mlc/ml2dcsnpreqvalidmnnnh_*_[*]
+-16,-0.09,-60,11,par_mlc/mlbuffstalltoifulsm500h[*]
+-16,-0.09,-606,136,par_mlc/mlrddatam511h_*_*_*_*_*_*_*_[*]
+-17,-0.09,-70,6,par_mlc/idic2ureqm5nnh_address[*]
+-15,-0.08,-176,32,par_mlc/mlisnpadrm502h_*_*_*_[*]
+-13,-0.07,-76,12,par_mlc/mlbuffstalltoifulsm500h[*]
+-11,-0.06,-16,2,par_mlc/mlearlyalertfbidm505h_*_*_*_[*]
+-11,-0.06,-48,8,par_mlc/idic2ureqm5nnh_rmid[*]
+-12,-0.06,-75,21,par_mlc/mlrddatam511h_*_*_*_*_*_*_*_[*]
+-10,-0.05,-40,4,par_mlc/idic2ureqm5nnh_clos[*]
+-5,-0.03,-22,4,par_mlc/idic2ureqm5nnh_cqid[*]
+-6,-0.03,-19,5,par_mlc/mlisnpadrm502h_*_*_*_[*]
+-4,-0.02,-9,2,par_mlc/dc2mlsnpdatardymnnnh_*_*_*_*_valid
+-2,-0.01,-4,2,par_mlc/idiu2creqm5nnh_opcode[*]
+-1,-0.0,-2,2,par_mlc/core_clk_core_common_clk_glbdrvff_mnsclkenmlcicore0m011h_o icore0/par_pmh/icore_clk_icore_common_clk_glbdrvff_mnsclkenpmhm010h_d
+-1,-0.0,-2,2,par_mlc/mlisnpclkenm501h_*_[*]
+-1,-0.0,-3,3,par_mlc/mltmulpgfsmackmnn2h[*]

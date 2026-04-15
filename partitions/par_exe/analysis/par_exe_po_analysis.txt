@@ -1,0 +1,261 @@
+[1;37m==============================================================================================================[0m
+[1;37m  PAR_EXE — PO WORKSPACE ANALYSIS + FIX RECOMMENDATIONS[0m
+[1;37m  PO: atraitel | Partition: par_exe[0m
+[1;37m  PO WA: /nfs/site/disks/atraitel_wa01/gfc/exe/26ww10e_contour_final_syn/26ww11d_dft_1[0m
+[1;37m  RTL: core-gfc-a0-master-26ww10b | Tool: Synopsys Fusion Compiler V-2023.12-SP5-6[0m
+[1;37m  BU Daily: FCT26WW12G_dcm_daily-CLK048 (WW13.1)[0m
+[1;37m  Date: 2026-03-22[0m
+[1;37m==============================================================================================================[0m
+
+
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[1;37m  SECTION 1: FLOW STAGE PROGRESSION[0m
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+
+  [1;37mStage                    Setup WNS    Setup TNS       NVP     Status[0m
+  [1;37m──────────────────────────────────────────────────────────────────────────────────────────[0m
+  [2minsert_dft               -2,253,795   -28.6B          219K    ✓ Done (pre-opt baseline)[0m
+  [2mcompile_initial_opto     -212         -255K           27K     ✓ Done[0m
+  [2mcompile_final_opto       -208         -387K           39K     ✓ Done[0m
+  [2mcts                      -812         -2.17M          58K     ✓ Done (clock tree added)[0m
+  [2mclock_route              -812         -2.16M          58K     ✓ Done[0m
+  [1;35mclock_route_opt          -134         -653K           39K     ✓ Done (current stage)[0m
+  [1;31mMANUAL ECOs              -134→ ???    in progress     ???     ◀ PO is HERE[0m
+
+  [2mHold: WNS=-121ps, TNS=-956K, NVP=81K (at clock_route_opt)[0m
+  [2mNet violations: 8,133 (max_trans=5,133, max_cap=3,025)[0m
+
+  [1;37mManual ECO branches active:[0m
+    • apr_fc_cts_eco_byplevel_pull  — bypass level pulling
+    • apr_fc_cts_eco_prf_clk_fix   — PRF clock fixing
+    • apr_fc_cts_eco_data305       — dataM305H path fixing
+
+
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[1;37m  SECTION 2: CELL STATS[0m
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+
+  [1;37mMetric               PO (atraitel)     Notes[0m
+  [1;37m──────────────────────────────────────────────────────────────────────[0m
+  ULVT                 52.63%  (991K)    Aggressive — >50% threshold
+  ULVTLL               14.46%  (272K)    
+  LVT                  32.91%  (620K)    
+  MBFF coverage        60.94%            Good banking
+  Buf+Inv cells        687,613           High buffer count
+  Clock gating         4,052 cells       3,904 RTL + 148 tool
+  Combinational        1,797,908 cells
+  [2mTotal cells          ~1.88M[0m
+
+
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[1;37m  SECTION 3: FEV STATUS[0m
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+
+  [1;31mRESULT: FAIL — 4 non-equivalent points[0m
+  Tool: Cadence Conformal LEC | Timestamp: Mar 22, 2026 (today)
+
+  [1;37m                Passing    Failing    Aborted    Unmapped[0m
+  [1;37m────────────────────────────────────────────────────────────[0m
+  Points           161,230        4       7,086        72 (golden) / 4 (revised)
+  
+  [2mPower grid: 172 equivalent, 0 non-equivalent[0m
+  [2mPST: equivalent[0m
+  [2mBlackboxes: 86 golden, 86 revised[0m
+
+  [1;35mThe 4 failures are all BBOX (blackbox) non-equivalences — likely from[0m
+  [1;35mmanual ECOs touching macro boundaries. Need debug in Conformal.[0m
+
+
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[1;37m  SECTION 4: IFC INTERFACE TIMING — TOP 20 WORST SIGNALS[0m
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+
+  [1;37mTotal: 155 families | Failing: 153 | Clean: 2[0m
+  [1;37mCategories: UNTRACKED=101 | FIX_PENDING=38 | FIX_LANDED=13 | REJECTED=1[0m
+
+  [1;37mCrossing distribution:[0m
+    ooo_vec → exe:   44 families   (28%)  ← biggest source
+    meu → exe:       37 families   (24%)
+    exe → meu:       19 families   (12%)
+    exe → fmav0:     16 families   (10%)
+    exe → fmav1:     13 families    (8%)
+    Other:           26 families   (17%)
+
+  [1;37m#   WNS  Signal                                  Crossing              HSD Status       TIP[0m
+  [1;37m────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+  [1;31m 1. -77  rsrealdispm304h                         meu → exe             FIX_PENDING      ---[0m
+  [1;31m 2. -68  mistdatam3n6h                           exe → meu             UNTRACKED        ---[0m
+  [1;31m 3. -60  rsvecsbidm301h                          ooo_vec → exe → meu   FIX_PENDING      ---[0m
+  [1;31m 4. -57  deponld_v2im303h                        exe → meu             UNTRACKED        ---[0m
+  [1;31m 5. -57  rsvecldprfwrcancelm805h                 meu → exe             UNTRACKED        ---[0m
+  [1;31m 6. -52  rsvecldportwritemuxctlm805h             meu → exe             UNTRACKED        ---[0m
+  [1;31m 7. -51  gatherelmidm805h                        meu → exe             FIX_PENDING      ---[0m
+  [1;31m 8. -46  mowbdatavldrobm805h                     meu → exe             UNTRACKED        TIP(4)[0m
+  [1;31m 9. -46  shuf2vfpp7v0wbm804h_data                exe → fmav0           UNTRACKED        ---[0m
+  [1;35m10. -44  cr_ring0_out_miint0_crpwrupmh           meu → exe             UNTRACKED        ---[0m
+  [1;35m11. -45  rsvecpdstm301h                          ooo_vec → exe         FIX_LANDED       ---[0m
+  [1;35m12. -43  rsvecuopisgitm301h                      ooo_vec → exe         FIX_PENDING      ---[0m
+  [1;35m13. -41  gatherelmszm805h                        meu → exe             FIX_PENDING      ---[0m
+  [1;35m14. -41  ronuket_m907h                           exe → meu             UNTRACKED        ---[0m
+  [1;35m15. -40  rsuopvm302h                             exe → ooo_vec         UNTRACKED        ---[0m
+  [1;35m16. -40  rsveczeroctlm301h                       ooo_vec → exe         UNTRACKED        ---[0m
+  [1;35m17. -39  exe_miu_psa_*_mnnnh                     exe → meu             UNTRACKED        ---[0m
+  [1;35m18. -38  mec_mob_dcdestsizeldm802h               meu → exe             FIX_PENDING      ---[0m
+  [1;35m19. -37  rsvecimmdatam302h                       ooo_vec → exe         FIX_PENDING      ---[0m
+  [1;35m20. -37  shuf2vfpp2v1wbm804h_data                exe → fmav1           UNTRACKED        ---[0m
+
+
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[1;37m  SECTION 5: FIX RECOMMENDATIONS (per master_timing_fix_cookbook.txt)[0m
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+
+  [1;37mSince PO is at manual ECO stage in FC, MODE 1 (ECO) + MODE 2 (CLOCK) apply.[0m
+  [1;37mMODE 3 (SIO2PO) already has 38 HSDs filed.[0m
+
+  [2mTechniques available at this stage:[0m
+  [2m  C1: size_cell (upsize)     C2: size_cell (downsize)   C3: Vt swap[0m
+  [2m  C4: insert_buffer          C5: remove_buffer          C6: move_objects[0m
+  [2m  C7: route_eco              E1: useful_skew            E2: CTS buffer sizing[0m
+
+  [1;37m────────────────────────────────────────────────────────────────────────────────────────────[0m
+  [1;37mPRIORITY 1: CRITICAL PATHS (WNS ≤ -50ps) — 7 signals[0m
+  [1;37m────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+  [1;31mP1. rsrealdispm304h (-77ps) | meu → exe | FIX_PENDING[0m
+      [1;37mRoot cause:[0m This is a dataM305/304 family — PO already working on it
+        (apr_fc_cts_eco_data305 branch exists)
+      [1;37mTechniques:[0m
+        C3: Vt swap ULVTLL→ULVT on receiver path (~5ps)
+        C1: Upsize receiver cells (D2→D4→D8) (~5-10ps)
+        E1: Useful skew — delay launch clock on source FF (~10-25ps)
+        D1: Bound source FF closer to port (SIO2PO — 5 HSDs already filed!)
+      [1;37mExpected gain:[0m 20-40ps — needs COMBINATION of techniques
+      [1;37mTCL:[0m size_cell + Vt swap on receiver cone
+
+  [1;31mP2. mistdatam3n6h (-68ps) | exe → meu | UNTRACKED[0m
+      [1;37mRoot cause:[0m 610 failing paths, exe→meu crossing = source is in exe
+      [1;37mTechniques:[0m
+        C1: Upsize driver cells in source cone (~5-10ps)
+        C3: Vt swap LVT→ULVT on data path (~5-10ps)
+        C4: Buffer on long wires from driver to port (~5-15ps)
+        E1: Useful skew — prepone launch clock (~10-25ps)
+        D1: Bound source FF — file SIO2PO HSD
+      [1;37mExpected gain:[0m 25-60ps with combined techniques
+      [1;37mACTION:[0m File SIO2PO HSD + apply ECO fixes
+
+  [1;31mP3. rsvecsbidm301h (-60ps) | ooo_vec → exe → meu | FIX_PENDING[0m
+      [1;37mRoot cause:[0m Multi-partition crossing (3 partitions)
+      [1;37mTechniques:[0m
+        C1+C3: Upsize + Vt swap on FEEDTHRU buffer chain (~10-15ps)
+        C5: Check if excess buffers in feedthru — remove (~5-10ps)
+        D1: Bound via SIO2PO (HSD 13014429736 filed, sign_off)
+      [1;37mExpected gain:[0m 15-25ps — limited by multi-partition nature
+      [1;37mNote:[0m SIO2PO HSD is in sign_off — follow up on it
+
+  [1;31mP4. deponld_v2im303h (-57ps) | exe → meu | UNTRACKED[0m
+      [1;37mTechniques:[0m
+        C1+C3: Upsize + Vt swap on source cone (~10-15ps)
+        C4: Buffer insertion on long wire to meu port (~5-15ps)
+        E1: Useful skew on launch FF (~10-25ps)
+      [1;37mExpected gain:[0m 25-55ps
+      [1;37mACTION:[0m File SIO2PO HSD + ECO
+
+  [1;31mP5. rsvecldprfwrcancelm805h (-57ps) | meu → exe | UNTRACKED[0m
+      [1;37mTechniques:[0m
+        C1+C3: Upsize + Vt swap on receiver path in exe (~10-15ps)
+        E1: Useful skew — delay receiver clock (~10-25ps)
+      [1;37mExpected gain:[0m 20-40ps
+      [1;37mACTION:[0m File SIO2PO HSD
+
+  [1;31mP6. rsvecldportwritemuxctlm805h (-52ps) | meu → exe | UNTRACKED[0m
+      [1;37mTechniques:[0m
+        C1+C3: Upsize + Vt swap on receiver (~10-15ps)
+        E1: Useful skew (~10-25ps)
+      [1;37mExpected gain:[0m 20-40ps
+      [1;37mACTION:[0m File SIO2PO HSD (NEW regression from WW12C)
+
+  [1;31mP7. gatherelmidm805h (-51ps) | meu → exe | FIX_PENDING[0m
+      [1;37mTechniques:[0m
+        C1+C3: Upsize + Vt swap (~10-15ps)
+        E1: Useful skew (~10-25ps)
+        D1: SIO2PO bound (2 HSDs filed, both sign_off)
+      [1;37mExpected gain:[0m 20-40ps — follow up on SIO2PO sign_off
+
+
+  [1;37m────────────────────────────────────────────────────────────────────────────────────────────[0m
+  [1;37mPRIORITY 2: MODERATE PATHS (-50ps < WNS ≤ -30ps) — 13 signals[0m
+  [1;37m────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+  [1;35mThe shuf2vfpp*wbm804h family (exe→fmav0/fmav1) — 5 signals, massive path count:[0m
+    shuf2vfpp7v0 (-46ps, 113K paths), shuf2vfpp2v1 (-37ps, 112K paths)
+    shuf2vfpp2v0 (-37ps, 130K paths), shuf2vfpp3v0 (-35ps, 72K paths)
+    shuf2vfpp6v0 (-33ps, 40K paths)
+    [1;37mThese are all FMAV shuffle bus paths — huge fanout.[0m
+    [1;37mTechniques:[0m C3: Vt swap on the shuf muxes + C1: upsize drivers
+    [1;37mRisk:[0m Touching 100K+ paths — test incrementally
+    [1;37mACTION:[0m File SIO2PO HSD for the shuf2vfpp family as a group
+
+  [1;35mmowbdatavldrobm805h (-46ps) | meu → exe | TIP(4) — already has TIP cells![0m
+    TIP cells placed but still failing — TIP may need relocation or more cells
+    [1;37mTechniques:[0m C1+C3 on receiver + check TIP cell placement
+
+  [1;35mcr_ring0_out_miint0_crpwrupmh (-44ps) | meu → exe | UNTRACKED[0m
+    Clock ring crossing — may need E1 useful skew or D3 push clock
+
+  [1;35mrsuopvm302h (-40ps), rsveczeroctlm301h (-40ps) | ooo_vec → exe[0m
+    Standard data crossings — C1+C3+E1 combo applies
+
+
+  [1;37m────────────────────────────────────────────────────────────────────────────────────────────[0m
+  [1;37mPRIORITY 3: MILD PATHS (-30ps < WNS ≤ -15ps) — closable with ECO[0m
+  [1;37m────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+  [1;36mThese 38+ signals are within ECO closing range.[0m
+  [1;36mGeneric recipe: C1 (upsize 1-2 cells) + C3 (Vt swap 2-3 cells) = 10-20ps gain[0m
+  [1;36mMany already have SIO2PO HSDs in sign_off — follow up.[0m
+
+
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[1;37m  SECTION 6: TCL FIX SCRIPT TEMPLATE[0m
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+
+  [2mThe following TCL is a TEMPLATE for FC shell. PO needs to verify cell names[0m
+  [2mand paths in the actual design before executing.[0m
+  [2mTechnique IDs reference master_timing_fix_cookbook.txt[0m
+
+  [1;37mScript will be saved to: avi_exe/par_exe_eco_fixes.tcl[0m
+
+
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[1;37m  SECTION 7: ACTION ITEMS[0m
+[1;37m═══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+
+  [1;31m[URGENT]  File SIO2PO HSDs for top 5 UNTRACKED signals[0m
+             mistdatam3n6h, deponld_v2im303h, rsvecldprfwrcancelm805h,
+             rsvecldportwritemuxctlm805h, shuf2vfpp* family
+
+  [1;31m[URGENT]  Debug FEV 4 failing points — before next release[0m
+
+  [1;35m[FOLLOW]  38 SIO2PO HSDs pending — 22 in sign_off, need approval[0m
+
+  [1;35m[FOLLOW]  13 FIX_LANDED still failing — check if RTL fix landed in this RTL[0m
+
+  [1;32m[ECO]     Apply ECO fixes on P1-P7 using TCL script below[0m
+
+  [1;32m[REVIEW]  Check data305 ECO results — are they helping?[0m
+
+
+[1;37m==============================================================================================================[0m
+[1;37m  BUILD INFO[0m
+[1;37m==============================================================================================================[0m
+
+  [2mPO WA:     /nfs/site/disks/atraitel_wa01/gfc/exe/26ww10e_contour_final_syn/26ww11d_dft_1[0m
+  [2mBU Daily:  FCT26WW12G_dcm_daily-CLK048[0m
+  [2mRTL:       core-gfc-a0-master-26ww10b[0m
+  [2mFC ver:    V-2023.12-SP5-6-T-20251217[0m
+  [2mFEV:       Cadence Conformal LEC[0m
+  [2mGenerated: 2026-03-22 01:29[0m
+
+[1;37m==============================================================================================================[0m
+[1;37m  END OF PAR_EXE ANALYSIS[0m
+[1;37m==============================================================================================================[0m

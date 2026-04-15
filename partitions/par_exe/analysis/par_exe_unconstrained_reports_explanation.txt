@@ -1,0 +1,133 @@
+================================================================================
+         PAR_EXE UNCONSTRAINED REPORTS - UNDERSTANDING THE DIFFERENCE
+================================================================================
+
+QUESTION: Why do core_client bu_uc.rpt and par_exe GOLDEN unconstrained_endpoints
+          have ZERO correlation (completely different signals)?
+
+ANSWER: They report DIFFERENT types of unconstrained signals!
+
+================================================================================
+                        REPORT #1: PARTITION GOLDEN
+================================================================================
+
+File: /nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_exe/sta_primetime/GOLDEN/
+      par_exe.func.max_high.T_85.typical.unconstrained_endpoints.rpt.gz
+
+What it contains:
+  - OUTPUT PORTS of par_exe that have NO set_output_delay constraint
+  - These are EXTERNAL interface signals FROM par_exe TO other partitions
+  
+Count: 247 external signals
+
+Example signals:
+  - rsveceuuopcodm303h[*]          - Vec EU uop code OUTPUTS to OOO_VEC
+  - specpdstforldbundlecancel[*]   - Speculative dest OUTPUTS
+  - mi2*                           - Micro-instruction OUTPUTS
+
+What this means:
+  - The output timing at these ports is NOT being checked
+  - Need: set_output_delay specs for these partition interfaces
+  - These signals GO OUT from par_exe to other partitions
+
+================================================================================
+                      REPORT #2: CORE_CLIENT bu_uc
+================================================================================
+
+File: /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_26ww06b_ww07_6_TIP...
+      /runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/reports/
+      core_client.func.max_high.T_85.typical_bu_uc.rpt
+
+What it contains:
+  - Signals unconstrained during BOTTOM-UP (BU) chip-level analysis
+  - These are signals that don't have valid timing paths at CHIP LEVEL
+  - Often INPUT signals or internal endpoints
+  
+Count: 268 par_exe signals
+
+Example signals:
+  - exe_tfb_tfb_in[*]     - TFB INPUT signals (note: _in suffix)
+  - fpv*wbzerom804h[*]    - FPV writeback zero flags (inputs from FPU)
+  - rsist*, rsvect*       - RS signals coming INTO execution units
+
+What this means:
+  - These are paths unconstrained when viewed from CHIP LEVEL
+  - Most match the waiver file (233 out of 244 waived)
+  - These signals COME INTO par_exe from other partitions
+
+================================================================================
+                           KEY INSIGHT
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│   PARTITION unconstrained_endpoints = OUTPUTS from par_exe                  │
+│                                       (need output delay specs)             │
+│                                                                             │
+│   CORE_CLIENT bu_uc                 = INPUTS to par_exe                     │
+│                                       (unconstrained at chip integration)   │
+│                                                                             │
+│   ZERO OVERLAP because they report OPPOSITE directions!                     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                         VISUAL REPRESENTATION
+================================================================================
+
+                    PARTITION BOUNDARY
+                          │
+    OTHER PARTITIONS      │         PAR_EXE
+                          │
+    ──────────────────>───┼───>  [exe_tfb_tfb_in]     ← bu_uc.rpt reports these
+    (fpv*wbzero, etc.)    │       (INPUTS)               (signals ENTERING par_exe)
+                          │
+                          │
+    <──────────────────<──┼───<  [rsveceuuopcodm303h] ← unconstrained_endpoints
+    (to ooo_vec, etc.)    │       (OUTPUTS)              reports these
+                          │                              (signals LEAVING par_exe)
+
+================================================================================
+                       WAIVER CORRELATION
+================================================================================
+
+The bu_uc.rpt signals (268) heavily overlap with unconstrained.waivers.csv:
+  - 233 out of 244 waived par_exe signals appear in bu_uc.rpt
+  - Waivers are for INPUT signals (coming INTO par_exe)
+  - Partition GOLDEN reports OUTPUT signals (going OUT from par_exe)
+
+================================================================================
+                    WHICH REPORT TO USE?
+================================================================================
+
+FOR OUTPUTS (par_exe -> other partitions):
+  Use: par_exe GOLDEN unconstrained_endpoints.rpt
+  Action: Need set_output_delay specs for these 247 signals
+  Status: NOT covered by current waivers
+
+FOR INPUTS (other partitions -> par_exe):
+  Use: core_client bu_uc.rpt (or waivers file)
+  Action: Most already waived (233 of 244)
+  Status: Covered by unconstrained.waivers.csv
+
+================================================================================
+                          SUMMARY
+================================================================================
+
+The two reports serve DIFFERENT purposes:
+
+1. unconstrained_endpoints.rpt = Partition standalone STA
+   - Shows: All ports without timing constraints
+   - Useful for: Identifying interface specs needed
+   - Scope: Single partition analysis
+
+2. bu_uc.rpt = Chip-level bottom-up STA
+   - Shows: Paths unconstrained after chip integration
+   - Useful for: Tracking what needs waivers at chip level
+   - Scope: Full chip analysis
+
+Both are valid reports - they just answer DIFFERENT questions!
+
+================================================================================
+                     CREATED: $(date)
+================================================================================

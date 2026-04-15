@@ -1,0 +1,2416 @@
+
+  [45;1;37m PAR_MEU IFC VIOLATIONS vs HSD STATUS — GAP REPORT [0m
+
+  [2mPO Build :[0m  mfeldma1 par_meu_ww11 (VER_053, Mar 19 2026)
+  [2mHSD DBs  :[0m  gfc.sio2po.rtl4be + gfc.rtl4be (Mar 22 2026)
+  [2mCorner   :[0m  func.max_high.T_85.typical (186ps / ~5.38GHz)
+  [2mScope    :[0m  All IFC ports with negative slack
+
+  [1;37m┌─────────────────────────────────────────────────────────────────┐[0m
+  [1;37m│                     ACTION ITEMS SUMMARY                        │[0m
+  [1;37m├───────────────────────┬──────────┬────────────┬─────────────────┤[0m
+  [1;37m│ Action                │   #Ports │  Worst WNS │ #Families       │[0m
+  [1;37m├───────────────────────┼──────────┼────────────┼─────────────────┤[0m
+  [1;37m│[0m [35mNEED NEWER BUILD     [0m [1;37m│[0m       43 [1;37m│[0m [31m   -109.3ps[0m [1;37m│[0m       8         [1;37m│[0m
+  [1;37m│[0m [36mAWAITING SIGN-OFF    [0m [1;37m│[0m      822 [1;37m│[0m [35m    -96.6ps[0m [1;37m│[0m     194         [1;37m│[0m
+  [1;37m│[0m [35mFIX IN PROGRESS      [0m [1;37m│[0m      440 [1;37m│[0m [35m    -89.7ps[0m [1;37m│[0m      55         [1;37m│[0m
+  [1;37m│[0m [31mNO HSD FILED         [0m [1;37m│[0m     1643 [1;37m│[0m [35m    -62.9ps[0m [1;37m│[0m     128         [1;37m│[0m
+  [1;37m│[0m [32mVERIFY FIX LANDED    [0m [1;37m│[0m      245 [1;37m│[0m [35m    -52.1ps[0m [1;37m│[0m      68         [1;37m│[0m
+  [1;37m│[0m [2mCHECK MANUALLY       [0m [1;37m│[0m       36 [1;37m│[0m [36m    -45.8ps[0m [1;37m│[0m       7         [1;37m│[0m
+  [1;37m├───────────────────────┼──────────┼────────────┼─────────────────┤[0m
+  [1;37m│[0m [1;37mTOTAL                 │     3229 │            │     460         │[0m
+  [1;37m└───────────────────────┴──────────┴────────────┴─────────────────┘[0m
+
+
+  [1;37mBREAKDOWN BY PARTITION[0m
+  [2m───────────────────────────────────────────────────────────────────────────────────────────────[0m
+  [36mpar_exe             [0m  [35mWNS    -93.4ps[0m  │  Total:   201 ports
+                        [35m  ├─ NEED NEWER BUILD            2 ports  (worst -12.9ps)[0m
+                        [36m  ├─ AWAITING SIGN-OFF          78 ports  (worst -93.4ps)[0m
+                        [35m  ├─ FIX IN PROGRESS            68 ports  (worst -53.2ps)[0m
+                        [31m  ├─ NO HSD FILED               33 ports  (worst -22.1ps)[0m
+                        [32m  ├─ VERIFY FIX LANDED          20 ports  (worst -45.7ps)[0m
+
+  [36mpar_fe              [0m  [35mWNS    -89.9ps[0m  │  Total:   200 ports
+                        [35m  ├─ NEED NEWER BUILD            4 ports  (worst -32.9ps)[0m
+                        [36m  ├─ AWAITING SIGN-OFF         150 ports  (worst -89.9ps)[0m
+                        [31m  ├─ NO HSD FILED               42 ports  (worst -29.5ps)[0m
+                        [32m  ├─ VERIFY FIX LANDED           4 ports  (worst -16.5ps)[0m
+
+  [36mpar_fmav0           [0m  [36mWNS    -27.7ps[0m  │  Total:   211 ports
+                        [35m  ├─ FIX IN PROGRESS             1 ports  (worst -0.8ps)[0m
+                        [31m  ├─ NO HSD FILED              209 ports  (worst -17.6ps)[0m
+                        [32m  ├─ VERIFY FIX LANDED           1 ports  (worst -27.7ps)[0m
+
+  [36mpar_fmav1           [0m  [36mWNS    -21.4ps[0m  │  Total:   724 ports
+                        [35m  ├─ FIX IN PROGRESS             6 ports  (worst -15.6ps)[0m
+                        [31m  ├─ NO HSD FILED              718 ports  (worst -21.4ps)[0m
+
+  [36mpar_mlc             [0m  [36mWNS    -31.8ps[0m  │  Total:   161 ports
+                        [36m  ├─ AWAITING SIGN-OFF          67 ports  (worst -31.8ps)[0m
+                        [35m  ├─ FIX IN PROGRESS             2 ports  (worst -20.8ps)[0m
+                        [31m  ├─ NO HSD FILED               92 ports  (worst -8.5ps)[0m
+
+  [36mpar_msid            [0m  [35mWNS    -81.6ps[0m  │  Total:     8 ports
+                        [36m  ├─ AWAITING SIGN-OFF           7 ports  (worst -81.6ps)[0m
+                        [35m  ├─ FIX IN PROGRESS             1 ports  (worst -0.7ps)[0m
+
+  [36mpar_ooo_int         [0m  [31mWNS   -109.3ps[0m  │  Total:   579 ports
+                        [35m  ├─ NEED NEWER BUILD           33 ports  (worst -109.3ps)[0m
+                        [36m  ├─ AWAITING SIGN-OFF         334 ports  (worst -69.0ps)[0m
+                        [35m  ├─ FIX IN PROGRESS            52 ports  (worst -89.7ps)[0m
+                        [31m  ├─ NO HSD FILED               26 ports  (worst -34.3ps)[0m
+                        [32m  ├─ VERIFY FIX LANDED          99 ports  (worst -37.3ps)[0m
+                        [2m  ├─ CHECK MANUALLY             35 ports  (worst -45.8ps)[0m
+
+  [36mpar_ooo_vec         [0m  [35mWNS    -96.6ps[0m  │  Total:    84 ports
+                        [36m  ├─ AWAITING SIGN-OFF          61 ports  (worst -96.6ps)[0m
+                        [35m  ├─ FIX IN PROGRESS            22 ports  (worst -87.5ps)[0m
+                        [32m  ├─ VERIFY FIX LANDED           1 ports  (worst -21.7ps)[0m
+
+  [36mpar_pm              [0m  [36mWNS    -49.5ps[0m  │  Total:     2 ports
+                        [31m  ├─ NO HSD FILED                2 ports  (worst -49.5ps)[0m
+
+  [36mpar_pmh             [0m  [35mWNS    -62.9ps[0m  │  Total:  1059 ports
+                        [35m  ├─ NEED NEWER BUILD            4 ports  (worst -8.0ps)[0m
+                        [36m  ├─ AWAITING SIGN-OFF         125 ports  (worst -47.2ps)[0m
+                        [35m  ├─ FIX IN PROGRESS           288 ports  (worst -42.8ps)[0m
+                        [31m  ├─ NO HSD FILED              521 ports  (worst -62.9ps)[0m
+                        [32m  ├─ VERIFY FIX LANDED         120 ports  (worst -52.1ps)[0m
+                        [2m  ├─ CHECK MANUALLY              1 ports  (worst -41.7ps)[0m
+
+
+  [45;1;37m NEED NEWER BUILD — 8 families, 43 ports [0m
+  [2m───────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+    [1;37mmowbcheckrobidldm803h[0m
+    [31mWNS: -109.3ps[0m  │  30 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014900127[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ mowbcheckrobidldm803h_*_[*] - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013920418[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/mowbcheckrobidldm803h* -> par_ooo_int/rowbcheckrobidldm804h* - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996289[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014326924[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013174636[0m  [32mcomplete       [0m  [2mowner:[0m ameenkha      [2m2026-03-03[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013590241[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ alloc_int/alrmc/aliclbd/RecJeClrMCLBIDValidMnnnH broken path[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014133848[0m  [32mrepo_modified  [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ [par_ooo_int]mowbcheckrobidldm803* toward alrmc/aliclbd - 26 logic cell + 400um[0m
+
+    [1;37mieportedjecleartofem806h_op[0m
+    [36mWNS: -32.9ps[0m  │  4 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014587209[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-03-02[0m  [2mpar_meu[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839075[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - remove buffers in manual work[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893619[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/exe_int_ieportedjeclearm805h_op_8 - fix routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013373569[0m  [36msign_off       [0m  [2mowner:[0m mburak        [2m2025-11-04[0m  [2mpar_msid[0m
+    [2m│  └─ ieportedjeclearm806h[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014205144[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/ieportedjeclear2combm805h - bound logic and flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014365593[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-01-13[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/ieportedjeclear2combm805h -> ieportedjeclear_tofitm806h  - bound logic and flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014727589[0m  [36msign_off       [0m  [2mowner:[0m navits        [2m2026-03-02[0m  [2mpar_msid[0m
+    [2m│  └─ and/or fix the clock to meet timing spec[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013919390[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014703633[0m  [32mcomplete       [0m  [2mowner:[0m bgabbay       [2m2026-03-12[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013896162[0m  [32mrepo_modified  [0m  [2mowner:[0m ahaimovi      [2m2026-03-03[0m
+
+    [1;37mmlnotmulpgfusemnn4h[0m
+    [36mWNS: -14.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014542325[0m  [35mnot_done       [0m  [2mowner:[0m baselibr      [2m2026-03-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/mlnotmulpgfusemnn4h -> altmulpgturnonmnnnh - bound the logic and flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014422060[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-03[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/mlnotmulpgfusemnn4h - remove BE icg and push the clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014542049[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-03-15[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/mlnotmulpgfusemnn4h -> altmulendthrottlemnnnh - bound the logic and flop[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014630275[0m  [32mrepo_modified  [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ -> alallowtdqdispmnnnh broken logic delay path[0m
+
+    [1;37mmec_mob_mowbdatavldexem805h[0m
+    [36mWNS: -12.9ps[0m  │  2 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014481628[0m  [32mrepo_modified  [0m  [2mowner:[0m ogal          [2m2026-03-03[0m
+
+    [1;37mjeclearm806h[0m
+    [36mWNS: -8.0ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014833902[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-08[0m  [2mpar_meu[0m
+    [2m│  └─ - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013373569[0m  [36msign_off       [0m  [2mowner:[0m mburak        [2m2025-11-04[0m  [2mpar_msid[0m
+    [2m│  └─ ieportedjeclearm806h[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014365593[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-01-13[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/ieportedjeclear2combm805h -> ieportedjeclear_tofitm806h  - bound logic and flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014430413[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014727589[0m  [36msign_off       [0m  [2mowner:[0m navits        [2m2026-03-02[0m  [2mpar_msid[0m
+    [2m│  └─ and/or fix the clock to meet timing spec[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014703633[0m  [32mcomplete       [0m  [2mowner:[0m bgabbay       [2m2026-03-12[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013896162[0m  [32mrepo_modified  [0m  [2mowner:[0m ahaimovi      [2m2026-03-03[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013318134[0m  [32mcomplete       [0m  [2mowner:[0m ahaimovi      [2m2026-03-03[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014154039[0m  [32mcomplete       [0m  [2mowner:[0m eabuyuni      [2m2026-03-03[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013363607[0m  [32mcomplete       [0m  [2mowner:[0m bgabbay       [2m2026-03-03[0m
+
+    [1;37miclbvncwritedcuenm404h[0m
+    [36mWNS: -7.5ps[0m  │  3 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014681760[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-02[0m  [2mpar_meu[0m
+    [2m│  └─ iclbvncwritedcuenm404h[*] bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801862[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ iclbvncwritedcuenm404h[*] exclude multibit push clk[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802483[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-10[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/iclbvncwritedcuenm404h[*] - early clk[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m22022168903[0m  [32mrepo_modified  [0m  [2mowner:[0m snouri        [2m2026-03-17[0m
+
+    [1;37mvalidjuoppwrm303h[0m
+    [36mWNS: -3.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013675739[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014418641[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014362936[0m  [32mrepo_modified  [0m  [2mowner:[0m ckashti       [2m2026-03-03[0m
+
+    [1;37mmoearlypwrupldm799h[0m
+    [36mWNS: -2.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m22022199248[0m  [32mrepo_modified  [0m  [2mowner:[0m snouri        [2m2026-03-19[0m
+    [2m│  └─ Wakeup, duplication for StInc and use ICLBValid Clock enable for EarlyPwrUpLdM799HFO[0m
+
+
+  [45;1;37m FIX IN PROGRESS — 55 families, 440 ports [0m
+  [2m───────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+    [1;37mrsslowrobidvpm803h_5_[0m
+    [35mWNS: -89.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860945[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsslowrobidvpm803h_*_ bound flop and fix clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327485[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mrsslowrobidvpm803h_3_[0m
+    [35mWNS: -87.5ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860945[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsslowrobidvpm803h_*_ bound flop and fix clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327485[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mrsslowrobidvpm803h_7_[0m
+    [35mWNS: -76.9ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860945[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsslowrobidvpm803h_*_ bound flop and fix clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327485[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mrsslowrobidvpm803h_1_[0m
+    [35mWNS: -69.9ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860945[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsslowrobidvpm803h_*_ bound flop and fix clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327485[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mcr_ring4_out_crpwrupmh[0m
+    [35mWNS: -56.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861001[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ - bonud flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400650[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mgatherelmidm805h[0m
+    [35mWNS: -53.2ps[0m  │  16 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840358[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ gatherelmidm805h_*_[*] - early clk[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014326190[0m  [36msign_off       [0m  [2mowner:[0m hmuhsen       [2m2026-02-14[0m  [2mpar_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014326932[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mcr_ring4_out_crdatamh[0m
+    [36mWNS: -49.0ps[0m  │  30 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400650[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861001[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ - bonud flop[0m
+
+    [1;37mmowbdatavldrsdupm805h[0m
+    [36mWNS: -47.0ps[0m  │  4 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014892538[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mowbdatavldrsdupm805h__FEEDTHRU_1[*] - bound flops[0m
+
+    [1;37mrsintdeponldm304h_805_[0m
+    [36mWNS: -45.0ps[0m  │  6 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839882[0m  [35mnot_done       [0m  [2mowner:[0m hmuhsen       [2m2026-03-09[0m  [2mpar_exe[0m
+
+    [1;37mbypreqadrm403h_1_[0m
+    [36mWNS: -42.8ps[0m  │  90 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014862774[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ bypreqadrm403h_*__*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014681128[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-02-23[0m  [2mpar_meu[0m
+    [2m│  └─ bypreqadrm403h_*__*_[*] fix routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014803855[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ bypreqadrm403h_*__*_[*] push flop clocks / check rfips clk[0m
+
+    [1;37mmowbdatavldrsdupm805h__feedthru[0m
+    [36mWNS: -39.5ps[0m  │  4 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014892538[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mowbdatavldrsdupm805h__FEEDTHRU_1[*] - bound flops[0m
+
+    [1;37ml1flushfailedearlym405h[0m
+    [36mWNS: -39.3ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014833293[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ l1flushfailedearlym405h[*] - early clk[0m
+
+    [1;37mbypreqadrm403h_0_[0m
+    [36mWNS: -39.2ps[0m  │  90 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014862774[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ bypreqadrm403h_*__*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014681128[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-02-23[0m  [2mpar_meu[0m
+    [2m│  └─ bypreqadrm403h_*__*_[*] fix routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014803855[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ bypreqadrm403h_*__*_[*] push flop clocks / check rfips clk[0m
+
+    [1;37mmeatretfaultinfot_m806h[0m
+    [36mWNS: -36.9ps[0m  │  8 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014909361[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ meatretfaultinfot_m806h_*_[*] - early clk[0m
+
+    [1;37mcr_ring0_out_miint0_crpwrupmh[0m
+    [36mWNS: -34.0ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014754404[0m  [35mnot_done       [0m  [2mowner:[0m hmuhsen       [2m2026-03-04[0m  [2mpar_exe[0m
+
+    [1;37mdcl1demandreqm403h[0m
+    [36mWNS: -32.9ps[0m  │  4 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mRTL4BE[0m [1;37m13014899849[0m  [35mnew            [0m  [2mowner:[0m ialon         [2m2026-03-20[0m
+    [2m│  └─ RFIP's[0m
+
+    [1;37mmivecsdeaddrmnn1h[0m
+    [36mWNS: -32.4ps[0m  │  2 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861042[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ mivecsdeaddrmnn1h[*] - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014402231[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-01-13[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/mivecsdeaddrmnn1h -> mivecsdeaddrmnn2h - bound flop[0m
+
+    [1;37mrsvecwbdatavldm805h_22_[0m
+    [36mWNS: -31.1ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860982[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecwbdatavldm805h_*_ - duplicate flops[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013522885[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013698223[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327498[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mcore_rf_dcu_pmh_bisr_chain_se_synced[0m
+    [36mWNS: -27.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014852264[0m  [35mnot_done       [0m  [2mowner:[0m mmasalha      [2m2026-03-11[0m  [2mdfx[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014646906[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-12[0m  [2mpar_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014743047[0m  [36msign_off       [0m  [2mowner:[0m navits        [2m2026-03-09[0m  [2mdfx[0m
+
+    [1;37mmoisgathervorm800h[0m
+    [36mWNS: -26.9ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014937208[0m  [35mnot_done       [0m  [2mowner:[0m baselibr      [2m2026-03-21[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/moisgathervorm800h - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014003370[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-18[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/moisgathervorm801h*  -> tmulgathercompwbm802h   - bound the flop[0m
+
+    [1;37msell1earlysetm402h[0m
+    [36mWNS: -26.8ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014902140[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ sell1earlysetm402h[*] - early clk[0m
+
+    [1;37mrsvecwbdatavldm805h_23_[0m
+    [36mWNS: -25.9ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860982[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecwbdatavldm805h_*_ - duplicate flops[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013522885[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013698223[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327498[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mexe_int_ieportedskidvalidm805h_0_[0m
+    [36mWNS: -24.7ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839075[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - remove buffers in manual work[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893619[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/exe_int_ieportedjeclearm805h_op_8 - fix routing[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13013675752[0m  [31mwont_do        [0m  [2mowner:[0m fnaseral      [2m2025-10-28[0m  [2mpar_meu[0m
+
+    [1;37mexe_int_ieportedskidvalidm805h_4_[0m
+    [36mWNS: -24.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839075[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - remove buffers in manual work[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893619[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/exe_int_ieportedjeclearm805h_op_8 - fix routing[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13013675752[0m  [31mwont_do        [0m  [2mowner:[0m fnaseral      [2m2025-10-28[0m  [2mpar_meu[0m
+
+    [1;37mexe_int_ieportedskidvalidm805h_6_[0m
+    [36mWNS: -24.1ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839075[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - remove buffers in manual work[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893619[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/exe_int_ieportedjeclearm805h_op_8 - fix routing[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13013675752[0m  [31mwont_do        [0m  [2mowner:[0m fnaseral      [2m2025-10-28[0m  [2mpar_meu[0m
+
+    [1;37mmeu2oooxbarpwrupmnn3h[0m
+    [36mWNS: -23.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014887060[0m  [35mnot_done       [0m  [2mowner:[0m baselibr      [2m2026-03-15[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meu2oooxbarpwrupmnn3h - bound the flop[0m
+
+    [1;37mexe_int_ieportedskidvalidm805h_2_[0m
+    [36mWNS: -22.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839075[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - remove buffers in manual work[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893619[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/exe_int_ieportedjeclearm805h_op_8 - fix routing[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13013675752[0m  [31mwont_do        [0m  [2mowner:[0m fnaseral      [2m2025-10-28[0m  [2mpar_meu[0m
+
+    [1;37mroeeccorepausemnn3h[0m
+    [36mWNS: -20.8ps[0m  │  1 ports  │  [2m→ par_mlc[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014889623[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m18043970443[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2026-02-04[0m  [2mpar_mlc[0m
+    [2m│  └─ roeeccorepausemnn3h*[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13013906934[0m  [31mwont_do        [0m  [2mowner:[0m amenashe      [2m2025-12-04[0m  [2mpar_mlc[0m
+    [2m│  └─ roeeccorepausemnn3h*[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13014691508[0m  [31mwont_do        [0m  [2mowner:[0m amenashe      [2m2026-03-03[0m  [2mpar_mlc[0m
+    [2m│  └─ roeeccorepausemnn3h*[0m
+
+    [1;37mrsvecwbdatavldm805h_21_[0m
+    [36mWNS: -19.7ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860982[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecwbdatavldm805h_*_ - duplicate flops[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013522885[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013698223[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327498[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mcr_ring0_out_miint0_crdatamh[0m
+    [36mWNS: -19.4ps[0m  │  13 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014754404[0m  [35mnot_done       [0m  [2mowner:[0m hmuhsen       [2m2026-03-04[0m  [2mpar_exe[0m
+
+    [1;37mrsldgathercomppdstm801h[0m
+    [36mWNS: -19.2ps[0m  │  6 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860990[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsldgathercomppdstm801h[*] - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013641453[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-03-09[0m  [2mpar_ooo_vec[0m
+
+    [1;37mdcreqadrprestallm403h[0m
+    [36mWNS: -18.9ps[0m  │  91 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014691523[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-02-18[0m  [2mpar_pmh[0m
+    [2m│  └─ dcreqadrprestallm403h_*_[*] push clk to 90ps in highV[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014682466[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-02-23[0m  [2mpar_meu[0m
+    [2m│  └─ dcreqadrprestallm403h_*_[*][0m
+
+    [1;37mexe_int_ieportedskidvalidm805h_9_[0m
+    [36mWNS: -18.4ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839075[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - remove buffers in manual work[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893619[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/exe_int_ieportedjeclearm805h_op_8 - fix routing[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13013675752[0m  [31mwont_do        [0m  [2mowner:[0m fnaseral      [2m2025-10-28[0m  [2mpar_meu[0m
+
+    [1;37mexe_int_ieportedjeclearm805h_op[0m
+    [36mWNS: -17.8ps[0m  │  6 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839075[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - remove buffers in manual work[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893619[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/exe_int_ieportedjeclearm805h_op_8 - fix routing[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13013675752[0m  [31mwont_do        [0m  [2mowner:[0m fnaseral      [2m2025-10-28[0m  [2mpar_meu[0m
+
+    [1;37mdcl1demandspecpwrenm403h[0m
+    [36mWNS: -17.4ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mRTL4BE[0m [1;37m13014899849[0m  [35mnew            [0m  [2mowner:[0m ialon         [2m2026-03-20[0m
+    [2m│  └─ RFIP's[0m
+
+    [1;37mmimbistpostalgom4n1h[0m
+    [36mWNS: -15.6ps[0m  │  6 ports  │  [2m→ par_fmav1[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014852237[0m  [35mnot_done       [0m  [2mowner:[0m mmasalha      [2m2026-03-11[0m  [2mdfx[0m
+
+    [1;37mrsreallddispm305h_22_[0m
+    [36mWNS: -14.1ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014899903[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ rsreallddispm305h_*_ - early clk[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996360[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m│  └─ -rsreallddispm305h bound flop[0m
+
+    [1;37mronukeallm909h[0m
+    [36mWNS: -13.6ps[0m  │  1 ports  │  [2m→ par_mlc[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014833937[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ - split and bound[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013697057[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-11-05[0m  [2mpar_mlc[0m
+    [2m│  └─ ronukeallm909h*[0m
+
+    [1;37mmowbdatavstm805h[0m
+    [36mWNS: -13.3ps[0m  │  3 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014909784[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ mowbdatavstm805h[*] - exclude from mbit and bound[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014647190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m│  └─ MOWbDataVStM805H_reg*[0m
+
+    [1;37mdcuopvldcm803h[0m
+    [36mWNS: -12.9ps[0m  │  4 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014890233[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ dcuopvldcm803h[*] - bound flop[0m
+
+    [1;37mrsvecwbdatavldm805h_20_[0m
+    [36mWNS: -12.5ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860982[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecwbdatavldm805h_*_ - duplicate flops[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013522885[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013698223[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327498[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mexe_int_ieportedskidvalidm805h_8_[0m
+    [36mWNS: -12.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014839075[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - remove buffers in manual work[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893619[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/exe_int_ieportedjeclearm805h_op_8 - fix routing[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13013675752[0m  [31mwont_do        [0m  [2mowner:[0m fnaseral      [2m2025-10-28[0m  [2mpar_meu[0m
+
+    [1;37mie2meujerobidwrapm305h[0m
+    [36mWNS: -11.6ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014890917[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ - fix routing[0m
+
+    [1;37mmowbdatavldrsm805h[0m
+    [36mWNS: -10.9ps[0m  │  2 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014860982[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecwbdatavldm805h_*_ - duplicate flops[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327073[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327096[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327116[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327136[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327498[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrsreallddispm305h_23_[0m
+    [36mWNS: -10.3ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014899903[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ rsreallddispm305h_*_ - early clk[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996360[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m│  └─ -rsreallddispm305h bound flop[0m
+
+    [1;37mrsreallddispm305h_21_[0m
+    [36mWNS: -9.5ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014899903[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ rsreallddispm305h_*_ - early clk[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996360[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m│  └─ -rsreallddispm305h bound flop[0m
+
+    [1;37mdcwbparitym806h[0m
+    [36mWNS: -8.0ps[0m  │  3 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014758305[0m  [35mnot_done       [0m  [2mowner:[0m hmuhsen       [2m2026-03-04[0m  [2mpar_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014884822[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ icore0/par_meu/dcwbparitym806h_*_[*] - early clk to 90ps[0m
+
+    [1;37mspecmissldm403h[0m
+    [36mWNS: -6.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014884751[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ specmissldm403h[*] - early clk[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014721955[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ specmissldm403h[*][0m
+
+    [1;37micore_clk_icore_common_clk_glbdrvff_mclkenmeum005h_d[0m
+    [36mWNS: -6.7ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014716730[0m  [35mnot_done       [0m  [2mowner:[0m mandrea       [2m2026-02-22[0m  [2mpar_pmh[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861032[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014314695[0m  [36msign_off       [0m  [2mowner:[0m mmasalha      [2m2026-02-03[0m  [2mdfx[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014315235[0m  [36msign_off       [0m  [2mowner:[0m mmasalha      [2m2026-02-01[0m  [2mdfx[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014542482[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-03[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/icore_clk_icore_common_clk_glbdrvff_mclkenooo_intm006h_d   - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802663[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-10[0m  [2mpar_meu[0m
+    [2m│  └─ - bound flop[0m
+    [2m├─[0m [31mRTL4BE[0m [1;37m13014083627[0m  [31mrejected       [0m  [2mowner:[0m hmuhsen       [2m2025-12-03[0m
+
+    [1;37mrsreallddispm305h_20_[0m
+    [36mWNS: -6.5ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014899903[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ rsreallddispm305h_*_ - early clk[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996360[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m│  └─ -rsreallddispm305h bound flop[0m
+
+    [1;37mdcldzerowbm806h[0m
+    [36mWNS: -5.1ps[0m  │  14 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014897993[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ dcldzerowbm806h_*_[*] -early clk[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400703[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mmorobidwrapldm802h[0m
+    [36mWNS: -1.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014893615[0m  [35mnot_done       [0m  [2mowner:[0m baselibr      [2m2026-03-16[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/morobidwrapldm802h - bound the flop[0m
+
+    [1;37mdctxcommitdonemnnnh[0m
+    [36mWNS: -1.0ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014892125[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ - exclude from mbit and bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014863757[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-03-15[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rodctxcommitdonem901h - bound the flop[0m
+
+    [1;37mmeu_ubp_act_rpt_misr_rst__feedthru[0m
+    [36mWNS: -0.8ps[0m  │  1 ports  │  [2m→ par_fmav0[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014727886[0m  [35mnot_done       [0m  [2mowner:[0m navits        [2m2026-02-24[0m  [2mdfx[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014727841[0m  [36msign_off       [0m  [2mowner:[0m navits        [2m2026-03-10[0m  [2mdfx[0m
+
+    [1;37mjeujmppredccearlym805h[0m
+    [36mWNS: -0.7ps[0m  │  1 ports  │  [2m→ par_msid[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014833883[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-18[0m  [2mpar_meu[0m
+    [2m│  └─ - early clk and exclude from mbit[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400634[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014427866[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+
+  [46;1;37m AWAITING SIGN-OFF — 194 families, 822 ports [0m
+  [2m───────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+    [1;37mmiintwbrsderrm807h_7_[0m
+    [35mWNS: -96.6ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mrsrealdispm304h_5___feedthru[0m
+    [35mWNS: -93.4ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmiintwbrsderrm807h_0_[0m
+    [35mWNS: -91.3ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mmiintwbrsderrm807h_3_[0m
+    [35mWNS: -90.3ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mjemustbranchm305h_2_[0m
+    [35mWNS: -89.9ps[0m  │  1 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327249[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014575813[0m  [36msign_off       [0m  [2mowner:[0m mburak        [2m2026-02-09[0m  [2mpar_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014803632[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-10[0m  [2mpar_meu[0m
+    [2m│  └─ jemustbranchm305h_*_ - early clk[0m
+
+    [1;37mmiintwbrsderrm807h_9_[0m
+    [35mWNS: -86.7ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mmiintwbrsderrm807h_1_[0m
+    [35mWNS: -85.1ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mjemustbranchm305h_0_[0m
+    [35mWNS: -81.6ps[0m  │  1 ports  │  [2m→ par_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327249[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014575813[0m  [36msign_off       [0m  [2mowner:[0m mburak        [2m2026-02-09[0m  [2mpar_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014803632[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-10[0m  [2mpar_meu[0m
+    [2m│  └─ jemustbranchm305h_*_ - early clk[0m
+
+    [1;37mrsrealdispm304h_1___feedthru[0m
+    [35mWNS: -79.7ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmiintwbrsderrm807h_5_[0m
+    [35mWNS: -79.5ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mmiintwbrsderrm807h_8_[0m
+    [35mWNS: -78.7ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37magrsderr2robm307h[0m
+    [35mWNS: -75.4ps[0m  │  8 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996444[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m│  └─ - agrsderr2robm307h early clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238940[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014429624[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ - agrsderr2robm307h_*_ fix clk skew[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014839896[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ agrsderr2robm307h_*_*_[*] - early clk[0m
+
+    [1;37mrsrealdispm304h_7___feedthru[0m
+    [35mWNS: -74.5ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mjemustbranchm305h_4_[0m
+    [35mWNS: -71.3ps[0m  │  1 ports  │  [2m→ par_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327249[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014575813[0m  [36msign_off       [0m  [2mowner:[0m mburak        [2m2026-02-09[0m  [2mpar_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014803632[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-10[0m  [2mpar_meu[0m
+    [2m│  └─ jemustbranchm305h_*_ - early clk[0m
+
+    [1;37mjemustbranchm305h_6_[0m
+    [35mWNS: -69.8ps[0m  │  1 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327249[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014575813[0m  [36msign_off       [0m  [2mowner:[0m mburak        [2m2026-02-09[0m  [2mpar_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014803632[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-10[0m  [2mpar_meu[0m
+    [2m│  └─ jemustbranchm305h_*_ - early clk[0m
+
+    [1;37mmiintwbrsderrm807h_2_[0m
+    [35mWNS: -69.4ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mmiintrsderrm305h_27_[0m
+    [35mWNS: -69.0ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintwbrsderrm807h_4_[0m
+    [35mWNS: -65.8ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mrsvecldprfwrcancelm805h_23_[0m
+    [35mWNS: -64.2ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014839269[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldprfwrcancelm805h_*_ - early the clk[0m
+
+    [1;37mrsvecldportwritemuxctlm805h_22__1_[0m
+    [35mWNS: -63.3ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840328[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldportwritemuxctlm805h_*__*_ - early clk[0m
+
+    [1;37mrsvecldprfwrcancelm805h_20_[0m
+    [35mWNS: -63.1ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014839269[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldprfwrcancelm805h_*_ - early the clk[0m
+
+    [1;37mrsvecldprfwrcancelm805h_21_[0m
+    [35mWNS: -62.9ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014839269[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldprfwrcancelm805h_*_ - early the clk[0m
+
+    [1;37mrsvecldprfwrcancelm805h_22_[0m
+    [35mWNS: -62.6ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014839269[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldprfwrcancelm805h_*_ - early the clk[0m
+
+    [1;37mrsrealdispm304h_3___feedthru[0m
+    [35mWNS: -58.2ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmiintwbrsderrm807h_6_[0m
+    [35mWNS: -57.5ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014132852[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ miintwbrsderrm807h_*_*_[*][0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840307[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrsderrm807h_*_ - early clk[0m
+
+    [1;37mjetakenbrclatem805h_6_[0m
+    [35mWNS: -55.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400672[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mgatherelmszm805h_20_[0m
+    [35mWNS: -53.0ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327322[0m  [36msign_off       [0m  [2mowner:[0m hmuhsen       [2m2026-02-14[0m  [2mpar_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400595[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mgatherelmszm805h_23_[0m
+    [35mWNS: -52.2ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327322[0m  [36msign_off       [0m  [2mowner:[0m hmuhsen       [2m2026-02-14[0m  [2mpar_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400595[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mwbdata4lvpm806h[0m
+    [36mWNS: -49.1ps[0m  │  179 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014430267[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mlbsnprblmhitm401h[0m
+    [36mWNS: -47.2ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014776997[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801943[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ lbsnprblmhitm401h[*] exclude multibit and bound flop to port[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785781[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+
+    [1;37mmiintrsderrm305h_12_[0m
+    [36mWNS: -46.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmewbflagsldm805h[0m
+    [36mWNS: -46.8ps[0m  │  16 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327166[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_2_[0m
+    [36mWNS: -46.5ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37ml1403reqpacketm403h_0__1__rfo[0m
+    [36mWNS: -43.8ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mrsbrrobidvpm803h_6_[0m
+    [36mWNS: -43.4ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013953591[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ rsbrrobidvpm803h_* - bound[0m
+
+    [1;37mgatherelmszm805h_21_[0m
+    [36mWNS: -43.3ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327322[0m  [36msign_off       [0m  [2mowner:[0m hmuhsen       [2m2026-02-14[0m  [2mpar_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400595[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrsbrrobidvpm803h_0_[0m
+    [36mWNS: -43.3ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013953591[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ rsbrrobidvpm803h_* - bound[0m
+
+    [1;37mlpsblmhitm403h[0m
+    [36mWNS: -43.1ps[0m  │  3 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014429141[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802511[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ lpsblmhitm403h[*] push clk[0m
+
+    [1;37mgatherelmszm805h_22_[0m
+    [36mWNS: -42.7ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327322[0m  [36msign_off       [0m  [2mowner:[0m hmuhsen       [2m2026-02-14[0m  [2mpar_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400595[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_9_[0m
+    [36mWNS: -42.0ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mjetakenbrclatem805h_2_[0m
+    [36mWNS: -40.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400672[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mrsvecldportwritemuxctlm805h_21__1_[0m
+    [36mWNS: -40.5ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840328[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldportwritemuxctlm805h_*__*_ - early clk[0m
+
+    [1;37ml1403reqpacketm403h_0__1__atretlock[0m
+    [36mWNS: -40.2ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mrslvpdatasigncheckm806h[0m
+    [36mWNS: -39.3ps[0m  │  4 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014112690[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-09[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rslvpdatasigncheckm806h -> rsismispredlvpm807h_rob - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327562[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37ml1403reqpacketm403h_1__1__atretlock[0m
+    [36mWNS: -39.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmosbnoseniorm405h[0m
+    [36mWNS: -39.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996379[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr0123_2__inc[0m
+    [36mWNS: -39.0ps[0m  │  5 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr_8__inc[0m
+    [36mWNS: -37.9ps[0m  │  3 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37ml1403reqpacketm403h_0__0__atretlock[0m
+    [36mWNS: -37.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mrsvecldportwritemuxctlm805h_23__1_[0m
+    [36mWNS: -37.5ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840328[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldportwritemuxctlm805h_*__*_ - early clk[0m
+
+    [1;37mjetakenbrclatem805h_4_[0m
+    [36mWNS: -37.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400672[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mmewbflagsstm805h[0m
+    [36mWNS: -37.3ps[0m  │  12 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327238[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014839915[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ mewbflagsstm805h_*_[*] - bound flops[0m
+
+    [1;37mmiintrsderrm305h_23_[0m
+    [36mWNS: -37.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_21_[0m
+    [36mWNS: -37.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmltasigntrrstm8n2h[0m
+    [36mWNS: -37.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m18043223657[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-09-30[0m  [2mpar_mlc[0m
+    [2m│  └─ mltasigntrrstm8n1h*[0m
+
+    [1;37mlbwrfilterenm404h[0m
+    [36mWNS: -36.9ps[0m  │  4 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014682460[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-02[0m  [2mpar_meu[0m
+    [2m│  └─ lbwrfilterenm404h[*] - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802243[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ lbwrfilterenm404h[*]  split &push clk[0m
+
+    [1;37mrsvecldportwritemuxctlm805h_21__0_[0m
+    [36mWNS: -36.8ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840328[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldportwritemuxctlm805h_*__*_ - early clk[0m
+
+    [1;37mrsbrrobidvpm803h_4_[0m
+    [36mWNS: -36.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013953591[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ rsbrrobidvpm803h_* - bound[0m
+
+    [1;37mrsvecldportwritemuxctlm805h_22__0_[0m
+    [36mWNS: -36.4ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840328[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldportwritemuxctlm805h_*__*_ - early clk[0m
+
+    [1;37mrsvecldportwritemuxctlm805h_20__1_[0m
+    [36mWNS: -36.2ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840328[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldportwritemuxctlm805h_*__*_ - early clk[0m
+
+    [1;37ml1403reqpacketm403h_1__0__atretlock[0m
+    [36mWNS: -36.0ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmoblkld2pmhm404h[0m
+    [36mWNS: -35.9ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014428301[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_10_[0m
+    [36mWNS: -35.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_4_[0m
+    [36mWNS: -35.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr_6__inc[0m
+    [36mWNS: -35.2ps[0m  │  3 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37mmiintrsderrm305h_26_[0m
+    [36mWNS: -35.2ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mrsbrrobidvpm803h_2_[0m
+    [36mWNS: -35.0ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013953591[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ rsbrrobidvpm803h_* - bound[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr0123_3__inc[0m
+    [36mWNS: -35.0ps[0m  │  5 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37mmiintrsderrm305h_22_[0m
+    [36mWNS: -34.9ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mrsvecldportwritemuxctlm805h_20__0_[0m
+    [36mWNS: -34.7ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840328[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldportwritemuxctlm805h_*__*_ - early clk[0m
+
+    [1;37mrsvecldportwritemuxctlm805h_23__0_[0m
+    [36mWNS: -34.5ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840328[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsvecldportwritemuxctlm805h_*__*_ - early clk[0m
+
+    [1;37mjeo2idataearlym804h[0m
+    [36mWNS: -34.5ps[0m  │  45 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013680663[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-08[0m  [2mpar_ooo_int[0m
+    [2m│  └─ - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400719[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr_4__inc[0m
+    [36mWNS: -34.3ps[0m  │  3 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_1__0__address[0m
+    [36mWNS: -34.2ps[0m  │  36 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37mrsbrrobidvpm803h_9_[0m
+    [36mWNS: -34.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013953591[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ rsbrrobidvpm803h_* - bound[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr0123_0__inc[0m
+    [36mWNS: -33.9ps[0m  │  5 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr0123_1__inc[0m
+    [36mWNS: -32.6ps[0m  │  5 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37ml1403reqpacketm403h_0__0__read[0m
+    [36mWNS: -32.0ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr_9__inc[0m
+    [36mWNS: -32.0ps[0m  │  3 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37ml1403reqpacketm403h_0__1__read[0m
+    [36mWNS: -31.9ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mroinc0emnn2h[0m
+    [36mWNS: -31.8ps[0m  │  1 ports  │  [2m→ par_mlc[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013676707[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-09-30[0m  [2mpar_mlc[0m
+    [2m│  └─ roinc0emnn2h*[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014462574[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014832776[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ roinc0emnn2h- bound flop[0m
+
+    [1;37mrsbrrobidvpm803h_8_[0m
+    [36mWNS: -31.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013953591[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m│  └─ rsbrrobidvpm803h_* - bound[0m
+
+    [1;37ml1403reqpacketm403h_1__0__read[0m
+    [36mWNS: -31.6ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmiintrsderrm305h_1_[0m
+    [36mWNS: -31.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37ml1403reqpacketm403h_1__1__read[0m
+    [36mWNS: -31.5ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr_5__inc[0m
+    [36mWNS: -31.5ps[0m  │  3 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37mmeuxbarperfeventmnn3h_ctr_7__inc[0m
+    [36mWNS: -31.0ps[0m  │  3 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014700671[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meuxbarperfeventmnn* - bound the flop[0m
+
+    [1;37ml1403reqpacketm403h_0__0__rfo[0m
+    [36mWNS: -30.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmiintrsderrm305h_28_[0m
+    [36mWNS: -30.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_0_[0m
+    [36mWNS: -29.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37ml1403reqpacketm403h_1__1__rfo[0m
+    [36mWNS: -28.9ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmiintrsderrm305h_5_[0m
+    [36mWNS: -28.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_8_[0m
+    [36mWNS: -28.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmolvparyldpwrupmnnnh[0m
+    [36mWNS: -28.0ps[0m  │  4 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013696440[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2025-10-05[0m  [2mpar_pmh[0m
+    [2m│  └─ - molvparyldpwrupmnnnh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014407538[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014408669[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ molvparyldpwrupmnnnh[*][0m
+
+    [1;37msnphienldm405h[0m
+    [36mWNS: -28.0ps[0m  │  3 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014462661[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mdtmissaddrm404h[0m
+    [36mWNS: -27.5ps[0m  │  54 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785921[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ clk/RC[0m
+
+    [1;37mvmrnwdtrippedmnn1h[0m
+    [36mWNS: -27.2ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400714[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840749[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-03-11[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/vmrnwdtrippedmnn1h - bound the flops[0m
+
+    [1;37mmiintrsderrm305h_25_[0m
+    [36mWNS: -27.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmebrkpnttrpldm805h[0m
+    [36mWNS: -26.6ps[0m  │  4 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400600[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_6_[0m
+    [36mWNS: -26.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_20_[0m
+    [36mWNS: -26.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_3_[0m
+    [36mWNS: -25.5ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mdciprdpwrupm401h[0m
+    [36mWNS: -25.4ps[0m  │  4 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014803347[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+
+    [1;37ml1403reqpacketm403h_1__0__txstate[0m
+    [36mWNS: -25.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37ml1403reqpacketm403h_1__0__wcstore[0m
+    [36mWNS: -25.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37ml1403reqpacketm403h_0__1__wcstore[0m
+    [36mWNS: -24.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_0__0__address[0m
+    [36mWNS: -24.4ps[0m  │  33 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37mdcreqbyteenm402h[0m
+    [36mWNS: -22.7ps[0m  │  32 ports  │  [2m→ par_mlc[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013614813[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-09-04[0m  [2mpar_mlc[0m
+    [2m│  └─ dcreqbyteenm402h*[0m
+
+    [1;37mrsrealdispm304h_10_[0m
+    [36mWNS: -22.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mjeloaduarreqcearlym805h[0m
+    [36mWNS: -22.3ps[0m  │  1 ports  │  [2m→ par_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014832783[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ - split and bound[0m
+
+    [1;37mroifbitm909h[0m
+    [36mWNS: -21.8ps[0m  │  1 ports  │  [2m→ par_mlc[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013648174[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-11-18[0m  [2mpar_mlc[0m
+    [2m│  └─ roifbitm909h*[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014314394[0m  [36msign_off       [0m  [2mowner:[0m tsabek        [2m2026-01-18[0m  [2mpar_mlc[0m
+    [2m│  └─ roifbitm909h*[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014471592[0m  [36msign_off       [0m  [2mowner:[0m tsabek        [2m2026-02-04[0m  [2mpar_mlc[0m
+    [2m│  └─ roifbitm909h*[0m
+
+    [1;37mjetakenbrclatem805h_0_[0m
+    [36mWNS: -21.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400672[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_7_[0m
+    [36mWNS: -21.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mmiintrsderrm305h_11_[0m
+    [36mWNS: -21.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014011689[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-27[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintrsderrm305h  -> rsintimmbpcparity*306[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014238964[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mrsrealdispm304h_28_[0m
+    [36mWNS: -20.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37ml1403reqpacketm403h_1__0__rfo[0m
+    [36mWNS: -20.8ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mrsrealdispm304h_5_[0m
+    [36mWNS: -20.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mjeclearlatetomsidm805h[0m
+    [36mWNS: -19.9ps[0m  │  1 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327488[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mcrysclkpulsemnn2h[0m
+    [36mWNS: -19.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014368595[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-01-13[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/crysclkpulsemnn2h -> crysclkpulsemnn3h  - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400590[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013640309[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-09-04[0m  [2mpar_mlc[0m
+    [2m│  └─ crysclkpulsemnnnh*[0m
+
+    [1;37mje2mswrearlym805h_a[0m
+    [36mWNS: -19.1ps[0m  │  3 ports  │  [2m→ par_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327258[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m18042972729[0m  [36msign_off       [0m  [2mowner:[0m mburak        [2m2026-03-12[0m  [2mpar_msid[0m
+    [2m│  └─ je2mswrearlym805h_a[*][0m
+
+    [1;37mrspartialrobidqvm804h_7_[0m
+    [36mWNS: -19.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013982966[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rspartialrobidqvm804h -> rspartialrobidqvm805h bound the flop[0m
+
+    [1;37mcr_ringmlc1_dummy1_crdatamh[0m
+    [36mWNS: -18.7ps[0m  │  32 ports  │  [2m→ par_mlc[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013896178[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-01-21[0m  [2mpar_pmh[0m
+    [2m│  └─ cr_ringmlc1_dummy1_crdatamh*[0m
+
+    [1;37mmolvpeligiblewbldm803h[0m
+    [36mWNS: -18.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311766[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-02-05[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/molvpeligiblewbldm803h[*] bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014804462[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ molvpeligiblewbldm803h[*] bound[0m
+
+    [1;37ml1403reqpacketm403h_1__1__wcstore[0m
+    [36mWNS: -18.6ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mrsrealdispm304h_26_[0m
+    [36mWNS: -18.5ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37ml1403reqpacketm403h_0__1__txstate[0m
+    [36mWNS: -18.0ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmeutelemetryinfomnn0h_memory_stalls_mem[0m
+    [36mWNS: -17.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014013779[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2025-12-10[0m  [2mpar_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014227714[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2026-01-07[0m  [2mpar_mlc[0m
+    [2m│  └─ meutelemetryinfomnnnh_*__memory_stalls_l1[0m
+
+    [1;37mrsrealdispm304h_25_[0m
+    [36mWNS: -17.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrsrealdispm304h_4_[0m
+    [36mWNS: -17.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrspartialrobidqvm804h_4_[0m
+    [36mWNS: -17.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013982966[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rspartialrobidqvm804h -> rspartialrobidqvm805h bound the flop[0m
+
+    [1;37mmeatretfaultflagst_m806h[0m
+    [36mWNS: -17.4ps[0m  │  4 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327205[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014462085[0m  [36msign_off       [0m  [2mowner:[0m hmuhsen       [2m2026-02-14[0m  [2mpar_exe[0m
+
+    [1;37mrsrealdispm304h_20_[0m
+    [36mWNS: -17.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37ml1403reqpacketm403h_0__0__wcstore[0m
+    [36mWNS: -17.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_0__1__address[0m
+    [36mWNS: -16.7ps[0m  │  34 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37mrsrealdispm304h_22_[0m
+    [36mWNS: -16.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrsrealdispm304h_27_[0m
+    [36mWNS: -15.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmaddisablemnn1h[0m
+    [36mWNS: -15.2ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014430329[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mrsrealdispm304h_7_[0m
+    [36mWNS: -15.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmowbpdstvecldm800h[0m
+    [36mWNS: -14.5ps[0m  │  38 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327220[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mrsrealdispm304h_23_[0m
+    [36mWNS: -14.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrsrealdispm304h_12_[0m
+    [36mWNS: -13.9ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_1__1__address[0m
+    [36mWNS: -13.7ps[0m  │  29 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37mrsrealdispm304h_1_[0m
+    [36mWNS: -13.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mjeneweipclearlatem805h[0m
+    [36mWNS: -13.4ps[0m  │  1 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327227[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014450194[0m  [36msign_off       [0m  [2mowner:[0m lstambul      [2m2026-02-13[0m  [2mpar_fe[0m
+    [2m│  └─ par_fe/jeneweipclearlatem805h bound FFs to TIP[0m
+
+    [1;37mmolvpdatasrcm804h_3__l2miss[0m
+    [36mWNS: -13.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014239492[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-05[0m  [2mpar_pmh[0m
+
+    [1;37magbcastmnnnh_dlorb[0m
+    [36mWNS: -13.1ps[0m  │  2 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327067[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+
+    [1;37mrspartialrobidqvm804h_5_[0m
+    [36mWNS: -13.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013982966[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rspartialrobidqvm804h -> rspartialrobidqvm805h bound the flop[0m
+
+    [1;37mrsrealdispm304h_3_[0m
+    [36mWNS: -13.0ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmewbisfaultstm805h[0m
+    [36mWNS: -12.9ps[0m  │  3 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327580[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+
+    [1;37mdcfullstorewbldm403h[0m
+    [36mWNS: -12.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014167930[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-15[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/dcfullstorewbldm403h -> dcfullstorewbldm404h _*_ - bound the flop[0m
+
+    [1;37mrsi2vuopvm304h[0m
+    [36mWNS: -12.6ps[0m  │  2 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327478[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014845024[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsi2vuopvm304h[*] - move flops and early clk[0m
+
+    [1;37mrotfbitm909h[0m
+    [36mWNS: -12.6ps[0m  │  1 ports  │  [2m→ par_mlc[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013647663[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-09-30[0m  [2mpar_mlc[0m
+    [2m│  └─ rotfbitm909h*[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014462487[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mmolvpdatasrcm804h_2__l2miss[0m
+    [36mWNS: -12.5ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014239492[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-05[0m  [2mpar_pmh[0m
+
+    [1;37ml1403reqpacketm403h_0__0__txstate[0m
+    [36mWNS: -12.5ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mjeforceallonesearlym805h[0m
+    [36mWNS: -12.5ps[0m  │  1 ports  │  [2m→ par_msid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327549[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-02[0m  [2mpar_meu[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_1__0__robid_addr[0m
+    [36mWNS: -11.8ps[0m  │  6 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37mmeu2oooenxbarpwrupmnn2h[0m
+    [36mWNS: -11.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014718908[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meu2oooenxbarpwrupmnn2h - flop bound[0m
+
+    [1;37ml1403reqpacketm403h_1__1__txstate[0m
+    [36mWNS: -11.6ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014785614[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-04[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__read split/ push clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014801468[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ l1403reqpacketm403h_*__*__rfo push clk to 100[0m
+
+    [1;37mrsrealdispm304h_21_[0m
+    [36mWNS: -11.2ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrsrealdispm304h_2_[0m
+    [36mWNS: -11.2ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmolvpldagepriovecm805h[0m
+    [36mWNS: -10.9ps[0m  │  6 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014418561[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37miebranch_directionm805h_p_8_[0m
+    [36mWNS: -10.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013920377[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/iebranch_directionm805h* -> par_ooo_int/rs_rs_int_iebranch_directionm806h* - bound the f[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996390[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m│  └─ - iebranch_directionm805h_p_*_ Fix RC[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400706[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-03-10[0m  [2mpar_meu[0m
+
+    [1;37mrsrealdispm304h_0_[0m
+    [36mWNS: -10.4ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrssegwriterealdispm305h[0m
+    [36mWNS: -10.0ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014012463[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-01[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rssegwriterealdispm305h   -bound the flop[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_1__1__issplithi[0m
+    [36mWNS: -9.8ps[0m  │  1 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37maopld1commitearlym402h[0m
+    [36mWNS: -9.1ps[0m  │  4 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014696043[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-26[0m  [2mpar_pmh[0m
+
+    [1;37mrsrealdispm304h_11_[0m
+    [36mWNS: -8.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37magbcastmnnnh_color[0m
+    [36mWNS: -7.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400750[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014402212[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-01-13[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/agbcastmnnnh_color -> agbcastmnn1h_color - bound flop[0m
+
+    [1;37miebranch_directionm805h_p_9_[0m
+    [36mWNS: -7.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013920377[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-22[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/iebranch_directionm805h* -> par_ooo_int/rs_rs_int_iebranch_directionm806h* - bound the f[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013996390[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m│  └─ - iebranch_directionm805h_p_*_ Fix RC[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400706[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-03-10[0m  [2mpar_meu[0m
+
+    [1;37mmolvpdatasrcm804h_0__l2miss[0m
+    [36mWNS: -7.1ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014239492[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-05[0m  [2mpar_pmh[0m
+
+    [1;37mlvpspecmispredlookupm803h[0m
+    [36mWNS: -7.0ps[0m  │  3 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014523998[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-11[0m  [2mpar_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802953[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ lvpspecmispredlookupm803h[*][0m
+
+    [1;37mmivdcuopcodldm803h[0m
+    [36mWNS: -6.8ps[0m  │  15 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014839209[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ mivdcuopcodldm803h_*_[*] - early clk[0m
+
+    [1;37mmiexectcaddressmnnnh[0m
+    [36mWNS: -6.3ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014430715[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+
+    [1;37mjeclearlatem805h[0m
+    [36mWNS: -6.2ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013573267[0m  [36msign_off       [0m  [2mowner:[0m mburak        [2m2026-01-14[0m  [2mpar_msid[0m
+
+    [1;37mrspartialrobidqvm804h_0_[0m
+    [36mWNS: -6.0ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013982966[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rspartialrobidqvm804h -> rspartialrobidqvm805h bound the flop[0m
+
+    [1;37mrsrealdispm304h_6_[0m
+    [36mWNS: -5.9ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013893472[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsrealdispm304h* -> par_ooo_int/*rsooorealdispm305h*  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327198[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327235[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mrspartialrobidqvm804h_2_[0m
+    [36mWNS: -5.5ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013982966[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rspartialrobidqvm804h -> rspartialrobidqvm805h bound the flop[0m
+
+    [1;37mmolvpdatasrcm804h_1__l2miss[0m
+    [36mWNS: -5.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014239492[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-05[0m  [2mpar_pmh[0m
+
+    [1;37mdone1stm405h[0m
+    [36mWNS: -5.3ps[0m  │  3 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014682473[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-02[0m  [2mpar_meu[0m
+    [2m│  └─ done1stm405h[*] - early clk, split and bound flop closer to port[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802930[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-07[0m  [2mpar_meu[0m
+    [2m│  └─ done1stm405h[*] - bound flop[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_0__1__robid_addr[0m
+    [36mWNS: -4.9ps[0m  │  3 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37mmolvpdatasrcm804h_3__src_omr_match[0m
+    [36mWNS: -4.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014239492[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-05[0m  [2mpar_pmh[0m
+
+    [1;37mrspartialrobidqvm804h_6_[0m
+    [36mWNS: -4.7ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013982966[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rspartialrobidqvm804h -> rspartialrobidqvm805h bound the flop[0m
+
+    [1;37mrsintallstackuopvm303h_12_[0m
+    [36mWNS: -4.4ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327463[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014518231[0m  [36msign_off       [0m  [2mowner:[0m hmuhsen       [2m2026-02-25[0m  [2mpar_exe[0m
+    [2m│  └─ rsintallstackuopvm303h_*_[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_0__1__robid_wrap[0m
+    [36mWNS: -3.7ps[0m  │  1 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37mmolvpeligibleldm801h[0m
+    [36mWNS: -3.6ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014419068[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-02-10[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/molvpeligibleldm801h[*] bound flop to port[0m
+
+    [1;37mmouopvldm405h[0m
+    [36mWNS: -3.1ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014462631[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802772[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-10[0m  [2mpar_meu[0m
+    [2m│  └─ mouopvldm405h[*] - split _MOUopVLdM405H_reg and bound[0m
+
+    [1;37mmo2ifsmcsnpreqmnnnh_1__1__robid_addr[0m
+    [36mWNS: -2.7ps[0m  │  3 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311414[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ Y~800[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014846002[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ mo2ifsmcsnpreqmnnnh_*__*__address[*] - improve routing[0m
+
+    [1;37mmimxmparityenmnnh[0m
+    [36mWNS: -2.4ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014839761[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ - early clk[0m
+
+    [1;37mtrcsstscovfm405h[0m
+    [36mWNS: -1.9ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014717989[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ trcsstscovfm405h[*] early clk to 90ps in highV[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014718357[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-02-24[0m  [2mpar_pmh[0m
+    [2m│  └─ trcsstscovfm405h[*] bound mbit closer to port[0m
+
+    [1;37mdtrstprfregm405h[0m
+    [36mWNS: -1.6ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014317370[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-01-26[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/dtrstprfregm405h bound flop closer to port[0m
+
+    [1;37mrspartialrobidqvm804h_1_[0m
+    [36mWNS: -1.6ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013982966[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rspartialrobidqvm804h -> rspartialrobidqvm805h bound the flop[0m
+
+    [1;37mmidcldwbvecdatahiselm803h[0m
+    [36mWNS: -0.8ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014674329[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+
+    [1;37mmlcr8wrackmnn1h[0m
+    [36mWNS: -0.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014271524[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-23[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/mlcr8wrackmnn1h   -> mlcr8wrackmnn3h -bound flops[0m
+
+    [1;37mmeutelemetryinfomnn0h_memory_stalls_l2[0m
+    [36mWNS: -0.8ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014013779[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2025-12-10[0m  [2mpar_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014227714[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2026-01-07[0m  [2mpar_mlc[0m
+    [2m│  └─ meutelemetryinfomnnnh_*__memory_stalls_l1[0m
+
+
+  [42;1;37m VERIFY FIX LANDED — 68 families, 245 ports [0m
+  [2m───────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+    [1;37mlvpsizetraineligiblem806h[0m
+    [35mWNS: -52.1ps[0m  │  4 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802626[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-10[0m  [2mpar_meu[0m
+    [2m│  └─ lvpsizetraineligiblem806h[*] bound flop[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014428077[0m  [32mcomplete       [0m  [2mowner:[0m ykimor        [2m2026-03-03[0m
+    [2m│  └─ + LVPSizeTrainEligibleM805H flop move[0m
+
+    [1;37mrsqsfwbdatavldm803h[0m
+    [36mWNS: -45.7ps[0m  │  4 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014900098[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ rsearlycancelwbldm803h[*] - duplicate specific flop and bound[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014587565[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013956980[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - logic duplcation[0m
+
+    [1;37mdcusnphittxrm403h[0m
+    [36mWNS: -43.0ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmewbisfaultldm805h__feedthru[0m
+    [36mWNS: -40.5ps[0m  │  4 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014400642[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-17[0m  [2mpar_meu[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014862900[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ mewbisfaultldm805h[*] - bound flop[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014650445[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014671802[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ (2)[0m
+
+    [1;37mmiintwbfaultinfom805h_p_4_[0m
+    [36mWNS: -37.3ps[0m  │  6 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840453[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p_*__*_*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mrsldatprfwraddrm804h[0m
+    [36mWNS: -36.6ps[0m  │  7 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840165[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m│  └─ rsldatprfwraddrm804h[*] - early clk[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37msnpnackdcum403h[0m
+    [36mWNS: -35.7ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014832578[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ snpnackdcum403h[*] - move logics[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mreqisfillm403h[0m
+    [36mWNS: -35.0ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012859131[0m  [32mcomplete       [0m  [2mowner:[0m fnaseral      [2m2025-03-06[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012859141[0m  [32mcomplete       [0m  [2mowner:[0m fnaseral      [2m2025-03-06[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012859154[0m  [32mcomplete       [0m  [2mowner:[0m fnaseral      [2m2025-03-06[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+
+    [1;37mdcdatabistl1rdenm404h[0m
+    [36mWNS: -33.4ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014356888[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 3)[0m
+
+    [1;37mmiintwbfaultinfom805h_p_2_[0m
+    [36mWNS: -32.8ps[0m  │  7 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840453[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p_*__*_*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mmowbcheckvldm802h[0m
+    [36mWNS: -32.6ps[0m  │  3 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013981893[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-11-10[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/mowbcheckvldm802  ->  rowbcheckvldm803h  - bound the flop[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013590241[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ alloc_int/alrmc/aliclbd/RecJeClrMCLBIDValidMnnnH broken path[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013893519[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - broken path[0m
+
+    [1;37mdcl0snphitm403h[0m
+    [36mWNS: -32.3ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mifsnphitsbm129h[0m
+    [36mWNS: -32.0ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014013779[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2025-12-10[0m  [2mpar_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014291238[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-01-21[0m  [2mpar_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014301482[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+
+    [1;37mmiintwbfaultinfom805h_p_6_[0m
+    [36mWNS: -30.7ps[0m  │  8 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840453[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p_*__*_*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mrsearlycancelwbldm803h[0m
+    [36mWNS: -30.5ps[0m  │  4 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014238919[0m  [35mnot_done       [0m  [2mowner:[0m fnaseral      [2m2025-12-18[0m  [2mpar_meu[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014900098[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-17[0m  [2mpar_meu[0m
+    [2m│  └─ rsearlycancelwbldm803h[*] - duplicate specific flop and bound[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013521142[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2025-12-16[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014455352[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-03[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsintearlycancelwbldm803h  - flop duplication to prevent round loops[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014725328[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-03-05[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rsintearlycancelwbldm803h - connect rsldmtxc flop icore0/par_ooo_int/rs_int/rsschedrepd/[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013348130[0m  [32mcomplete       [0m  [2mowner:[0m eabuyuni      [2m2026-03-03[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013417981[0m  [32mcomplete       [0m  [2mowner:[0m damburg       [2m2026-03-03[0m
+    [2m│  └─ --> rs_vec/rsveceumtxsched/RSLdMtxCncEuM807H_reg - one cycle , negative path[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014127604[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - duplicate the flop to drive rsldmtxc/RSEarlyCancelWBLdM804H only[0m
+
+    [1;37mhgs_enable_telemetrymnn3h[0m
+    [36mWNS: -28.9ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327552[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-16[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014012436[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-01[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/ooo_hgs_enable_telemetrymnnnh  -> ooo_hgs_enable_telemetrymnn1h - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014396516[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-02-05[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/ml2roeventearlywakeormnn1h split multibit and bound closer to port[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012752231[0m  [32mcomplete       [0m  [2mowner:[0m ahaimovi      [2m2026-03-03[0m
+    [2m│  └─ *enable_telemetrymnn2h pins  move logic repeater from fe to pmh[0m
+
+    [1;37mfmfapwrdwnovrm3nnh__feedthru[0m
+    [36mWNS: -27.7ps[0m  │  1 ports  │  [2m→ par_fmav0[0m
+    [2m├─[0m [31mRTL4BE[0m [1;37m13014402155[0m  [31mrejected       [0m  [2mowner:[0m hmuhsen       [2m2026-01-26[0m
+    [2m│  └─ - EXE[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014406792[0m  [32mcomplete       [0m  [2mowner:[0m ogal          [2m2026-03-03[0m
+
+    [1;37mjenewuipclatem805h[0m
+    [36mWNS: -27.0ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013318134[0m  [32mcomplete       [0m  [2mowner:[0m ahaimovi      [2m2026-03-03[0m
+
+    [1;37mdcmisspecsnpm403h[0m
+    [36mWNS: -26.5ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmowbdatavldrobm805h[0m
+    [36mWNS: -25.6ps[0m  │  4 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014650445[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+
+    [1;37ml1ctrlpacket2m404h_1__1__l1fbhitnob2b[0m
+    [36mWNS: -25.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmiintwbfaultinfom805h_p_7_[0m
+    [36mWNS: -25.2ps[0m  │  7 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840453[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p_*__*_*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mreqiswbm403h[0m
+    [36mWNS: -25.1ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014681903[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-02[0m  [2mpar_meu[0m
+    [2m│  └─ reqiswbm403h[*] early clk to 90ps in highV &bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802755[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ reqiswbm403h[*] push clk / check rfip[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012859170[0m  [32mcomplete       [0m  [2mowner:[0m fnaseral      [2m2025-03-06[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+
+    [1;37mlbidbrincm306h[0m
+    [36mWNS: -25.1ps[0m  │  10 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014833866[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ lbidbrincm306h[*] - improve routing[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+
+    [1;37mmiintwbrealisfaultm805h_p_9_0__op[0m
+    [36mWNS: -25.0ps[0m  │  4 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327536[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014832810[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-16[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbrealisfaultm805h_p_*_*__op_* - improve routing[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014288078[0m  [32mcomplete       [0m  [2mowner:[0m gberger1      [2m2026-01-11[0m
+    [2m│  └─ - rob[0m
+
+    [1;37mmiintwbfaultinfom805h_p_1_[0m
+    [36mWNS: -24.2ps[0m  │  8 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840453[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p_*__*_*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mmiintwbfaultinfom805h_p_5_[0m
+    [36mWNS: -23.4ps[0m  │  8 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840453[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p_*__*_*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mdcsdbchktagfaultm805h[0m
+    [36mWNS: -22.5ps[0m  │  4 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861195[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ dcsdbchktagfaultm805h[*] - bound flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013615928[0m  [36msign_off       [0m  [2mowner:[0m ayarokh       [2m2026-01-20[0m  [2mpar_ooo_vec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m18043975409[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-02[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/rodcsdbchktagfaultm805h  -> rodcsdbchktagfaultm806h[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014469834[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-03-02[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/molbtailchgmnnnh - bound flop[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013896340[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - flop location[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014650445[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+
+    [1;37mjeclearlatetoooom805h[0m
+    [36mWNS: -21.7ps[0m  │  1 ports  │  [2m→ par_ooo_vec[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013732617[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+
+    [1;37ml1ctrlpacket2m404h_1__0__l1fbhitnob2b[0m
+    [36mWNS: -21.5ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmouoppak4stlbm405h_robid_addr[0m
+    [36mWNS: -20.7ps[0m  │  10 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861290[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2025-06-25[0m
+    [2m│  └─ (PMH)[0m
+
+    [1;37ml1ctrlpacket2m404h_0__1__l1fbhitnob2b[0m
+    [36mWNS: -20.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmolvpchkwbldm803h[0m
+    [36mWNS: -20.0ps[0m  │  4 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014316921[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-01-26[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/molvpchkwbldm803h[*] bound flop closer to port[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840664[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-03-11[0m  [2mpar_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311761[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-01-26[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/molvpchkwbldm806h[*] split multi bit[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014419198[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014722377[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-24[0m  [2mpar_pmh[0m
+    [2m│  └─ molvpchkwbldm806h[*] delay clock in20ps[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802449[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ molvpchkwbldm806h[*] bound flop to port[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mmiintwbfaultinfom805h_p_0_[0m
+    [36mWNS: -18.6ps[0m  │  8 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840453[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p_*__*_*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mmolvpchkwbldm806h[0m
+    [36mWNS: -18.0ps[0m  │  4 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311761[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-01-26[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/molvpchkwbldm806h[*] split multi bit[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014419198[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014722377[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-24[0m  [2mpar_pmh[0m
+    [2m│  └─ molvpchkwbldm806h[*] delay clock in20ps[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802449[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ molvpchkwbldm806h[*] bound flop to port[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014316921[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-01-26[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/molvpchkwbldm803h[*] bound flop closer to port[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840664[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-03-11[0m  [2mpar_ooo_int[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37mmo2ifsmcsnpvalidmnnnh[0m
+    [36mWNS: -16.5ps[0m  │  4 ports  │  [2m→ par_fe[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014002854[0m  [36msign_off       [0m  [2mowner:[0m ahaimovi      [2m2026-02-02[0m  [2mpar_fe[0m
+    [2m│  └─ mo2ifsmcsnpvalidmnnnh* recivers flop to Y ~500[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m14026657681[0m  [32mcomplete       [0m  [2mowner:[0m ajaysing      [2m2026-03-03[0m
+    [2m│  └─ MEU/MSID[0m
+
+    [1;37mmiintwbfaultinfom805h_p_3_[0m
+    [36mWNS: -16.2ps[0m  │  8 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014840453[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p_*__*_*_[*] - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327190[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m│  └─ miintwbfaultinfom805h_p*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37ml1ctrlpacket2m404h_0__0__l1fbhitnob2b[0m
+    [36mWNS: -15.2ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmiintwbfaultflagsoverrm805h[0m
+    [36mWNS: -15.1ps[0m  │  14 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013917804[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-10-12[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/miintwbfaultflagsoverrm805h  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014327267[0m  [36msign_off       [0m  [2mowner:[0m fnaseral      [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37ml1ctrlpacket2m404h_0__1__l1fbhitb2b[0m
+    [36mWNS: -14.5ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37ml1ctrlpacket2m404h_1__0__selfsnoop[0m
+    [36mWNS: -14.1ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmeforceprfwrldmnnnh_1__rsint[0m
+    [36mWNS: -13.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861170[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ meforceprfwrldmnnnh_*__rsint - bound flop[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861410[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ meforceprfwrldmnnnh_*__rsvec - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014270929[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-23[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meforceprfwrldmnnnh_*_rsvec -> icore0/par_ooo_int/meforceprfwrldmnn1h_*_rsvec - bound fl[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013630498[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - connect rsbpd from meu[0m
+
+    [1;37ml1ctrlpacket2m404h_0__0__selfsnoop[0m
+    [36mWNS: -13.0ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37ml1ctrlpacket2m404h_1__1__selfsnoop[0m
+    [36mWNS: -12.9ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37ml1ctrlpacket2m404h_1__0__l1fbhitb2b[0m
+    [36mWNS: -12.4ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37ml1ctrlpacket2m404h_0__1__selfsnoop[0m
+    [36mWNS: -12.1ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mdc2mlsnpdatardymnn0h_0__valid[0m
+    [36mWNS: -11.4ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013666356[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-11-05[0m  [2mpar_mlc[0m
+    [2m│  └─ dc2mlsnpdatardymnnnh_*__*__valid[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13013905375[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2025-12-09[0m  [2mpar_pmh[0m
+    [2m│  └─ -dc2mlsnpdatardymnnnh_* early clock[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m18043969709[0m  [36msign_off       [0m  [2mowner:[0m amenashe      [2m2025-12-04[0m  [2mpar_mlc[0m
+    [2m│  └─ dc2mlsnpdatardymnnnh_*__*__snpreqid_snpagent[*][0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13014227519[0m  [31mwont_do        [0m  [2mowner:[0m amenashe      [2m2026-01-01[0m  [2mpar_mlc[0m
+    [2m│  └─ dc2mlsnpdatardymnnnh_*__*__snpreqid_id*[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014360186[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+
+    [1;37ml1ctrlpacket2m404h_0__0__l1fbhitb2b[0m
+    [36mWNS: -11.2ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37ml1ctrlpacket2m404h_1__1__l1fbhitb2b[0m
+    [36mWNS: -11.2ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37ml1ctrlpacket2m404h_0__0__statusok[0m
+    [36mWNS: -10.6ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmolvphashdatam806h[0m
+    [36mWNS: -10.4ps[0m  │  37 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+
+    [1;37mmouoppak4stlbm405h_pwtype[0m
+    [36mWNS: -10.3ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861290[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2025-06-25[0m
+    [2m│  └─ (PMH)[0m
+
+    [1;37ml1ctrlpacket2m404h_1__1__statusok[0m
+    [36mWNS: -10.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37ml1islandclkenmnn0h[0m
+    [36mWNS: -10.2ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014419253[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802644[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014356888[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 3)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014527733[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ L0-FB match to prevent bypass request[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+
+    [1;37mmeforceprfwrldmnnnh_2__rsvec[0m
+    [36mWNS: -9.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861170[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ meforceprfwrldmnnnh_*__rsint - bound flop[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861410[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ meforceprfwrldmnnnh_*__rsvec - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014270929[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-23[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meforceprfwrldmnnnh_*_rsvec -> icore0/par_ooo_int/meforceprfwrldmnn1h_*_rsvec - bound fl[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013630498[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - connect rsbpd from meu[0m
+
+    [1;37ml1flushwaym404h[0m
+    [36mWNS: -8.2ps[0m  │  6 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014722066[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-03-09[0m  [2mpar_meu[0m
+    [2m│  └─ l1flushwaym404h_*_[*] - bound and early clk[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014356888[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 3)[0m
+
+    [1;37ml1ctrlpacket2m404h_1__0__statusok[0m
+    [36mWNS: -7.9ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmeforceprfwrldmnnnh_0__rsvec[0m
+    [36mWNS: -7.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861170[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ meforceprfwrldmnnnh_*__rsint - bound flop[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861410[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ meforceprfwrldmnnnh_*__rsvec - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014270929[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-23[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meforceprfwrldmnnnh_*_rsvec -> icore0/par_ooo_int/meforceprfwrldmnn1h_*_rsvec - bound fl[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013630498[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - connect rsbpd from meu[0m
+
+    [1;37mdcflushstatel1mnnnh[0m
+    [36mWNS: -7.8ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013703932[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 2)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014356888[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 3)[0m
+
+    [1;37ml1ctrlpacket2m404h_0__1__statusok[0m
+    [36mWNS: -7.8ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mdcdatabistl1rdadrm404h[0m
+    [36mWNS: -7.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014356888[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 3)[0m
+
+    [1;37mmolvpchkwbldm803h__feedthru[0m
+    [36mWNS: -7.5ps[0m  │  3 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014311761[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-01-26[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/molvpchkwbldm806h[*] split multi bit[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014316921[0m  [36msign_off       [0m  [2mowner:[0m aholtzma      [2m2026-01-26[0m  [2mpar_pmh[0m
+    [2m│  └─ icore0/par_pmh/molvpchkwbldm803h[*] bound flop closer to port[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014419198[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-15[0m  [2mpar_meu[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014722377[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-24[0m  [2mpar_pmh[0m
+    [2m│  └─ molvpchkwbldm806h[*] delay clock in20ps[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014802449[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-03-05[0m  [2mpar_pmh[0m
+    [2m│  └─ molvpchkwbldm806h[*] bound flop to port[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014840664[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-03-11[0m  [2mpar_ooo_int[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+
+    [1;37ml1ctrlpacket2m404h_0__1__dissamelinel1[0m
+    [36mWNS: -7.3ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37msplithicommitldm404h[0m
+    [36mWNS: -6.9ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013703932[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 2)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014356888[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 3)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+
+    [1;37mdchwpcommitldm404h[0m
+    [36mWNS: -6.0ps[0m  │  2 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013703932[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 2)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014356888[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 3)[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13012861291[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-01-14[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 1)[0m
+
+    [1;37ml1ctrlpacket2m404h_1__1__dissamelinel1[0m
+    [36mWNS: -5.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014518643[0m  [32mcomplete       [0m  [2mowner:[0m ialon         [2m2026-03-03[0m
+    [2m│  └─ par_pmh/par_meu delay paths (part 4)[0m
+
+    [1;37mmeforceprfwrldmnnnh_0__rsint[0m
+    [36mWNS: -5.0ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861170[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ meforceprfwrldmnnnh_*__rsint - bound flop[0m
+    [2m├─[0m [35mSIO2PO[0m [1;37m13014861410[0m  [35mnot_done       [0m  [2mowner:[0m aholtzma      [2m2026-03-12[0m  [2mpar_meu[0m
+    [2m│  └─ meforceprfwrldmnnnh_*__rsvec - improve routing[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014270929[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-23[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/meforceprfwrldmnnnh_*_rsvec -> icore0/par_ooo_int/meforceprfwrldmnn1h_*_rsvec - bound fl[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014238413[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - rs[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13013630498[0m  [32mcomplete       [0m  [2mowner:[0m baselibr      [2m2026-03-03[0m
+    [2m│  └─ - connect rsbpd from meu[0m
+
+    [1;37msimddisablebugfixm3nnh[0m
+    [36mWNS: -1.3ps[0m  │  1 ports  │  [2m→ par_exe[0m
+    [2m├─[0m [31mRTL4BE[0m [1;37m13014402155[0m  [31mrejected       [0m  [2mowner:[0m hmuhsen       [2m2026-01-26[0m
+    [2m│  └─ - EXE[0m
+    [2m├─[0m [32mRTL4BE[0m [1;37m13014406792[0m  [32mcomplete       [0m  [2mowner:[0m ogal          [2m2026-03-03[0m
+
+
+  [47;1;30m CHECK MANUALLY — 7 families, 36 ports [0m
+  [2m───────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+    [1;37mmefastlockretbypm899h[0m
+    [36mWNS: -45.8ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [2mRTL4BE[0m [1;37m14027436585[0m  [2munknown        [0m  [2mowner:[0m snouri        [2m2026-03-21[0m
+    [2m│  └─ - fix timing path of to MEFastLockRetBypM899H  toward the ROB[0m
+
+    [1;37mlvptraininfomnn1h_lvptraininginfo_lvp_ctrl_info[0m
+    [36mWNS: -45.6ps[0m  │  26 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014273347[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-23[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/lvptraininfo*nnnh*   -> lvptraininfo*nn1h  - bound the flop[0m
+    [2m├─[0m [31mRTL4BE[0m [1;37m13013501222[0m  [31mrejected       [0m  [2mowner:[0m mburak        [2m2025-08-27[0m
+    [2m│  └─ lvptraininfo* missing cycle[0m
+
+    [1;37mmlcringcntenmnnnh[0m
+    [36mWNS: -41.7ps[0m  │  1 ports  │  [2m→ par_pmh[0m
+    [2m├─[0m [31mSIO2PO[0m [1;37m13014587477[0m  [31mwont_do        [0m  [2mowner:[0m mandrea       [2m2026-02-11[0m  [2mpar_pmh[0m
+    [2m│  └─ & stress spec[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014368455[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-05[0m  [2mpar_pmh[0m
+    [2m│  └─ msuipbrkptt_m108h[*] split multibit[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014454603[0m  [36msign_off       [0m  [2mowner:[0m mandrea       [2m2026-02-10[0m  [2mpar_pmh[0m
+
+    [1;37mmomeutxmisspecm4nnh[0m
+    [36mWNS: -26.3ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014012450[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-01[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/momeutxmisspecm4nnh  -> momeutxmisspecmnnnh - bound the flop[0m
+    [2m├─[0m [31mRTL4BE[0m [1;37m13013993889[0m  [31mrejected       [0m  [2mowner:[0m ayarokh       [2m2025-11-16[0m
+    [2m│  └─ - retiming[0m
+
+    [1;37mmoatretdispm805h[0m
+    [36mWNS: -7.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014428159[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-01-21[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/moatretdispm805h -> moatretdispm806h  - bound the flop[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014568862[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2026-02-15[0m  [2mpar_ooo_int[0m
+    [2m│  └─ moatretdispm805h-> moatretdispm806h - flop bound[0m
+    [2m├─[0m [31mRTL4BE[0m [1;37m13013952336[0m  [31mrejected       [0m  [2mowner:[0m ayarokh       [2m2025-12-01[0m
+    [2m│  └─ - need retiming[0m
+
+    [1;37mmoglbidldm803h[0m
+    [36mWNS: -5.1ps[0m  │  5 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [31mRTL4BE[0m [1;37m13014288079[0m  [31mrejected       [0m  [2mowner:[0m gberger1      [2m2026-03-18[0m
+    [2m│  └─ - alloc[0m
+
+    [1;37mlvptraininfoenmnnnh[0m
+    [36mWNS: -0.1ps[0m  │  1 ports  │  [2m→ par_ooo_int[0m
+    [2m├─[0m [36mSIO2PO[0m [1;37m13014273347[0m  [36msign_off       [0m  [2mowner:[0m baselibr      [2m2025-12-23[0m  [2mpar_ooo_int[0m
+    [2m│  └─ par_ooo_int/lvptraininfo*nnnh*   -> lvptraininfo*nn1h  - bound the flop[0m
+    [2m├─[0m [31mRTL4BE[0m [1;37m13013501222[0m  [31mrejected       [0m  [2mowner:[0m mburak        [2m2025-08-27[0m
+    [2m│  └─ lvptraininfo* missing cycle[0m
+
+
+  [41;1;37m NO HSD FILED — 128 families, 1643 ports — ACTION REQUIRED [0m
+  [2m───────────────────────────────────────────────────────────────────────────────────────────────[0m
+
+    [1;37mSignal Family                                    WNS  #Ports  Destination                   [0m
+    [2m──────────────────────────────────────────  ────────  ──────  ──────────────────────────────[0m
+    l1earlytagadrm403h                          [35m   -62.9[0m      76  [2mpar_pmh                       [0m
+    exe_ieu_post_busy                           [36m   -49.5[0m       1  [2mpar_pm_VIRTUAL_4_3_end_start  [0m
+    ie2meujerobidm305h                          [36m   -43.5[0m       3  [2mpar_pmh                       [0m
+    dcl0snphitsm403h                            [36m   -39.3[0m       2  [2mpar_pmh                       [0m
+    dcl1hitslprim404h                           [36m   -34.3[0m       2  [2mpar_pmh                       [0m
+    mowbqsfldacsszm804h                         [36m   -34.3[0m       8  [2mpar_ooo_int                   [0m
+    dtccbenm4nnh                                [36m   -33.9[0m       1  [2mpar_pmh                       [0m
+    iclbwriteenm305h                            [36m   -30.1[0m       4  [2mpar_pmh                       [0m
+    rsuopvtofem303h_op                          [36m   -29.5[0m       4  [2mpar_fe                        [0m
+    hmlesscandidatem403h                        [36m   -25.8[0m       2  [2mpar_pmh                       [0m
+    jeo2icanonm805h                             [36m   -25.6[0m       1  [2mpar_fe                        [0m
+    jeoptypelatem805h                           [36m   -25.0[0m       5  [2mpar_fe                        [0m
+    clearmdresetm405h                           [36m   -23.6[0m       4  [2mpar_pmh                       [0m
+    mdsetdusldm404h                             [36m   -23.2[0m       4  [2mpar_pmh                       [0m
+    moearlycancelwbldm804h                      [36m   -22.1[0m       4  [2mpar_exe                       [0m
+    dchwpspeccommitldm403h                      [36m   -22.0[0m       4  [2mpar_pmh                       [0m
+    mowbqsfstdbankselm804h                      [36m   -21.9[0m       8  [2mpar_ooo_int                   [0m
+    dclddatam805h_20_                           [36m   -21.4[0m     256  [2mpar_fmav1                     [0m
+    glb406writeenm405h                          [36m   -20.4[0m       4  [2mpar_pmh                       [0m
+    jebcastaddrm805h                            [36m   -20.3[0m       2  [2mpar_fe                        [0m
+    mdadrstendm404h                             [36m   -19.4[0m      14  [2mpar_pmh                       [0m
+    dcl1wayisslm404h                            [36m   -19.1[0m      31  [2mpar_pmh                       [0m
+    jeclrnukem305h                              [36m   -18.2[0m       1  [2mpar_pmh                       [0m
+    dclddatam805h_21_                           [36m   -18.2[0m     256  [2mpar_fmav1                     [0m
+    dclddatam805h_23_                           [36m   -17.6[0m     207  [2mpar_fmav0                     [0m
+    trcstinfom405h_5__status                    [36m   -17.0[0m       6  [2mpar_pmh                       [0m
+    trcstinfom405h_6__status                    [36m   -16.4[0m       5  [2mpar_pmh                       [0m
+    dclddatam805h_22_                           [36m   -15.8[0m     197  [2mpar_fmav1                     [0m
+    dclockinprogm4nnh                           [36m   -15.6[0m       1  [2mpar_ooo_int                   [0m
+    dc2l1wrdatam405h_0_                         [36m   -15.5[0m     113  [2mpar_pmh                       [0m
+    dc2l1wrdatam405h_1_                         [36m   -15.2[0m      60  [2mpar_pmh                       [0m
+    l1fillstatem405h                            [36m   -14.7[0m       4  [2mpar_pmh                       [0m
+    dcexpzerosldm805h                           [36m   -14.6[0m       4  [2mpar_fmav1                     [0m
+    wbballocconfm405h                           [36m   -14.4[0m       2  [2mpar_pmh                       [0m
+    rssbidm306h_3__addr                         [36m   -14.2[0m       5  [2mpar_pmh                       [0m
+    mddoneldm405h                               [36m   -14.2[0m       2  [2mpar_pmh                       [0m
+    trcstinfom405h_4__status                    [36m   -14.1[0m       6  [2mpar_pmh                       [0m
+    megatherdispldm800h                         [36m   -13.8[0m       3  [2mpar_ooo_int                   [0m
+    rsrobidvm804h_12_                           [36m   -13.2[0m       1  [2mpar_ooo_int                   [0m
+    tsbcheckpassldprtm404h                      [36m   -13.0[0m      12  [2mpar_pmh                       [0m
+    meu_dcu_post_busy                           [36m   -12.9[0m       1  [2mpar_pm_VIRTUAL_5_4_end_start  [0m
+    mrncheckphyadrm404h                         [36m   -12.9[0m      38  [2mpar_pmh                       [0m
+    bypreqcandidatem404h                        [36m   -12.7[0m       2  [2mpar_pmh                       [0m
+    rsrobidvm804h_11_                           [36m   -12.2[0m       1  [2mpar_ooo_int                   [0m
+    pmonstentrypmreqm405h                       [36m   -12.1[0m       1  [2mpar_pmh                       [0m
+    crdisableintqsfextmnn1h                     [36m   -12.0[0m       1  [2mpar_ooo_int                   [0m
+    forcesnphitonanysnpmnnnh                    [36m   -11.8[0m       1  [2mpar_pmh                       [0m
+    mdblksbidm405h_0__addr                      [36m   -11.8[0m       6  [2mpar_pmh                       [0m
+    disippcorecrmnnnh                           [36m   -11.4[0m       1  [2mpar_pmh                       [0m
+    dcexponesldm805h                            [36m   -11.2[0m       4  [2mpar_fmav1                     [0m
+    rsrobidvm804h_10_                           [36m   -11.1[0m       1  [2mpar_ooo_int                   [0m
+    mo2dceipldm401h                             [36m   -10.4[0m      21  [2mpar_pmh                       [0m
+    snpcnfinvl1m403h                            [36m   -10.0[0m       2  [2mpar_pmh                       [0m
+    dtmeadrstglbm404h                           [36m   -10.0[0m      10  [2mpar_pmh                       [0m
+    rstnukeglbclkenm911h                        [36m   -10.0[0m       1  [2mpar_pmh                       [0m
+    mivecbypwbparityctcmnnnh                    [36m    -9.5[0m       3  [2mpar_exe                       [0m
+    txorseniordispldm404h                       [36m    -9.3[0m       3  [2mpar_pmh                       [0m
+    lbhipawrenm404h                             [36m    -9.0[0m       1  [2mpar_pmh                       [0m
+    dcreqlenprestallm403h                       [36m    -8.9[0m       3  [2mpar_pmh                       [0m
+    dcl0snphitmm403h                            [36m    -8.6[0m       2  [2mpar_pmh                       [0m
+    disippcrmnnnh                               [36m    -8.5[0m       1  [2mpar_pmh                       [0m
+    dc2mlwrdatapoisonm402h                      [36m    -8.5[0m       2  [2mpar_mlc                       [0m
+    exesparesipwrdwnovrmnnnh                    [36m    -7.8[0m       3  [2mpar_exe                       [0m
+    tmulspinepwrovrdmnnnh                       [36m    -7.8[0m       1  [2mpar_pmh                       [0m
+    jeclrnukem307h                              [36m    -7.7[0m       1  [2mpar_pmh                       [0m
+    dcbyteadrldm403h                            [36m    -7.6[0m       9  [2mpar_pmh                       [0m
+    rssbidm306h_2__addr                         [36m    -7.5[0m       1  [2mpar_pmh                       [0m
+    crmonukeifcsafemodemnnnh                    [36m    -7.3[0m       1  [2mpar_pmh                       [0m
+    glbwriteenm305h                             [36m    -7.1[0m       2  [2mpar_pmh                       [0m
+    trcstinfom405h_6__resumed                   [36m    -7.0[0m       1  [2mpar_pmh                       [0m
+    mdblksbidm405h_2__addr                      [36m    -7.0[0m       2  [2mpar_pmh                       [0m
+    molbidstm404h                               [36m    -6.9[0m       1  [2mpar_pmh                       [0m
+    dcreqattrprestallm403h                      [36m    -6.8[0m       2  [2mpar_pmh                       [0m
+    dtmeadrldm404h                              [36m    -6.7[0m       3  [2mpar_pmh                       [0m
+    cr_ring2_dummy1_crdatamh                    [36m    -6.7[0m      30  [2mpar_fe                        [0m
+    moiclbcompleteldm805h                       [36m    -6.7[0m       1  [2mpar_ooo_int                   [0m
+    mdupdateldm405h                             [36m    -6.7[0m       2  [2mpar_pmh                       [0m
+    dc2mlwrdatam402h_0__3_                      [36m    -6.6[0m      29  [2mpar_mlc                       [0m
+    hwprefdropmnnnh                             [36m    -6.6[0m       1  [2mpar_pmh                       [0m
+    dcmcmsmimnnnh                               [36m    -6.6[0m       1  [2mpar_pmh                       [0m
+    meexefpfaultm805h                           [36m    -6.5[0m       2  [2mpar_exe                       [0m
+    dc2mlwrdatam402h_1__3_                      [36m    -6.3[0m       6  [2mpar_mlc                       [0m
+    trcstinfom405h_5__resumed                   [36m    -6.2[0m       1  [2mpar_pmh                       [0m
+    tmpgdirectcontmnnh_pgdirectcontaltmwakeuprst  [36m    -6.0[0m       1  [2mpar_exe                       [0m
+    tmpgdirectcontmnnh_pgdirectcontaltmopenallicgs  [36m    -5.7[0m       1  [2mpar_exe                       [0m
+    dc2mlwrdatam402h_1__1_                      [36m    -5.6[0m      16  [2mpar_mlc                       [0m
+    dc2mlwrdatam402h_0__1_                      [36m    -5.6[0m      18  [2mpar_mlc                       [0m
+    mistddoublepumpcbitmnn1h                    [36m    -5.6[0m       1  [2mpar_exe                       [0m
+    dcdatabistl1404wradrm404h                   [36m    -5.6[0m       1  [2mpar_pmh                       [0m
+    aopld2commitearlym402h                      [36m    -5.6[0m       3  [2mpar_pmh                       [0m
+    mii2vsrcpwrenm8n1h                          [36m    -5.2[0m       2  [2mpar_exe                       [0m
+    dc2mlwrdatam402h_1__2_                      [36m    -4.7[0m       9  [2mpar_mlc                       [0m
+    fpmisfaultssedsblm3nnh                      [36m    -4.6[0m       1  [2mpar_exe                       [0m
+    dcreqidprestallm403h                        [36m    -4.6[0m       2  [2mpar_pmh                       [0m
+    dc2mlwrdatam402h_1__0_                      [36m    -4.6[0m       7  [2mpar_mlc                       [0m
+    earlymosnoophitthrbypassm899h               [36m    -4.4[0m       1  [2mpar_pmh                       [0m
+    mdvermoglbenm403h                           [36m    -4.2[0m       2  [2mpar_pmh                       [0m
+    l1earlysetadrm403h                          [36m    -4.0[0m       6  [2mpar_pmh                       [0m
+    ipphintthresholdmnnnh                       [36m    -3.7[0m       1  [2mpar_pmh                       [0m
+    iefmadpp01pwrdwnovrm3nnh                    [36m    -3.6[0m       1  [2mpar_fmav0                     [0m
+    l1updateweightm405h_1_                      [36m    -3.3[0m       2  [2mpar_pmh                       [0m
+    gsshpwrdwnovrm3nnh                          [36m    -3.1[0m       1  [2mpar_exe                       [0m
+    sisharndsp23pwrdwnovrm3nnh                  [36m    -3.1[0m       1  [2mpar_exe                       [0m
+    exresetm004h__feedthru                      [36m    -2.5[0m       1  [2mpar_fmav1                     [0m
+    mii2vdatam802h                              [36m    -2.2[0m       6  [2mpar_exe                       [0m
+    dc2mlwrdatam402h_0__0_                      [36m    -2.1[0m       4  [2mpar_mlc                       [0m
+    setseladrldm403h                            [36m    -2.0[0m       1  [2mpar_pmh                       [0m
+    mdblksbidm405h_1__addr                      [36m    -1.5[0m       2  [2mpar_pmh                       [0m
+    mowbqsfvldrsm805h                           [36m    -1.5[0m       1  [2mpar_ooo_int                   [0m
+    ronukem910h                                 [36m    -1.5[0m       1  [2mpar_pmh                       [0m
+    trcldtscovfm406h                            [36m    -1.4[0m       1  [2mpar_pmh                       [0m
+    ippmaxmultipliermnnnh                       [36m    -1.4[0m       1  [2mpar_pmh                       [0m
+    yngerstpendoldl1missm405h                   [36m    -1.3[0m       1  [2mpar_pmh                       [0m
+    sishuf3pwrdwnovrm3nnh                       [36m    -1.3[0m       1  [2mpar_exe                       [0m
+    tmpgdirectcontmnnh_pgdirectconten           [36m    -1.2[0m       1  [2mpar_exe                       [0m
+    dc2mlwrdatam402h_0__2_                      [36m    -1.2[0m       1  [2mpar_mlc                       [0m
+    aopqresetmnnnh                              [36m    -1.0[0m       1  [2mpar_pmh                       [0m
+    sishamsgp0pwrdwnovrm3nnh                    [36m    -0.9[0m       1  [2mpar_exe                       [0m
+    mistckpwruporpwrovrdmnnnh                   [36m    -0.9[0m       1  [2mpar_exe                       [0m
+    disshufflehandlingmnnnh                     [36m    -0.8[0m       1  [2mpar_pmh                       [0m
+    shufdisablebugfixm3nnh                      [36m    -0.7[0m       2  [2mpar_exe                       [0m
+    streqvldm404h                               [36m    -0.5[0m       1  [2mpar_pmh                       [0m
+    dcl1earlyfbacanclm405h                      [36m    -0.5[0m       1  [2mpar_pmh                       [0m
+    snooppwrovrdmnnnh                           [36m    -0.4[0m       1  [2mpar_pmh                       [0m
+    snpcnfreqspecm399h                          [36m    -0.3[0m       1  [2mpar_pmh                       [0m
+    dishintmnnnh                                [36m    -0.3[0m       1  [2mpar_pmh                       [0m
+    fdivdisablebugfixm3nnh__feedthru            [36m    -0.1[0m       1  [2mpar_fmav0                     [0m
+    misrenpwrovrdm3nnh                          [36m    -0.0[0m       1  [2mpar_exe                       [0m
+
+    [31m▲ All 128 families above need HSDs filed immediately[0m
+
+
+  [2m═══════════════════════════════════════════════════════════════════════════════════════════════[0m
+  [2mColor key:  [31m■ Critical (≤-100ps)[0m  [35m■ Moderate (≤-50ps)[0m  [36m■ Mild (<0ps)[0m  [32m■ Met timing[0m
+  [2mHSD status: [32mcomplete/repo_modified[0m  [36msign_off[0m  [35mnot_done/open[0m  [31mrejected[0m
+  [2m═══════════════════════════════════════════════════════════════════════════════════════════════[0m

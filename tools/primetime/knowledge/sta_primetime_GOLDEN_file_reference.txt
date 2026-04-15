@@ -1,0 +1,392 @@
+================================================================================
+        sta_primetime/GOLDEN Directory - File & Directory Reference
+================================================================================
+
+LOCATION
+--------
+/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_msid/sta_primetime/GOLDEN/
+
+OVERVIEW
+--------
+This is the GOLDEN signoff release of par_msid partition - the complete 
+PrimeTime STA package with all physical/timing data needed for integration.
+
+Size: 72GB | Files: 5,880 | Date: Feb 11-12, 2026
+
+================================================================================
+                          DIRECTORIES
+================================================================================
+
+.par_msid.breadcrumbs/
+    Internal tracking directory with environment variables and settings
+    used during the archive process.
+
+bscript/
+    Build scripts used during the STA run.
+
+clock_collateral/
+    Clock definitions and constraints for ALL corners (36 subdirs).
+    Each corner has: *_clocks.tcl, *_clock_params.tcl, clock_uncertainty.tcl
+    Corners include: func.max_*, func.min_*, fresh.*, noise.*
+
+constraints_mapping/
+    Mapping files that translate constraint names between tools.
+
+dft_collateral/
+    DFT (Design For Test) related files - scan chain definitions,
+    ATPG constraints, BIST collateral.
+
+fe_collateral/
+    Front-End collateral from RTL:
+    - par_msid.f          : Verilog filelist
+    - par_msid.v.gz       : RTL Verilog source
+    - par_msid.upf        : Power intent (UPF format)
+    - par_msid.hip_tags.xml : HIP (Hierarchical IP) tags
+    - ms_units/           : Memory/stub unit definitions
+    - par_msid_rtl_snapshot/ : RTL snapshot for FEV
+
+fscript/
+    Flow scripts used for the STA setup and analysis.
+
+fv/
+    Formal Verification related files and reports.
+
+genus_dft/
+    Cadence Genus DFT synthesis outputs and reports.
+
+hip_data/
+    HIP (Hierarchical IP) data - timing models and abstracts for
+    hard macros used in the design.
+
+logs/
+    Log files from the STA runs and archiving process.
+
+par_msid.db/
+    Cadence Innovus database - complete P&R database including:
+    - par_msid.fp.gz      : Floorplan
+    - par_msid.place.gz   : Placement
+    - par_msid.route.gz   : Routing (868MB)
+    - libs/               : Library data
+    - mmmc/               : Multi-Mode Multi-Corner setup
+    - extraction/         : Parasitic extraction data
+
+par_msid.gpd/
+    Gate-level Power Data - used for power analysis.
+
+par_msid.pt_session.func.max_high.T_85.typical/
+    Saved PrimeTime session for max_high corner.
+    Can be restored with: pt_shell> restore_session <path>
+
+par_msid.pt_session.func.max_nom.T_85.typical/
+    Saved PrimeTime session for max_nom corner.
+
+par_msid.pt_session.func.rv_em_core.F_125.rcworst_CCworst/
+    Saved PrimeTime session for EM/reliability corner.
+
+pivot/
+    Pivot table data for timing analysis summaries.
+
+power_collateral/
+    Power intent files - UPF, power domains, level shifters.
+
+reports/
+    Additional reports directory (contains star_pv extraction reports).
+
+sio_timing_collateral/
+    SerDes/IO timing collateral - constraints for high-speed interfaces.
+
+td_collateral/
+    Top-Down collateral for integration:
+    - icc2/      : Synopsys IC Compiler 2 format
+    - innovus/   : Cadence Innovus format
+    - standard/  : Tool-agnostic format
+
+timing_collateral/
+    Timing constraints and exceptions:
+    - global_constraints.tcl        : Main timing constraints
+    - global_clocks_constraints.tcl : Clock definitions
+    - global_mbist_constraints.tcl  : MBIST timing exceptions
+    - global_scan_constraints.tcl   : Scan mode constraints
+    - func.max_*/                   : Per-corner constraints
+    - dsbe_arrays.sdc               : Memory array constraints
+
+================================================================================
+                          PHYSICAL DESIGN FILES
+================================================================================
+
+par_msid.oas (745MB)
+    OASIS layout file (GDSII equivalent) - full physical layout
+    of the partition for tape-out.
+
+par_msid.def.gz (1.0GB)
+    Design Exchange Format - contains placement, routing, and
+    physical design information in industry-standard format.
+
+par_msid.lef (481MB)
+    Library Exchange Format - abstract view of the design for
+    use by other tools (no detailed routing, just pin locations).
+
+par_msid.v.gz (64MB)
+    Gate-level Verilog netlist - structural netlist after P&R.
+
+par_msid.pt.v.gz (67MB)
+    PrimeTime-annotated Verilog netlist with timing annotations.
+
+par_msid.pt_nonpg.v.gz (64MB)
+    Verilog netlist without power/ground pins.
+
+par_msid.lvs.v.gz (74MB)
+    LVS (Layout vs Schematic) Verilog for physical verification.
+
+par_msid.upf (386KB)
+    Unified Power Format - defines power domains, isolation cells,
+    level shifters, and power management structures.
+
+par_msid_mfill.oas (18MB)
+    Metal fill OASIS - dummy metal fill patterns for manufacturing.
+
+par_msid_rules.lef (755KB)
+    Design rules in LEF format.
+
+================================================================================
+                          PARASITIC FILES (SPEF)
+================================================================================
+
+par_msid.typical_85.spef.gz (3.0GB)
+    Standard Parasitic Exchange Format for typical corner at 85°C.
+    Contains RC parasitics for all nets.
+
+par_msid.cworst_CCworst_125.spef.gz (3.0GB)
+    Capacitance-worst corner at 125°C - used for setup analysis
+    where higher capacitance means slower signals.
+
+par_msid.cworst_CCworst_M40.spef.gz (3.0GB)
+    Capacitance-worst corner at -40°C (cold).
+
+par_msid.cworst_CCworst_T_125.spef.gz (3.0GB)
+    C-worst with temperature-dependent parasitics at 125°C.
+
+par_msid.cworst_CCworst_T_M40.spef.gz (3.0GB)
+    C-worst with temperature-dependent parasitics at -40°C.
+
+par_msid.rcworst_CCworst_125.spef.gz (3.0GB)
+    RC-worst corner at 125°C - worst-case resistance for
+    timing analysis.
+
+par_msid.rcworst_CCworst_M40.spef.gz (3.0GB)
+    RC-worst corner at -40°C.
+
+par_msid.rcworst_CCworst_T_125.spef.gz (3.0GB)
+    RC-worst with temperature effects at 125°C.
+
+================================================================================
+                          CONSTRAINT FILES (SDC)
+================================================================================
+
+par_msid.exceptions.sdc (22MB)
+    Timing exceptions - false paths, multicycle paths, and
+    other timing exceptions for the design.
+
+par_msid.internal_exceptions.sdc (3.6MB)
+    Internal timing exceptions generated during P&R optimization.
+
+par_msid.setup_analysis_view_func.max_high.T_85.typical.sdc (218MB)
+    Complete SDC constraints for setup analysis at max_high corner.
+
+par_msid.setup_analysis_view_func.max_nom.T_85.typical.sdc (219MB)
+    Complete SDC constraints for setup analysis at max_nom corner.
+
+par_msid.hold_analysis_view_func.min_low.T_85.typical.sdc (164MB)
+    Complete SDC constraints for hold analysis at min_low corner.
+
+================================================================================
+                          PER-CORNER REPORTS
+================================================================================
+
+For each corner (example: func.max_high.T_85.typical), these reports exist:
+
+*.pt.log (52MB)
+    Full PrimeTime session log - all commands and messages.
+
+*.sdc.gz (18MB)
+    Final SDC constraints after PT processing.
+
+*.sdf.gz (1GB)
+    Standard Delay Format - annotated delays for simulation.
+
+*.report_timing.gz (70MB)
+    Full timing report with all paths meeting slack criteria.
+
+*.report_timing_summary_table.gz (79MB)
+    Summary table of timing by endpoint/startpoint.
+
+*.report_qor.max.rpt.gz (42KB)
+    Quality of Results - summary by path group showing:
+    - Levels of logic, critical path length
+    - WNS (Worst Negative Slack)
+    - TNS (Total Negative Slack)
+    - Number of violating paths
+
+*.report_constraint.max.rpt.gz (575KB)
+    All constraint violations listed.
+
+*.report_global_timing.rpt.gz (40KB)
+    Global timing summary across all path groups.
+
+*.report_clock.rpt.gz (2KB)
+    Clock definitions and attributes.
+
+*.report_clock_timing.rpt.gz (3KB)
+    Clock tree timing - latencies and skew.
+
+*.report_clock_skew.rpt.gz (8KB)
+    Detailed clock skew analysis.
+
+*.report_max_transition.rpt.gz (456KB)
+    Max transition (slew) violations.
+
+*.report_max_capacitance.rpt.gz (33KB)
+    Max capacitance violations.
+
+*.report_analysis_coverage.max.rpt.gz (26MB)
+    Analysis coverage - which paths were analyzed.
+
+*.report_case_analysis.rpt.gz (10KB)
+    Case analysis settings (constant values).
+
+*.report_disable_timing.rpt.gz (245KB)
+    Disabled timing arcs.
+
+*.report_error_warning.rpt.gz (741KB)
+    All PT errors and warnings.
+
+*.report_port.rpt.gz (254KB)
+    Port information (direction, load, fanout).
+
+*.report_design.rpt.gz (1KB)
+    Design statistics and operating conditions.
+
+*.modelval.rpt (58KB)
+    Model validation report.
+
+*.changed_app_vars.rpt.gz (6KB)
+    PT application variables that were changed.
+
+*.unconstrained_endpoints.rpt.gz (2KB)
+    Endpoints without timing constraints.
+
+*.timing_loops.rpt.gz
+    Combinational timing loops detected.
+
+*.no_clock.rpt.gz
+    Registers without clock.
+
+*.no_input_delay.rpt.gz
+    Input ports without input delay constraints.
+
+================================================================================
+                          RELIABILITY/EM CORNER FILES
+================================================================================
+
+For func.rv_em_core.F_125.rcworst_CCworst corner only:
+
+*.power.rep (141MB)
+    Detailed power report for EM analysis.
+
+*.rh.irdrop.gz (241MB)
+    IR drop analysis results.
+
+*.em_cell_power.rpt.gz (60MB)
+    Per-cell power for electromigration.
+
+*.em_activity_summary.rpt.gz
+    Activity summary for EM analysis.
+
+*.em_power_summary.rpt.gz
+    Power summary for EM.
+
+*.report_cell_em_violation.gz
+    EM violations at cell level.
+
+*.maxcapvio (136KB)
+    Maximum capacitance violations.
+
+*.rvextcap (265KB)
+    Extracted capacitance for reliability.
+
+================================================================================
+                          LIBRARY SCALING FILES
+================================================================================
+
+design.library_link_scaling.func.max_high.T_85.typical.tcl (44KB)
+    Library voltage scaling commands for max_high corner.
+
+design.library_link_scaling.func.max_nom.T_85.typical.tcl (45KB)
+    Library voltage scaling commands for max_nom corner.
+
+design.library_link_scaling.func.rv_em_core.F_125.rcworst_CCworst.tcl (47KB)
+    Library voltage scaling commands for EM corner.
+
+================================================================================
+                          MISCELLANEOUS FILES
+================================================================================
+
+.sta_done
+    Marker file indicating STA completed successfully.
+
+sta_pt.star_pv.extraction
+    Marker for StarRC parasitic extraction completion.
+
+par_msid.hip_tags.xml (9KB)
+    HIP (Hierarchical IP) tag definitions.
+
+par_msid.scandef (414KB)
+    Scan chain definitions for DFT.
+
+par_msid.saif.namemap (79MB)
+    SAIF (Switching Activity Interchange Format) name mapping
+    for power analysis.
+
+par_msid.lib_cell_usage.csv (347KB)
+    Library cell usage statistics.
+
+par_msid.optimization_dt_list_insts.tcl (5KB)
+    Dont-touch instances for optimization.
+
+par_msid.optimization_dt_list_nets.tcl
+    Dont-touch nets for optimization.
+
+par_msid.power_domain_to_tweaker.tcl (1KB)
+    Power domain mapping for timing optimization.
+
+par_msid.finish_cdns.report_metric.vivid (6MB)
+    Cadence Vivid metric report from P&R.
+
+par_msid_fct.manifest (161B)
+    FCT manifest file - lists archive contents.
+
+par_msid.sta_primetime.manifest.gz (86KB)
+    Full archive manifest with all files and metadata.
+
+================================================================================
+                          USAGE EXAMPLES
+================================================================================
+
+1. Restore PT Session:
+   pt_shell> restore_session par_msid.pt_session.func.max_high.T_85.typical
+
+2. Read Timing Report:
+   zcat par_msid.func.max_high.T_85.typical.report_timing.gz | less
+
+3. Check QoR:
+   zcat par_msid.func.max_high.T_85.typical.report_qor.max.rpt.gz
+
+4. View Clock Definitions:
+   zcat par_msid.func.max_high.T_85.typical.report_clock.rpt.gz
+
+5. Check Violations:
+   zcat par_msid.func.max_high.T_85.typical.report_constraint.max.rpt.gz
+
+================================================================================
+Generated: 2026-02-17
+================================================================================

@@ -1,0 +1,137 @@
+================================================================================
+  OPEN LOCAL PT SESSION — COOKBOOK
+  Load a PrimeTime session from daily saved database
+  Works on weekends (bypasses pt_client server)
+  Author: sunger | Date: 2026-04-12 (WW15.7)
+================================================================================
+
+================================================================================
+  1. WHEN TO USE LOCAL PT SESSION (vs pt_client)
+================================================================================
+
+  pt_client.pl (server)         | Local PT session (load_session)
+  ------------------------------|-------------------------------------
+  Fast (seconds per query)      | Slow to load (15-30 min), fast after
+  Only works on weekdays        | Works anytime (weekends too!)
+  Limited to latest/prev models | Any daily you have on disk
+  Read-only queries only        | Full PT shell (write commands too)
+  No license needed             | Needs PT license
+  Preferred for quick queries   | Use when server is OFFLINE
+
+  RULE: Try pt_client first. If OFFLINE, use local session.
+
+================================================================================
+  2. QUICK START
+================================================================================
+
+  SCRIPT:
+    /nfs/site/disks/sunger_wa/skills_for_sio_copilot/scripts/open_pt_session.sh
+
+  USAGE:
+    ./open_pt_session.sh <daily_path> <corner> [tech]
+
+  EXAMPLES:
+    # Setup-critical corner (max_high)
+    ./open_pt_session.sh /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_26ww12b_ww13_1_initial_with_TIP-FCT26WW15G_dcm_daily-CLK050.bu_postcts func.max_high
+
+    # Hold corner (min_low)
+    ./open_pt_session.sh <daily_path> func.min_low
+
+    # Fresh corner (min_fast)
+    ./open_pt_session.sh <daily_path> fresh.min_fast
+
+    # Short corner names work too
+    ./open_pt_session.sh <daily_path> high
+    ./open_pt_session.sh <daily_path> min_low
+    ./open_pt_session.sh <daily_path> fast
+
+  SHORT CORNER NAMES:
+    high       -> func.max_high.T_85.typical
+    low        -> func.max_low.T_85.typical
+    med        -> func.max_med.T_85.typical
+    nom        -> func.max_nom.T_85.typical
+    min_low    -> func.min_low.T_85.typical
+    min_nom    -> func.min_nom.T_85.typical
+    fast       -> fresh.min_fast.F_125.rcworst_CCworst
+    fast_cold  -> fresh.min_fast_cold.F_M40.rcworst_CCworst
+    slow       -> fresh.min_slow.S_125.cworst_CCworst
+    hvqk       -> fresh.min_hvqk.F_125.rcworst_CCworst
+    hi_hi_lo   -> fresh.min_hi_hi_lo.T_85.typical
+    hi_lo_hi   -> fresh.min_hi_lo_hi.T_85.typical
+    lo_hi_hi   -> fresh.min_lo_hi_hi.T_85.typical
+
+================================================================================
+  3. MANUAL OPEN (without script)
+================================================================================
+
+  sg soc -c "/p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \
+    <daily>/runs/core_client/n2p_htall_conf4/sta_pt/<corner_dir>/outputs/core_client.pt_session.<corner_dir> \
+    -title <title>"
+
+  EXAMPLE:
+    sg soc -c "/p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \
+      /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/GFC_CLIENT_26ww12b_ww13_1_initial_with_TIP-FCT26WW15G_dcm_daily-CLK050.bu_postcts/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/outputs/core_client.pt_session.func.max_high.T_85.typical \
+      -title core_client_BU_high"
+
+================================================================================
+  4. COPILOT USAGE — HOW COPILOT OPENS PT SESSIONS
+================================================================================
+
+  Copilot can open a PT session in its hidden terminal using async bash:
+
+    bash mode="async" shellId="pt-session":
+      sg soc -c "/p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \
+        <session_path> -title <title>"
+
+  Then interact using write_bash to send commands and read output.
+  
+  LIMITATION: Copilot's terminal is NOT visible to the user.
+  If user wants to see the PT shell, they must open it themselves.
+
+  WORKFLOW:
+    1. Copilot opens session in async mode (hidden)
+    2. Waits for PT prompt (15-30 min load time)
+    3. Sends report_timing commands via write_bash
+    4. Saves output to files user can read
+    5. Closes session when done (exit command)
+
+================================================================================
+  5. COMMON QUERIES AFTER OPENING
+================================================================================
+
+  # Check output paths from a specific cell (useful skew margin check)
+  report_timing -from [get_pins */DcL1RdDataM409H_reg_*/Q*] -max_paths 20 -nosplit
+
+  # Check paths to a specific cell
+  report_timing -to [get_pins */DcL1RdDataM409H_reg_*/D*] -max_paths 20 -nosplit
+
+  # PBA mode query
+  report_timing -from [get_pins */IntM408H_reg_*/Q*] \
+    -to [get_pins */M409H_reg_*/D*] \
+    -pba_mode path -max_paths 50 -nosplit
+
+  # Clock tree delay
+  report_timing -to [get_pins */M409H_reg_0__0__0__0/CP] \
+    -path_type full_clock_expanded -nosplit
+
+  # Count pins
+  sizeof_collection [get_pins */DcL1RdDataM409H_reg_*/Q*]
+
+  # Escape brackets in port names
+  report_timing -through [get_ports dcl1rddatam408h_3__1__1__2_\[0\]] -nosplit
+
+================================================================================
+  6. IMPORTANT NOTES
+================================================================================
+
+  - Loading takes 15-30 min — be patient
+  - Needs PT license (check with: lic_queuer -tool pt_shell)
+  - The session is READ-ONLY from the saved database
+  - Changes you make (like set_clock_latency) are in-memory only
+  - Close with: exit
+  - If you get OOM, try a smaller session or free memory first
+  - Daily path must be accessible (not archived/cleaned)
+
+================================================================================
+  Shachar Unger / SIO GFC Client A0
+================================================================================

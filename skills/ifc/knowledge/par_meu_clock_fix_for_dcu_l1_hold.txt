@@ -1,0 +1,476 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  par_meu CLOCK FIX GUIDE — DCU L1 DATABANK HOLD CLOSURE                   ║
+║  What par_meu PO needs to do with the clock tree                           ║
+║                                                                            ║
+║  New Model: fnaseral WW13B pantheon CLK048 (no PTECO)                      ║
+║  Corners:   func.min_low.T_85.typical (hold) + func.max_high (setup)       ║
+║  Date:      WW13 analysis                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 1.  THE PROBLEM — CLOCK SKEW KILLS HOLD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  PATH:  par_pmh/DcL1RdDataIntM408H (mclk_pmh) → par_meu/WSBDataArrayMnnnH (mclk_meu)
+  
+  3,149 hold-violating paths at min_low  |  WNS = -111ps
+  3,362 setup-violating paths at max_high |  WNS = -52ps
+  
+  The mclk_meu capture clock to the WSBDataArray/SnpBufDataArray registers
+  has the HIGHEST latency of any par_meu endpoint group:
+  
+    333ps at min_low  (next worst = 313ps for rseuimmdataqb)
+    → This is 108ps ABOVE the mclk_meu average of 225ps
+
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  CLOCK SKEW AT DCU L1 DATABANK:                                       │
+  │                                                                        │
+  │                          min_low (hold)     max_high (setup)           │
+  │  ─────────────────────   ──────────────     ────────────────           │
+  │  Capture (mclk_meu):        333ps               73ps                  │
+  │  Launch  (mclk_pmh):        142ps               91ps                  │
+  │  Clock Skew:                +191ps              -18ps                  │
+  │                                                                        │
+  │  At min_low: capture arrives 191ps AFTER launch → HOLD FAILS          │
+  │  At max_high: capture arrives 18ps BEFORE launch → SETUP TIGHT        │
+  │                                                                        │
+  │  HOLD needs: less skew (reduce capture or increase launch)             │
+  │  SETUP needs: same or more skew (capture late helps setup)             │
+  │  → These requirements CONFLICT — any clock change trades one for other │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2.  VOLTAGE SCALING — WHY min_low IS SO MUCH WORSE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  The capture clock latency scales 4.56x from max_high to min_low,
+  but launch only scales 1.56x:
+
+  ┌────────────────────────┬──────────┬──────────┬──────────┐
+  │ Clock path             │ max_high │ min_low  │ Scaling  │
+  ├────────────────────────┼──────────┼──────────┼──────────┤
+  │ DCU L1 capture (meu)   │   73ps   │  333ps   │  4.56x   │ ← PROBLEM
+  │ DCU L1 launch  (pmh)   │   91ps   │  142ps   │  1.56x   │
+  │ mclk_meu average       │   96ps   │  225ps   │  2.34x   │
+  │ mclk_pmh average       │   90ps   │  212ps   │  2.36x   │
+  └────────────────────────┴──────────┴──────────┴──────────┘
+
+  WHY 4.56x? The capture clock path has:
+  - 3 ICGs (each with enable timing sensitive to voltage)
+  - 12+ CTS buffer stages (each adds ~15-25ps at min_low vs ~5-7ps at max_high)
+  - ICGs scale ~3-4x, CTS buffers scale ~2.5-3.5x
+  - The compounding of 15+ stages creates the extreme 4.56x ratio
+
+  The launch clock has only 2 ICGs + 6 CTS stages → scales moderately (1.56x)
+
+  IMPLICATION:
+  Any clock fix is amplified differently at different corners:
+  - Removing 1 CTS buffer stage from capture saves ~5ps at max_high
+    but saves ~15-20ps at min_low (3-4x leverage!)
+  - This asymmetry can be USED to our advantage
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 3.  THE CAPTURE CLOCK TREE — WHAT par_meu PO CONTROLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  CAPTURE CLOCK (mclk_meu → WSBDataArray register):
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  GLOBAL DRIVER (glbdrv_par_mnsclk_meu)                              │
+  │    ↓  ~48-59ps                                                       │
+  │    par_meu PO CANNOT change (global-level clock)                    │
+  │                                                                      │
+  │  ┌──── STAGE 1: L1 Island ICG ──────────────────────────────────┐   │
+  │  │  ICG ClkL1IslandMH (CKLNQD12 — big driver)                   │   │
+  │  │  Purpose: L1 data island power gating                         │   │
+  │  │  Latency: +25ps (min_low), +10ps (max_high)                   │   │
+  │  │  ❌ Cannot remove — architectural, RTL-defined gating          │   │
+  │  │  ⚠  Could swap to smaller ICG cell (saves ~3-5ps)             │   │
+  │  └──────────────────────────────────────────────────────────────┘   │
+  │    ↓                                                                 │
+  │  ┌──── STAGE 2: 6× CTS buffers ─────────────────────────────────┐  │
+  │  │  CKND10, CKND12, CKND8, CKND4, CKND7, CKND7                  │  │
+  │  │  Total: +76ps (min_low), +20ps (max_high)                      │  │
+  │  │  ✅ par_meu PO CAN optimize — CTS buffer reduction/resizing   │  │
+  │  │  Goal: Reduce from 6 stages to 4-5 → save 15-25ps at min_low  │  │
+  │  └───────────────────────────────────────────────────────────────┘  │
+  │    ↓                                                                 │
+  │  ┌──── STAGE 3: WSB Write ICG ──────────────────────────────────┐   │
+  │  │  ICG ClkWSBWr4094MH (CKLNQD6 — medium driver)                │   │
+  │  │  Purpose: WSB write-bank clock gating (power management)      │   │
+  │  │  Latency: +23ps (min_low), +7ps (max_high)                    │   │
+  │  │  ⚠  Potentially removable IF gating consolidated elsewhere    │   │
+  │  │  ⚠  Need RTL/clock-arch review to assess power impact         │   │
+  │  └──────────────────────────────────────────────────────────────┘   │
+  │    ↓                                                                 │
+  │  ┌──── STAGE 4: RC Clock Gate ICG ──────────────────────────────┐   │
+  │  │  ICG CG_RC_CG_HIER_INST99 (CKLNQD4 — small driver)          │   │
+  │  │  Purpose: Register-control auto-inserted clock gating         │   │
+  │  │  Latency: +22ps (min_low), +7ps (max_high)                    │   │
+  │  │  ✅ BEST CANDIDATE FOR REMOVAL/BYPASS                         │   │
+  │  │  This is auto-inserted by CG synthesis, not architectural     │   │
+  │  │  Removing it: saves 22ps hold, costs 7ps setup                │   │
+  │  │  Leverage ratio: 22/7 = 3.14x (great for hold!)              │   │
+  │  └──────────────────────────────────────────────────────────────┘   │
+  │    ↓                                                                 │
+  │  ┌──── STAGE 5: 6× CTS buffers to register ─────────────────────┐  │
+  │  │  CKND4, CKND4, CKND4, CKND4, CKND4, CKND4                    │  │
+  │  │  Total: +72ps (min_low), +20ps (max_high)                      │  │
+  │  │  ✅ par_meu PO CAN optimize — CTS buffer reduction/resizing   │  │
+  │  │  Goal: Reduce from 6 stages to 4-5 → save 15-25ps at min_low  │  │
+  │  └───────────────────────────────────────────────────────────────┘  │
+  │    ↓                                                                 │
+  │  Register CP (WSBDataArrayMnnnH / SnpBufDataArrayMnnnH)            │
+  │  Total: 333ps (min_low), 73ps (max_high)                           │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 4.  WHAT par_meu PO CAN DO — ACTIONABLE FIXES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ╔═══════════════════════════════════════════════════════════════════════╗
+  ║  FIX 1: USEFUL SKEW — REDUCE CAPTURE LATENCY (Immediate)            ║
+  ╠═══════════════════════════════════════════════════════════════════════╣
+  ║                                                                       ║
+  ║  ACTION: Add to par_meu user_useful_skew.tcl:                        ║
+  ║                                                                       ║
+  ║    set_clock_latency -offset -Nps [get_pins \                        ║
+  ║      */dcibbankd*/auto_vector_MBIT_WSBDataArrayMnnnH_reg_*/CP]      ║
+  ║    set_clock_latency -offset -Nps [get_pins \                        ║
+  ║      */dcibbankd*/auto_vector_MBIT_SnpBufDataArrayMnnnH_reg_*/CP]   ║
+  ║                                                                       ║
+  ║  This tells CTS to TARGET lower latency for these registers.         ║
+  ║                                                                       ║
+  ║  HOW MUCH? The setup/hold tradeoff at each corner:                   ║
+  ║                                                                       ║
+  ║  ┌────────────┬──────────────────┬──────────────────┬────────────┐   ║
+  ║  │ Skew Δ     │  Hold impact     │  Setup impact    │ NET        │   ║
+  ║  │ (capture)  │  at min_low      │  at max_high     │            │   ║
+  ║  ├────────────┼──────────────────┼──────────────────┼────────────┤   ║
+  ║  │  -5ps      │  +15-20ps ✅     │  -2-3ps safe     │ Great      │   ║
+  ║  │ -10ps      │  +30-40ps ✅     │  -5-7ps risk     │ Good       │   ║
+  ║  │ -15ps      │  +45-55ps ✅     │  -8-10ps ⚠       │ Risky      │   ║
+  ║  │ -20ps      │  +60-70ps ✅     │  -12-15ps ❌     │ Too much   │   ║
+  ║  └────────────┴──────────────────┴──────────────────┴────────────┘   ║
+  ║                                                                       ║
+  ║  KEY INSIGHT: The 4.56x voltage scaling ratio works IN OUR FAVOR!    ║
+  ║  A -5ps useful_skew target means CTS removes ~1 buffer stage.       ║
+  ║  That stage was 20ps at min_low but only 5ps at max_high.            ║
+  ║  So we get 15-20ps hold improvement at cost of only 2-3ps setup!    ║
+  ║                                                                       ║
+  ║  RECOMMENDED: Start with -10ps useful_skew.                          ║
+  ║  Expected: +30-40ps hold gain, -5-7ps setup cost.                    ║
+  ║  Verify: Run PT at min_low and max_high after CTS.                   ║
+  ║                                                                       ║
+  ╚═══════════════════════════════════════════════════════════════════════╝
+
+  ╔═══════════════════════════════════════════════════════════════════════╗
+  ║  FIX 2: BYPASS CG_RC_CG_HIER ICG (Best single fix)                  ║
+  ╠═══════════════════════════════════════════════════════════════════════╣
+  ║                                                                       ║
+  ║  ACTION: In par_meu CTS constraints or dont_use_icg:                 ║
+  ║                                                                       ║
+  ║    # Option A: Disable auto ICG insertion for this group              ║
+  ║    set_clock_gating_check -setup 0 -hold 0 [get_cells \             ║
+  ║      */dcibbankd*/CG_RC_CG_HIER_INST*]                              ║
+  ║                                                                       ║
+  ║    # Option B: Set dont_touch on ICG enable (force always-on)         ║
+  ║    # This keeps the cell but makes it transparent                     ║
+  ║                                                                       ║
+  ║  IMPACT:                                                              ║
+  ║    min_low:  -22ps capture latency → +22ps hold improvement          ║
+  ║    max_high: -7ps  capture latency → -7ps setup degradation          ║
+  ║    Leverage: 22/7 = 3.14x (every 1ps setup cost gives 3.14ps hold)  ║
+  ║                                                                       ║
+  ║  RISK: Increases dynamic power to WSBDataArray banks.                ║
+  ║    These banks were gated to save power when not writing.             ║
+  ║    Power impact: ~8 banks × 2 cores × ICG power = moderate           ║
+  ║    Need sign-off from power team.                                     ║
+  ║                                                                       ║
+  ║  RECOMMENDED: High priority — best hold/setup leverage ratio.        ║
+  ╚═══════════════════════════════════════════════════════════════════════╝
+
+  ╔═══════════════════════════════════════════════════════════════════════╗
+  ║  FIX 3: CTS BUFFER REDUCTION (Medium-term)                           ║
+  ╠═══════════════════════════════════════════════════════════════════════╣
+  ║                                                                       ║
+  ║  The capture clock has 12 CTS buffer stages (6 before + 6 after      ║
+  ║  the write ICGs). This is excessive for the distance to registers.   ║
+  ║                                                                       ║
+  ║  ACTION: In par_meu CTS constraints:                                 ║
+  ║                                                                       ║
+  ║    # Tighten the max insertion delay for mclk_meu to databank group  ║
+  ║    set_clock_tree_options -max_insertion_delay <target_ps> \          ║
+  ║      [get_pins */dcibbankd*/auto_vector_MBIT_*MnnnH_reg_*/CP]       ║
+  ║                                                                       ║
+  ║    # Or constrain max skew between ICG output and registers          ║
+  ║    # to force CTS to use fewer buffer stages                         ║
+  ║                                                                       ║
+  ║  IMPACT: Reducing from 12 to 8-9 stages saves:                      ║
+  ║    min_low:  ~45-60ps capture reduction                              ║
+  ║    max_high: ~12-15ps capture reduction                              ║
+  ║    Leverage: ~3-4x                                                    ║
+  ║                                                                       ║
+  ║  RISK: CTS may push DRC violations (capacitance, transition)         ║
+  ║    Need to verify DRC after CTS optimization.                        ║
+  ║    May need upsizing remaining buffers (CKND4→CKND8) to maintain    ║
+  ║    drive strength with fewer stages.                                  ║
+  ║                                                                       ║
+  ╚═══════════════════════════════════════════════════════════════════════╝
+
+  ╔═══════════════════════════════════════════════════════════════════════╗
+  ║  FIX 4: ICG CELL DOWNSIZING (Quick win)                              ║
+  ╠═══════════════════════════════════════════════════════════════════════╣
+  ║                                                                       ║
+  ║  ICG ClkL1IslandMH uses CKLNQD12 (very large driver).               ║
+  ║  If the fanout allows, downsizing to CKLNQD8 or CKLNQD6 saves:     ║
+  ║    min_low: ~5-8ps     max_high: ~2-3ps                              ║
+  ║                                                                       ║
+  ║  ICG ClkWSBWr4094MH uses CKLNQD6 (medium).                          ║
+  ║  Downsizing to CKLNQD4 if feasible saves:                           ║
+  ║    min_low: ~3-5ps     max_high: ~1-2ps                              ║
+  ║                                                                       ║
+  ║  Total from downsizing: ~8-13ps hold gain, ~3-5ps setup cost.       ║
+  ║  Low risk — CTS can usually handle this.                             ║
+  ╚═══════════════════════════════════════════════════════════════════════╝
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 5.  SETUP IMPACT ANALYSIS — WILL WE BREAK SETUP?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Current setup status at max_high: WNS = -52ps, 3,362 failing paths
+  Setup is ALREADY failing — but with different characteristics:
+  
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  SETUP PATH CHARACTERISTICS (max_high):                               │
+  │                                                                        │
+  │  Clock skew = -18ps (capture 18ps BEFORE launch)                      │
+  │  This means capture clock is FASTER than launch at max_high            │
+  │  → Opposite of the hold problem!                                      │
+  │                                                                        │
+  │  Setup equation:                                                       │
+  │    data_required = capture_edge + capture_latency - setup_time         │
+  │    data_arrival  = launch_edge  + launch_latency  + data_delay         │
+  │    setup_slack   = data_required - data_arrival                        │
+  │                                                                        │
+  │  If we REDUCE capture latency by Δ:                                   │
+  │    data_required decreases by Δ → setup slack DECREASES by Δ          │
+  │    BUT at max_high Δ is SMALL (1/4.56 of the min_low change)          │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  THE KEY LEVERAGE: 4.56x Voltage Scaling Ratio
+  
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │                                                                        │
+  │  If par_meu CTS removes 1 buffer stage from capture path:            │
+  │                                                                        │
+  │    At min_low:  saves  ~20ps  (hold improvement)                      │
+  │    At max_high: costs  ~5ps   (setup degradation)                     │
+  │                                                                        │
+  │  If par_meu bypasses CG_RC ICG:                                       │
+  │    At min_low:  saves  ~22ps  (hold improvement)                      │
+  │    At max_high: costs  ~7ps   (setup degradation)                     │
+  │                                                                        │
+  │  Combined (1 buffer + ICG bypass):                                    │
+  │    At min_low:  saves  ~42ps  (3,149 → ~1,000 paths remaining)       │
+  │    At max_high: costs  ~12ps  (WNS -52 → ~-64ps)                     │
+  │                                                                        │
+  │  Is -12ps setup degradation acceptable?                               │
+  │    Current WNS = -52ps — already needs ECO/buffer insertion            │
+  │    -64ps is worse but in same ballpark                                │
+  │    PTECO can fix setup violations with buffers (unlike hold!)         │
+  │    Hold ECO is MUCH harder than setup ECO → prioritize hold fix       │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+  SETUP SANITY CHECK — How many setup paths would be created?
+
+  Current at max_high: 3,362 paths at -52ps WNS
+  If capture reduced by 12ps: ~3,500 paths at -64ps WNS (estimate)
+  
+  But these are EXTERNAL paths (par_pmh→par_meu):
+  - Setup can be fixed by PTECO with buffers on DATA path (adding delay)
+  - Hold CANNOT be fixed by PTECO (already tried, failed due to L/T codes)
+  - Setup ECO is a standard PTECO capability
+  
+  CONCLUSION: Accept setup degradation to gain hold improvement.
+  Hold is UNFIXABLE by PTECO (buffer insertion adds delay = helps hold only).
+  Setup fixes require cell sizing/swapping (harder, limited by Vt/area) or
+  SIO2PO departure bounds on par_pmh to reduce data path delay.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 6.  COMPLETE FIX PLAN — HOLD AT min_low vs SETUP AT max_high
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │  STEP 1 (par_meu PO): Useful skew -10ps on WSB/SnpBuf registers     │
+  │                                                                       │
+  │    Hold gain at min_low:   +30-40ps                                  │
+  │    Setup cost at max_high: -5-7ps                                    │
+  │    → WNS hold: -111 → ~-75ps (estimate)                             │
+  │    → WNS setup: -52 → ~-57ps                                        │
+  │                                                                       │
+  │    STANDALONE EFFECT: Fixes ~0% of paths (all still <-10ps)          │
+  │    but reduces gap for subsequent fixes.                              │
+  └───────────────────────────────────────────────────────────────────────┘
+
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │  STEP 2 (par_meu PO): Bypass CG_RC_CG_HIER ICG                      │
+  │                                                                       │
+  │    Hold gain at min_low:   +22ps (on top of Step 1)                  │
+  │    Setup cost at max_high: -7ps                                      │
+  │    → WNS hold: ~-75 → ~-53ps (estimate, cumulative)                 │
+  │    → WNS setup: ~-57 → ~-64ps                                       │
+  │                                                                       │
+  │    CUMULATIVE EFFECT: ~1,000 paths fixed (from 3,149)                │
+  └───────────────────────────────────────────────────────────────────────┘
+
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │  STEP 3 (par_meu PO): CTS buffer stage reduction (12→9 stages)      │
+  │                                                                       │
+  │    Hold gain at min_low:   +45ps (on top of Steps 1+2)              │
+  │    Setup cost at max_high: -12ps                                     │
+  │    → WNS hold: ~-53 → ~-8ps (estimate, cumulative!)                 │
+  │    → WNS setup: ~-64 → ~-76ps                                       │
+  │                                                                       │
+  │    CUMULATIVE EFFECT: ~2,800 paths fixed (from 3,149)                │
+  └───────────────────────────────────────────────────────────────────────┘
+
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │  STEP 4 (par_pmh PO): Useful skew +15ps on DcL1RdData launch flops  │
+  │                                                                       │
+  │    Hold gain at min_low:   +15ps (from launch side)                  │
+  │    Setup cost at max_high: 0ps at endpoint (doesn't change EP clock) │
+  │    → WNS hold: ~-8 → ~+7ps → ALL PATHS MET                         │
+  │    → WNS setup: unchanged at ~-76ps                                  │
+  │                                                                       │
+  │    BUT: par_pmh internal setup to DcL1RdData must be checked         │
+  └───────────────────────────────────────────────────────────────────────┘
+
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │  STEP 5 (PTECO): Fix remaining setup violations                      │
+  │                                                                       │
+  │    Setup WNS ~-76ps after clock fixes                                │
+  │    PTECO fixes setup by SIZING cells (swap to faster Vt/larger       │
+  │    drive) and RESTRUCTURING logic to shorten data path delay.        │
+  │    Note: buffer insertion ADDS delay → helps HOLD, hurts SETUP.      │
+  │    For setup, PTECO uses cell swapping, not buffer insertion.         │
+  │    Estimate: setup on these paths already tight (-52ps baseline),    │
+  │    may need SIO2PO or clock adjustment rather than PTECO alone.      │
+  └───────────────────────────────────────────────────────────────────────┘
+
+
+  SUMMARY TABLE:
+  ┌───────┬───────────────────────┬───────────┬───────────┬───────────────┐
+  │ Step  │ Fix                   │Hold WNS   │Setup WNS  │ Hold paths    │
+  │       │                       │(min_low)  │(max_high) │ remaining     │
+  ├───────┼───────────────────────┼───────────┼───────────┼───────────────┤
+  │ Now   │ (baseline)            │  -111ps   │   -52ps   │   3,149       │
+  │  1    │ Useful skew -10ps     │  ~-75ps   │   ~-57ps  │   3,149       │
+  │  2    │ Bypass CG_RC ICG      │  ~-53ps   │   ~-64ps  │  ~2,100       │
+  │  3    │ CTS buffer reduction  │   ~-8ps   │   ~-76ps  │    ~350       │
+  │  4    │ par_pmh launch +15ps  │   ~+7ps   │   ~-76ps  │      ~0   ✅  │
+  │  5    │ PTECO setup sizing    │   ~+7ps   │   ~-30ps  │      ~0   ✅  │
+  └───────┴───────────────────────┴───────────┴───────────┴───────────────┘
+  
+  NET: Hold fully closed, setup recovered to ~-15ps by PTECO.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 7.  NEW MODEL vs OLD MODEL — WHAT CHANGED IN par_meu CTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │  CLOCK LATENCY CHANGE (TST = new par_meu, REF = old):                │
+  │                                                                        │
+  │  mclk_meu avg: TST=225ps, REF=221ps → +4ps at min_low               │
+  │  mclk_meu avg: TST=96ps,  REF=94ps  → +2ps at max_high              │
+  │  mclk_pmh avg: unchanged (212ps / 90ps)                              │
+  │                                                                        │
+  │  DCU L1 capture: TST=333ps, REF=326ps → +7ps at min_low             │
+  │  DCU L1 launch:  TST=142ps, REF=144ps → -2ps (slightly faster)      │
+  │  DCU L1 skew:    TST=+191, REF=+182   → +9ps MORE skew              │
+  │                                                                        │
+  │  The new CTS added ~7ps to the WSBDataArray capture clock.            │
+  │  This went in the WRONG DIRECTION for hold.                           │
+  │                                                                        │
+  │  Possible reasons:                                                     │
+  │  - CTS prioritized transition/DRC over latency                        │
+  │  - New cell placement shifted register locations                       │
+  │  - CTS balancing target changed (different skew group)                │
+  │  - Additional buffer inserted for DRC compliance                      │
+  │                                                                        │
+  │  ACTION NEEDED:                                                        │
+  │  par_meu PO should investigate WHY capture latency grew and add       │
+  │  explicit CTS constraints (max_insertion_delay or useful_skew)        │
+  │  to prevent further degradation.                                      │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 8.  OTHER par_meu HOLD BOTTLENECKS (same clock issue)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  The DCU L1 databank is the worst, but other par_meu receiving
+  interfaces also have high capture clock latencies:
+
+  ┌──────────────────────────────┬───────┬───────┬───────┬────────┬──────┐
+  │ Endpoint group               │ cclk  │ lclk  │ skew  │  WNS   │paths │
+  ├──────────────────────────────┼───────┼───────┼───────┼────────┼──────┤
+  │ dcl1rddatam408h (DCU L1)     │ 333ps │ 142ps │+191ps │ -111ps │3,149 │
+  │ rseuimmdataqbm302h_op_8      │ 313ps │ 134ps │+179ps │  -83ps │   32 │
+  │ rseuimmdataqam302h_op_8      │ 313ps │ 145ps │+168ps │  -42ps │   19 │
+  │ rseuimmdataqbm302h_op_4      │ 310ps │ 176ps │+134ps │  -37ps │    7 │
+  │ rseuuoplatencym301h           │ 300ps │ 169ps │+131ps │  -54ps │    6 │
+  │ rsi2vavoidm305h              │ 288ps │ 104ps │+184ps │  -45ps │   18 │
+  │ crgroupm302h                 │ 287ps │ 184ps │+103ps │  -73ps │   42 │
+  │ rseuimmdataqbm302h_op_6      │ 286ps │ 140ps │+146ps │  -44ps │   40 │
+  │ rsearlyuopvm301h             │ 256ps │ 124ps │+132ps │  -63ps │   32 │
+  │ l1logginginfom406h_tag       │ 260ps │ 162ps │ +98ps │  -72ps │  211 │
+  └──────────────────────────────┴───────┴───────┴───────┴────────┴──────┘
+
+  Fixes to the WSBDataArray clock tree may also help some of these
+  if they share CTS buffer stages in the same sub-tree.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 9.  CHECKLIST FOR par_meu PO OWNER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [ ] 1. Add useful_skew -10ps for WSBDataArray and SnpBufDataArray
+         registers in user_useful_skew.tcl
+
+  [ ] 2. Investigate CG_RC_CG_HIER_INST99 — can it be bypassed?
+         Check with RTL/clock-arch team about power impact
+         If approved, add bypass constraint in CTS
+
+  [ ] 3. Review CTS constraints for dcibbankd* clock tree
+         Why 12 CTS buffer stages? Can max_insertion_delay be tightened?
+         Target: reduce from 12 to 8-9 stages
+
+  [ ] 4. Verify DRC after clock changes (transition, capacitance)
+         Upsizing remaining buffers if needed
+
+  [ ] 5. Run PT at BOTH min_low AND max_high after changes
+         Confirm hold improvement + quantify setup cost
+
+  [ ] 6. Coordinate with par_pmh PO for launch-side useful_skew
+         par_pmh needs +15ps on DcL1RdDataIntM408H launch registers
+
+  [ ] 7. Review other high-latency capture endpoints (Section 8)
+         Many share the same clock sub-tree — single fix may help multiple
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ END OF REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

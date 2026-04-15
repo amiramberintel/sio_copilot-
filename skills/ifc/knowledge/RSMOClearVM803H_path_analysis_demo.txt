@@ -1,0 +1,567 @@
+================================================================================
+  CROSS-PARTITION TIMING PATH ANALYSIS — LIVE DEMO
+  Signal: RSMOClearVM803H (par_ooo_int → par_ooo_vec)
+  WA: FCT26WW11A  |  Date: 2026-03-09  |  Analyst: sunger
+  Tool: Copilot-assisted path debug flow
+================================================================================
+
+  This document captures a full path analysis session step-by-step,
+  from initial WA → root cause → fix plan → TIP file creation.
+  Use as a demo of the cross-partition timing path analysis flow.
+
+================================================================================
+  TABLE OF CONTENTS
+================================================================================
+
+  PHASE 1: WA SETUP & PATH IDENTIFICATION
+  PHASE 2: PATH EXTRACTION (PT report_timing)
+  PHASE 3: GATE-BY-GATE ANALYSIS
+  PHASE 4: ROOT CAUSE IDENTIFICATION
+  PHASE 5: SPEC CHECK & BUDGET ANALYSIS
+  PHASE 6: FIX OPTION DEVELOPMENT
+  PHASE 7: INPUT PATH VALIDATION (D2 pin check)
+  PHASE 8: FIX STRATEGY & RECOMMENDATION
+  PHASE 9: TIP FILE CREATION (.tp)
+  PHASE 10: DELIVERABLES SUMMARY
+
+================================================================================
+  PHASE 1: WA SETUP & PATH IDENTIFICATION
+================================================================================
+
+  STEP 1.1: Identify the daily Work Area (WA)
+  ─────────────────────────────────────────────
+  WA path:
+    /nfs/site/disks/idc_gfc_fct_bu_daily/work_area/
+    GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW11A_dcm_daily-CLK039.bu_postcts
+
+  STA corner for setup analysis:
+    .../runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical
+
+  STEP 1.2: Read the XML timing summary
+  ──────────────────────────────────────
+  PT command used:
+    → Read timing_summary.xml from sta_pt reports directory
+
+  Found failing path:
+    Signal:      RSMOClearVM803H
+    Direction:   par_ooo_int → par_ooo_vec
+    Slack:       -71.6ps (statistical)
+    POR Slack:   +17ps (budget exists but misallocated)
+
+  STEP 1.3: Check path multiplicity
+  ──────────────────────────────────
+  PT command:
+    report_timing -through par_ooo_int/rsmoclearvm803h -max_paths 20 -nosplit
+
+  Found: 6 failing endpoints from the SAME startpoint FF:
+    ROBEarlyQualJumpM304H_reg    -71ps  (×2 icores)
+    ROMOClearStallM901H_reg      -64ps  (×2 icores)
+    RSMOClearVM804H_reg          -49ps  (×2 icores)
+
+  → Key insight: fixing the source side fixes ALL 6 paths at once
+
+================================================================================
+  PHASE 2: PATH EXTRACTION (PT report_timing)
+================================================================================
+
+  STEP 2.1: Run detailed report_timing
+  ─────────────────────────────────────
+  PT commands used:
+    report_timing -to .../ROBEarlyQualJumpM304H_reg/D \
+      -include_hierarchical_pins -significant_digits 1 -nosplit \
+      -nets -physical -input_pins -capacitance -transition_time \
+      -attributes points.object.max_slack
+
+  STEP 2.2: Extract path summary
+  ───────────────────────────────
+  Startpoint:  par_ooo_int/rs_int/rsrptint/
+               auto_vector_MBIT_RORtLdIncM904H_reg_4__MBIT_RSMOClearVM803H_reg/CP
+  Endpoint:    par_ooo_vec/rob/roipaddd/roptrd/ROBEarlyQualJumpM304H_reg/D
+  Path Group:  mclk_ooo_vec
+  Cross-clock: mclk_ooo_int (SP) → mclk_ooo_vec (EP)
+
+  Timing Numbers:
+    Data Arrival:   242.9ps
+    Data Required:  171.3ps
+    Slack:          -71.6ps (stat), -64.0ps (mean)
+    Clock Period:   186.0ps
+    Skew:           +6.69ps (favorable)
+    Setup Time:     12.4ps (statistical)
+    Norm Slack:     -0.38
+
+  Physical:
+    SP FF: (1160376, 783451) — par_ooo_int/rsrptint
+    EP FF: (440568, 357177)  — par_ooo_vec/rob/roipaddd/roptrd
+    Port:  (652368, 505248)  — abutted boundary (576nm gap)
+    Total Manhattan: ~1146um
+      par_ooo_int leg: 786um (SP → port)
+      par_ooo_vec leg: 360um (port → EP)
+
+================================================================================
+  PHASE 3: GATE-BY-GATE ANALYSIS
+================================================================================
+
+  STEP 3.1: Walk the path — par_ooo_int side (SP FF → port)
+  ──────────────────────────────────────────────────────────
+  140.5ps, 786um, 8 gates:
+
+  Gate │ Cell                    │ Vt   │ Cell  │ Wire  │ Flag
+  ─────┼─────────────────────────┼──────┼───────┼───────┼──────────────
+  SP   │ MB2 (MBIT-2 FF)        │ ULVT │ 16.2ps│  —    │ MBIT merge!
+  G1   │ BUFFSR2BFYD8            │ ULVT │  5.5ps│  2.9ps│
+  G2   │ INVREPM2P30ITLICMD16   │ ULVT │  4.5ps│  3.3ps│ hier cross
+  G3   │ BUFFREPM2P30ITLICMD16  │ ULVT │  8.1ps│ 10.4ps│ 128um wire
+  G4   │ BUFFSR2BFYD18           │ ULVT │  7.3ps│  5.7ps│ 86um
+  G5   │ BUFFSR2BFYD18           │ ULVT │  8.6ps│ 13.6ps│ 152um ← LONG
+  G6   │ BUFFSR2BFYTHD18         │ ULVT │  7.9ps│ 12.4ps│ 134um ← LONG
+  G7   │ BUFFSR2SKRD6            │ ULVT │  9.6ps│ 20.6ps│ 281um ← WORST
+  G8   │ INVREPM2P30ITLICMD6    │ ULVT │  3.1ps│  0.2ps│ polarity inv
+  PORT │ par_ooo_int/rsmoclearvm803h                     │
+
+  KEY OBSERVATIONS — par_ooo_int:
+    ● 8-buffer chain just to reach the port — all consumed by wire length
+    ● G7 has 281um wire with 20.6ps delay and DTrans=3.9ps, trans=37.4ps
+    ● All cells already ULVT — no Vt swap opportunity on this side
+    ● Wire-dominated: 69.1ps wire vs 54.6ps cell (56% wire)
+
+  STEP 3.2: Walk the path — par_ooo_vec side (port → EP FF)
+  ──────────────────────────────────────────────────────────
+  102.9ps, 360um, 6 gates:
+
+  Gate │ Cell              │ Vt    │ Cell  │ Wire  │ Flag
+  ─────┼───────────────────┼───────┼───────┼───────┼──────────────
+  PORT │ par_ooo_vec/rsmoclearvm803h                │ abutted
+  V1   │ BUFFD4             │ ULVT  │  8.4ps│  5.5ps│ WEAK D4
+  V2   │ BUFFD6             │ ULVT  │ 12.4ps│ 24.7ps│ 97um, 52ps trans!
+  V3   │ BUFFD6             │ ULVT  │ 10.7ps│  7.7ps│ 47um
+  V4   │ NR2D6              │ ULVT  │  6.8ps│ 10.0ps│ FIRST logic gate
+  V5   │ INVD1              │ULVTLL │  4.3ps│  6.1ps│ WEAK D1!
+  V6   │ OR2D1              │ LVT   │  5.8ps│  0.2ps│ WEAK D1! + LVT
+  EP   │ SDFQTXGD4          │ LVT   │ 12.4ps│       │ LVT FF
+
+  KEY OBSERVATIONS — par_ooo_vec:
+    ● V5 and V6 are weak D1 drives — easy upsize targets
+    ● V6 and EP FF are LVT — can swap to ULVT
+    ● V1 is D4 driving 30um wire → upsize to D18 reduces V2 trans
+    ● 15/17 cells already ULVT — only 2 LVT cells remain
+
+  STEP 3.3: Delay breakdown summary
+  ──────────────────────────────────
+  ┌───────────────────────────────┬──────────┬─────────┐
+  │ Category                      │ Delay    │ % total │
+  ├───────────────────────────────┼──────────┼─────────┤
+  │ CK→Q (SP FF)                  │  16.2ps  │   6.7%  │
+  │ par_ooo_int cell delays (G1-8)│  54.6ps  │  22.5%  │
+  │ par_ooo_int wire delays       │  69.1ps  │  28.5%  │
+  │ par_ooo_vec cell delays (V1-6)│  48.4ps  │  19.9%  │
+  │ par_ooo_vec wire delays       │  54.2ps  │  22.3%  │
+  │ EP setup                      │  12.4ps  │ — OCV   │
+  ├───────────────────────────────┼──────────┼─────────┤
+  │ TOTAL data arrival            │ 242.9ps  │  100%   │
+  │ Available window              │ 168.2ps  │         │
+  │ DEFICIT                       │  74.7ps  │         │
+  └───────────────────────────────┴──────────┴─────────┘
+
+  Wire delay = 123.3ps (50.8%) — wire-dominated path
+  Cell delay = 119.2ps (49.1%) — many buffers exist because of wire length
+
+================================================================================
+  PHASE 4: ROOT CAUSE IDENTIFICATION
+================================================================================
+
+  STEP 4.1: Check SP FF — MBIT merge analysis
+  ─────────────────────────────────────────────
+  FF name: auto_vector_MBIT_RORtLdIncM904H_reg_4__MBIT_RSMOClearVM803H_reg
+  Cell:    MB2SRLSDFKMCNQTXGOPTBB1211M2P30ITLD3BWP156HPNPN3P48CPDULVT
+  Type:    MB2 (Multi-Bit 2 — two flip-flops in one physical cell)
+
+  Q1: RORtLdIncM904H[4] → internal/par_pmh (up/right) — 0 failing
+  Q2: RSMOClearVM803H    → par_ooo_vec (down/left)     — 6 failing!
+
+  → BAD MERGE: signals going in OPPOSITE directions
+  → Synthesis packed them because they share mclk_ooo_int clock
+  → Ignoring that outputs go to completely different partitions
+
+  STEP 4.2: Why is the FF so far from the port?
+  ──────────────────────────────────────────────
+  The MB2 cell is placed at (1160, 783) because RORtLdIncM904H[4]
+  drives internal/par_pmh (up/right direction). This placement is
+  optimal for Q1 but terrible for Q2 (RSMOClearVM803H).
+
+  RSMOClearVM803H needs to reach port at (652, 505) — 786um away!
+  This forces an 8-buffer chain consuming 140.5ps in par_ooo_int.
+
+  STEP 4.3: Root cause statement
+  ──────────────────────────────
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ ROOT CAUSE: Bad MBIT merge — RSMOClearVM803H packed with           │
+  │ RORtLdIncM904H[4] in opposite-direction MB2 cell at (1160,783).    │
+  │ Forces 786um / 8-buffer chain in par_ooo_int (4x over 34ps spec). │
+  └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  PHASE 5: SPEC CHECK & BUDGET ANALYSIS
+================================================================================
+
+  STEP 5.1: Look up timing specs
+  ───────────────────────────────
+  Source: timing_specs.xml (added by gilkeren)
+
+  ┌──────────────┬─────────────────────┬──────────┬───────────┬─────────────────────┐
+  │ Partition    │ Pin                 │ Spec(ps) │ Used(ps)  │ Status              │
+  ├──────────────┼─────────────────────┼──────────┼───────────┼─────────────────────┤
+  │ par_ooo_int  │ rsmoclearvm803h     │ 34.0     │ 140.5    │ OVER by 106.5ps !!  │
+  │ par_ooo_vec  │ rsmoclearvm803h     │ 134.0    │ 115.2    │ UNDER by 18.8ps ✓   │
+  └──────────────┴─────────────────────┴──────────┴───────────┴─────────────────────┘
+
+  STEP 5.2: Budget analysis
+  ─────────────────────────
+  Total budget:    34.0 + 134.0 = 168.0ps
+  Total data used: 140.5 + 115.2 = 255.7ps (after removing clk/setup)
+  Overshoot:       255.7 - 168.0 = 87.7ps
+
+  KEY INSIGHT: par_ooo_int has spec=34ps but SP FF is 786um from port.
+  The budget split assumes the FF would be near the port (~34ps travel).
+  The MBIT merge made that impossible.
+
+  POR slack = +17ps means: if par_ooo_int met its 34ps spec,
+  there would be 17ps of margin. The budget is valid,
+  par_ooo_int just can't deliver because of placement.
+
+================================================================================
+  PHASE 6: FIX OPTION DEVELOPMENT
+================================================================================
+
+  STEP 6.1: List all candidate fixes
+  ───────────────────────────────────
+  For each fix: estimate gain, owner, risk, and target partition.
+
+  #1 TIP (M17/M18 half shield)    │ +35-50ps │ ~1 wk │ LOW    │ par_ooo_int
+     Replace 8-buffer chain with shielded TIP route (M17/M18)
+     L-shape: (1160,783) → (1140,505) → (440,505)
+     5-6 repeaters at optimal 170um spacing
+     Reference: specstall has TIP on same boundary, WNS=-43ps
+
+  #2 EP FF placement move         │ +15-22ps │ ~1 wk │ LOW    │ par_ooo_vec
+     Move ROBEarlyQualJumpM304H_reg: (440,357) → (520,470)
+     Wire saved: 360um → 167um = 193um reduction
+     Safety: 0 startpoint paths → SAFE to move
+
+  #3 Gate upsize (V1,V5,V6)       │  +5-8ps  │  ECO  │ LOW    │ par_ooo_vec
+     V5: INVD1 → D4, V6: OR2D1 → D4+ULVT, V1: BUFD4 → D18
+
+  #4 ULVT swap (V6 + EP FF)      │  +3-5.5ps│  ECO  │ LOW    │ par_ooo_vec
+     Only 2 LVT cells left on path → both to ULVT
+
+  #5 SP FF de-merge (synthesis)   │ +65-90ps │ ~2 wk │ MEDIUM │ par_ooo_int
+     Split MB2 → two single-bit FFs
+     Move RSMOClearVM803H closer to port
+     *** INITIAL ESTIMATE — before D2 input check (Phase 7) ***
+
+  STEP 6.2: Identify what each fix targets
+  ─────────────────────────────────────────
+  par_ooo_int side (root cause): FIX #1 (TIP) + FIX #5 (de-merge)
+  par_ooo_vec side (margin):     FIX #2 (EP move) + #3 (upsize) + #4 (ULVT)
+
+================================================================================
+  PHASE 7: INPUT PATH VALIDATION (D2 pin check) — CRITICAL STEP
+================================================================================
+
+  *** THIS PHASE CHANGED OUR FIX STRATEGY ***
+  Before proposing de-merge, must check all inputs to the SP FF.
+
+  STEP 7.1: Run input path timing
+  ────────────────────────────────
+  PT command:
+    report_timing -to .../MBIT_RORtLdIncM904H_reg_4__MBIT_RSMOClearVM803H_reg/D2 \
+      -include_hierarchical_pins -significant_digits 1 -nosplit \
+      -nets -physical -input_pins -capacitance -transition_time \
+      -attributes points.object.max_slack
+
+  STEP 7.2: D2 input path results
+  ────────────────────────────────
+  SP: rsbpc/RSMOClearVM802H_reg at (1008, 861)
+  EP: our MBIT FF D2 pin at (1161, 783)
+  Slack: +38.6ps (MET) — only 38.6ps margin!
+
+  Signal chain:
+    RSMOClearVM802H → RSMOClearVM302H → buffers → D2 pin
+    All WITHIN par_ooo_int (same clock mclk_ooo_int)
+
+  Last driver: BUFFSKRD4 LVT at (1162, 833) — just 50um from current FF
+  Last wire:   50um, DTrans=48.7ps(!), Trans=43.1ps, wire_delay=27.6ps
+
+  *** The last wire is already heavily stressed! ***
+  *** Any FF movement adds wire length to this path ***
+
+  STEP 7.3: Placement tradeoff analysis
+  ──────────────────────────────────────
+  ┌────────────────┬───────────┬───────────┬────────────────┬────────────────┐
+  │ FF moved to    │ Out wire  │ Out gain  │ Input loss     │ Input slack    │
+  ├────────────────┼───────────┼───────────┼────────────────┼────────────────┤
+  │ (1160,783) NOW │ 786um     │  0ps      │  0ps           │ +38.6ps  ✓     │
+  │ (1050,750)     │ ~590um    │ +15-20ps  │ ~15ps          │ +23ps    ✓     │
+  │ (1000,720)     │ ~433um    │ +25-35ps  │ ~25ps          │ +13ps    ✓     │
+  │ (900,700)      │ ~394um    │ +30-40ps  │ ~30-40ps       │ -1 to +9ps ⚠️ │
+  │ (850,600)      │ ~293um    │ +45-55ps  │ ~40-55ps       │ -16 to -1ps ✗ │
+  │ (650,505) PORT │ ~2um      │ +90-100ps │ ~60-80ps       │ -41 to -21ps ✗│
+  └────────────────┴───────────┴───────────┴────────────────┴────────────────┘
+
+  STEP 7.4: Critical finding
+  ──────────────────────────
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ FINDING: Moving the FF to (850,600) — which was the original          │
+  │ de-merge target — creates a NEW -16ps violation on the D2 input path! │
+  │                                                                        │
+  │ Safe range: (1000-1100, 700-780) — max ~250um from last driver        │
+  │ Revised de-merge gain: +20-30ps (was +65-90ps)                        │
+  │ De-merge alone CANNOT close -71.6ps — TIP is MANDATORY               │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  *** LESSON: Always check input paths before proposing FF movement! ***
+
+================================================================================
+  PHASE 8: FIX STRATEGY & RECOMMENDATION
+================================================================================
+
+  STEP 8.1: Revised fix table (with D2 constraint)
+  ─────────────────────────────────────────────────
+  ┌───────────────────────────────────┬───────────┬──────────┬──────────┬──────────────┐
+  │ Fix                               │ Gain      │ Time     │ Risk     │ Cumulative   │
+  ├───────────────────────────────────┼───────────┼──────────┼──────────┼──────────────┤
+  │ #1 TIP (M17/M18 half shield)      │ +35-50ps  │ ~1 week  │ LOW      │ -37 to -22ps │
+  │ #2 EP FF placement move           │ +15-22ps  │ ~1 week  │ LOW      │ -22 to  +0ps │
+  │ #3 Gate upsize D1→D4 (V1,V5,V6)  │  +5-8ps   │ ECO      │ LOW      │ -17 to  +8ps │
+  │ #4 ULVT swap (V6 + EP FF)        │  +3-5.5ps │ ECO      │ LOW      │ -14 to +14ps │
+  │ #5 SP FF de-merge (REVISED)       │ +20-30ps  │ ~2 weeks │ HIGH     │ closes fully │
+  └───────────────────────────────────┴───────────┴──────────┴──────────┴──────────────┘
+
+  STEP 8.2: Strategy options
+  ──────────────────────────
+  Strategy A — FAST (TIP + EP move + ECOs): +58-86ps
+    Slack: -71.6 → -14 to +14ps
+    Probability of closure: ~60-70%
+    Timeline: ~1 week
+
+  Strategy B — FULL (A + de-merge): +78-116ps
+    Slack: -71.6 → +6 to +44ps
+    Probability of closure: ~95%
+    Timeline: ~2 weeks
+    WARNING: D2 input path must be monitored
+
+  STEP 8.3: Recommendation
+  ────────────────────────
+  → TIP (#1) is MANDATORY — no other fix alone is sufficient
+  → Start Strategy A immediately (TIP + EP move + ECOs)
+  → Request de-merge from synthesis team IN PARALLEL
+  → D2 input path (+38.6ps margin) must be monitored
+  → Spec renegotiation may be needed (par_ooo_int 34ps cannot be met)
+
+================================================================================
+  PHASE 9: TIP FILE CREATION (.tp)
+================================================================================
+
+  STEP 9.1: Create TIP plan file
+  ───────────────────────────────
+  File: rsmoclearvm803h.tp
+
+  Pattern used: bbox_percentage {50 50} + move_objects (per TIP cookbook)
+  Reference:    specstall TIP (same boundary, TS25.12)
+
+  STEP 9.2: TIP file structure
+  ─────────────────────────────
+  Section 1: User attributes (one-time defines)
+  Section 2: NER (Net Estimation Rule)
+             → BUFFSR2BFYD18 ULVT, buffer_spacing=170um
+             → Horizontal: M18, Vertical: M17
+  Section 3: Topology group (tip_repeater)
+  Section 4: Supernets & bundle (single-bit signal)
+  Section 5: Topology plan (L-shape route)
+  Section 6: Topology nodes (2 partition + 2 pin nodes)
+             → NODE0: par_ooo_int + move_objects to SP FF (1160.376, 783.451)
+             → NODE1: par_ooo_vec + move_objects to EP FF target (520.000, 470.000)
+             → NODE2/3: port pin nodes
+  Section 7: Topology edges
+             → EDGE0: par_ooo_int side, 786um
+             → EDGE1: boundary crossing (abutted ports)
+             → EDGE2: par_ooo_vec side, 212um
+  Section 8: Repeaters — EDGE0 (5 repeaters: 1 corner + 4 mid)
+  Section 9: Repeaters — EDGE2 (1 mid-repeater)
+
+  STEP 9.3: Key TIP parameters
+  ─────────────────────────────
+  Route (L-shape):
+    (1160,783) → (1140,783) → (1140,505) → (440,505)
+    Leg 1: M18  20um horizontal (near SP FF)
+    Leg 2: M17 278um vertical   (drop to port level Y=505)
+    Leg 3: M18 700um horizontal (cross boundary → EP)
+
+  Half shield: {M18 0.5 0.5} {M17 0.5 0.5}
+  Repeater multiplier: 1.5x height, 1.5x width
+  Repeater spacing: ~170um
+
+  STEP 9.4: EP FF placement change embedded in TIP
+  ──────────────────────────────────────────────────
+  NODE1 move_objects target: (520.000, 470.000)
+    Current EP FF: (440, 357) — 360um from port
+    Target:        (520, 470) — 167um from port
+    Wire saved: 193um → 15-22ps gain
+    Safety: 0 startpoint paths → SAFE
+
+  *** The .tp file combines FIX #1 (TIP) + FIX #2 (EP FF move) ***
+
+================================================================================
+  PHASE 10: DELIVERABLES SUMMARY
+================================================================================
+
+  FILES CREATED during this analysis session:
+  ────────────────────────────────────────────
+
+  1. RSMOClearVM803H_fix_summary.txt        (504 lines)
+     Full fix analysis with gate-by-gate detail, specs, 5 fix options,
+     D2 input path constraint analysis, placement tradeoff table,
+     revised de-merge estimates, combined strategy, spec projections.
+
+  2. RSMOClearVM803H_fix_summary.sh          (191 lines)
+     Color-coded terminal display of the full summary.
+     Run: ./RSMOClearVM803H_fix_summary.sh
+
+  3. RSMOClearVM803H_fix_short_summary.txt   (100 lines)
+     Condensed 1-page version for quick review.
+
+  4. RSMOClearVM803H_fix_short_summary.sh     (72 lines)
+     Color-coded terminal display of the short summary.
+     Run: ./RSMOClearVM803H_fix_short_summary.sh
+
+  5. rsmoclearvm803h.tp                      (167 lines)
+     TIP plan file with bbox {50 50} + move_objects pattern.
+     Includes EP FF new placement at (520, 470).
+     DRAFT — needs RTLFP validation of master_bound names.
+
+  6. RSMOClearVM803H_path_analysis_demo.txt  (this file)
+     Full session walkthrough for demo purposes.
+
+  COOKBOOK UPDATED:
+  ────────────────
+  7. TIP_tp_creation_cookbook.txt — Section 11 template updated
+     from get_bounds/4 nodes/3 edges → get_cells/move_objects/2 nodes/1 edge
+     to match Section 14 (move_objects) recommended pattern.
+
+================================================================================
+  ANALYSIS FLOW DIAGRAM
+================================================================================
+
+  ┌─────────────────┐
+  │  1. Read WA/XML │  ← Identify failing paths from timing summary
+  └────────┬────────┘
+           ▼
+  ┌─────────────────┐
+  │  2. PT Report   │  ← Full report_timing with physical, caps, transitions
+  └────────┬────────┘
+           ▼
+  ┌─────────────────┐
+  │  3. Gate-by-Gate │  ← Walk each cell: Vt, drive, wire length, DTrans
+  └────────┬────────┘
+           ▼
+  ┌─────────────────┐
+  │  4. Root Cause  │  ← MBIT merge? Placement? Logic depth? High fanout?
+  └────────┬────────┘
+           ▼
+  ┌─────────────────┐
+  │  5. Spec Check  │  ← Which partition is over spec? Budget analysis
+  └────────┬────────┘
+           ▼
+  ┌─────────────────┐
+  │  6. Fix Options │  ← TIP, placement, upsize, Vt swap, de-merge
+  └────────┬────────┘
+           ▼
+  ┌─────────────────────────────────────────┐
+  │  7. Input Path Check ← CRITICAL STEP!  │  ← Check D-pin paths before
+  │     (validates FF movement is safe)     │     proposing any FF movement
+  └────────┬────────────────────────────────┘
+           ▼
+  ┌─────────────────┐
+  │  8. Strategy    │  ← Combined fix plan with revised estimates
+  └────────┬────────┘
+           ▼
+  ┌─────────────────┐
+  │  9. TIP File    │  ← Create .tp with correct cookbook pattern
+  └────────┬────────┘
+           ▼
+  ┌─────────────────┐
+  │ 10. Deliverables│  ← Summary files, colorizers, TIP plan
+  └─────────────────┘
+
+================================================================================
+  KEY LESSONS FROM THIS ANALYSIS
+================================================================================
+
+  1. ALWAYS CHECK INPUT PATHS BEFORE PROPOSING FF MOVEMENT
+     The D2 input path had only +38.6ps margin. Moving the FF to the
+     "obvious" location (850,600) would have created a new -16ps violation.
+     This reduced our de-merge estimate from +65-90ps to +20-30ps.
+
+  2. MBIT MERGE IS A COMMON ROOT CAUSE
+     Synthesis packs FFs by clock domain, ignoring output direction.
+     When two bits in an MB2 go to different partitions, one will suffer.
+
+  3. ONE TIP CAN FIX MULTIPLE ENDPOINTS
+     All 6 failing paths shared the same par_ooo_int buffer chain.
+     One TIP plan fixes all 6 simultaneously.
+
+  4. CHECK EXISTING TIP PLANS ON SAME BOUNDARY
+     specstall already had a TIP on par_ooo_int → par_ooo_vec.
+     Used it as reference for route geometry, metal layers, and repeaters.
+
+  5. SPEC ANALYSIS REVEALS TRUE ROOT CAUSE
+     par_ooo_int: spec=34ps, used=140.5ps → the REAL problem
+     par_ooo_vec: spec=134ps, used=115.2ps → already within budget
+     Without spec check, you might waste time optimizing the wrong side.
+
+  6. WIRE-DOMINATED PATHS NEED TIP, NOT JUST ECOs
+     Wire = 50.8% of total delay. Upsizing gates helps on cell-dominated
+     paths, but for wire-dominated paths you need controlled routing (TIP).
+
+  7. PLACEMENT TRADEOFF TABLES QUANTIFY RISK
+     Don't just say "move the FF closer." Build a table showing output
+     gain vs input degradation at 4-5 positions to find the safe range.
+
+  8. USE bbox {50 50} + move_objects FOR TIP FILES
+     Cookbook Section 14 pattern: get_cells + bbox_percentage {50 50}
+     + move_objects. Simpler and more reliable than get_bounds/4-node pattern.
+
+================================================================================
+  PT COMMANDS REFERENCE (used in this analysis)
+================================================================================
+
+  # 1. Initial path identification
+  report_timing -through par_ooo_int/rsmoclearvm803h -max_paths 20
+
+  # 2. Detailed path with all attributes
+  report_timing -to .../ROBEarlyQualJumpM304H_reg/D \
+    -include_hierarchical_pins -significant_digits 1 -nosplit \
+    -nets -physical -input_pins -capacitance -transition_time \
+    -attributes points.object.max_slack
+
+  # 3. Check all endpoints from same SP FF
+  report_timing -from .../MBIT_RSMOClearVM803H_reg/CP \
+    -max_paths 20 -nosplit
+
+  # 4. Input path check (D-pin) — CRITICAL before de-merge
+  report_timing -to .../MBIT_RSMOClearVM803H_reg/D2 \
+    -include_hierarchical_pins -significant_digits 1 -nosplit \
+    -nets -physical -input_pins -capacitance -transition_time \
+    -attributes points.object.max_slack
+
+  # 5. EP FF safety check (startpoint paths)
+  report_timing -from .../ROBEarlyQualJumpM304H_reg/CP -max_paths 5
+
+  # 6. Spec lookup
+  report_timing -through par_ooo_int/rsmoclearvm803h \
+    -attributes points.object.por_slack
+
+================================================================================
+  END OF PATH ANALYSIS DEMO
+  Signal: RSMOClearVM803H | Slack: -71.6ps | TIP + de-merge → target closure
+  Files: RSMOClearVM803H/ directory (6 files + this demo)
+================================================================================

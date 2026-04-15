@@ -1,0 +1,65 @@
+pin,partition,spec_value,spec_clock,spec_edge,source,comment
+tsgroupdioderdsel_9[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdioderdsel_8[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdioderdsel_3[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdioderdsel_2[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdioderdsel_1[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdioderdsel_11[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdioderdsel_10[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdioderdsel[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdiode_v_cathode_24[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdiode_v_cathode_16[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdiode_v_anode_24[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdiode_v_anode_16[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdiode_i_anode_24[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+tsgroupdiode_i_anode_16[*],par_pm,9999.0,sbclk,r,sibling_copy,analog family: ts*diodanatempsense_a has spec=9999 in par_pm
+scancheckcore0m000h_b[*],par_pm,136.0,mclk_mlc,r,sibling_ref,ref from par_mlc/scancheckcore0m000h_b[0] spec=136.0
+pmcdyninfomnn1h_*_*_highven,par_pm,113.0,mclk_mlc,r,sibling_ref,ref from par_mlc/pmcdyninfomnn1h_0__pvpsmten spec=113.0
+pdpviolationmnn4h[*],par_pm,84.0,mclk_mlc,r,sibling_ref,ref from par_mlc/pdpviolationmnn4h[0] spec=84.0
+mltawludtunemnnnh[*],par_pm,9999.0,sbclk,r,sibling_copy,SOC-level multi-FT: soc→par_pmh(FT)→par_pm(FT)→par_mlc(FT); no endpoint in core_client; spec=9999 like analog
+mltacrbuscntlm732h_*_*_go,par_pm,26.0,mclk_meu,r,sibling_ref,ref from par_meu/mltacrbuscntlm734h_umbpsel[0] spec=26.0
+mltacrbuscntlm732h_*_*_cr64bit,par_pm,26.0,mclk_meu,r,sibling_ref,ref from par_meu/mltacrbuscntlm734h_umbpsel[0] spec=26.0
+ifemnsclkenmnh[*],par_pm,60.0,mclk_mlc,r,sibling_ref,ref from par_mlc/ifemnsclkenmnh[0] spec=60.0
+corevccpwrgoodx4nnnh_*_vccst_ls_iso,par_pm,400.0,sbclk,r,sibling_copy,sibling corevccpwrgoodx4nnnh_vccst_ls_iso[0] spec=400.0
+c2ustrapunnnh_spare[*],par_pm,50.0,uclk,r,sibling_copy,sibling c2ustrapunnnh_spare[0] spec=50.0
+stpwrgoodxnnnh,par_pm,9999.0,sbclk,r,sibling_copy,async power-good from soc_level; similar vrefpwrgood_a=9999; slack=-551ps
+scancheckcore0m000h_valid,par_pm,103.0,mclk_mlc,r,sibling_ref,ref from par_mlc/scancheckcore0m000h_valid spec=103.0
+sapwrgoodyxznnnh,par_pm,9999.0,sbclk,r,sibling_copy,async power-good from soc_level; similar vrefpwrgood_a=9999; slack=18951ps
+ringpwrgoodxnnnh,par_pm,9999.0,sbclk,r,sibling_copy,async power-good from soc_level; similar vrefpwrgood_a=9999; slack=735ps
+pm_dcm_dcmrefclk,par_pm,9999.0,sbclk,r,sibling_copy,clock pin from soc_level (idvfreqOut); not data path
+pdptimerpulsemnh,par_pm,60.0,mclk_mlc,r,sibling_ref,ref from par_mlc/pdptimerpulsemnh spec=60.0
+outclk_freq_error,par_pm,9999.0,sbclk,r,sibling_copy,clock infrastructure; not in any margins report
+mltanotmulpgexistmnnnh,par_pm,9999.0,sbclk,r,sibling_copy,unconstrained output; no endpoint in core_client
+mltadomarrrdkprstrmnnnh,par_pm,9999.0,sbclk,r,sibling_copy,not in any margins report; no timing path
+mltadomarrdlykprmnnnh,par_pm,9999.0,sbclk,r,sibling_copy,not in any margins report; no timing path
+mltadiscvccwrpchmnnnh,par_pm,79.0,mclk_meu,r,sibling_ref,ref from par_meu/mltadiscvccwrpchmnnnh spec=79.0
+mltacolmuxjitdismnnnh,par_pm,9999.0,sbclk,r,sibling_copy,SOC-level multi-FT: soc→par_pmh(FT)→par_pm(FT)→par_mlc(FT); same as mltawludtune
+mlcsnpqentryvalidcountm542h[*],par_pm,74.0,mclk_pm,r,sibling_copy,sibling mlcsnpqentryvalidcountm542h[0] spec=74.0
+mclkouthvm_ring,par_pm,9999.0,sbclk,r,sibling_copy,clock infrastructure; not in any margins report
+lockstepmodeovrmnh,par_pm,100.0,mclk_mlc,r,sibling_ref,ref from par_mlc/lockstepmodeovrmnh spec=100.0
+insafmodewithoutteleblockmnh,par_pm,84.0,mclk_mlc,r,sibling_ref,ref from par_mlc/insafmodewithoutteleblockmnh spec=84.0
+icore1vccpwrgoodpreisox4nnnh,par_pm,400.0,sbclk,r,sibling_copy,sibling corevccpwrgoodx4nnnh_vccst_ls_iso[0] spec=400.0
+icore0vccpwrgoodpreisox4nnnh,par_pm,400.0,sbclk,r,sibling_copy,sibling corevccpwrgoodx4nnnh_vccst_ls_iso[0] spec=400.0
+fusajtagownershipnnnnh,par_pm,101.0,mclk_mlc,r,sibling_ref,ref from par_mlc/fusajtagownershipnnnnh spec=101.0
+dft_saf_ovrd_mux_enable,par_pm,9999.0,sbclk,r,sibling_copy,DFT override; unconstrained output par_pm→par_mlc
+corevccpwrgoodpreisox4nnnh_vcccore_ls_iso,par_pm,24.0,mclk_mlc,r,sibling_ref,ref from par_mlc/icorevccpwrgoodpreisox4nnnh_vcccore_ls_iso[0] spec=24.0
+core_clk_pm_clk_glbdrv_ufreeclk_clk_clkin,par_pm,173.0,mclk_pm,r,sibling_copy,sibling core_clk_pm_clk_glbdrv_root_cryclk_clk_clkin spec=173.0
+core_clk_pm_clk_glbdrv_root_side_clk_clkin,par_pm,173.0,mclk_pm,r,sibling_copy,sibling core_clk_pm_clk_glbdrv_root_cryclk_clk_clkin spec=173.0
+core_clk_pm_clk_glbdrv_root_npkclk_clk_clkin,par_pm,173.0,mclk_pm,r,sibling_copy,sibling core_clk_pm_clk_glbdrv_root_cryclk_clk_clkin spec=173.0
+core_clk_core_common_clk_glbdrvff_mnsclkenpmicore1m013h_o,par_pm,54.0,mclk_pm,r,sibling_copy,sibling core_clk_core_common_clk_glbdrvff_mclkenpmm008h_o spec=54.0
+core_clk_core_common_clk_glbdrvff_mnsclkenpmicore0m013h_o,par_pm,54.0,mclk_pm,r,sibling_copy,sibling core_clk_core_common_clk_glbdrvff_mclkenpmm008h_o spec=54.0
+core_clk_core_common_clk_glbdrvff_mclkenpmm013h_o,par_pm,54.0,mclk_pm,r,sibling_copy,sibling core_clk_core_common_clk_glbdrvff_mclkenpmm008h_o spec=54.0
+core_clk_core_common_clk_glbdrvff_mclkenpmicore1m013h_o,par_pm,54.0,mclk_pm,r,sibling_copy,sibling core_clk_core_common_clk_glbdrvff_mclkenpmm008h_o spec=54.0
+core_clk_core_common_clk_glbdrvff_mclkenpmicore0m013h_o,par_pm,54.0,mclk_pm,r,sibling_copy,sibling core_clk_core_common_clk_glbdrvff_mclkenpmm008h_o spec=54.0
+core_clk_core_common_clk_glbdrv_mnsclk_pm_mlc_clkout,par_pm,54.0,mclk_pm,r,sibling_copy,sibling core_clk_core_common_clk_glbdrvff_mclkenpmm008h_o spec=54.0
+core_clk_core_common_clk_glbdrv_mnsclk_icore1_clkout,par_pm,54.0,mclk_pm,r,sibling_copy,sibling core_clk_core_common_clk_glbdrvff_mclkenpmm008h_o spec=54.0
+core_clk_core_common_clk_glbdrv_mnsclk_icore0_clkout,par_pm,54.0,mclk_pm,r,sibling_copy,sibling core_clk_core_common_clk_glbdrvff_mclkenpmm008h_o spec=54.0
+clkauxpllref,par_pm,9999.0,sbclk,r,sibling_copy,clock pin from soc_level (xxbclk_pllrefxx); not data path
+c2ustrapunnnh_supportstall,par_pm,50.0,uclk,r,sibling_copy,sibling c2ustrapunnnh_spare[0] spec=50.0
+c2ustrapunnnh_enhparity,par_pm,50.0,uclk,r,sibling_copy,sibling c2ustrapunnnh_spare[0] spec=50.0
+c2urequnnnh_trivialdata,par_pm,50.0,uclk,r,sibling_copy,sibling c2urequnnnh_address[0] spec=50.0
+bira_capture_ip4_core1,par_pm,5000.0,mclk_mlc,r,sibling_ref,ref from par_mlc/bira_capture_ip4_core1 spec=5000.0
+bira_capture_ip4_core0,par_pm,5000.0,mclk_mlc,r,sibling_ref,ref from par_mlc/bira_capture_ip4_core0 spec=5000.0
+bira_capture_ip3,par_pm,5000.0,mclk_mlc,r,sibling_ref,ref from par_mlc/bira_capture_ip3 spec=5000.0
+bira_capture_ip2,par_pm,5000.0,mclk_mlc,r,sibling_ref,ref from par_mlc/bira_capture_ip2 spec=5000.0
+bira_capture_ip1,par_pm,5000.0,mclk_mlc,r,sibling_ref,ref from par_mlc/bira_capture_ip1 spec=5000.0

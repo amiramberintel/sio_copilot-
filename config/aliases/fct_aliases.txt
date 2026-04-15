@@ -1,0 +1,88 @@
+#!/usr/intel/bin/tcsh -f
+
+#FCT central aliases
+source /p/hdk/pu_tu/prd/fct_alias/latest/utils/fct_run_aliases
+
+#server aliases
+source /nfs/site/proj/lnc/c2dgbcptserver_sc8_fct/cth2_ptserver/cth2_ptserver_root/aliases_for_pt_client
+
+alias loadptnb_cth 'nbjob run --target sc8_express --qslot bc12_pnc_fct --class "SLES12SP5&&4C&&256G" /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \!:1 -title \!:2'
+
+alias da_help '/nfs/site/disks/hdk_sd_utilities/sd_user_utils/cheetah_utils/common_proj/bin/da_help.tcl'
+alias lnc_archive 'realpath /nfs/site/disks/lnc_n3_client.arc.proj_archive/'
+alias sio_fct 'source $GFC_FCT_SCRIPTS/sio_assistance_tool.main'
+alias server_gui '$GFC_FCT_SCRIPTS/fct_server_tool.py &'
+alias fct_gui 'source ~baselibr/PNC_script/td_fct_tool/td_fct_flow.gui &'
+alias sio_ci '$GFC_FCT_SCRIPTS/sio_spec_ci.py &'
+alias hsd_ci '/nfs/site/disks/home_user/baselibr/PNC_script/rtl4be_fct.py &'
+alias find_hsd '~baselibr/PNC_script/find_hsd'
+alias path2windows 'realpath \!* | perl -pe "s|^|\\\\sc8-samba.sc.intel.com|" | perl -pe "s|/|\\|g" | tee /dev/tty | xclip'
+
+alias comp "sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*\//_*\//g' | sed -e 's/\[[0-9]*\]/\[*\]/g' | sed -e 's/\/d[0-9]/\/d*/g' | sed -e 's/\/D[0-9]/\/D*/g' "
+alias my_count "sort | uniq -c | sort -nr"
+
+alias align '/p/mpg/proc/common2/da_utils/fct_skl42/bin//align.pl'
+alias aligncsv '/p/mpg/proc/common2/da_utils/fct_skl42/bin//align.pl -id "," -od " "'
+
+alias awkp 'awk -F "|"' 
+alias awkc 'awk -F ","' 
+alias awksum "awk '{s+="'$1'"}END{print s}'"
+
+alias hvlog 'most runs/$block/$tech/sta_pt/func.max_high.*/logs/$block.func.max_high.*.pt.log'
+alias hvminlog 'most runs/$block/$tech/sta_pt/func.min_high.*/logs/$block.func.min_high.*.pt.log'
+alias ptlog 'ls -ltr runs/$block/$tech/sta_pt/*/logs/*.pt.log'
+alias nomminlog 'most runs/$block/$tech/sta_pt/func.min_nom.*/logs/$block.func.min_*.pt.log'
+alias spechvlog 'most runs/$block/$tech/sta_pt/spec.max_high.*/logs/$block.spec.max_high.*.pt.log'
+alias specnomlog 'most runs/$block/$tech/$flow/spec.max_nom.*/logs/$block.spec.max_nom.*.pt.log'
+
+alias hvreport 'ls -ltr runs/$block/$tech/sta_pt/func.max_high.*/reports/*.*'
+alias nomreport 'ls -ltr runs/$block/$tech/sta_pt/func.max_nom.*/reports/*.*'
+alias nomminreport 'ls -ltr runs/$block/$tech/sta_pt/func.min_nom.*/reports/*.*'								      
+alias lvminreport 'ls -ltr runs/$block/$tech/sta_pt/func.min_low.*/reports/*.*'								      
+alias spechvreport 'ls -ltr runs/$block/$tech/sta_pt/spec.max_high.*/reports/*.*'
+
+alias hvlinking 'most runs/$block/$tech/sta_pt/func.max_high.*/reports/$block.func.max_high.*.link_issues.rpt'
+
+alias hvunstamp 'most runs/$block/$tech/sta_pt/func.max_high.*/reports/$block.func.max_high.*_unstamped.rpt'
+
+alias spechvxml 'most runs/$block/$tech/sta_pt/spec.max_high.*/reports/$block.spec.max_high.*_timing_summary.xml.filtered'
+alias hvxml 'most runs/$block/$tech/sta_pt/func.max_high.*/reports/$block.func.max_high.*_timing_summary.xml.filtered'
+alias xmls 'ls -ltr runs/$block/$tech/sta_pt/*/reports/$block.*_timing_summary.xml.filtered'
+alias xmls_nworst 'ls -ltr runs/$block/$tech/sta_pt/*/reports/$block.*_timing_summary.nworst.xml.filtered'
+
+alias xmls_daily 'ls -ltr $FCT_MODEL/daily_gfc0a_n2_${block}_bu_postcts/runs/$block/$tech/sta_pt/*/reports/$block.*_timing_summary.xml.filtered'
+alias xmls_nworst_daily 'ls -ltr $FCT_MODEL/daily_gfc0a_n2_${block}_bu_postcts/runs/$block/$tech/sta_pt/*/reports/$block.*_timing_summary.nworst.xml.filtered'
+
+alias fct_xls 'ls -ltr runs/$block/$tech/$flow/*/reports/csv/*.xlsx runs/$block/$tech/$flow/*/reports/spec*/*.xlsx'
+
+alias pnccoremodel 'realpath /p/hdk/rtl/models/xhdk74/pnc/core/core-pnc-a0-master-latest/'
+alias pnccoremodelb0 'realpath /p/hdk/rtl/models/xhdk74/pnc/core/core-pnc-b0-master-latest/'
+alias gfccoremodela0 'realpath /p/hdk/rtl/models/xhdk74/gfc/core/core-gfc-a0-master-latest/'
+
+alias bus_compress_Full "sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*_/_*_/g' | sed -e 's/_[0-9]*\//_*\//g' | sed -e 's/\[[0-9]*\]/\[*\]/g' | sed -e 's/\/d[0-9]/\/d*/g' | sed -e 's/\/D[0-9]/\/D*/g' "
+
+alias fctxml ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2" "$3]==0) {b[$2" "$3]=$1} ; a[$2" "$3] += $1 ; c[$2" "$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths from startpoint to endpoint"} {print $1,$2,$3" -from "$4" -to "$5}'"'"' | column -t '
+alias fctxml_start ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$2]==0) {b[$2]=$1} ; a[$2] += $1 ; c[$2] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths startpoint"} {print $1,$2,$3,$4}'"'"' | column -t '
+alias fctxml_end ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $16}'"'"'|  bus_compress_Full | awk '"'"'{if (a[$3]==0) {b[$3]=$1} ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths endpoint"} {print $1,$2,$3,$4}'"'"' | column -t ' 
+alias fctxml_port 'awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $34}'"'"' |  sort -n | bus_compress_Full | awk '"'"'{if (a[$NF]==0) {b[$NF]=$1 ; d[$NF] = $3","$4","$5","$6 ; } ; a[$NF] += $1 ; c[$NF] += 1 } END{for (i in a) print b[i],a[i],c[i],d[i]}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths Ports"} {print $1,$2,$3,$4}'"'"' | column -t | m'
+#alias fctxml_port_norm 'awk -F '"'"'"'"'"' '"'"'{print  $2 " " $14 " " $34}'"'"' |  sort -n | bus_compress_Full | awk '"'"'{if (a[$NF]==0) {b[$NF]=$1 ; d[$NF] = $3","$4","$5","$6 ; } ; a[$NF] += $1 ; c[$NF] += 1 } END{for (i in a) print b[i],a[i],c[i],d[i]}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths Ports"} {print $1,$2,$3,$4}'"'"' | column -t '
+alias fctxml_port_norm 'awk -F '"'"'"'"'"' '"'"'{print  $2" "$4" " $14 " " $34}'"'"' |  sort -n | bus_compress_Full | awk '"'"'{if (a[$NF]==0) {b_norm[$NF]=$1 ; b[$NF]=$2; d[$NF] = $4","$5","$6","$7 ; } ; a[$NF] += $2 ; c[$NF] += 1 } END{for (i in a) print b[i],b_norm[i],a[i],c[i],d[i]}'"'"' | sort -nk2 | awk '"'"'BEGIN {print "-WNS WNS_norm TNS Paths Ports"} {print $1,$2,$3,$4,$5}'"'"' | column -t '
+alias fctxml_port_uc ' awk -F '"'"'"'"'"' '"'"'{print  $4 " " $14 " " $34}'"'"'|   awk '"'"'{if (a[$3]==0) {b[$3]=$1 ; d[$3] = $4","$5","$6 ; } ; a[$3] += $1 ; c[$3] += 1 } END{for (i in a) print b[i],a[i],c[i],i,d[i]}'"'"' | sort -n | awk '"'"'BEGIN {print "-WNS TNS Paths Ports"} {print $1,$2,$3,$4,$5}'"'"' | column -t '
+
+alias ext_hv_5 'cat vrf_split/spec.max_high.T_85.typical/*/*.ext.5.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_hv_10 'cat vrf_split/spec.max_high.T_85.typical/*/*.ext.10.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_hv_20 'cat vrf_split/spec.max_high.T_85.typical/*/*.ext.20.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_hv_wns 'cat vrf_split_no_dfx/spec.max_high.T_85.typical/*/*.ext.0.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port'
+alias ext_hv_tns 'cat vrf_split_no_dfx/spec.max_high.T_85.typical/*/*.ext.0.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port |sort -nk2'
+
+alias ext_hv_5_func 'cat vrf_split/func.max_high.T_85.typical/*/*.ext.5.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_hv_10_func 'cat vrf_split/func.max_high.T_85.typical/*/*.ext.10.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_hv_20_func 'cat vrf_split/func.max_high.T_85.typical/*/*.ext.20.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_hv_wns_func 'cat vrf_split_no_dfx/func.max_high.T_85.typical/*/*.ext.0.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port'
+alias ext_hv_tns_func 'cat vrf_split_no_dfx/func.max_high.T_85.typical/*/*.ext.0.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port |sort -nk2'
+
+alias ext_nom_5 'cat vrf_split/spec.max_nom.T_85.typical/*/*.ext.5.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_nom_10 'cat vrf_split/spec.max_nom.T_85.typical/*/*.ext.10.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_nom_20 'cat vrf_split/spec.max_nom.T_85.typical/*/*.ext.20.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port | sort -nrk3'
+alias ext_nom_wns 'cat vrf_split_no_dfx/spec.max_nom.T_85.typical/*/*.ext.0.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port'
+alias ext_nom_tns 'cat vrf_split_no_dfx/spec.max_nom.T_85.typical/*/*.ext.0.rpt | sort -t '"'"'"'"'"' -nk4 | replace "icore1" "icore0" | fctxml_port |sort -nk2'

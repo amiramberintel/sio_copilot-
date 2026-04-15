@@ -1,0 +1,63 @@
+Caliber (Intel Caliber) - Full Chip Timing Signoff Overview
+============================================================
+Last updated: 2026-03-30
+
+WHAT IS CALIBER?
+  Caliber is Intel's full-chip timing signoff checker.
+  It runs AFTER partition-level STA (PrimeTime) and checks physical/electrical
+  violations at the FC (Full Chip) level: capacitance, slopes, pulse widths,
+  clock integrity, latch margins, and more.
+
+  Caliber violations are DIFFERENT from STA timing violations:
+  - STA (PrimeTime): setup/hold slack on paths (functional timing)
+  - Caliber: physical/electrical rule checks (signal quality, clock health)
+  Both must be clean for signoff.
+
+HOW TO RUN CALIBER:
+  # Partition-level extract-fc:
+  intel_caliber -B $block -F intel_caliber --extract_parent_fc core_client --extract_parent_tag GFCN2CLIENTA0LATEST
+
+  # PO must provide the tag to populate from in order to get reports from archive
+
+CALIBER REPORT LOCATIONS:
+  Model root:
+    $MODEL/runs/core_client/n2p_htall_conf4/
+
+  Main directories:
+    intel_caliber_all/           -- Full caliber run output
+      func.max_high.T_85.typical/reports/caliber/  -- Per-rule .rpt files
+      func.max_nom.T_85.typical/reports/caliber/
+      func.max_low.T_85.typical/reports/caliber/
+
+    sta_pt/reports/caliber_indicators/  -- Summary reports
+      core_client.Un_Waived_Caliber_Violations.csv           -- All data, per partition
+      core_client.Un_Waived_Caliber_Violations.transpose.csv -- Per rule, all partitions
+      core_client.Un_Waived_Caliber_Violations.multi_corner.xlsx  -- Excel (multi-corner)
+      core_client.<corner>.Un_Waived_Caliber_Violations.par_sum.txt  -- Per partition total
+      core_client.<corner>.Un_Waived_Caliber_Violations.rule_sum.txt -- Per rule total
+
+    caliber_waiver/  -- Waiver files
+
+CORNERS CHECKED:
+  func.max_high.T_85.typical  (setup, fast process, high voltage)
+  func.max_nom.T_85.typical   (setup, fast process, nominal voltage)
+  func.max_low.T_85.typical   (setup, fast process, low voltage)
+
+VIOLATION SEVERITY:
+  "must"        -- Must be fixed for signoff
+  "recommended" -- Should be fixed, not blocking
+  "info"        -- Informational only
+
+VIOLATION OWNERS:
+  PO      -- Partition Owner
+  PO_PV   -- Partition Owner / Physical Verification (most common)
+  PO_SYN  -- Partition Owner / Synthesis
+  NA      -- Not assigned / infrastructure
+
+NOTE ON IFC:
+  Caliber violations are NOT the same as IFC timing violations.
+  - Most caliber violations are internal to a partition (not cross-partition).
+  - The "partitions" column in .rpt files shows where the net is routed.
+  - "core_client" means routed at FC level but may still be internal.
+  - True cross-partition: partitions column contains ";" (multiple partitions).
+  - The "is_interface" column (in SlowSlope) marks IFC nets explicitly.

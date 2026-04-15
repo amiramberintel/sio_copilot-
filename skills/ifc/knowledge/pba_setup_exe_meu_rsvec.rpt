@@ -1,0 +1,324 @@
+
+-I- MODE:  func.max_high.T_85.typical
+-I- MODEL: /nfs/site/disks/idc_gfc_fct_bu_release/work_area/GFC_CLIENT_26ww08b_ww10_5_TIP_and_RCOs-FCT26WW13A_dcm_release-CLK048.bu_postcts/runs/core_client/n2p_htall_conf4/sta_pt/func.max_high.T_85.typical/outputs/core_client.pt_session.func.max_high.T_85.typical
+
+Warning: AOCVM path-based analysis can take a long time if path-specific slew propagation is also performed. (UITE-487)
+****************************************
+Report : timing
+	-path_type full
+	-delay_type max
+	-slack_lesser_than 500.000
+	-max_paths 20
+	-pba_mode path
+	-sort_by slack
+Design : core_client
+Version: V-2023.12-SP5-5-VAL-20260115
+Date   : Wed Mar 25 07:38:15 2026
+****************************************
+
+Report timing status: Started...
+
+  Startpoint: icore0/par_meu/rsbpd/rsportreductionstressM3n1H_reg/CP
+               (rising edge-triggered flip-flop clocked by mclk_meu)
+  Endpoint: icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/D2
+               (rising edge-triggered flip-flop clocked by mclk_meu)
+  Last common pin: icore0/par_meu/par_meu_glbdrv_par_mnsclk_meu/glbdrv_par_mnsclk_meu_c3/CLKOUT
+  Path Group: mclk_meu
+  Path Type: max  (recalculated)
+  Sigma: 4.4
+
+       Mean       Sensit     Incr         Path       Point
+  -------------------------------------------------------------------------------
+        0.000                 0.000        0.000     clock mclk_meu (rise edge)
+       92.917      0.370     94.544       94.544     clock network delay (propagated)
+        0.000      0.000      0.000       94.544 r
+                                                     icore0/par_meu/rsbpd/rsportreductionstressM3n1H_reg/CP (SDFQTXGITLICMD12BWP156HPNPN3P48CPDULVT)
+       18.501      0.250     18.836 &    113.380 f
+                                                     icore0/par_meu/rsbpd/rsportreductionstressM3n1H_reg/Q (SDFQTXGITLICMD12BWP156HPNPN3P48CPDULVT)
+       13.833      0.182     13.980 &    127.360 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_OFC1290808_rsportreductionstressM3n1H/Z (BUFFSKRD12BWP156HPNPN3P48CPDULVTLL)
+       32.215      0.173     32.345 &    159.705 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_OFC2508578_invs_place_FE_OFN359708_rsportreductionstressM3n1H/ZN (INVREPM2P30ITLICMD12BWP156HNPPN3P48CPDULVT)
+       17.883      0.222     18.082 &    177.787 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_OFC2271217_n_6902/Z (BUFFSR2SKFBFYD5BWP156HPNPN3P48CPDULVTLL)
+        8.823      0.149      8.904 &    186.691 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_OFC1237712_rsportreductionstressM3n1H/Z (BUFFSKRD8BWP156HPNPN3P48CPDLVT)
+       15.358      0.445     16.009 &    202.700 f
+                                                     icore0/par_meu/rsbpd/p0102A4507474/ZN (ND2D1BWP156HPNPN3P48CPDLVT)
+        6.674      0.436      7.184 &    209.884 r
+                                                     icore0/par_meu/rsbpd/p0007A4503348/ZN (NR2SKFOITLICMD1BWP156HPNPN3P48CPDULVT)
+        3.236      0.277      3.391 &    213.275 f
+                                                     icore0/par_meu/rsbpd/p0007A4498769/ZN (AOI221D1BWP156HPNPN3P48CPDULVT)
+        4.533      0.267      4.672 &    217.947 r
+                                                     icore0/par_meu/rsbpd/p0002A4495399/ZN (OAI2111ITLICMD1BWP156HPNPN3P48CPDULVT)
+        5.227      0.267      5.365 &    223.312 f
+                                                     icore0/par_meu/rsbpd/p0011A4493732/ZN (AOI211SKRD2BWP156HPNPN3P48CPDULVT)
+        7.337      0.258      7.481 &    230.794 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_60250_0/Z (OR2D2BWP156HPNPN3P48CPDULVT)
+        4.800      0.186      4.866 &    235.659 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_420112_0/ZN (OAI21OPTPAD1BWP156HPNPN3P48CPDULVT)
+        4.745      0.188      4.817 &    240.476 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_344704_0/ZN (ND2D1BWP156HPNPN3P48CPDULVT)
+        4.754      0.203      4.837 &    245.313 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_345478_0/ZN (IND2D2BWP156HNPPN3P48CPDULVT)
+        4.123      0.153      4.171 &    249.484 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_180884_0/ZN (INVSKRLPOD4BWP156HNPPN3P48CPDULVT)
+        3.800      0.097      3.819 &    253.303 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_414630_0/ZN (ND2D8BWP156HNPPN3P48CPDULVT)
+        4.451      0.119      4.481 &    257.784 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_414629_0/Z (BUFFD2BWP156HNPPN3P48CPDULVT)
+        6.388      0.148      6.430 &    264.214 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_341322_0/Z (BUFFRFSD2BWP156HNPPN3P48CPDULVT)
+        6.522      0.143      6.561 &    270.775 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_180882_0_dup/ZN (INVSKRLPOD12BWP156HNPPN3P48CPDULVT)
+       10.845      0.000     10.845 &    281.620 f
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/D2 (MB4SRLSDFQTXGOPTQA22222211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+                                         281.620     data arrival time
+
+      186.000               186.000      186.000     clock mclk_meu (rise edge)
+      163.930      0.845    160.212      346.212     clock network delay (propagated)
+        0.069     -0.173      0.147      346.358     clock reconvergence pessimism
+       -6.000                -6.000      340.358     inter-clock uncertainty
+                                         340.358 r
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/CP (MB4SRLSDFQTXGOPTQA22222211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+        3.092      1.537     -0.947      339.412     library setup time
+      347.091      1.745                 339.412     data required time
+  -------------------------------------------------------------------------------
+      347.091      1.745                 339.412     data required time
+     -276.964      1.058                -281.620     data arrival time
+  -------------------------------------------------------------------------------
+                              3.370       61.161     statistical adjustment
+       70.127      2.038                  61.161     slack (MET)
+
+  ---------------------------------------------------
+  normalization delay                   186.000
+  normalized slack                        0.329
+
+
+  Startpoint: icore0/par_exe/rs_vec_wrap/rsvecbpd/auto_vector_MBIT_SpecPDstForLDBundleCancelM801H_reg_4__7__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__6__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__5__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__4__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__3__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__2__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__1__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__0_/CP
+               (rising edge-triggered flip-flop clocked by mclk_exe)
+  Endpoint: icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/D1
+               (rising edge-triggered flip-flop clocked by mclk_meu)
+  Path Group: mclk_meu
+  Path Type: max  (recalculated)
+  Sigma: 4.4
+
+       Mean       Sensit     Incr         Path       Point
+  -------------------------------------------------------------------------------
+        0.000                 0.000        0.000     clock mclk_exe (rise edge)
+       67.124      0.365     68.730       68.730     clock network delay (propagated)
+        0.000      0.000      0.000       68.730 r
+                                                     icore0/par_exe/rs_vec_wrap/rsvecbpd/auto_vector_MBIT_SpecPDstForLDBundleCancelM801H_reg_4__7__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__6__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__5__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__4__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__3__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__2__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__1__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__0_/CP (MB8SRLSDFQTXG2422M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+       25.091      0.385     25.815 &     94.544 f
+                                                     icore0/par_exe/rs_vec_wrap/rsvecbpd/auto_vector_MBIT_SpecPDstForLDBundleCancelM801H_reg_4__7__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__6__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__5__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__4__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__3__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__2__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__1__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__0_/Q1 (MB8SRLSDFQTXG2422M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+       23.102      0.595     24.253 &    118.797 r
+                                                     icore0/par_exe/rs_vec_wrap/rsvecbpd/compile_initial_opto_HFSINV_48_3589879/ZN (INVD2BWP156HPNPN3P48CPDULVT)
+       20.891      0.600     21.766 &    140.563 f
+                                                     icore0/par_exe/rs_vec_wrap/rsvecbpd/compile_initial_opto_HFSINV_22_3589878/ZN (INVD2BWP156HPNPN3P48CPDULVT)
+       12.272      0.294     12.458 &    153.021 f
+                                                     icore0/par_exe/tip_cell_0_specpdstforldbundlecancelm801h_4__7_/Z (BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT)
+       16.581      0.140     16.622 &    169.644 f
+                                                     icore0/par_exe/tip_cell_1_specpdstforldbundlecancelm801h_4__7_/Z (BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT)
+       11.949      0.094     11.967 &    181.611 f
+                                                     icore0/par_meu/tip_cell_0_specpdstforldbundlecancelm801h_4__7_/Z (BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT)
+        4.890      0.113      4.913 &    186.524 r
+                                                     icore0/par_meu/rsbpd/n0001D4503210/Z (XOR2TXGNBFITLICMD1BWP156HPNPN3P48CPDULVT)
+        4.681      0.219      4.775 &    191.298 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_453703_0/ZN (NR3SKRD2BWP156HPNPN3P48CPDULVT)
+        6.376      0.235      6.476 &    197.774 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_453702_0/Z (OA22M2P30ITLD1BWP156HPNPN3P48CPDULVT)
+        3.731      0.152      3.770 &    201.543 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_453701_0/ZN (ND2D2BWP156HNPPN3P48CPDULVT)
+        3.250      0.098      3.268 &    204.811 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_205288_0/ZN (NR3SKRLPOD6BWP156HNPPN3P48CPDULVT)
+        5.071      0.096      5.088 &    209.899 r
+                                                     icore0/par_meu/rsbpd/p0001D4492000/ZN (IOA22DHD4BWP156HPNPN3P48CPDULVT)
+        4.316      0.122      4.344 &    214.243 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_62971_0/ZN (INVSKRLPOD4BWP156HNPPN3P48CPDULVT)
+        5.157      0.111      5.179 &    219.422 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_62967_0/ZN (OAI21D4BWP156HNPPN3P48CPDULVT)
+        4.065      0.113      4.089 &    223.511 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_401954_0/ZN (ND3OPTPAD2BWP156HPNPN3P48CPDULVT)
+        4.225      0.143      4.262 &    227.774 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_401953_0/Z (NRND32ITLICMD2BWP156HPNPN3P48CPDULVT)
+        4.104      0.125      4.133 &    231.907 f
+                                                     icore0/par_meu/rsbpd/p0006A4479217/Z (NRND32ITLICMD2BWP156HPNPN3P48CPDULVT)
+        3.885      0.118      3.910 &    235.817 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_160535_0/ZN (ND2D4BWP156HNPPN3P48CPDULVT)
+        8.776      0.106      8.797 &    244.614 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_160533_0/ZN (IOA21D12BWP156HNPPN3P48CPDULVT)
+        6.292      0.096      6.309 &    250.923 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_OCPC2291825_invs_place_FE_RN_76958_0/Z (BUFFSR2BFYD6BWP156HNPPN3P48CPDULVT)
+        4.042      0.056      4.047 &    254.971 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_160532_0_dup/ZN (INVREPM2P30ITLICMD8BWP156HNPPN3P48CPDULVT)
+       11.041      0.000     11.041 &    266.011 f
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/D1 (MB4SRLSDFQTXGOPTQA22222211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+                                         266.011     data arrival time
+
+      186.000               186.000      186.000     clock mclk_meu (rise edge)
+      163.925      0.845    160.207      346.207     clock network delay (propagated)
+        0.000      0.000      0.000      346.207     clock reconvergence pessimism
+      -12.000               -12.000      334.207     inter-clock uncertainty
+                                         334.207 r
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/CP (MB4SRLSDFQTXGOPTQA22222211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+        3.163      1.511     -0.737      333.469     library setup time
+      341.088      1.732                 333.469     data required time
+  -------------------------------------------------------------------------------
+      341.088      1.732                 333.469     data required time
+     -260.911      1.159                -266.011     data arrival time
+  -------------------------------------------------------------------------------
+                              3.560       71.018     statistical adjustment
+       80.177      2.082                  71.018     slack (MET)
+
+  ---------------------------------------------------
+  normalization delay                   186.000
+  normalized slack                        0.382
+
+
+  Startpoint: icore0/par_meu/rsbpd/auto_vector_MBIT_WBPdstVecLdM801H_reg_20__6__MBIT_WBPdstVecLdM801H_reg_20__7__MBIT_WBPdstVecLdM801H_reg_20__8__MBIT_WBPdstVecLdM801H_reg_20__9__MBIT_WBPdstVecLdM801H_reg_21__0__MBIT_WBPdstVecLdM801H_reg_21__1__MBIT_WBPdstVecLdM801H_reg_21__2__MBIT_WBPdstVecLdM801H_reg_21__3_/CP
+               (rising edge-triggered flip-flop clocked by mclk_meu)
+  Endpoint: icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/D3
+               (rising edge-triggered flip-flop clocked by mclk_meu)
+  Last common pin: icore0/par_meu/par_meu_glbdrv_par_mnsclk_meu/glbdrv_par_mnsclk_meu_c3/CLKOUT
+  Path Group: mclk_meu
+  Path Type: max  (recalculated)
+  Sigma: 4.4
+
+       Mean       Sensit     Incr         Path       Point
+  -------------------------------------------------------------------------------
+        0.000                 0.000        0.000     clock mclk_meu (rise edge)
+      106.333      0.387    108.035      108.035     clock network delay (propagated)
+        0.000      0.000      0.000      108.035 r
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_WBPdstVecLdM801H_reg_20__6__MBIT_WBPdstVecLdM801H_reg_20__7__MBIT_WBPdstVecLdM801H_reg_20__8__MBIT_WBPdstVecLdM801H_reg_20__9__MBIT_WBPdstVecLdM801H_reg_21__0__MBIT_WBPdstVecLdM801H_reg_21__1__MBIT_WBPdstVecLdM801H_reg_21__2__MBIT_WBPdstVecLdM801H_reg_21__3_/CP (MB8SRLSDFQTXG2442M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+       19.563      0.286     19.977 &    128.012 f
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_WBPdstVecLdM801H_reg_20__6__MBIT_WBPdstVecLdM801H_reg_20__7__MBIT_WBPdstVecLdM801H_reg_20__8__MBIT_WBPdstVecLdM801H_reg_20__9__MBIT_WBPdstVecLdM801H_reg_21__0__MBIT_WBPdstVecLdM801H_reg_21__1__MBIT_WBPdstVecLdM801H_reg_21__2__MBIT_WBPdstVecLdM801H_reg_21__3_/Q2 (MB8SRLSDFQTXG2442M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+        9.185      0.183      9.331 &    137.344 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_OFC1282737_WBPdstVecLdM801H_20__7/Z (BUFFD12BWP156HNPPN3P48CPDULVT)
+        4.615      0.143      4.693 &    142.037 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_218406_0/Z (NRND23ITLICMD2BWP156HPNPN3P48CPDULVTLL)
+        7.507      0.203      7.657 &    149.694 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_319870_0/Z (NRND22ITLICMD2BWP156HPNPN3P48CPDULVTLL)
+        5.502      0.146      5.569 &    155.263 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_202448_0/ZN (ND3D3BWP156HPNPN3P48CPDULVTLL)
+        8.367      0.128      8.428 &    163.691 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_OCPC2435959_n_25921/Z (BUFFDHDVGD12BWP156HPNPN3P48CPDULVT)
+       28.969      0.229     29.153 &    192.843 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_OFC1275291_n_25921/Z (BUFFLLKGD14BWP156HPNPN3P48CPDULVT)
+       11.327      0.173     11.427 &    204.270 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_307670_0/ZN (NR2SKFITLICMD4BWP156HPNPN3P48CPDULVT)
+        5.516      0.146      5.584 &    209.854 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_421503_0/ZN (OAI211D2BWP156HPNPN3P48CPDULVT)
+        8.770      0.191      8.881 &    218.736 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_49960_0/ZN (IAO21DHD4BWP156HPNPN3P48CPDULVT)
+        6.292      0.211      6.417 &    225.153 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_209842_0/Z (AN2D1BWP156HPNPN3P48CPDULVTLL)
+        4.527      0.152      4.586 &    229.739 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_100534_0/ZN (AOI21D2BWP156HPNPN3P48CPDULVTLL)
+        4.176      0.129      4.223 &    233.961 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_67369_0/ZN (NR3D3BWP156HPNPN3P48CPDULVT)
+        6.482      0.112      6.518 &    240.479 f
+                                                     icore0/par_meu/rsbpd/p0013A4482293/Z (OR2SR2DHD8BWP156HPNPN3P48CPDULVT)
+        5.035      0.049      5.041 &    245.520 r
+                                                     icore0/par_meu/rsbpd/p0012A4481419/ZN (NR3SKRLPOD12BWP156HNPPN3P48CPDULVT)
+       15.487      0.269     15.681 &    261.201 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_OFC1164949_n_33131/Z (BUFFSR2D3BWP156HPNPN3P48CPDULVT)
+        6.477      0.000      6.477 &    267.678 r
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/D3 (MB4SRLSDFQTXGOPTQA22222211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+                                         267.678     data arrival time
+
+      186.000               186.000      186.000     clock mclk_meu (rise edge)
+      163.927      0.845    160.209      346.209     clock network delay (propagated)
+        0.069     -0.173      0.147      346.355     clock reconvergence pessimism
+       -6.000                -6.000      340.355     inter-clock uncertainty
+                                         340.355 r
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/CP (MB4SRLSDFQTXGOPTQA22222211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+        0.442      1.646     -4.023      336.332     library setup time
+      344.438      1.842                 336.332     data required time
+  -------------------------------------------------------------------------------
+      344.438      1.842                 336.332     data required time
+     -264.130      0.806                -267.678     data arrival time
+  -------------------------------------------------------------------------------
+                              2.810       71.464     statistical adjustment
+       80.307      2.010                  71.464     slack (MET)
+
+  ---------------------------------------------------
+  normalization delay                   186.000
+  normalized slack                        0.384
+
+
+  Startpoint: icore0/par_exe/rs_vec_wrap/rsvecbpd/auto_vector_MBIT_SpecPDstForLDBundleCancelM801H_reg_4__7__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__6__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__5__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__4__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__3__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__2__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__1__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__0_/CP
+               (rising edge-triggered flip-flop clocked by mclk_exe)
+  Endpoint: icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/D4
+               (rising edge-triggered flip-flop clocked by mclk_meu)
+  Path Group: mclk_meu
+  Path Type: max  (recalculated)
+  Sigma: 4.4
+
+       Mean       Sensit     Incr         Path       Point
+  -------------------------------------------------------------------------------
+        0.000                 0.000        0.000     clock mclk_exe (rise edge)
+       67.124      0.365     68.730       68.730     clock network delay (propagated)
+        0.000      0.000      0.000       68.730 r
+                                                     icore0/par_exe/rs_vec_wrap/rsvecbpd/auto_vector_MBIT_SpecPDstForLDBundleCancelM801H_reg_4__7__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__6__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__5__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__4__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__3__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__2__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__1__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__0_/CP (MB8SRLSDFQTXG2422M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+       25.091      0.385     25.815 &     94.544 f
+                                                     icore0/par_exe/rs_vec_wrap/rsvecbpd/auto_vector_MBIT_SpecPDstForLDBundleCancelM801H_reg_4__7__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__6__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__5__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__4__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__3__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__2__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__1__MBIT_SpecPDstForLDBundleCancelM801H_reg_4__0_/Q1 (MB8SRLSDFQTXG2422M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+       23.102      0.595     24.253 &    118.797 r
+                                                     icore0/par_exe/rs_vec_wrap/rsvecbpd/compile_initial_opto_HFSINV_48_3589879/ZN (INVD2BWP156HPNPN3P48CPDULVT)
+       20.891      0.600     21.766 &    140.563 f
+                                                     icore0/par_exe/rs_vec_wrap/rsvecbpd/compile_initial_opto_HFSINV_22_3589878/ZN (INVD2BWP156HPNPN3P48CPDULVT)
+       12.272      0.294     12.458 &    153.021 f
+                                                     icore0/par_exe/tip_cell_0_specpdstforldbundlecancelm801h_4__7_/Z (BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT)
+       16.581      0.140     16.622 &    169.644 f
+                                                     icore0/par_exe/tip_cell_1_specpdstforldbundlecancelm801h_4__7_/Z (BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT)
+       11.949      0.094     11.967 &    181.611 f
+                                                     icore0/par_meu/tip_cell_0_specpdstforldbundlecancelm801h_4__7_/Z (BUFFSR2BFYD18BWP156HNPPN3P48CPDULVT)
+        4.890      0.113      4.913 &    186.524 r
+                                                     icore0/par_meu/rsbpd/n0001D4503210/Z (XOR2TXGNBFITLICMD1BWP156HPNPN3P48CPDULVT)
+        4.681      0.219      4.775 &    191.298 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_453703_0/ZN (NR3SKRD2BWP156HPNPN3P48CPDULVT)
+        6.376      0.235      6.476 &    197.774 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_453702_0/Z (OA22M2P30ITLD1BWP156HPNPN3P48CPDULVT)
+        3.731      0.152      3.770 &    201.543 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_453701_0/ZN (ND2D2BWP156HNPPN3P48CPDULVT)
+        3.250      0.098      3.268 &    204.811 f
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_205288_0/ZN (NR3SKRLPOD6BWP156HNPPN3P48CPDULVT)
+        3.712      0.118      3.737 &    208.548 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_205287_0/ZN (ND2D2BWP156HPNPN3P48CPDULVT)
+        5.243      0.085      5.257 &    213.805 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_324543_0/Z (NRND23ITLICMD4BWP156HPNPN3P48CPDULVT)
+        9.006      0.208      9.083 &    222.888 r
+                                                     icore0/par_meu/rsbpd/p0004A4481854/ZN (OAOI211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+        7.622      0.238      7.728 &    230.616 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_348105_0/Z (OR2D4BWP156HNPPN3P48CPDULVT)
+        4.102      0.114      4.120 &    234.736 f
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_RC_469097_0/ZN (ND3D12BWP156HNPPN3P48CPDULVT)
+        4.899      0.059      4.906 &    239.641 r
+                                                     icore0/par_meu/rsbpd/invs_place_FE_RC_204991_0/ZN (INVREPM2P30ITLICMD18BWP156HNPPN3P48CPDULVT)
+       16.820      0.231     16.916 &    256.558 r
+                                                     icore0/par_meu/rsbpd/invs_cts_FE_OCPC2435389_invs_place_FE_OFN3529107_n_33892/Z (BUFFD12BWP156HNPPN3P48CPDULVT)
+        6.564      0.000      6.564 &    263.122 r
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/D4 (MB4SRLSDFQTXGOPTQA22222211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+                                         263.122     data arrival time
+
+      186.000               186.000      186.000     clock mclk_meu (rise edge)
+      163.925      0.845    160.207      346.207     clock network delay (propagated)
+        0.000      0.000      0.000      346.207     clock reconvergence pessimism
+      -12.000               -12.000      334.207     inter-clock uncertainty
+                                         334.207 r
+                                                     icore0/par_meu/rsbpd/auto_vector_MBIT_RSVecLdPRFWrCancelM802H_reg_23__MBIT_RSVecLdPRFWrCancelM802H_reg_20__MBIT_RSVecLdPRFWrCancelM802H_reg_21__MBIT_RSVecLdPRFWrCancelM802H_reg_22_/CP (MB4SRLSDFQTXGOPTQA22222211M2P30ITLD2BWP156HPNPN3P48CPDULVT)
+        2.061      1.378     -1.334      332.873     library setup time
+      339.986      1.617                 332.873     data required time
+  -------------------------------------------------------------------------------
+      339.986      1.617                 332.873     data required time
+     -257.905      1.186                -263.122     data arrival time
+  -------------------------------------------------------------------------------
+                              3.518       73.269     statistical adjustment
+       82.082      2.003                  73.269     slack (MET)
+
+  ---------------------------------------------------
+  normalization delay                   186.000
+  normalized slack                        0.394
+
+
+Report timing status: Completed...
+1

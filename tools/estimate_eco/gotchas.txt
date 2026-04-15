@@ -1,0 +1,41 @@
+estimate_eco GOTCHAS
+====================
+
+1. GBA vs PBA MISMATCH
+   estimate_eco uses GBA slack internally.
+   The absolute slack values are NOT your PBA slack.
+   Only the DELTA (improvement) transfers to PBA results.
+   NEVER report GBA numbers from estimate_eco as actual slack.
+
+2. *current* = BEST means NO ECO HELPS
+   If the first row shows *current* as best option,
+   this cell is already optimal. Move on to next cell.
+
+3. BUFFER INSERTION IS OPTIMISTIC
+   estimate_eco assumes ideal buffer placement.
+   Real gains are typically 60-80% of estimated due to routing.
+
+4. CROSS-PARTITION LIMITATION
+   You can only ECO cells in YOUR partition.
+   If the bottleneck cell is in another partition,
+   estimate_eco results are informational only.
+
+5. DULVT ALREADY OPTIMAL
+   Most GFC Client A0 critical paths are already DULVT.
+   VT swap options may show no improvement.
+   Try insert_buffer on long nets instead.
+
+6. CHECK BOTH RISE AND FALL
+   Worst transition may differ. Always check both:
+   estimate_eco ... -rise ...
+   estimate_eco ... -fall ...
+
+7. DONT_USE CELLS IN RESULTS
+   estimate_eco may suggest cells on the dont_use list!
+   Always cross-check against skills/cell_library/knowledge/illegal_cells_dont_use.txt
+   before recommending an ECO.
+
+8. CORNER MISMATCH
+   Always run estimate_eco on the SAME corner as your timing analysis.
+   Setup: func.max_high (or whichever is limiting)
+   Hold:  func.min_low / func.min_fast (with -min flag)

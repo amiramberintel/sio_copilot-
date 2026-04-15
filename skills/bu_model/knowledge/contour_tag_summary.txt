@@ -1,0 +1,74 @@
+================================================================================
+                         CONTOUR_TAG Summary
+================================================================================
+
+WHAT IS IT?
+-----------
+A meta-tag that provides a consistent snapshot of all collateral types for a 
+specific release milestone.
+
+LOCATION
+--------
+/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/<partition>/<bundle>/<CONTOUR_TAG>/
+
+Example:
+/nfs/site/disks/gfc_n2_client_arc_proj_archive/arc/par_msid/timing_collateral/GFCN2CLIENTA0P10_CONTOUR_26WW06E/
+
+HOW IT WORKS
+------------
+The CONTOUR_TAG is a symlink pointing to a versioned directory:
+
+  GFCN2CLIENTA0P10_CONTOUR_26WW06E  →  GFCN2CLIENTA0_SC8_VER_XXX
+
+Each bundle has its own version number (updated independently):
+
+  Bundle                  Version
+  ----------------------  --------
+  timing_collateral       VER_095
+  td_collateral           VER_064
+  clock_collateral        VER_035
+  dft_collateral          VER_031
+  fe_collateral           VER_026
+  sio_timing_collateral   VER_008
+  power_collateral        VER_006
+
+HOW TO POPULATE
+---------------
+eouMGR --block $block --bundle <bundle_type> --tag $ctag --populate --force
+
+Example:
+  set ctag = GFCN2CLIENTA0P10_CONTOUR_26WW06E
+  eouMGR --block par_msid --bundle fe_collateral --tag $ctag --populate --force
+  eouMGR --block par_msid --bundle clock_collateral --tag $ctag --populate --force
+  eouMGR --block par_msid --bundle td_collateral --tag $ctag --populate --force
+  eouMGR --block par_msid --bundle timing_collateral --tag $ctag --populate --force
+  eouMGR --block par_msid --bundle dft_collateral --tag $ctag --populate --force
+  eouMGR --block par_msid --bundle power_collateral --tag $ctag --populate --force
+  eouMGR --block par_msid --bundle sio_timing_collateral --tag $ctag --populate --force
+
+BUNDLES INCLUDED
+----------------
+- fe_collateral          : RTL Verilog (.v), filelists (.f), UPF, HIP tags
+- clock_collateral       : Clock definitions, periods, constraints
+- td_collateral          : Top-down constraints, interface timing
+- timing_collateral      : Specs, FDR exceptions, timing constraints
+- dft_collateral         : DFT/scan collateral
+- power_collateral       : Power intent, voltage domains
+- sio_timing_collateral  : SerDes/IO timing
+
+WHERE DEFINED IN WA
+-------------------
+$WA/user_env_vars_file.csh:
+  setenv CONTOUR_TAG "GFCN2CLIENTA0P10_CONTOUR_26WW06E"
+
+PURPOSE
+-------
+- Ensures all teams use compatible versions of collateral
+- Enables bottom-up flow (partitions share specs with core_client)
+- Provides versioned history and rollback capability
+- Atomic updates via symlink changes
+
+================================================================================
+Generated: 2026-02-15
+Work Area: GFC_CLIENT_26ww04e_ww06_4_collaterals_update-FCT26WW07G_dcm_daily-CLK039
+================================================================================
