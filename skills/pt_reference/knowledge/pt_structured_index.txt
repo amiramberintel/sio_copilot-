@@ -1,0 +1,376 @@
+==========================================================================================
+  PT COMMAND STRUCTURED INDEX -- 371 commands
+  Format: LINE_NUM | CATEGORY | COMMAND | DESCRIPTION
+==========================================================================================
+
+99888  | other        | active_clock_list                        | Sets a group of clocks to be active in the current analysis scope. Provides capability to
+1951   | other        | add_scenario_unsupported_attribute_waiver | The add_scenario_unsupported_attribute_waiver command adds a waiver for attributes
+2309   | query        | all_clocks                               | The all_clocks command creates a collection of all clocks in the current design. If you do
+2345   | query        | all_connected                            | The all_connected command creates a collection of objects connected to a specified net,
+132449 | other        | aocvm_file                               | The write_binary_aocvm command creates binary encoded AOCV files from ASCII AOCV
+101218 | other        | aocvm_table_group_name                   | The set_aocvm_table_group command can operate on either hierarchical cells in the top-
+36268  | other        | args                                     | Define custom tcl command to use in charts expression evaluation.
+3495   | other        | as_collection                            | This command looks up a string value and returns it as a collection it the collection is still
+14225  | other        | attr_name                                | Use define_qtm_attribute command to define a new user-defined attribute that is
+132450 | other        | binary_file                              | The write_binary_aocvm command creates binary encoded AOCV files from ASCII AOCV
+43296  | other        | block_mark                               | This command sets a block mark for one or more hierarchical or leaf-level cell instances.
+36269  | other        | body                                     | Define custom tcl command to use in charts expression evaluation.
+113027 | other        | capacitance_value                        | Specifies a minimum capacitance on input/inout ports or designs. If minimum capacitance
+58853  | other        | cell_list                                | The remove_cell command removes cells from the current design. Like all other netlist
+3677   | other        | cell_of                                  | The cell_of command creates a collection of cells owned by a list of pins. The command
+43295  | other        | cells                                    | This command sets a block mark for one or more hierarchical or leaf-level cell instances.
+4154   | other        | check_constraints                        | Invokes constraint consistency to check constraints of the current design for potential
+4243   | other        | check_eco                                | The check_eco command reads physical library and design files in either LEF/DEF or IC
+4578   | other        | check_level_shifters                     | In PrimeTime, the check_level_shifters command is an alias for:
+4851   | other        | check_routes                             | This command verifies, checks, and reports routing statistics for the current design block.
+22432  | other        | clock_list                               | Shows the relationship between two given clocks. If the option -type is not specified, the
+6027   | other        | collections                              | Synopsys applications build an internal database of objects and attributes applied to them.
+51865  | other        | concurrent_cmds                          | This command is a parallel directive that instructs PrimeTime to execute the list of
+103450 | other        | connection_class_value                   | The connection class label is an attribute that is used to describe connection requirements
+7646   | other        | create_command_group                     | The create_command_group command is used to create a new command group, which
+10377  | power        | create_power_state_group                 | The create_power_state_group command defines a group in the active scope that can be
+10563  | other        | create_pst                               | The create_pst command creates a power state table using a specific order of supply nets.
+10608  | other        | create_python_venv                       | This command creates a Python virtual environment (venv) using the current application.
+11162  | other        | create_qtm_model                         | Specifies the name of a new quick timing model (QTM) to be created by PrimeTime. QTMs
+11346  | other        | create_qtm_port                          | This command creates QTM port. You can create a single port or a list of ports with this
+11575  | other        | create_ruleset                           | This command is available only if you invoke the pt_shell with the -constraints option.
+127196 | other        | criteria                                 | You can use the sort_collection command to order the objects in a collection based on one
+12795  | other        | current_instance                         | The current_instance command specifies the working cell instance. This command differs
+13181  | other        | current_session                          | This command is available only if you invoke the pt_shell with the -multi_scenario option.
+13280  | other        | date                                     | The date command generates a string containing the current date and time, and returns
+2259   | other        | def                                      | The alias command defines or displays command aliases. With no arguments, the alias
+13665  | other        | define_design_mode_group                 | The define_design_mode_group command defines a set of design modes to be placed
+65134  | other        | design                                   | The rename_design command changes the name of a design. Either a design name
+104652 | other        | design_name                              | The UPF specification defines the set_design_top command that is in PrimeTime -
+121562 | other        | dnets                                    | If selected in composite aggressor group for noise analysis, dnets specified by this
+60388  | other        | drc_error_data                           | The remove_drc_error_data command removes the specified DRC error data objects.
+60470  | other        | drc_error_types                          | The remove_drc_error_types command removes physical DRC error type objects from
+60519  | other        | drc_errors                               | The remove_drc_errors command removes physical DRC error objects from the given
+15005  | other        | error_info                               | The error_info command is used to display information after an error has occurred. Tcl
+15054  | other        | estimate_clock_gate_max_power            | Find the worst-case internal energy when-condition in the liberty model and set those for
+16004  | other        | exit                                     | This command exits from the application. You have the option to specify a code to return
+16014  | other        | exit_code                                | This command exits from the application. You have the option to specify a code to return
+16377  | other        | extract_scaling_data_config              | The extract_scaling_data_config command can be used to extract commands to use
+112484 | other        | fanout_value                             | Specifies a maximum fanout on input ports or designs. If maximum fanout is set on a
+50731  | other        | file_name                                | The load_constraints command sets the scope to the specified instance and executes the
+54101  | other        | file_names                               | Reads design and library information from Synopsys database (db) files into PrimeTime.
+21546  | other        | generate_power_profile                   | This command is used to generate power profile. The power profile can be either static or
+22811  | other        | get_current_hook_command                 | The get_current_hook_command command may only be run from within a command
+22842  | other        | get_current_power_domain                 | The set_current_power_domain command provides the control of calculating power
+22892  | other        | get_current_power_net                    | The set_current_power_net command provides control of calculating power consumption
+22989  | other        | get_current_sms_scenario                 | The get_current_sms_scenario command can be used to query the SMS scenarios
+24652  | other        | get_gpd_corners                          | This command reports the operating condition corners stored in a Galaxy Parasitics
+24878  | other        | get_gui_stroke_bindings                  | This command queries the current state of stroke bindings for the application. If no options
+25031  | other        | get_ilm_objects                          | Returns a collection of nets, cells, or pins that have been identified as belonging to
+26241  | other        | get_message_instances                    | This command creates a collection of saved message instances of the specified message
+27167  | other        | get_pg_pins                              | The get_pg_pins command creates a collection of upf_pg_pin_info objects in the current
+28278  | other        | get_qtm_ports                            | The get_qtm_ports command creates a collection of QTM ports from the current QTM
+28376  | other        | get_related_supply_net                   | The get_related_supply_net command returns a collection of UPF supply nets for the
+62995  | other        | group_names                              | The remove_power_groups command removes some or all power groups that are
+32866  | other        | gui_clear_error_data_filter              | Remove the filter and restore visibility of errors. Errors may remain hidden based on null
+32915  | other        | gui_clear_selected_errors                | Clears selected errors in the Error Browser.
+33008  | other        | gui_close_utable                         | This command closes and frees all the table names given by the user. If
+34198  | other        | gui_create_clock_graph                   | The command generates a levelized or latency clock graph using a selected set of objects.
+34472  | other        | gui_create_pref_category                 | This command creates a preference service category with the specified name,
+35899  | other        | gui_create_vm_objects                    | Layout visual modes are used to color objects in the layout given certain criteria.
+36263  | other        | gui_define_charts_proc                   | Define custom tcl command to use in charts expression evaluation.
+36713  | other        | gui_error_browser                        | The gui_error_browser command controls the visibility of the Error Browser Dialog. The
+36855  | other        | gui_execute_menu_item                    | This command checks for the existence and enabled state of the given menu item in the
+36900  | other        | gui_exist_pref_category                  | This command checks the existence of a preference category. Return "1" if the specified
+36936  | other        | gui_exist_pref_key                       | This command checks the existence of a preference key given the key name and the
+37454  | other        | gui_get_bucket_option_list               | This command displays a list of all options that are available for the buckets in the
+37891  | other        | gui_get_current_task                     | The gui_get_current_task command queries the name of the current task.
+37906  | other        | gui_get_current_task_item                | The gui_get_current_task_item command queries the name of the current task item.
+37930  | other        | gui_get_current_task_page                | The gui_get_current_task_page command queries the name of the current task page.
+38068  | other        | gui_get_eco_context                      | The gui_get_eco_context command sets the context of manual ECO in the GUI.
+38108  | other        | gui_get_error_browser_option             | This command gets the value of the requested option setting for the Error Browser. One
+38201  | other        | gui_get_error_data                       | The gui_get_error_data command creates a collection of physical DRC error data that are
+38707  | other        | gui_get_map_list                         | The gui_get_map_list command returns a list of existing visual and map modes.
+38756  | other        | gui_get_map_option                       | This command gets the value for an option in a visual mode or map mode. You must
+38807  | other        | gui_get_map_option_list                  | This command displays a list of all options that are available for the specified visual mode
+38939  | other        | gui_get_menu_roots                       | This command returns a list of all the menu roots used by the application. The menu roots
+38970  | other        | gui_get_mouse_tool_option                | This command returns value of a mouse tool option .
+38994  | other        | gui_get_performance_log_option           | This command is used to query the current setting for the performance log which is set by
+39028  | other        | gui_get_pref_categories                  | This command returns a tcl list of the current preference categories.
+39057  | other        | gui_get_pref_keys                        | Return a list of preference keys under the specified category.
+39140  | other        | gui_get_pref_value_type                  | This command retrieves the data type of the value of a preference key from the specified
+39189  | other        | gui_get_presets                          | This command retrieves the list of presets for a category.
+39227  | other        | gui_get_region                           | This command returns the coordinates of the rectangle or rectilinear polygon that defines
+39295  | other        | gui_get_task_list                        | The gui_get_task_list command queries the names of all available tasks.
+39322  | other        | gui_get_task_page                        | This command returns the name of the task page for the task item identified by the option
+39367  | other        | gui_get_toolbar_names                    | Return a Tcl list of the names of all the toolbars that have been created with
+39403  | other        | gui_get_user_units                       | This command returns a string representing the GUI unit for a quantity type.
+40122  | other        | gui_get_window_presets                   | This command retrieves the list of presets for a window type. This command has been
+40163  | other        | gui_get_window_types                     | This command returns a list of existing window types. Instances of these types can be
+40441  | other        | gui_hide_window_toolbar                  | This command hides the specified view's toolbar.
+40811  | other        | gui_list_cell_block_marks                | This command lists the cell names and block mark values for all cells that are marked in
+40849  | other        | gui_list_vm                              | The gui_list_vm command will return a list of existing visual modes.
+40881  | other        | gui_load_cell_density_mm                 | The command generates the map mode view of cell density in a given area. Each grid is
+40916  | other        | gui_load_cell_power_density_mm           | The gui_load_cell_power_density_mm command generates map mode view of cell power
+41195  | other        | gui_open_error_data                      | The gui_open_error_data command displays the given error data in the GUI error browser.
+41276  | other        | gui_open_utable                          | This command opens the given UserTable file and copies the table contents
+41432  | other        | gui_query_objects                        | The object_collection command returns and displays the query text. Same text will be
+41748  | other        | gui_remove_all_rulers                    | This command removes rulers form specified layout window, or from all windows if the
+42016  | other        | gui_remove_charts_model                  | Remove model data from charts.
+42050  | other        | gui_remove_charts_plot                   | Removes one or all charts from a view.
+42204  | other        | gui_remove_user_map                      | Remove current/all user map mode.
+42237  | other        | gui_remove_vm                            | Removes the specified visual mode and all the associated buckets.
+42274  | other        | gui_remove_vmbucket                      | Removes the specified bucket or all buckets from the specified visual mode.
+42369  | other        | gui_report_hotkeys                       | This command prints a report on the current key bindings. The list of bindings printed in
+42445  | other        | gui_report_map                           | The gui_report_map command queries the option values of an existing map mode name
+42564  | other        | gui_report_proc_arg_type_names           | This command prints a report on the available values for the type_name attribute for the
+42865  | other        | gui_schematic_remove_logic               | This command removes logic into a Path Schematic view. The command returns the name
+43291  | other        | gui_set_cell_block_marks                 | This command sets a block mark for one or more hierarchical or leaf-level cell instances.
+43970  | other        | gui_set_error_status                     | This command sets the status of the given error objects to the given status value.
+44952  | other        | gui_set_setting                          | Sets a setting on the specified window. Windows are views or top level windows. The
+44991  | other        | gui_set_task_list                        | The gui_set_task_list command sets the list of tasks that are visible and available in the
+45940  | other        | gui_show_command_form                    | Create a form dialog for a shell command. The form contains fields to allow entry of option
+46049  | other        | gui_show_man_page                        | This command will launch or raise the man page browser, and display the topic specified
+46389  | other        | gui_show_task_assistant                  | The gui_show_task_assistant command opens the task assistant window and displays the
+46418  | other        | gui_show_timing_paths                    | The command shows the details of a collection of timing paths in a timing path inspector.
+46537  | other        | gui_show_url_in_browser                  | The gui_show_url_in_browser command an external web browser to display the specified
+46864  | other        | gui_show_window_toolbar                  | This command shows the specified view's toolbar.
+46951  | other        | gui_stop                                 | This command stops the application GUI and returns to the shell prompt.
+47558  | other        | gui_write_charts_data                    | Write charts data as a tcl script to terminal or a file.
+48164  | other        | gui_zoom_all_layouts_to_current_view     | The command sets the zoom factor of all layout views to the zoom factor of current layout
+48180  | other        | gui_zoom_to_selected_errors              | If you have selected the errors in the error browser, you can execute this command to
+60912  | other        | host_option_names                        | Given a list of host option names, removes those host options. The host option names
+96589  | other        | instances                                | Find the worst-case internal energy when-condition in the liberty model and set those for
+49933  | other        | is_false                                 | This command tests the value of a specified variable, and returns 1 if the value is either 0
+52023  | other        | itr_var                                  | Similarly to the foreach_in_collection command, the parallel_foreach_in_collection
+114774 | other        | lib_pin                                  | This command allows to redefine the noise information for a certain library pin. For output
+69431  | other        | library                                  | The report_clib command displays timing information from the specified CLIB reference
+50065  | other        | license_users                            | This command displays information about all licenses, related users, and host names
+50507  | other        | list_key_bindings                        | The list_key_bindings command displays current key bindings and the edit mode. To
+50548  | other        | list_libs                                | The list_libs command lists the libraries that are read into PrimeTime. You can filter
+50613  | other        | list_licenses                            | The list_licenses command lists the name and number of licenses that you currently have
+50760  | other        | load_distributed_design                  | The load_distributed_design command will load the appropriate image (decided internally)
+51022  | other        | man                                      | The man command displays the online manual page for a command, variable, or error
+124242 | other        | margin_table                             | When VSA calculates the delay of a marco cell with a set margin table, VSA looks up the
+51160  | other        | mem                                      | The mem command shows the maximum memory usage in kilobytes (KB) of this instance
+13670  | other        | mode_list                                | The define_design_mode_group command defines a set of design modes to be placed
+2256   | other        | name                                     | The alias command defines or displays command aliases. With no arguments, the alias
+65223  | other        | net                                      | The rename_net command changes the name of a net. Either a net name that matches a
+62358  | other        | net_list                                 | The remove_net command removes specified nets or all nets from the current design.
+53396  | other        | net_name                                 | The query_net_ports commands returns a list of ports that are logically connected to
+64965  | other        | new_name                                 | Renames the old_name command so that it is now called new_name. If new_name is
+124833 | other        | new_value                                | The setenv command sets the specified system environment variable_name to the
+3690   | other        | object_list                              | The cell_of command creates a collection of cells owned by a list of pins. The command
+24334  | other        | object_name                              | This command reports the EM maximum capacitance from the library for a specific cell
+2351   | other        | object_spec                              | The all_connected command creates a collection of objects connected to a specified net,
+53726  | other        | ocvm_file                                | The read_ocvm command reads AOCV/POCV derate factor tables from a disk file. The
+64964  | other        | old_name                                 | Renames the old_name command so that it is now called new_name. If new_name is
+52214  | other        | parse_proc_arguments                     | The parse_proc_arguments command is used within a Tcl procedure to enable use of the
+62814  | other        | path_group_list                          | Removes path groups in the current design. The group_path and create_clock commands
+3437   | other        | pattern                                  | The apropos command searches the command and option database for all commands
+116154 | other        | pin_list                                 | This command customizes the HyperScale block abstraction behavior for specific pins.
+58334  | other        | pin_or_port_list                         | The remove_annotated_transition command removes transition times previously
+114773 | other        | pins                                     | This command allows to redefine the noise information for a certain library pin. For output
+52315  | other        | pop_sms_scenario                         | The pop_sms_scenario command ends the scope of the closest/most recent previous
+11351  | other        | port_list                                | This command creates QTM port. You can create a single port or a list of ports with this
+53590  | other        | port_name                                | The query_port_net commands returns the net logically connected to a port. If no net is
+52450  | other        | power_reset_feedthrough_endpoints        | This command resets the cell list for power analysis which is set by
+52686  | other        | pre_dsta_update_power                    | This command enables rtl and delay shifted time based power analysis in Hypergrid mode.
+52805  | other        | print_suppressed_messages                | The print_suppressed_messages command displays all messages that you suppressed
+52843  | other        | printenv                                 | The printenv command prints the values of the environment variables inherited from
+52965  | other        | proc_args                                | The proc_args command is used to display the names of the formal parameters of a user-
+118721 | other        | pulse_width_value                        | Specifies the maximum pulse width limit for the pulse clock network at the forward of pulse
+53357  | other        | query_cell_mapped                        | The query_cell_mapped command returns cells that are mapped to the specified instance.
+53390  | other        | query_net_ports                          | The query_net_ports commands returns a list of ports that are logically connected to
+53585  | other        | query_port_net                           | The query_port_net commands returns the net logically connected to a port. If no net is
+53691  | other        | quit                                     | The quit command exits from the application. It is basically a synonym for the exit
+53721  | io           | read_aocvm                               | The read_ocvm command reads AOCV/POCV derate factor tables from a disk file. The
+54178  | io           | read_ddc                                 | This command reads netlist data from .ddc files into PrimeTime. The .ddc format is a
+54684  | io           | read_edge_annotation                     | PrimePower supports boundary leakage power analysis and reporting through edge back
+55007  | io           | read_ivm                                 | The read_ivm command reads via interconnect variation tables from a specified text file.
+55154  | io           | read_memory_config                       | The command reads the specified energy when-condition rules for a spacific lib cell in
+55208  | io           | read_memory_configuration                | The command reads the specified energy when-condition rules for a spacific lib cell in
+57392  | other        | record_training_data                     | The record_training_data command enables the PrimeTime tool to learn user-scripted
+58043  | other        | remove_annotated_clock_network_power     | The remove_annotated_clock_network_power command removes the annotated power
+58329  | other        | remove_annotated_transition              | The remove_annotated_transition command removes transition times previously
+58706  | other        | remove_case_sequential_propagation       | This command disables previously enabled cell instances or library cells for selective
+58968  | other        | remove_clock                             | Removes the specified clock objects from the current design. You must specify either the
+59233  | other        | remove_clock_jitter                      | This command removes the cycle-to-cycle jitter or the duty-cycle jitter of the clock that was
+59645  | other        | remove_connection_class                  | Removes any values for previously set on port with the set_connection_class command.
+59894  | other        | remove_current_session                   | This command is available only if you invoke the pt_shell with the -multi_scenario option.
+60198  | other        | remove_disable_clock_gating_check        | Restores timing clock gating checks previously disabled with the
+60301  | other        | remove_distributed_design                | The remove_distributed_design command will remove the design data previously loaded
+60384  | other        | remove_drc_error_data                    | The remove_drc_error_data command removes the specified DRC error data objects.
+60514  | other        | remove_drc_errors                        | The remove_drc_errors command removes physical DRC error objects from the given
+60570  | other        | remove_drive_resistance                  | The remove_drive_resistance command removes the drive resistance value from one
+60713  | other        | remove_dvd                               | Removes user-specified dynamic voltage drop information that was previously applied with
+130535 | other        | remove_dynamic                           | The remove_dynamic command deletes all dynamic objects that match name, or
+60752  | other        | remove_fanout_load                       | Removes fanout load information specified by the set_fanout_load command. Fanout
+60860  | other        | remove_generated_clock                   | This command removes from the current design generated clocks previously created
+60902  | other        | remove_host_options                      | Given a list of host option names, removes those host options. The host option names
+61874  | other        | remove_license_limit                     | The remove_license_limit command removes the upper limit on the number of licenses of
+61917  | other        | remove_max_area                          | The remove_max_area command removes the max_area attribute from the current
+62318  | other        | remove_multi_scenario_design             | This command is available only if you invoke the pt_shell with the -multi_scenario option.
+62497  | other        | remove_noise_lib_pin                     | Given a collection of pins, this command allows you to remove a noise library pin
+62638  | other        | remove_operating_conditions              | Removes operating conditions settings from the current design, individual blocks, leaf
+62771  | other        | remove_parasitic_corner                  | The remove_parasitic_corner command removes the parasitic corner information
+62908  | other        | remove_placement_blockage                | This command removes a placement blockage that controls the placement of ECO cells
+62946  | other        | remove_port_fanout_number                | Removes the fanout_number settings on ports. The set_port_fanout_number command
+62990  | other        | remove_power_groups                      | The remove_power_groups command removes some or all power groups that are
+63035  | other        | remove_propagated_clock                  | Removes propagated clock specification from clocks, ports, or pins in the current design.
+63141  | other        | remove_pulse_clock_max_width             | Removes maximum pulse clock width limits from the specified objects. A maximum width
+63669  | other        | remove_rail_voltage                      | Removes power rail voltage that was set by the set_rail_voltage command on cells.
+63757  | other        | remove_ruleset                           | This command is available only if you invoke the pt_shell with the -constraints option.
+63872  | other        | remove_scenario_unsupported_attribute_waiver | The remove_scenario_unsupported_attribute_waiver command removes a previously
+64270  | other        | remove_si_delay_disable_statistical      | Removes the effect of the set_si_delay_disable_statistical command.
+64453  | other        | remove_si_noise_disable_statistical      | Removes the effect of the set_si_noise_disable_statistical command.
+64542  | other        | remove_target_library_subset             | This command removes the target library subset specifications from the specified design
+64591  | other        | remove_upf                               | The remove_upf command is used to clean up UPF data for the design.
+64683  | other        | remove_user_sensitization                | The remove_user_sensitization command deletes the defined sensitization vectors for the
+64838  | other        | remove_wire_load_min_block_size          | Removes the minimum block area for automatic wire load selection in the current design,
+65130  | other        | rename_design                            | The rename_design command changes the name of a design. Either a design name
+65326  | other        | replay_activity                          | This command is used when power_enable_power_replay appvar is set to true.A major
+65378  | other        | replay_sanity_check                      | This command is used when power_enable_power_replay is set to true. It is the optional
+65407  | other        | report_activity_annotation               | To check and report conflicting activities among different segments of a net in any
+65469  | other        | report_activity_derate                   | Reports the toggle rate derating factors currently set on a cell instance or a list of cells in
+66809  | other        | report_annotated_dvd                     | This command provides a summary report, for the DvD mode, and the number of cells
+67220  | other        | report_annotated_power                   | This command provides a summary report of annotated powers in the current design.
+67529  | other        | report_app_var                           | The report_app_var command prints information about application variables matching the
+68033  | other        | report_bounding_box                      | This command reports the approximate bounding box of specified nets. The coordinates of
+68154  | other        | report_bus                               | Displays information about buses (pins or nets) in the current instance or current design.
+69345  | other        | report_check_ctpm_tolerance              | The report_check_ctpm_tolerance command is used to report tolerance used in
+74314  | other        | report_design                            | This command shows the following information about the current design:
+74394  | other        | report_design_mismatch                   | When the link_allow_design_mismatch variable is true, linking succeeds even when there
+74554  | timing       | report_disable_pg_pins                   | The report_disable_pg_pins command reports the list of PG pins disabled using
+75288  | other        | report_eco_options                       | The report_eco_options command reports all the ECO options specified by the
+78111  | other        | report_gui_stroke_bindings               | This command takes the data returned by get_gui_stroke_bindings and formats it into a
+78172  | other        | report_gui_stroke_builtins               | This command takes the data returned by get_gui_stroke_bindings and formats it into a
+78175  | other        | report_gui_stroke_builtinss              | This command takes the data returned by get_gui_stroke_bindings and formats it into a
+78846  | other        | report_implement_options                 | The report_implement_options command reports all PrimeECO options specified by
+78911  | other        | report_instances                         | This command creates a collection of the instances (cells) associated with one or more
+78957  | other        | report_ir_aggressor                      | The report_ir_aggressor command shows the global limit on the max number of active
+79013  | other        | report_ivm                               | The report_ivm command displays the user-specified via variation information previously
+79166  | other        | report_length_layerwise                  | This command reports the distribution of length with respect to layers for specified nets.
+79720  | other        | report_license_limit                     | The report_license_limit command shows the limits on the number of licenses that were
+81095  | other        | report_multi_input_switching_lib_cells   | Advanced multi-input switching (MIS) analyzes library cell data, along with actual pin slew,
+81268  | other        | report_multi_user_server                 | The report_multi_user command reports information about the current multi-user server
+81340  | other        | report_name_mapping                      | The report_name_mapping command reports the user-defined name-mapping rules you
+81580  | net_physical | report_net_connectivity                  | This command reports the ports, instances, and cells connected to the specified nets.
+82021  | other        | report_noise_parameters                  | This command reports status of the parameters that are considered during the noise
+82717  | other        | report_parasitics_range                  | The report_parasitics_range command reports the two factors of both parasitic resistance
+82781  | other        | report_path_group                        | Produces a report showing information about path groups in the current_design command.
+84465  | power        | report_power_analysis_options            | The report_power_analysis_options command reports the default and user settings for
+84512  | power        | report_power_budget                      | This command is used to report the power budget and derived scaling factor for the
+85241  | power        | report_power_delay_shifted_event_analysis_options | This command is used when power_enable_delay_shifted_event_analysis is set to
+85589  | power        | report_power_groups                      | The report_power_groups command reports the power groups that has been created in
+85650  | power        | report_power_net_info                    | The report_power_net_info command reports the power net info for the current design.
+85710  | power        | report_power_network                     | This command reports the explicit connectivity of supply nets, ports, and connected power
+85987  | power        | report_power_switch                      | The report_power_switch command enables you to get the detail information of all
+86033  | other        | report_pst                               | This command reports the power state table of the current design. This reflects the
+86617  | other        | report_pvt_explorer_condition            | The report_pvt_explorer_condition command reports PVT explorer condition set
+87597  | other        | report_reference                         | Displays information about all references in the current instance or current design. If the
+88932  | other        | report_scale_parasitics                  | The report_scale_parasitics command reports the parasitic resistance and capacitance
+88987  | other        | report_scenario_attribute_support        | The report_scenario_attribute_support command reports the multi-scenario support status
+89359  | other        | report_sensitivity_lib_mapping           | The report_sensitivity_lib_mapping command reports mapping between base library
+89521  | other        | report_si_aggressor_bus_group            | Generates a report of the aggressor bus groups in the design.
+90801  | other        | report_sim_setup                         | The report_sim_setup command reports the details of the current SimLink configuration.
+90891  | other        | report_sms_scenarios                     | The report_sms_scenarios command reports the active status of SMS scenarios for
+91320  | other        | report_supply_group                      | The report_supply_group command reports detailed information about the supply groups,
+91374  | other        | report_supply_net                        | The report_supply_net command provides detailed information about all supply nets
+91454  | other        | report_supply_set                        | The report_supply_set command reports detailed information about the supply sets
+94591  | other        | report_total_net_capacitance             | This command reports the total capacitance of specified nets.
+95025  | other        | report_units                             | The report_units command displays the units used by the current design. To generate the
+96256  | other        | report_wire_load                         | The report_wire_load command shows the characteristics of wire load models set on the
+96350  | other        | reset_activity_derate                    | Resets toggle rate derating factors currently set on a cell instance or the list of cells in the
+96403  | other        | reset_annotated_activity_waveform        | This command allows the user to reset the waveform generated by the
+96447  | other        | reset_aocvm_table_group                  | The reset_aocvm_table_group command removes the association between a
+96587  | other        | reset_clock_gate_max_power               | Find the worst-case internal energy when-condition in the liberty model and set those for
+96673  | other        | reset_ctpm                               | The command reset_ctpm is used in PrimeShield SPICE2Design feature to reset any
+96745  | other        | reset_design                             | Removes all attributes from the design. It does not matter whether these attributes are
+96865  | other        | reset_eco_options                        | The reset_eco_options command removes all the ECO options specified by the
+96901  | other        | reset_eco_scenarios                      | The reset_eco_scenarios removes any forced or ignored violation types set by the
+97010  | other        | reset_extract_model_indexes              | This command replaces all user-specified index values on all ports with automatically-
+97038  | other        | reset_gpd_config                         | The reset_gpd_config command removes custom GPD configuration options previously
+97083  | other        | reset_hier_resource_limits               | The reset_hier_resource_limits command removes all the constraints specified by the
+97424  | other        | reset_noise_parameters                   | The reset_noise_parameters command resets the parameters that are considered during
+97518  | other        | reset_parasitics_range                   | The reset_parasitics_range command resets the two factors of parasitic resistance range
+97792  | other        | reset_power_budget                       | This command resets power budget set on the hierarchical instances in the design.
+97855  | other        | reset_power_delay_shifted_event_analysis_options | This command is used when power_enable_delay_shifted_event_analysis is set to
+97993  | other        | reset_power_replay_options               | This command is used when power_enable_power_replay is set to true. The command is
+98021  | other        | reset_pvt_explorer_condition             | The reset_pvt_explorer_condition command will reset PVT explorer condition specified by
+98123  | other        | reset_routing_rule                       | This command resets routing rule changes performed by set_routing_rule command.
+98159  | other        | reset_rtl_to_gate_name                   | The reset_rtl_to_gate_name command resets all the RTL-to-gate name mapping
+98694  | other        | reset_vsa_margin_table                   | The reset_vsa_marign_table command resets the margin table, for a specified macro cell
+119946 | other        | resistance_value                         | Sets the ba_net_resistance attribute, which specifies the back-annotation of resistance
+126805 | other        | row_site                                 | Synopsys applications are built around a series of commands. These commands are
+11580  | other        | rule_list                                | This command is available only if you invoke the pt_shell with the -constraints option.
+63761  | other        | ruleset_list                             | This command is available only if you invoke the pt_shell with the -constraints option.
+13027  | other        | scenario_list                            | The current_scenario command returns a collection containing all the scenarios in
+96906  | other        | scenario_name_list                       | The reset_eco_scenarios removes any forced or ignored violation types set by the
+99688  | other        | sdp                                      | The Synopsys Diagnostic Platform (SDP) utility is for investigating and debugging issues
+99884  | other        | set_active_clocks                        | Sets a group of clocks to be active in the current analysis scope. Provides capability to
+100074 | other        | set_advanced_analysis                    | This command turns on the advanced analysis mode. In this mode, PrimeTime
+101315 | other        | set_app_var                              | The set_app_var command sets the specified application variable. This command sets the
+101646 | other        | set_cell_mode                            | This command selects the active mode for a mode group or for several mode groups and
+103446 | other        | set_connection_class                     | The connection class label is an attribute that is used to describe connection requirements
+103926 | other        | set_create_lib_options                   | The set_create_lib_options command pass options for create_lib to synthesis module.
+104844 | other        | set_disable_clock_gating_check           | The set_disable_clock_gating_check command disables clock gating checks inferred
+105820 | other        | set_dont_use                             | This command sets the dont_use attribute on specified library objects, so that they are not
+107240 | other        | set_essential_map                        | The set_essential_map writes out the essential and non-essential mapping files in the
+109882 | other        | set_ignore_pg_function                   | The set_ignore_pg_function command declares a list of cells and their internal_pg_pin
+111244 | other        | set_level_shifter_strategy               | This command specifies the strategy for reporting nets that need insertion of level-shifters.
+111531 | other        | set_license_limit                        | The set_license_limit command specifies the upper limit on the number of licenses of
+114409 | other        | set_net_for_sim_analyze_clock_network    | For a given net(multi-driver net in clock mesh structure), spice based power analysis will
+115289 | other        | set_opposite                             | This command defines two input ports in the current design as logically opposite. This
+115623 | other        | set_parasitic_corner                     | The set_parasitic_corner command reads parasitic corner information from a disk file
+117008 | power        | set_power_base_clock                     | For a given net/pin activities are applied by specifying toggle rates relative to it's related
+118177 | power        | set_power_scenario                       | The set_power_scenario command specifies scenario for power analysis purpose. For
+118223 | power        | set_power_units                          | We can use this option to specify the power unit to be used in the power report. Supported
+118314 | other        | set_prepower_options                     | The set_prepower_options command pass PrimePower RTL tcl commands to be executed
+118357 | other        | set_presynth_options                     | The set_presynth_options command pass RTL Architect tcl commands to be executed
+118504 | other        | set_program_options                      | This command provides options that trade off performance and capacity without affecting
+118912 | other        | set_pvt_explorer_condition               | The set_pvt_explorer_condition command set PVT explorer condition, which is used in
+120245 | other        | set_retention_elements                   | This command works with set_retention command. It is used for defining a set of elements
+121068 | other        | set_si_aggressor_bus_group               | Creates an aggressor bus group group_name with the specified set of nets anets.
+121550 | other        | set_si_noise_disable_statistical         | If selected in composite aggressor group for noise analysis, dnets specified by this
+121593 | other        | set_signal_em_analysis_options           | Command to specify various analysis options for signal electromigration analysis in
+122312 | other        | set_synth_output_dir                     | The set_synth_output_dir command specifies output directory for all temporary files and
+122357 | other        | set_synth_phy_tech_file                  | The set_synth_phy_tech_file command pass LEF technology file to synthesis module. if
+124190 | other        | set_voltage_levels                       | The set_voltage_levels command is used to assign multiple voltage levels to a given
+124236 | other        | set_vsa_margin_table                     | When VSA calculates the delay of a marco cell with a set margin table, VSA looks up the
+124556 | other        | set_wire_load_min_block_size             | Specifies the minimum block area for automatic wire load selection in the current design.
+124598 | other        | set_wire_load_mode                       | Specifies a wire load mode with the set_wire_load_mode command. If the mode for the
+124824 | other        | setenv                                   | The setenv command sets the specified system environment variable_name to the
+120692 | other        | severity_value                           | Modifies the severity of specified rules. You can change the severity of built-in or user-
+124875 | other        | sh                                       | This is very similar to the exec command. However, file name expansion is performed on
+124924 | other        | sh_list_key_bindings                     | The sh_list_key_bindings command displays current key bindings and the edit
+124965 | other        | show_rule_violation                      | Displays the violation details for each violation of a particular rule along with debugging
+125479 | other        | sim_enable_si_correlation                | This command specifies nets for signal integrity SPICE correlation.
+127943 | other        | start_learning                           | The start_learning command enables PrimeTime to learn users' custom ECO optimization.
+1918   | other        | state_name                               | The add_pst_state command defines the states of each of the supply nets for one possible
+121855 | other        | static_prob                              | Averaged power analysis uses the supply net probability to determine what fraction of the
+128267 | other        | stop_gui                                 | This command stops the application GUI and returns to the shell prompt.
+128304 | other        | stop_hosts                               | The stop_hosts command shuts down all hosts that have been started. The hosts could
+128637 | other        | stop_multi_user_client                   | The stop_multi_user_client command shuts down all active client sessions whose name
+128692 | other        | stop_multi_user_server                   | The stop_multi_user_server command ends the current multi-user server session. Client
+128728 | other        | stop_profile                             | The stop_profile command is used to stop the command level profiling in PrimeTime that
+124194 | other        | supply_group_list                        | The set_voltage_levels command is used to assign multiple voltage levels to a given
+121841 | other        | supply_nets                              | Averaged power analysis uses the supply net probability to determine what fraction of the
+3538   | other        | supply_set_names                         | The associate_supply_set command associates the supply set handle specified with the
+128754 | other        | suppress_message                         | The suppress_message command provides a mechanism to disable the printing of
+10567  | other        | table_name                               | The create_pst command creates a power state table using a specific order of supply nets.
+51026  | other        | topic                                    | The man command displays the online manual page for a command, variable, or error
+16613  | other        | type                                     | The find command creates a collection of objects. The command exists in PrimeTime
+130767 | other        | unalias                                  | The unalias command removes aliases created by the alias command.
+130805 | other        | undefine_derived_user_attribute          | The undefine_derived_user_attribute command removes an attribute defined by the
+130891 | other        | undo_config                              | This command configures the undo stack.
+130931 | other        | unset_rtl_to_gate_name                   | If you have done only the RTL simulation to generate the RTL backward SAIF or RTL VCD
+131028 | other        | unsuppress_message                       | The unsuppress_message command provides a mechanism to re-enable the printing of
+131073 | other        | update_activity                          | Updates activity for the current design without updating power. Activity is also
+131136 | other        | update_budget                            | Updates and compute the budget information for the current design.
+131167 | other        | update_metrics                           | Updates RTL power metrics for the current design. This command needs to be called
+131249 | other        | update_power                             | Updates power for the current design. Power is also automatically updated by command
+131398 | timing       | update_timing                            | Updates timing for the current design. Timing is also automatically updated by commands
+131445 | other        | upf_version                              | As the UPF standard matures, new updated versions of the UPF standard can occur. The
+49938  | other        | value                                    | This command tests the value of a specified variable, and returns 1 if the value is either 0
+101320 | other        | var                                      | The set_app_var command sets the specified application variable. This command sets the
+124831 | other        | variable_name                            | The setenv command sets the specified system environment variable_name to the
+131778 | other        | which                                    | Displays the location of the specified files. This command uses the search_path to find
+132444 | io           | write_binary_aocvm                       | The write_binary_aocvm command creates binary encoded AOCV files from ASCII AOCV
+135121 | io           | write_python_interface_file              | The write_python_interface_file generate a python stub file called snps.pyi. The stub file
+136379 | io           | write_session_settings                   | The write_session_settings command writes current session settings to a file in Tcl byte

@@ -1,0 +1,336 @@
+================================================================================
+  SUNGER SYNOPSYS.ALIASES -- Command Reference & Explanation
+================================================================================
+  File: /nfs/site/home/sunger/synopsys.aliases
+  Loaded by: ~/.synopsys_pt.setup (auto-sourced when PT starts)
+================================================================================
+
+
+================================================================================
+  SOURCED LIBRARIES (loaded at top of file)
+================================================================================
+
+source .../parseOpt.7.0.tcl
+source .../rls_table.tcl
+  - HDK utility libraries for argument parsing and formatted table output
+  - Used internally by procs like bu_ebb_audit (from baselibr)
+
+
+================================================================================
+  TERMINAL COLOR ALIASES
+================================================================================
+
+color_blue      Changes terminal background to dark blue (white text)
+color_green     Changes terminal background to forest green (white text)
+color_red       Changes terminal background to dark red (white text)
+color_magenta   Changes terminal background to magenta (white text)
+color_1         DarkSeaGreen4 background (muted green)
+color_2         CadetBlue4 background (steel blue)
+color_3         Coral4 background (brownish red)
+color_4         DarkOrchid4 background (purple)
+
+  PURPOSE: When you have multiple PT sessions open, each with a different
+  scenario/corner, color-coding the terminals helps you know which is which.
+  Example: color_red for turbo corner, color_blue for nominal.
+
+title <text>    Sets the terminal window title bar text
+gui_title <text> Sets the PT GUI window title
+
+
+================================================================================
+  REPORT TIMING -- The Core Commands
+================================================================================
+
+rpt
+  report_timing -nosplit -nets -physical -attributes {" "} -transition_time
+                -capacitance -input -include_hierarchical_pins
+
+  THE main timing report command. Shows:
+    -nosplit          Single output (not split by path groups)
+    -nets             Show net names along the path
+    -physical         Show X/Y coordinates and metal layers
+    -attributes       Show custom attributes (space placeholder here)
+    -transition_time  Signal slew (rise/fall time) at each point
+    -capacitance      Pin/net capacitance at each point
+    -input            Show input pin contributions
+    -include_hierarchical_pins  Show partition boundary pins
+
+  Usage: rpt -from startpoint -to endpoint
+         rpt -through [get_pins some_cell/Q]
+
+rptf <startpoint>
+  Shortcut: rpt -from <startpoint>
+  Reports worst timing path FROM a specific startpoint (register/port).
+  Example: rptf par_fe/fe_out_reg/Q
+
+rptt <endpoint>
+  Shortcut: rpt -to <endpoint>
+  Reports worst timing path TO a specific endpoint (register/port).
+  Example: rptt par_msid/msid_in_reg/D
+
+rpth <through_point>
+  Shortcut: rpt -through <through_point>
+  Reports worst timing path THROUGH a specific pin/net.
+  Example: rpth par_fe/some_signal*
+
+trptf <startpoint>
+  rpt -scenario func.max_turbo.T_85.typical -from <startpoint>
+  Same as rptf but forces TURBO corner (worst case max delay).
+  Use when you have multi-scenario DMSA and want to check turbo specifically.
+
+trptt <endpoint>
+  rpt -scenario func.max_turbo.T_85.typical -to <endpoint>
+  Turbo corner, report to endpoint.
+
+trpth <through>
+  rpt -scenario func.max_turbo.T_85.typical -through <through>
+  Turbo corner, report through pin.
+
+nrptf <startpoint>
+  rpt -scenario func.max_nom.T_85.typical -from <startpoint>
+  Same as rptf but forces NOMINAL corner.
+
+nrptt <endpoint>
+  rpt -scenario func.max_nom.T_85.typical -to <endpoint>
+  Nominal corner, report to endpoint.
+
+nrpth <through>
+  rpt -scenario func.max_nom.T_85.typical -through <through>
+  Nominal corner, report through pin.
+
+rptc
+  report_timing -nosplit -nets -physical -attributes -input_pins
+                -transition_time -capacitance -path_type full_clock_expanded
+
+  Full clock expanded report: shows both the LAUNCH clock path and CAPTURE
+  clock path in addition to the data path. Essential for debugging clock
+  skew issues, CTS problems, and understanding clock-to-data relationship.
+  Use when you suspect clock latency is the problem, not the data path.
+
+
+================================================================================
+  GET TIMING PATHS -- Programmatic Access
+================================================================================
+
+grpt
+  get_timing_paths
+  Returns a COLLECTION of timing path objects (not a text report).
+  Use when you need to process paths programmatically (e.g., in a loop).
+
+grptf <startpoint>
+  get_timing_paths -from <startpoint>
+  Get path collection starting from a point.
+
+grptt <endpoint>
+  get_timing_paths -to <endpoint>
+  Get path collection ending at a point.
+
+grpth <through>
+  get_timing_paths -through <through>
+  Get path collection through a point.
+
+  Example: set paths [grpth par_fe/some_signal*]
+           foreach_in_collection p $paths { puts [get_attribute $p slack] }
+
+
+================================================================================
+  OBJECT ACCESS SHORTCUTS
+================================================================================
+
+cs
+  change_selection
+  Changes the GUI selection to specified objects.
+  Example: cs [get_cells par_fe/*]
+
+gs
+  get_selection
+  Returns currently selected objects in the GUI.
+  Example: rpt -through [gs]   -- report timing through whatever you clicked
+
+soc
+  sizeof_collection
+  Returns the number of objects in a collection.
+  Example: soc [get_cells -hier *buf*]  -- count all buffers
+
+gfn <pattern>
+  get_flat_nets -nocase <pattern>
+  Find nets by name (case-insensitive, flattened hierarchy).
+  Example: gfn *clk_mclk*
+
+gfc <pattern>
+  get_flat_cells -nocase <pattern>
+  Find cells by name (case-insensitive, flattened hierarchy).
+  Example: gfc *shifter*
+
+gp <pattern>
+  get_ports -nocase <pattern>
+  Find top-level ports by name (case-insensitive).
+  Example: gp *data_out*
+
+ga <object> <attribute>
+  get_attribute
+  Get any attribute of an object.
+  Example: ga [get_cells par_fe/buf1] ref_name  -- returns cell type
+
+afo <pin>
+  all_fanout -endpoints_only -only_cells -flat -from <pin>
+  Find all sequential endpoints reachable from a pin (forward trace).
+  Shows WHERE a signal goes (which registers capture it).
+  Example: afo [get_pins par_fe/some_reg/Q]
+
+afi <pin>
+  all_fanin -startpoints_only -only_cells -flat -to <pin>
+  Find all sequential startpoints that feed a pin (backward trace).
+  Shows WHERE a signal comes from (which registers launch it).
+  Example: afi [get_pins par_fe/some_reg/D]
+
+
+================================================================================
+  DESIGN ACCESS
+================================================================================
+
+obr <block>
+  open_block -read <block>
+  Opens a Fusion Compiler design block in read-only mode.
+  Used in FC (not PT). Loads the physical design for inspection.
+
+vrtl
+  mf_view mf_rtl
+  Switch to RTL view in Fusion Compiler GUI.
+
+tr
+  mf_timing_buckets_report -group mclk_fe -nworst 1
+    -scenario func.max_high.T_85.typical -output <file>
+  Generate timing bucket report for mclk_fe clock group in FC.
+  Shows timing distribution across the design.
+
+
+================================================================================
+  UTILITY
+================================================================================
+
+ps
+  set_user_units -type time -value 1.0e-12
+  Sets display units to PICOSECONDS (ps).
+  By default PT may show nanoseconds. This makes all timing values show in ps,
+  which is more natural for GFC timing closure (typical slacks are 10-500 ps).
+
+gvim <file>
+  sh gvim <file>
+  Opens a file in gvim from within PT shell.
+
+title <text>
+  exec xtermset -title <text>
+  Sets terminal window title. Useful to label which session/scenario is open.
+
+
+================================================================================
+  SETTINGS (conditional on tool)
+================================================================================
+
+In PT (pt_shell):
+  set_app_var timing_report_fixed_width_columns_on_left true
+  Makes timing report columns align consistently (fixed width on left side).
+  Easier to read and parse.
+
+In FC (Fusion Compiler):
+  set_app_options -name time.report_timing_column_order -value
+    "Attributes Voltage Location Fanout Cap Trans Delta Incr Path Point"
+  Sets the column order in timing reports to this specific layout.
+
+
+================================================================================
+  CUSTOM PROCS
+================================================================================
+
+get_pattern_object <type> <pattern>
+  Generic object finder. Type can be "net", "pin", or "cell".
+  Searches hierarchically, case-insensitive, with wildcards.
+  Example: get_pattern_object cell "shifter"
+           get_pattern_object pin  "clk_mux"
+           get_pattern_object net  "data_bus"
+
+get_regexp_attribute <object> <pattern>
+  Shows ALL attributes of an object that match a regex pattern.
+  Useful for discovery: "what attributes does this cell have?"
+  Example: get_regexp_attribute [get_cells par_fe/buf1] ".*slack.*"
+           get_regexp_attribute [get_pins par_fe/reg/D] ".*cap.*"
+  Output: lists each matching attribute name and its value.
+
+mf <arg>
+  Loads Cheetah utilities and re-sources baselibr aliases.
+  Cheetah is an HDK utility for multi-scenario/multi-corner analysis.
+  Use when you need Cheetah-specific features (mf_view, mf_timing_buckets, etc.)
+
+get_slack_thr_nets <pattern> [scenario]
+  For each net matching <pattern>, prints the net name and its worst slack.
+  Default scenario: func.max_turbo.T_85.typical
+  Example: get_slack_thr_nets "*clk_data*"
+  Output:  par_fe/clk_data_bus[0]    -12.5
+           par_fe/clk_data_bus[1]    -8.3
+
+all_fanin_margin <file> <pin> [scenario]
+  For every startpoint that feeds <pin>, writes to file:
+    start_point, margin_from, margin_to, clk_delay
+  Then opens the result in an xterm with aligned columns.
+  Use to understand: "which inputs to this register are critical?"
+  Example: all_fanin_margin "/tmp/afi_report.txt" [get_pins par_fe/reg/D]
+
+all_fanout_margin <file> <pin> [scenario]
+  For every endpoint reachable from <pin>, writes to file:
+    end_point, margin_before, margin_after, clk_delay
+  Then opens in xterm with aligned columns.
+  Use to understand: "which outputs from this register are critical?"
+  Example: all_fanout_margin "/tmp/afo_report.txt" [get_pins par_fe/reg/Q]
+
+all_fanout_marginPT <file> <pin>
+  Same as all_fanout_margin but for PT (without scenario flag).
+  Writes to file only (no xterm popup).
+
+spec_results <port>
+  Runs spec_calc on a port (from baselibr library), writes results,
+  then opens them in a less viewer. spec_calc analyzes the timing
+  specification compliance of a port.
+
+obrfe <ward_path>
+  Opens par_fe block from compile_final_opto stage in FC read-only mode.
+  Sets terminal title to the ward name, sets ps units, runs rpt.
+  One-liner to jump into a par_fe design for quick timing check.
+  Example: obrfe /nfs/site/disks/my_ward
+
+obrfe_route <ward_path>
+  Same as obrfe but opens the route_opt stage (post-routing).
+  Use when you need to check timing after routing is complete.
+
+obrmsid <ward_path>
+  Same as obrfe but opens par_msid block instead of par_fe.
+  For MSID partition timing analysis.
+
+
+================================================================================
+  QUICK REFERENCE CARD
+================================================================================
+
+  TIMING:     rpt / rptf X / rptt X / rpth X    (full report)
+              trptf X / nrptf X                  (turbo / nominal)
+              rptc                                (with clock expanded)
+              grpt / grptf X / grpth X            (get path objects)
+
+  OBJECTS:    gfn / gfc / gp                      (find nets/cells/ports)
+              gs / cs / soc                        (selection, count)
+              ga obj attr                          (get attribute)
+              afo pin / afi pin                    (fanout/fanin trace)
+
+  ANALYSIS:   get_slack_thr_nets pattern           (slack per net)
+              all_fanin_margin file pin             (input margin analysis)
+              all_fanout_margin file pin            (output margin analysis)
+              get_regexp_attribute obj pattern      (discover attributes)
+              get_pattern_object type pattern       (generic finder)
+
+  DESIGN:     obr / obrfe / obrmsid                (open blocks in FC)
+              ps                                    (switch to picoseconds)
+              mf                                    (load cheetah utils)
+
+  DISPLAY:    color_blue / color_red / color_green  (terminal colors)
+              title <text>                          (window title)
+================================================================================

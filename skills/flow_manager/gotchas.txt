@@ -1,0 +1,28 @@
+================================================================================
+  FLOW MANAGER GOTCHAS
+================================================================================
+
+GOTCHA 1: NB --triggers uses JobID numbers, not task names
+  WRONG:  --triggers "my_task_name:done"
+  RIGHT:  --triggers "624101842326440:done"
+  nb_flow.py handles this automatically — extracts JobID from nbjob output.
+
+GOTCHA 2: If parent job FAILS, child stays waiting forever
+  NB :done trigger only fires on SUCCESS.
+  If a parent job fails or is killed, children remain in "waiting" state.
+  You must manually cancel them or resubmit the parent.
+
+GOTCHA 3: Multiple 500G jobs can exhaust queue capacity
+  If submitting 3+ parallel PT sessions (each 500G), the queue may not
+  have enough resources to run them all simultaneously.
+  They will still complete — just serialized instead of parallel.
+
+GOTCHA 4: Job scripts must be executable
+  chmod +x your_script.sh before submitting.
+  NB will fail silently if the script isn't executable.
+
+GOTCHA 5: Don't use sg soc in NB scripts
+  See skills/nb/gotchas.txt — "setgid: Operation not permitted"
+  Use full binary paths instead.
+
+================================================================================

@@ -1,0 +1,163 @@
+================================================================================
+  COOKBOOK: Multi-Step NB Flows with Dependencies
+  Author: sunger (with copilot) | WW16C April 2026
+================================================================================
+
+PURPOSE:
+  Run multi-step analysis/ECO flows on NB where some jobs must wait
+  for others to complete. Uses NB --triggers for dependency management.
+
+================================================================================
+  QUICK START
+================================================================================
+
+  # 1. Create a flow file
+  python3 /nfs/site/disks/sunger_wa/init_sio_copilot/skills/flow_manager/scripts/nb_flow.py \
+    --example > my_flow.json
+
+  # 2. Edit my_flow.json with your jobs and dependencies
+
+  # 3. Preview (dry-run)
+  python3 nb_flow.py --flow my_flow.json --dry-run
+
+  # 4. Submit
+  python3 nb_flow.py --flow my_flow.json
+
+  # 5. Track
+  python3 nb_flow.py --status my_flow.json
+
+================================================================================
+  NB --triggers SYNTAX (the core mechanism)
+================================================================================
+
+  nbjob run --triggers "JOBID:done" ...
+    → Job stays in queue until JOBID finishes successfully
+
+  nbjob run --triggers "JOBID1:done,JOBID2:done" ...
+    → Job waits for BOTH jobs to finish (AND logic)
+
+  This is a NATIVE NB feature — NB manages the waiting, not our script.
+  nb_flow.py just automates building the trigger strings from your flow.
+
+================================================================================
+  STEP-BY-STEP: PBA ALL CORNERS THEN MERGE
+================================================================================
+
+  GOAL: Run PBA on max_high, max_med, max_low in parallel,
+        then merge results after all 3 finish.
+
+  STEP 1: Create wrapper scripts for each corner
+  ──────────────────────────────────────────────
+    For each corner, you need:
+      a) TCL script with your PT commands (NO restore_session — CTH does it)
+      b) Bash wrapper calling load_session_cth.csh
+
+    See skills/nb/examples/ for templates.
+
+    The bash wrapper uses load_session_cth.csh:
+      /p/hdk/pu_tu/prd/fct_alias/latest/utils/load_session_cth.csh \
+        <session_path> -file <tcl> -title <name>
+
+    This handles: container, license, procs, restore_session, validation.
+
+  STEP 2: Create merge script
+  ────────────────────────────
+    A simple bash or python script that reads all PBA result files
+    and generates a combined report. This job only needs small resources
+    (4C, 16G) since it's just text processing.
+
+  STEP 3: Create flow JSON
+  ─────────────────────────
+    {
+      "name": "par_meu_pba_all_corners",
+      "defaults": {
+        "target": "sc8_express",
+        "qslot": "/c2dg/BE_BigCore/gfc/sd",
+        "class": "SLES15&&500G&&16C",
+        "workdir": "/nfs/site/disks/sunger_wa/meu_manual_work"
+      },
+      "jobs": [
+        { "id": "pba_max_high", "script": "nb_pba_max_high.sh", "depends_on": [] },
+        { "id": "pba_max_med",  "script": "nb_pba_max_med.sh",  "depends_on": [] },
+        { "id": "pba_max_low",  "script": "nb_pba_max_low.sh",  "depends_on": [] },
+        {
+          "id": "merge_report",
+          "script": "merge_pba_results.sh",
+          "depends_on": ["pba_max_high", "pba_max_med", "pba_max_low"],
+          "class": "SLES15&&4C&&16G"
+        }
+      ]
+    }
+
+  STEP 4: Dry-run → Submit
+  ─────────────────────────
+    python3 nb_flow.py --flow par_meu_pba_flow.json --dry-run
+    python3 nb_flow.py --flow par_meu_pba_flow.json
+
+================================================================================
+  STEP-BY-STEP: ECO FLOW (fix → validate → signoff)
+================================================================================
+
+  GOAL: Apply PT-ECO fix, then run STA signoff, then check IFC.
+
+    {
+      "name": "eco_fix_validate",
+      "defaults": { ... },
+      "jobs": [
+        {
+          "id": "pt_eco",
+          "task": "PT-ECO useful skew fix",
+          "script": "/path/to/run_pt_eco.sh",
+          "depends_on": [],
+          "class": "SLES15&&500G&&16C"
+        },
+        {
+          "id": "sta_signoff",
+          "task": "STA signoff all corners",
+          "script": "/path/to/run_sta_signoff.sh",
+          "depends_on": ["pt_eco"],
+          "class": "SLES15&&512G&&16C"
+        },
+        {
+          "id": "ifc_check",
+          "task": "IFC report generation",
+          "script": "/path/to/run_ifc_check.sh",
+          "depends_on": ["sta_signoff"],
+          "class": "SLES15&&4C&&16G"
+        }
+      ]
+    }
+
+================================================================================
+  MANUAL ALTERNATIVE (without nb_flow.py)
+================================================================================
+
+  If you prefer manual submission:
+
+    # Submit job 1
+    JOB1_OUT=$(nbjob run --target sc8_express \
+      --qslot /c2dg/BE_BigCore/gfc/sd \
+      --class "SLES15&&500G&&16C" \
+      --task "step1" \
+      /path/to/step1.sh)
+    JOB1_ID=$(echo "$JOB1_OUT" | grep -oP 'JobID \K[0-9]+')
+
+    # Submit job 2 depending on job 1
+    nbjob run --target sc8_express \
+      --qslot /c2dg/BE_BigCore/gfc/sd \
+      --class "SLES15&&500G&&16C" \
+      --task "step2" \
+      --triggers "${JOB1_ID}:done" \
+      /path/to/step2.sh
+
+================================================================================
+  GOTCHAS
+================================================================================
+
+  1. Triggers use NB JobID (the number), not the --task name
+  2. :done means successful completion — if parent fails, child stays waiting
+  3. No built-in :failed trigger — if parent fails, you must manually cancel
+  4. All parallel jobs need their own 500G allocation — check queue capacity
+  5. Status tracking: nb_flow.py saves _status.json next to your flow file
+
+================================================================================

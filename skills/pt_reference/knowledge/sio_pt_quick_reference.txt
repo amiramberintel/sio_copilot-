@@ -1,0 +1,111 @@
+================================================================================
+  SIO PrimeTime Quick Reference -- Most Used Commands for Timing Closure
+================================================================================
+
+TIMING REPORTS
+--------------
+report_timing -from <start> -to <end> -max_paths N -delay_type max|min
+report_timing -through <pin/net> -max_paths N -nworst N
+report_timing -group <clk> -max_paths N -slack_lesser_than <val>
+report_timing -pba_mode exhaustive -from <start> -to <end>
+report_timing -nosplit -input_pins -nets -transition_time -capacitance
+
+CLOCK REPORTS
+-------------
+report_clock                           ;# All clock definitions
+report_clock_timing -type summary      ;# Clock latency summary
+report_clock_timing -type skew         ;# Clock skew
+report_clock_timing -type latency      ;# Clock latency detail
+
+CONSTRAINT REPORTS
+------------------
+report_constraints -all_violators -max_delay
+report_constraints -all_violators -min_delay
+report_analysis_coverage                ;# Timing coverage
+report_exceptions                       ;# False paths, multicycles
+report_disable_timing                   ;# Disabled arcs
+
+NET/CELL QUERIES
+----------------
+get_nets <pattern>                     ;# Find nets
+get_cells <pattern>                    ;# Find cells
+get_pins <pattern>                     ;# Find pins
+get_clocks <pattern>                   ;# Find clocks
+get_ports <pattern>                    ;# Find ports
+sizeof_collection <collection>          ;# Count objects
+get_object_name <collection>            ;# Get name string
+
+ATTRIBUTES
+----------
+get_attribute <object> <attr>           ;# Get any attribute
+get_attribute [get_nets X] total_capacitance
+get_attribute [get_nets X] wire_length
+get_attribute [get_cells X] ref_name
+get_attribute [get_cells X] location
+get_attribute [get_pins X] direction
+get_attribute [get_pins X] capacitance
+get_attribute [get_timing_paths ...] slack
+
+PATH ANALYSIS
+-------------
+get_timing_paths -from <start> -to <end> -max_paths N
+get_attribute <path> slack
+get_attribute <path> startpoint
+get_attribute <path> endpoint
+get_attribute <path> points                ;# All points on path
+
+FANIN/FANOUT
+------------
+all_fanin -to <pin> -flat -only_cells
+all_fanout -from <pin> -flat -only_cells
+all_connected [get_nets X]              ;# All pins on a net
+
+ECO COMMANDS
+------------
+size_cell <inst> <new_ref>             ;# Upsize/downsize cell
+insert_buffer <net> <buf_ref>          ;# Insert buffer
+remove_buffer <inst>                    ;# Remove buffer
+connect_net <net> <pin>                ;# Wire connection
+disconnect_net <net> <pin>             ;# Disconnect
+write_changes -format icctcl -output eco.tcl  ;# Export ECO
+
+CONSTRAINTS
+-----------
+set_false_path -from <start> -to <end>
+set_multicycle_path N -from <start> -to <end> -setup|-hold
+set_max_delay <val> -from <start> -to <end>
+set_min_delay <val> -from <start> -to <end>
+set_case_analysis <val> <pin>
+
+TIMING UPDATE
+-------------
+update_timing -full                    ;# Re-run STA
+report_global_timing                   ;# Quick WNS/TNS summary
+
+CROSS-PARTITION (PT CLIENT)
+---------------------------
+set_pt_client_mode -use_client true
+set_pt_client_connection -host <host> -port <port> -partition <par>
+report_timing -through [get_ports <ifc_port>]  ;# IFC path
+
+PBA (PATH-BASED ANALYSIS)
+--------------------------
+report_timing -pba_mode path -from <start> -to <end>
+report_timing -pba_mode exhaustive -from <start> -to <end>
+
+SAVE/RESTORE
+--------------
+save_session <dir>                     ;# Save PT session
+restore_session <dir>                  ;# Restore PT session
+write_sdc <file>                       ;# Export constraints
+
+PT BUILT-IN HELP
+-----------------
+man <command>                          ;# Full manual for any command
+apropos <keyword>                      ;# Search commands by keyword
+help <command>                         ;# Quick syntax help
+
+================================================================================
+  COMMAND LOOKUP: For full syntax of any command, search pt_cmd.txt:
+    grep -A 50 "^     <command_name>" docs/pt_cmd.txt | head -60
+================================================================================

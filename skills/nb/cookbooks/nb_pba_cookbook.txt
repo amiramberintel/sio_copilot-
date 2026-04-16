@@ -1,0 +1,103 @@
+================================================================================
+  COOKBOOK: Submit PBA Queries via NetBatch
+  Author: sunger (with copilot) | WW16C April 2026
+================================================================================
+
+WHEN TO USE:
+  - PT server has stale model (release != daily)
+  - Need PBA on current daily model
+  - Need many PBA queries (>50) that would timeout on PT server
+  - Need full restore to run estimate_eco or complex analysis
+
+PREREQUISITES:
+  - Saved PT session from daily build
+  - NB access to sc8_express pool
+  - Queue slot: /c2dg/BE_BigCore/gfc/sd
+
+================================================================================
+  STEP 1: LOCATE PT SESSION
+================================================================================
+
+  Daily sessions live at:
+    <daily_wa>/runs/core_client/n2p_htall_conf4/sta_pt/<corner>/outputs/
+      core_client.pt_session.<corner>
+
+  Common corners:
+    func.max_high.T_85.typical      (worst setup)
+    func.max_med.T_85.typical       (medium setup)
+    func.max_low.T_85.typical       (best-case setup)
+    func.min_low.T_85.typical       (aged hold)
+    fresh.min_fast.F_125.rcworst_CCworst  (fresh hold)
+
+================================================================================
+  STEP 2: CREATE TCL SCRIPT
+================================================================================
+
+  The TCL script must:
+  1. restore_session (the session path)
+  2. Run your PT commands
+  3. Write results to output file
+  4. exit
+
+  See examples/pba_query_template.tcl
+
+  KEY RULES:
+  - restore_session goes IN the TCL, not on pt_shell command line
+  - Always add -pba_mode path to timing queries
+  - Always call exit at end (otherwise PT hangs and NB times out)
+  - Use catch {} for error handling on individual queries
+
+================================================================================
+  STEP 3: CREATE BASH WRAPPER
+================================================================================
+
+  See examples/nb_pba_wrapper.sh
+
+  KEY RULES:
+  - Use full PT binary path: /p/hdk/cad/primetime/V-2023.12-SP5-5-VAL-20260115/bin/pt_shell
+  - Launch with: $PT_BIN -file $TCL
+  - NEVER use: sg soc, -restore_session, or -execute on command line
+  - Add "exec > >(tee -a logfile) 2>&1" for logging
+
+================================================================================
+  STEP 4: SUBMIT
+================================================================================
+
+  nbjob run --target sc8_express \
+    --qslot /c2dg/BE_BigCore/gfc/sd \
+    --class "SLES15&&500G&&16C" \
+    --task "pba_<partition>_<corner>" \
+    /path/to/wrapper.sh
+
+  Returns: JobID for tracking
+
+================================================================================
+  STEP 5: MONITOR
+================================================================================
+
+  Check log file:  cat /path/to/my_pba.log
+  Check results:   cat /path/to/results.txt
+
+  Session restore: ~15-30 min
+  PBA queries:     ~3-5 sec each (bus-level, single path)
+  Total for 54 buses: ~5 min after restore
+
+================================================================================
+  EXAMPLE: par_meu IFC max_high PBA (WW16C)
+================================================================================
+
+  Files created in /nfs/site/disks/sunger_wa/meu_manual_work/:
+    pba_endpoints.txt       -- 54 bus endpoints (bus, gba_slack, SP, EP)
+    run_pba_max_high.tcl    -- Restores WW16C session, runs 54 PBA queries
+    nb_pba_max_high.sh      -- NB wrapper script
+    nb_pba_max_high.log     -- Job log
+    pba_max_high_results.txt -- Output (bus, gba, pba, delta, SP, EP)
+
+  Submit command:
+    nbjob run --target sc8_express \
+      --qslot /c2dg/BE_BigCore/gfc/sd \
+      --class "SLES15&&500G&&16C" \
+      --task "sunger_pba_max_high" \
+      /nfs/site/disks/sunger_wa/meu_manual_work/nb_pba_max_high.sh
+
+================================================================================

@@ -1,0 +1,37 @@
+{
+  "name": "par_meu_pba_all_corners",
+  "description": "Run PBA queries on par_meu IFC for all setup corners in parallel, then merge into one report",
+  "defaults": {
+    "target": "sc8_express",
+    "qslot": "/c2dg/BE_BigCore/gfc/sd",
+    "class": "SLES15&&500G&&16C",
+    "workdir": "/nfs/site/disks/sunger_wa/meu_manual_work"
+  },
+  "jobs": [
+    {
+      "id": "pba_max_high",
+      "task": "PBA par_meu max_high",
+      "script": "/nfs/site/disks/sunger_wa/meu_manual_work/nb_pba_max_high.sh",
+      "depends_on": []
+    },
+    {
+      "id": "pba_max_med",
+      "task": "PBA par_meu max_med",
+      "script": "/nfs/site/disks/sunger_wa/meu_manual_work/nb_pba_max_med.sh",
+      "depends_on": []
+    },
+    {
+      "id": "pba_max_low",
+      "task": "PBA par_meu max_low",
+      "script": "/nfs/site/disks/sunger_wa/meu_manual_work/nb_pba_max_low.sh",
+      "depends_on": []
+    },
+    {
+      "id": "merge_pba",
+      "task": "Merge all PBA corner results",
+      "script": "/nfs/site/disks/sunger_wa/meu_manual_work/merge_pba_results.sh",
+      "depends_on": ["pba_max_high", "pba_max_med", "pba_max_low"],
+      "class": "SLES15&&4C&&16G"
+    }
+  ]
+}

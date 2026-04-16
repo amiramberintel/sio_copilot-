@@ -1,0 +1,366 @@
+PrimeTime Suite Tool Invocation
+Commands
+Version X-2025.06-SP3, January 2025
+                                                                                                                           Feedback
+
+
+
+
+Contents
+
+     1.    PrimeTime Suite Tool Invocation Commands . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+           primetime . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+           pt_shell . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .5
+           start_multi_user_client . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .7
+
+
+
+
+                                                                                                                                            2
+                                                                                         Feedback
+
+
+
+
+1
+PrimeTime Suite Tool Invocation Commands
+     This document describes the tool invocation commands supported by the PrimeTime Suite
+     tool.
+
+
+primetime
+     Runs the PrimeTime graphical user interface (GUI).
+     Syntax
+     primetime
+     -root_path path_name
+     [-display display_env_value]
+     [-file script_file]
+     [-no_init]
+     [-version]
+     [-multi_scenario]
+
+     Data Types
+     path_name                       string
+     display_env_value               string
+     script_file                     string
+
+     Arguments
+     "-root_path path_name"
+        Specifies the Synopsys root path.
+     "-display display_env_value"
+        Sets the DISPLAY environment variable to display_env_value for PrimeTime
+        GUI if invoked from the pt_shell.
+     "-file script_file"
+        Executes the commands in the specified script file before displaying the initial
+        pt_shell prompt. If the last statement in the script file is the quit or exit command,
+        no prompt is displayed, and the command shell exits.
+
+
+
+
+PrimeTime Suite Tool Invocation Commands                                                            3
+X-2025.06-SP3
+                                                                                        Feedback
+Chapter 1: PrimeTime Suite Tool Invocation Commands
+primetime
+
+
+     "-no_init"
+        Prevents the execution any .synopsys_pt.setup startup files.
+     "-version"
+        Displays the version number and build date information and then exits.
+     "-multi_scenario"
+        Invokes PrimeTime in the master of the distributed processing mode. PrimeTime
+        starts up and displays the pt_shell prompt just as in a single scenario session.
+        A distributed multi-scenario analysis (DMSA) is carried out by one master
+        PrimeTime process and multiple PrimeTime slave processes.
+     "-constraints"
+        Invokes PrimeTime in constraints consistency mode. PrimeTime starts up
+        and displays a ptc_shell prompt. This mode opens a GUI, so the DISPLAY
+        environment variable must point to a valid graphical environment.
+     "-output_log_file log_file"
+        Writes the tool session output to both the specified file and the terminal. This is
+        equivalent to using the tee command in the host environment, except that the
+        startup banner and tool exit message are not included in the output file.
+     "-container"
+        Invokes PrimeTime in a container. You can also set the SNPS_CONTAINER
+        environment variable to 1 before invoking the tool. The Synopsys Container
+        environment must be installed and configured.
+     Description
+     This command invokes the graphical user interface (GUI) to pt_shell. It executes all
+     pt_shell startup files, commands, and command scripts. It also provides a graphical
+     console for invoking the pt_shell commands and windows for graphical visualization of
+     timing information.
+     The Main window is the graphical counterpart to pt_shell and is the only window that
+     appears initially. The Main window provides a graphical console for executing pt_shell
+     commands and viewing the results. Commonly used commands are also accessible from
+     the Main window's menus. Lastly, the graphical visualization windows are invoked from the
+     Main window.
+     The Histogram window can display a histogram of Endpoint Slack, Path Slack, Net
+     Capacitance, or Design Rule Cost information for the current design. The histograms
+     give an overall view of the state of the design. The Path Profiler window can be used to
+     examine profiles of specific paths and nets identified in the Histogram window.
+
+
+
+
+PrimeTime Suite Tool Invocation Commands                                                           4
+X-2025.06-SP3
+                                                                                     Feedback
+Chapter 1: PrimeTime Suite Tool Invocation Commands
+pt_shell
+
+
+     The Path Schematic Window provides a schematic view of the path specified from the
+     Histogram Window. In addition, pin names with rise/fall arrival value, net capacitance and
+     cell names are annotated.
+     The Report window organize the reports generated and provides simple viewing and
+     search capabilities to browse the reports.
+
+     See Also
+      • pt_shell Runs the PrimeTime command shell.
+
+
+pt_shell
+     Runs the PrimeTime command shell.
+     Syntax
+     pt_shell
+     -root_path path_name
+     [-gui]
+     [-display display_env_value]
+     [-file script_file]
+     [-x command]
+     [-python]
+     [-no_init]
+     [-version]
+     [-multi_scenario]
+     [-output_log_file file_name]
+     [-adv_constraints]
+     [-constraints]
+     [-container]
+
+     Data Types
+     path_name                     string
+     display_env_value             string
+     script_file                   string
+     command                       string
+     file_name                     string
+
+     Arguments
+     "-root_path path_name"
+        Specifies the Synopsys root path.
+     "-gui"
+        Invokes the PrimeTime GUI immediately upon startup.
+
+
+
+PrimeTime Suite Tool Invocation Commands                                                          5
+X-2025.06-SP3
+                                                                                         Feedback
+Chapter 1: PrimeTime Suite Tool Invocation Commands
+pt_shell
+
+
+     "-display display_env_value"
+        Sets the DISPLAY environment variable to display_env_value for PrimeTime
+        GUI if invoked from the pt_shell command.
+     "-file script_file"
+        Executes the commands in the specified script file before displaying the initial
+        pt_shell prompt. If the last statement in the script file is the quit or exit command,
+        no prompt is displayed, and the command shell exits.
+     "-x command"
+        Executes the pt_shell statements in command before displaying the initial
+        pt_shell prompt. You can enter multiple statements, separating each statement
+        with a semicolon, with quotation marks around the entire set of command
+        statements after the -x option. If you also use the -file option, the statements
+        from the -x option are executed before the script from the -file option is
+        executed. If the last statement entered is quit, no prompt is displayed and the
+        command shell is exited.
+     "-python"
+        Starts the tool in Python rather than Tcl mode. When Python mode is enabled
+        the -x option expects a Python statement and the \B-file\P expects a Python file
+        as input. The interactive prompt is also Python rather than Tcl. For details on
+        Python support in the tool see the py_eval\P man page.
+     "-no_init"
+        Directs the pt_shell not to execute any .synopsys_pt.setup startup files.
+     "-version"
+        Displays the version number and build date information, and then exits.
+     "-multi_scenario"
+        Invokes PrimeTime in the master of the distributed processing mode. PrimeTime
+        starts up and displays the pt_shell prompt just as in a single scenario session.
+        A distributed multi-scenario analysis (DMSA) is carried out by one manager
+        PrimeTime process and multiple PrimeTime worker processes.
+     "-adv_constraints"
+        Invokes PrimeTime in the advanced constraints mode.
+     "-constraints"
+        Invokes PrimeTime in constraints consistency mode. PrimeTime starts up
+        and displays a ptc_shell prompt. This mode opens a GUI, so the DISPLAY
+        environment variable must point to a valid graphical environment.
+
+
+
+PrimeTime Suite Tool Invocation Commands                                                            6
+X-2025.06-SP3
+                                                                                        Feedback
+Chapter 1: PrimeTime Suite Tool Invocation Commands
+start_multi_user_client
+
+
+     "-output_log_file log_file"
+        Writes the tool session output to both the specified file and the terminal. This is
+        equivalent to using the tee command in the host environment, except that the
+        startup banner and tool exit message are not included in the output file.
+     "-container"
+        Invokes PrimeTime in a container. You can also set the SNPS_CONTAINER
+        environment variable to 1 before invoking the tool. The Synopsys Container
+        environment must be installed and configured.
+     Description
+     Interprets and executes PrimeTime timing analysis commands. The pt_shell command
+     interpreter is based on Tcl (Tool Command Language).
+     The pt_shell executes commands until you terminate the session with the quit or exit
+     command. During interactive mode, you can also terminate the pt_shell session by using
+     Ctrl+D.
+     To cancel or interrupt the command currently executing in the pt_shell, type Ctrl+C. The
+     time it takes for a command to process an interrupt (stop what it is doing and continue with
+     the next command) depends upon the size of the design and the type of command. If you
+     enter Ctrl+C three times before a command responds to the interrupt, pt_shell exits, and
+     the following message is displayed:
+     Information: Process terminated by interrupt.
+
+     See Also
+      • primetime Runs the PrimeTime graphical user interface (GUI).
+
+
+start_multi_user_client
+     Script to start a Multi User client session.
+     Syntax
+     start_multi_user_client
+     -session_id session_id
+     [-file script_file]
+     [-output output_log]
+     [-display display_env_value]
+     [-enable_xauth]
+     [-queue]
+
+
+
+
+PrimeTime Suite Tool Invocation Commands                                                           7
+X-2025.06-SP3
+                                                                                             Feedback
+Chapter 1: PrimeTime Suite Tool Invocation Commands
+start_multi_user_client
+
+
+     Data Types
+     session_id                     string
+     script_file                    string
+     output_log                     string
+     display                        string
+
+     Arguments
+     "-session_id session_id"
+        Specifies the session ID to identify and connect to Multi User Server session.
+        It is a unique string displayed at the Server session while starting Multi User
+        mode which helps identify the port on which the Server is waiting for connection
+        requests.
+     "-display display_env_value"
+        Specifies the display port where the GUI window will be started to run client in
+        interactive mode. The value is picked from DISPLAY environment variable if this
+        option is not specified.
+     "-file script_file"
+        Executes the commands in the specified script file in non interactive mode.
+        The script is executed parallel to other clients and output is written to the file
+        specified with -output option.
+     "-output log_file"
+        Writes the client session output to the specified file. It is supported with both
+        interactive (GUI) and non-interactive mode. By default, a ${client_name}.out file
+        will be created in the client working directory which will contain the output logs.
+     "-enable_xauth"
+        Performs xauth commands to grant server user permission to launch GUI
+        window at the client's display. Without this option, client user may have to
+        explicitly execute xhost or xauth commands to grant XDisplay permissions.
+        Using this option reduces those extra steps from client user's end and the script
+        will internally perform xauth commands to grant permission.
+     "-queue"
+        Allows queuing of client if request is sent after the maximum client limit of the
+        Multi User session has been reached. By default, queueing is disabled and an
+        appropriate error message will be printed by start_multi_user_client command.
+        This option will help override this behavior and the queued client will be started
+        when a running client has completed execution.
+
+
+
+
+PrimeTime Suite Tool Invocation Commands                                                                8
+X-2025.06-SP3
+                                                                                         Feedback
+Chapter 1: PrimeTime Suite Tool Invocation Commands
+start_multi_user_client
+
+
+     Description
+     Initiates communication with Multi User Server and requests Read-only access to
+     PrimeTime design to execute timing analysis commands in Multi User client. The client
+     will only be allowed to call a set of reporting commands that do not change the timing
+     state of the design. It will have access to read all PrimeTime variables and will be allowed
+     to update any variable that do not cause any change to the computed timing values. If
+     the client user calls any command or updates any variable that changes timing state and
+     triggers an incremental timing update, a severe error will be reported and the client will be
+     terminated immediately.
+     The Multi User feature supports execution of client commands in two modes: interactive
+     (GUI) and non-interactive.
+     In interactive mode, the script launches a GUI instance of the server PrimeTime design at
+     client's display. The display configuration where the GUI is being launched will be printed
+     by the start_multi_user_client script. Users can change the value of display port by using
+     the -display option. The GUI window will contain a pt_shell prompt where the client users
+     can input commands and a console where the output of client commands will be printed.
+     In non-interactive mode, the client user can write a script file containing list of all the
+     PrimeTime read-only commands it wants to execute and pass the name of the script file
+     with -file option. Users must explicitly provide path of an output file where the result of the
+     client commands needs to be written with -output option. An appropriate error message
+     will be printed if user does not provide this value.
+     The script is non blocking and returns control to UNIX shell after communicating client
+     request to the Multi User Server.
+     Before calling this script, the client user must meet the following requirements:
+     Must be logged in to the same host as server.
+     User must be part of the UNIX group specified while starting Multi User session.
+     Must ensure the client's working directory is under access group ownership and group bits
+     for read-write access is set properly.
+     From the above, #1 ensures that security of Multi User server design is imposed at system
+     level by restricting unauthorized users from logging into the host. #2 and #3 ensures that
+     client user has Read-Write access to output files written by client subprocess. Failure
+     to meet any of the above requirements will cause the script to fail. An appropriate error
+     message will be printed indicating the reason of failure and steps to resolve it.
+
+
+
+
+PrimeTime Suite Tool Invocation Commands                                                               9
+X-2025.06-SP3
+                                                                         Feedback
+Chapter 1: PrimeTime Suite Tool Invocation Commands
+start_multi_user_client
+
+
+     Examples
+     Usage and output of start_multi_user_client script is as follows:
+     start_multi_user_client -session_id 32:5120
+       Information: Setting 'hostname:1234' as display for Multi-User client.
+      (MC-141)
+       Information: Client logs will be available at
+      '/path/client123.out' (MC-144)
+       Information: Starting Multi-User client. (MC-152)
+
+     See Also
+      • start_multi_user_server
+      • report_multi_user_server
+      • stop_multi_user_server
+      • stop_multi_user_client
+
+
+
+
+PrimeTime Suite Tool Invocation Commands                                        10
+X-2025.06-SP3
+

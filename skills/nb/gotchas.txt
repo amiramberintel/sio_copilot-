@@ -1,0 +1,52 @@
+================================================================================
+  NB GOTCHAS — Hard-Won Lessons (WW16C, April 2026)
+================================================================================
+
+GOTCHA 1: --title flag does NOT exist
+  WRONG:  nbjob run --title "my job" ...
+  RIGHT:  nbjob run --task "my job" ...
+  Lesson: --title is not a valid nbjob flag. Use --task for job naming.
+
+GOTCHA 2: sg soc FAILS inside NB jobs
+  WRONG:  sg soc -c "pt_shell ..."
+  ERROR:  "setgid: Operation not permitted"
+  RIGHT:  /p/hdk/cad/primetime/<VERSION>/bin/pt_shell -file script.tcl
+  Lesson: NB machines cannot switch security groups. Use full binary path.
+
+GOTCHA 3: -restore_session is TCL, NOT a CLI flag
+  WRONG:  pt_shell -restore_session /path/to/session
+  ERROR:  "unknown option '-restore_session' (CMD-010)"
+  RIGHT:  Put "restore_session /path/to/session" inside a .tcl file,
+          then: pt_shell -file my_script.tcl
+  Lesson: pt_shell CLI only accepts: -file, -x, -gui, -no_init
+
+GOTCHA 4: -execute is NOT a valid CLI flag
+  WRONG:  pt_shell -execute "source my.tcl"
+  RIGHT:  pt_shell -file my.tcl    (for script files)
+  RIGHT:  pt_shell -x "command"    (for single commands)
+
+GOTCHA 5: Team aliases use stale SLES12 + PNC queue
+  The load_pt_session_in_nb_express aliases reference:
+    SLES12, /c2dg/BE_BigCore/pnc/sd/sles12_sd
+  Current GFC Client A0 needs:
+    SLES15, /c2dg/BE_BigCore/gfc/sd
+  Always verify queue/class before using team aliases.
+
+GOTCHA 6: NB log capture
+  NB writes its own log to --log-file-dir or default location.
+  For explicit logging INSIDE the script, use:
+    exec > >(tee -a "$LOGFILE") 2>&1
+  at top of bash wrapper. This captures all stdout+stderr.
+
+GOTCHA 7: Session restore needs 500G+ memory
+  A full partition PT session (e.g. core_client max_high) is 100-200GB.
+  Class "SLES15&&500G&&16C" is the minimum. Restore takes 15-30 min.
+  If memory is too low, PT will silently crash or be killed by NB.
+
+GOTCHA 8: PT needs cth_psetup BEFORE load_session_cth.csh
+  load_session_cth.csh alone is NOT enough — it needs the CTH container.
+  ALWAYS run cth_psetup first with -x to chain load_session inside it.
+  Without cth_psetup: license errors, missing tools, missing env vars.
+  See tools/primetime/scripts/open_pt.sh for the correct pattern.
+
+================================================================================
